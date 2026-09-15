@@ -23,6 +23,22 @@ export type PrzComponent = {
   ratio_high: number
 }
 
+export type ReactionAudit = {
+  d_index: number
+  bars_observed: number
+  target_382: number
+  target_618: number
+  bars_to_382: number | null
+  bars_to_618: number | null
+  first_prz_exit_bar: number | null
+  secondary_prz_retest_bar: number | null
+  no_prz_retest_first_3_bars: boolean | null
+  no_prz_retest_first_5_bars: boolean | null
+  max_favorable_price: number | null
+  max_favorable_retracement: number | null
+  type_ii_candidate: boolean
+}
+
 export type Pattern = {
   pattern_id: string
   direction: 'bullish' | 'bearish'
@@ -32,6 +48,7 @@ export type Pattern = {
   points: HarmonicPoint[]
   identity_conflicts?: string[]
   is_primary_identity?: boolean
+  reaction_audit?: ReactionAudit
   prz: {
     price_low: number
     price_high: number
@@ -64,9 +81,6 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
   const fullFirstIndex = bars[0].index
   const fullLastIndex = bars.at(-1)?.index ?? fullFirstIndex
   const patternFirstIndex = pattern?.points[0]?.index ?? fullFirstIndex
-  // A 420/720-bar research window is useful for discovery, but plotting all of it can make a
-  // current XABC structure unreadably tiny. Focus starts before X while retaining recent price
-  // action through the latest bar. This changes presentation only, never engine input.
   const focusPadding = Math.max(12, Math.min(40, Math.round((fullLastIndex - patternFirstIndex + 1) * 0.35)))
   const viewportStart = focusPattern && pattern
     ? Math.max(fullFirstIndex, patternFirstIndex - focusPadding)
