@@ -65,13 +65,7 @@ class AkShareProvider:
         return [value for value in values if start <= value <= end]
 
     def get_market_daily_snapshot(self, trade_date: date) -> pd.DataFrame:
-        """Fetch one all-market SSE/SZSE daily snapshot in a single HTTP request.
-
-        This is the fast path for post-close daily updates. It replaces thousands of
-        per-symbol history requests with one Eastmoney market snapshot. Missing/invalid
-        symbols are intentionally left out so callers can repair only those symbols via
-        the normal historical-provider chain.
-        """
+        """Fetch one all-market SSE/SZSE daily snapshot in a single HTTP request."""
         frame = self._ak.stock_zh_a_spot_em()
         columns = [
             "instrument_id",
@@ -150,14 +144,22 @@ class AkShareProvider:
         ordered = [column for column in columns if column in out.columns]
         return out[ordered].copy()
 
-    def get_daily(self, instrument_id: str, start: date, end: date) -> pd.DataFrame:
+    def _get_daily_with_adjust(
+        self,
+        instrument_id: str,
+        start: date,
+        end: date,
+        *,
+        adjust: str,
+        source: str,
+    ) -> pd.DataFrame:
         symbol = symbol_from_instrument_id(instrument_id)
         frame = self._ak.stock_zh_a_hist(
             symbol=symbol,
             period="daily",
             start_date=start.strftime("%Y%m%d"),
             end_date=end.strftime("%Y%m%d"),
-            adjust="",
+            adjust=adjust,
         )
         columns = [
             "instrument_id",
@@ -198,5 +200,39 @@ class AkShareProvider:
         out = frame.rename(columns=mapping)[list(dict.fromkeys(mapping.values()))].copy()
         out["volume"] = pd.to_numeric(out["volume"], errors="raise") * 100.0
         out.insert(0, "instrument_id", instrument_id)
-        out["source"] = self.name
+        out["source"] = source
         return out
+
+    def get_daily(self, instrument_id: str, start: date, end: date) -> pd.DataFrame:
+        return self._get_daily_with_adjust(
+            instrument_id,
+            start,
+            end,
+            adjust="",
+            source=self.name,
+        )
+
+    def get_daily_adjusted(
+        self,
+        instrument_id: str,
+        start: date,
+        end: date,
+        *,
+        mode: str = "qfq",
+    ) -> pd.DataFrame:
+        """Return provider-adjusted history for factor derivation.
+
+        HT-CN keeps raw OHLCV as the durable source of truth. This method is used to
+        derive an effective adjustment factor by comparing adjusted and raw closes on the
+        same trade dates. The adjusted series itself is not treated as the canonical raw
+        history.
+        """
+        if mode not in {"qfq", "hfq"}:
+            raise ValueError("mode must be 'qfq' or 'hfq'")
+        return self._get_daily_with_adjust(
+            instrument_id,
+            start,
+            end,
+            adjust=mode,
+            source=f"{self.name}_{mode}",
+        )
