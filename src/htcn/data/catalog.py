@@ -119,6 +119,20 @@ class DataCatalog:
             columns = [description[0] for description in con.description]
             return dict(zip(columns, row, strict=True))
 
+    def list_daily_datasets(self) -> list[dict[str, object]]:
+        """Return all daily-dataset metadata with one DuckDB connection.
+
+        Health/audit jobs must not call get_daily() once for every security in the market;
+        doing so creates thousands of short-lived DuckDB connections and makes the command
+        appear hung before it produces any output.
+        """
+        with self._connect() as con:
+            rows = con.execute(
+                "SELECT * FROM daily_dataset ORDER BY instrument_id"
+            ).fetchall()
+            columns = [description[0] for description in con.description]
+        return [dict(zip(columns, row, strict=True)) for row in rows]
+
     def daily_dataset_count(self) -> int:
         with self._connect() as con:
             return int(con.execute("SELECT COUNT(*) FROM daily_dataset").fetchone()[0])
