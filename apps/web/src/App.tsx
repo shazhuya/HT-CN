@@ -163,6 +163,7 @@ export default function App() {
           <section className="summary-grid">
             <div><span>价格视图</span><strong>{analysis.price_mode.toUpperCase()}</strong></div>
             <div><span>区间</span><strong>{analysis.first_trade_date} → {analysis.last_trade_date}</strong></div>
+            <div><span>实际K线</span><strong>{analysis.bars_returned} / {analysis.bars_requested}</strong></div>
             <div><span>完成形态</span><strong>{analysis.completed.length}</strong></div>
             <div><span>形成中</span><strong>{analysis.forming.length}</strong></div>
           </section>
