@@ -55,6 +55,8 @@ export default function App() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [showAllIdentities, setShowAllIdentities] = useState(false)
+  const [focusPattern, setFocusPattern] = useState(true)
 
   useEffect(() => {
     fetch(`${API}/api/health`)
@@ -71,10 +73,16 @@ export default function App() {
       .catch(() => undefined)
   }, [])
 
-  const allPatterns = useMemo(() => {
+  const rawPatterns = useMemo(() => {
     if (!analysis) return []
     return [...analysis.completed, ...analysis.forming]
   }, [analysis])
+
+  const allPatterns = useMemo(() => {
+    if (showAllIdentities) return rawPatterns
+    // Backward-compatible with deterministic browser fixtures that predate the field.
+    return rawPatterns.filter((pattern) => pattern.is_primary_identity !== false)
+  }, [rawPatterns, showAllIdentities])
 
   const selectedPattern = useMemo(() => {
     if (!allPatterns.length) return null
@@ -177,14 +185,20 @@ export default function App() {
                   <span className="kicker">{analysis.instrument_id}</span>
                   <h2>{selectedPattern ? `${patternName(selectedPattern.pattern_id)} · ${selectedPattern.state === 'completed' ? '已完成' : '形成中'}` : '暂无有效形态'}</h2>
                 </div>
-                {selectedPattern && (
-                  <div className="score-box">
-                    <span>几何评分</span>
-                    <strong>{selectedPattern.geometry_score.toFixed(1)}</strong>
-                  </div>
-                )}
+                <div className="chart-heading-actions">
+                  <label className="toggle-line">
+                    <input type="checkbox" checked={focusPattern} onChange={(event) => setFocusPattern(event.target.checked)} />
+                    聚焦当前形态
+                  </label>
+                  {selectedPattern && (
+                    <div className="score-box">
+                      <span>几何评分</span>
+                      <strong>{selectedPattern.geometry_score.toFixed(1)}</strong>
+                    </div>
+                  )}
+                </div>
               </div>
-              <HarmonicChart bars={analysis.bars} pattern={selectedPattern} />
+              <HarmonicChart bars={analysis.bars} pattern={selectedPattern} focusPattern={focusPattern} />
               <p className="engine-note">{analysis.engine_note}</p>
             </div>
 
@@ -195,6 +209,13 @@ export default function App() {
                   <h2>形态与 PRZ</h2>
                 </div>
               </div>
+              <label className="toggle-line identity-toggle">
+                <input type="checkbox" checked={showAllIdentities} onChange={(event) => setShowAllIdentities(event.target.checked)} />
+                显示同节点备选身份
+              </label>
+              <p className="candidate-summary">
+                当前显示 {allPatterns.length} / {rawPatterns.length} 个身份；默认只显示每组节点的主身份。
+              </p>
               <div className="pattern-list">
                 {allPatterns.length === 0 && <p className="muted">当前窗口没有通过规则的 XABCD 候选。</p>}
                 {allPatterns.map((pattern) => {
@@ -217,6 +238,18 @@ export default function App() {
 
               {selectedPattern && (
                 <div className="audit-card">
+                  <h3>节点区间</h3>
+                  <p className="node-range">
+                    {selectedPattern.points[0]?.trade_date ?? '—'} → {selectedPattern.points.at(-1)?.trade_date ?? '—'} · S{selectedPattern.scale}
+                  </p>
+                  {(selectedPattern.identity_conflicts?.length ?? 0) > 1 && (
+                    <>
+                      <h3>同节点身份冲突</h3>
+                      <p className="identity-note">
+                        主身份为 {patternName(selectedPattern.pattern_id)}；同一节点还满足 {selectedPattern.identity_conflicts?.filter((value) => !value.startsWith(`${selectedPattern.pattern_id}@`)).join('、')}。这些身份保留供审计，不代表多个独立机会。
+                      </p>
+                    </>
+                  )}
                   <h3>比例审计</h3>
                   <dl>
                     <div><dt>B/XA</dt><dd>{fmt(selectedPattern.metrics.b_xa)}</dd></div>
