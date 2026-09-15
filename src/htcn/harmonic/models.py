@@ -15,6 +15,32 @@ class PatternState(str, Enum):
     REJECTED = "rejected"
 
 
+class PivotKind(str, Enum):
+    HIGH = "high"
+    LOW = "low"
+
+
+@dataclass(frozen=True, slots=True)
+class Pivot:
+    """Confirmed swing pivot independent of any harmonic label."""
+
+    index: int
+    price: float
+    kind: PivotKind
+    scale: int
+    confirmed_at: int
+
+    def __post_init__(self) -> None:
+        if self.index < 0:
+            raise ValueError("index must be >= 0")
+        if self.price <= 0:
+            raise ValueError("price must be positive")
+        if self.scale < 1:
+            raise ValueError("scale must be >= 1")
+        if self.confirmed_at < self.index:
+            raise ValueError("confirmed_at must be >= pivot index")
+
+
 @dataclass(frozen=True, slots=True)
 class HarmonicPoint:
     """Immutable semantic point used by the harmonic engine.
