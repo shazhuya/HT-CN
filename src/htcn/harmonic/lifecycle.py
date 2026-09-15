@@ -14,12 +14,12 @@ from .prz import PotentialReversalZone
 class ReactionAudit:
     """Deterministic post-completion price/confirmation audit.
 
-    The identity of a harmonic pattern is already frozen before this module runs.  The
-    audit therefore cannot create, delete or mutate X/A/B/C/D geometry.  It records the
+    The identity of a harmonic pattern is already frozen before this module runs. The
+    audit therefore cannot create, delete or mutate pattern geometry. It records the
     source-backed Type-I 38.2% / 61.8% reaction objectives, PRZ exit/retest behaviour,
     and confirmation evidence around a possible Type-II secondary test.
 
-    Volume Three requires PRICE and INDICATOR confirmation for a Type-II reversal.  HT-CN
+    Volume Three requires PRICE and INDICATOR confirmation for a Type-II reversal. HT-CN
     consequently keeps ``type_ii_candidate`` and ``type_ii_evidence_state`` separate:
     a secondary PRZ retest is structural evidence, not an automatic declaration that a
     larger reversal is valid.
@@ -81,12 +81,7 @@ def _tests_full_prz(
     direction: PatternDirection,
     prz: PotentialReversalZone,
 ) -> bool:
-    """Whether the retest reaches the far/terminal side of the original PRZ.
-
-    For bullish support the final measured number is represented by the lower edge of the
-    convergence zone; for bearish resistance it is the upper edge.  This is recorded as
-    stronger evidence, not required to label the initial secondary overlap a candidate.
-    """
+    """Whether the retest reaches the far/terminal side of the original PRZ."""
 
     if direction is PatternDirection.BULLISH:
         return low <= prz.price_low
@@ -118,7 +113,7 @@ def _rsi_confirmation_evidence(
 ) -> tuple[float | None, int | None, float | None, int | None, float | None, bool]:
     """Audit Wilder RSI 30/70 extreme reversal around a secondary-test sequence.
 
-    Volume Three notes that indicator confirmation can lead price.  For that reason the
+    Volume Three notes that indicator confirmation can lead price. For that reason the
     search window starts at D and extends through the secondary retest, then looks for the
     first reversal out of the conventional extreme zone after the last extreme reading.
     Offsets are returned relative to D, matching the rest of ``ReactionAudit``.
@@ -176,6 +171,17 @@ def _rsi_confirmation_evidence(
     )
 
 
+def _reaction_anchors(
+    points: tuple[HarmonicPoint, ...],
+) -> tuple[HarmonicPoint, HarmonicPoint]:
+    labels = tuple(point.label for point in points)
+    if labels == ("X", "A", "B", "C", "D"):
+        return points[1], points[4]
+    if labels == ("A", "B", "C", "D"):
+        return points[0], points[3]
+    raise ValueError("reaction audit requires X/A/B/C/D or A/B/C/D points")
+
+
 def audit_completed_reaction(
     frame: pd.DataFrame,
     *,
@@ -189,11 +195,10 @@ def audit_completed_reaction(
     ``frame`` must be the same indexed price window used to identify the pattern. Only bars
     strictly after D are examined for outcomes. Targets are measured from D back toward A
     using the 38.2% and 61.8% reaction objectives described in Harmonic Trading Volume
-    Three. Wilder RSI is confirmation evidence only and never participates in identity.
+    Three. Both XABCD and standalone ABCD schemas have an explicit A/D anchor. Wilder RSI
+    is confirmation evidence only and never participates in identity.
     """
 
-    if tuple(point.label for point in points) != ("X", "A", "B", "C", "D"):
-        raise ValueError("reaction audit requires X/A/B/C/D points")
     required = {"high", "low"}
     missing = required.difference(frame.columns)
     if missing:
@@ -201,8 +206,7 @@ def audit_completed_reaction(
     if rsi_period < 2:
         raise ValueError("rsi_period must be >= 2")
 
-    a = points[1]
-    d = points[4]
+    a, d = _reaction_anchors(points)
     if d.index < 0 or d.index >= len(frame):
         raise ValueError("D index is outside the supplied frame")
 
