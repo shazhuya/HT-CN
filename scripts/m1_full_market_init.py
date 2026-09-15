@@ -15,6 +15,7 @@ from htcn.data.providers import (
 )
 from htcn.data.store import ParquetDailyStore
 from htcn.data.sync import sync_daily
+from htcn.data.universe import select_initial_daily_candidates
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,7 +62,7 @@ def parse_args() -> argparse.Namespace:
         "--limit",
         type=int,
         default=0,
-        help="maximum instruments in this run; 0 means all remaining candidates",
+        help="maximum supported instruments in this run; 0 means all remaining candidates",
     )
     parser.add_argument("--max-attempts", type=int, default=5)
     parser.add_argument("--retries", type=int, default=2, help="transient retries inside one task")
@@ -84,9 +85,13 @@ def main() -> int:
     provider = build_provider()
     ensure_reference_data(catalog, provider)
 
-    candidates = catalog.sync_candidates(
+    all_candidates = catalog.sync_candidates(
         max_attempts=max(1, args.max_attempts),
-        limit=None if args.limit <= 0 else args.limit,
+        limit=None,
+    )
+    candidates, deferred_bse = select_initial_daily_candidates(
+        all_candidates,
+        limit=args.limit,
     )
     total_market = catalog.security_count()
     existing = catalog.daily_dataset_count()
@@ -96,9 +101,18 @@ def main() -> int:
         f"this run={len(candidates)}",
         flush=True,
     )
+    if deferred_bse:
+        print(
+            f"[HT-CN M1 FULL] BSE deferred={deferred_bse}: 920-code history continuity "
+            "adapter pending; this batch processes SSE+SZSE only.",
+            flush=True,
+        )
 
     if not candidates:
-        print("[HT-CN M1 FULL] Nothing to initialize. PASS", flush=True)
+        print(
+            "[HT-CN M1 FULL] No remaining SSE/SZSE instruments to initialize. PASS",
+            flush=True,
+        )
         return 0
 
     completed = 0
