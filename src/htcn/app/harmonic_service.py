@@ -11,6 +11,8 @@ from htcn.data.delta import DailyHistoryView, MarketDailyDeltaStore
 from htcn.data.store import ParquetDailyStore
 from htcn.harmonic.engine import CompletedMatch, FormingMatch, HarmonicScan, scan_frame
 from htcn.harmonic.lifecycle import audit_completed_reaction
+from htcn.harmonic.models import HarmonicPoint, Pivot
+from htcn.harmonic.pivots import build_pivot_consensus
 
 
 class DatasetNotFoundError(FileNotFoundError):
@@ -98,12 +100,54 @@ class LocalHarmonicService:
             for key, rows in groups.items()
         }
 
+    @staticmethod
+    def _pivot_support_payload(
+        points: tuple[HarmonicPoint, ...],
+        *,
+        source_scale: int,
+        pivots_by_scale: dict[int, tuple[Pivot, ...]],
+        consensus: dict,
+    ) -> list[dict[str, Any]]:
+        source_by_index = {
+            int(pivot.index): pivot
+            for pivot in pivots_by_scale.get(int(source_scale), ())
+        }
+        out: list[dict[str, Any]] = []
+        for point in points:
+            source = source_by_index.get(int(point.index))
+            if source is None:
+                out.append(
+                    {
+                        "label": point.label,
+                        "index": int(point.index),
+                        "kind": None,
+                        "scales": [int(source_scale)],
+                        "support_count": 1,
+                        "max_scale": int(source_scale),
+                    }
+                )
+                continue
+            scales = consensus.get((int(point.index), source.kind), (int(source_scale),))
+            out.append(
+                {
+                    "label": point.label,
+                    "index": int(point.index),
+                    "kind": source.kind.value,
+                    "scales": list(scales),
+                    "support_count": len(scales),
+                    "max_scale": max(scales),
+                }
+            )
+        return out
+
     def _completed_payload(
         self,
         item: CompletedMatch,
         frame: pd.DataFrame,
         dates: pd.Series,
         conflict_ids: list[str],
+        pivots_by_scale: dict[int, tuple[Pivot, ...]],
+        pivot_consensus: dict,
     ) -> dict[str, Any]:
         metrics = item.evaluation.metrics
         own_id = f"{item.pattern_id}@S{item.scale}"
@@ -123,6 +167,12 @@ class LocalHarmonicService:
             "identity_conflicts": conflict_ids,
             "is_primary_identity": bool(conflict_ids and conflict_ids[0] == own_id),
             "points": [self._point_payload(point, dates) for point in item.points],
+            "pivot_support": self._pivot_support_payload(
+                item.points,
+                source_scale=item.scale,
+                pivots_by_scale=pivots_by_scale,
+                consensus=pivot_consensus,
+            ),
             "prz": self._prz_payload(item.evaluation.prz),
             "metrics": {
                 "b_xa": metrics.b_xa.value,
@@ -141,6 +191,8 @@ class LocalHarmonicService:
         item: FormingMatch,
         dates: pd.Series,
         conflict_ids: list[str],
+        pivots_by_scale: dict[int, tuple[Pivot, ...]],
+        pivot_consensus: dict,
     ) -> dict[str, Any]:
         own_id = f"{item.pattern_id}@S{item.scale}"
         c_index = int(item.points[-1].index)
@@ -155,6 +207,12 @@ class LocalHarmonicService:
             "identity_conflicts": conflict_ids,
             "is_primary_identity": bool(conflict_ids and conflict_ids[0] == own_id),
             "points": [self._point_payload(point, dates) for point in item.points],
+            "pivot_support": self._pivot_support_payload(
+                item.points,
+                source_scale=item.scale,
+                pivots_by_scale=pivots_by_scale,
+                consensus=pivot_consensus,
+            ),
             "prz": self._prz_payload(item.projection.prz),
             "metrics": {
                 "b_xa": item.projection.b_xa,
@@ -205,15 +263,32 @@ class LocalHarmonicService:
             max_completed=max_completed,
             max_forming=max_forming,
         )
+        pivots_by_scale: dict[int, tuple[Pivot, ...]] = {
+            int(scale): tuple(pivots) for scale, pivots in scan.pivots_by_scale.items()
+        }
+        pivot_consensus = build_pivot_consensus(pivots_by_scale)
         dates = selected["trade_date"]
         completed_conflicts = self._identity_conflicts(scan.completed)
         forming_conflicts = self._identity_conflicts(scan.forming)
         completed = [
-            self._completed_payload(item, selected, dates, completed_conflicts[item.conflict_key])
+            self._completed_payload(
+                item,
+                selected,
+                dates,
+                completed_conflicts[item.conflict_key],
+                pivots_by_scale,
+                pivot_consensus,
+            )
             for item in scan.completed
         ]
         forming = [
-            self._forming_payload(item, dates, forming_conflicts[item.conflict_key])
+            self._forming_payload(
+                item,
+                dates,
+                forming_conflicts[item.conflict_key],
+                pivots_by_scale,
+                pivot_consensus,
+            )
             for item in scan.forming
         ]
 
@@ -230,5 +305,5 @@ class LocalHarmonicService:
             "completed": completed,
             "forming": forming,
             "pivot_counts": {str(scale): len(pivots) for scale, pivots in scan.pivots_by_scale.items()},
-            "engine_note": "geometry_score 仅衡量几何贴合度，不代表胜率、预期收益或交易建议；形成中只保留各尺度最新 XABC frontier；已完成形态附带 38.2%/61.8% 反应目标与 PRZ 二次回测审计，但 Type-II 仅标候选，不替代价格/指标确认。",
+            "engine_note": "geometry_score 仅衡量 Carney 几何贴合度；pivot_support 仅表示同一极值被多少独立尺度重复识别；两者都不是胜率。已完成形态附带 Type-I 目标、PRZ 回测及 Wilder RSI 确认证据，但不会自动转化为交易建议。",
         }
