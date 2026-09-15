@@ -32,11 +32,23 @@ export type ReactionAudit = {
   bars_to_618: number | null
   first_prz_exit_bar: number | null
   secondary_prz_retest_bar: number | null
+  full_prz_retest_bar: number | null
+  reversal_exit_after_retest_bar: number | null
+  bars_to_reversal_exit_after_retest: number | null
+  third_prz_test_bar: number | null
   no_prz_retest_first_3_bars: boolean | null
   no_prz_retest_first_5_bars: boolean | null
   max_favorable_price: number | null
   max_favorable_retracement: number | null
   type_ii_candidate: boolean
+  rsi_period: number
+  rsi_at_d: number | null
+  rsi_extreme_bar: number | null
+  rsi_extreme_value: number | null
+  rsi_trigger_bar: number | null
+  rsi_trigger_value: number | null
+  rsi_confirmation: boolean
+  type_ii_evidence_state: 'not_candidate' | 'retest_only' | 'price_confirmed_no_rsi' | 'price_and_rsi_confirmed'
 }
 
 export type Pattern = {
