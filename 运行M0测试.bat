@@ -1,13 +1,23 @@
 @echo off
-chcp 65001 >nul
+setlocal
 cd /d "%~dp0"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\qa_local.ps1"
+
+if not exist ".venv\Scripts\python.exe" (
+  echo [HT-CN QA] ERROR: Python virtual environment not found.
+  echo [HT-CN QA] Run install script first.
+  pause
+  exit /b 2
+)
+
+.venv\Scripts\python.exe scripts\qa_local.py
 if errorlevel 1 (
   echo.
-  echo [HT-CN QA] 测试失败，请把本窗口截图发给 ChatGPT。
+  echo [HT-CN QA] TEST FAILED. Send the last error lines to ChatGPT.
   pause
   exit /b 1
 )
+
 echo.
-echo [HT-CN QA] M0 自动测试通过。
+echo [HT-CN QA] M0 TEST PASSED.
 pause
+exit /b 0
