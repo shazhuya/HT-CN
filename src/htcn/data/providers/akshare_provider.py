@@ -13,6 +13,10 @@ class AkShareProvider:
 
     The adapter translates provider-specific columns into HT-CN's stable schema.
     Core code must never depend on AKShare column names directly.
+
+    HT-CN canonical volume unit is shares. AKShare stock_zh_a_hist documents
+    its historical daily volume in hands (1 hand = 100 shares), so this adapter
+    converts volume to shares before returning data.
     """
 
     name = "akshare"
@@ -106,6 +110,7 @@ class AkShareProvider:
                 mapping[provider_name] = stable_name
 
         out = frame.rename(columns=mapping)[list(dict.fromkeys(mapping.values()))].copy()
+        out["volume"] = pd.to_numeric(out["volume"], errors="raise") * 100.0
         out.insert(0, "instrument_id", instrument_id)
         out["source"] = self.name
         return out
