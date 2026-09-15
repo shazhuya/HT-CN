@@ -54,6 +54,13 @@ function hitLabel(value: number | null | undefined) {
   return value == null ? '未触及' : `${value} 根K线`
 }
 
+function evidenceLabel(state: string) {
+  if (state === 'price_and_rsi_confirmed') return '价格 + RSI 证据'
+  if (state === 'price_confirmed_no_rsi') return '仅价格证据'
+  if (state === 'retest_only') return '仅二次回测'
+  return '非 Type-II 候选'
+}
+
 export default function App() {
   const [health, setHealth] = useState<Health | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -285,9 +292,13 @@ export default function App() {
                         <div><dt>到达T1</dt><dd>{hitLabel(selectedPattern.reaction_audit.bars_to_382)}</dd></div>
                         <div><dt>到达T2</dt><dd>{hitLabel(selectedPattern.reaction_audit.bars_to_618)}</dd></div>
                         <div><dt>PRZ二次回测</dt><dd>{selectedPattern.reaction_audit.secondary_prz_retest_bar == null ? '未观察到' : `D后第 ${selectedPattern.reaction_audit.secondary_prz_retest_bar} 根`}</dd></div>
-                        <div><dt>Type-II候选</dt><dd>{selectedPattern.reaction_audit.type_ii_candidate ? '是（仍需确认）' : '否'}</dd></div>
+                        <div><dt>完整PRZ回测</dt><dd>{selectedPattern.reaction_audit.full_prz_retest_bar == null ? '未观察到' : `D后第 ${selectedPattern.reaction_audit.full_prz_retest_bar} 根`}</dd></div>
+                        <div><dt>回测后二次离开</dt><dd>{selectedPattern.reaction_audit.bars_to_reversal_exit_after_retest == null ? '未观察到' : `${selectedPattern.reaction_audit.bars_to_reversal_exit_after_retest} 根K线`}</dd></div>
+                        <div><dt>第三次测试</dt><dd>{selectedPattern.reaction_audit.third_prz_test_bar == null ? '未观察到' : `D后第 ${selectedPattern.reaction_audit.third_prz_test_bar} 根`}</dd></div>
+                        <div><dt>RSI({selectedPattern.reaction_audit.rsi_period})确认</dt><dd>{selectedPattern.reaction_audit.rsi_confirmation ? '有' : '无'}</dd></div>
+                        <div><dt>Type-II证据</dt><dd>{evidenceLabel(selectedPattern.reaction_audit.type_ii_evidence_state)}</dd></div>
                       </dl>
-                      <p className="identity-note">Type-II这里只表示“离开原PRZ后再次回测”的结构候选；第三卷要求额外的价格与指标确认，系统不会把二次回测直接等同于有效反转。</p>
+                      <p className="identity-note">Type-II 证据层与形态身份严格分离。RSI 使用 Wilder 标准 14 周期与 30/70 极值区；HSI 属于 Carney 专有指标，HT-CN 不会臆造公式。即便显示“价格 + RSI 证据”，也仍是研究审计状态，不自动转化为交易建议。</p>
                     </>
                   )}
                 </div>
