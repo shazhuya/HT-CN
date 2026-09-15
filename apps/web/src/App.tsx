@@ -50,6 +50,10 @@ function primaryCount(patterns: Pattern[]) {
   return patterns.filter((pattern) => pattern.is_primary_identity !== false).length
 }
 
+function hitLabel(value: number | null | undefined) {
+  return value == null ? '未触及' : `${value} 根K线`
+}
+
 export default function App() {
   const [health, setHealth] = useState<Health | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -271,6 +275,21 @@ export default function App() {
                       </li>
                     ))}
                   </ul>
+
+                  {selectedPattern.state === 'completed' && selectedPattern.reaction_audit && (
+                    <>
+                      <h3>Reaction vs. Reversal 审计</h3>
+                      <dl>
+                        <div><dt>38.2%目标</dt><dd>{selectedPattern.reaction_audit.target_382.toFixed(2)}</dd></div>
+                        <div><dt>61.8%目标</dt><dd>{selectedPattern.reaction_audit.target_618.toFixed(2)}</dd></div>
+                        <div><dt>到达T1</dt><dd>{hitLabel(selectedPattern.reaction_audit.bars_to_382)}</dd></div>
+                        <div><dt>到达T2</dt><dd>{hitLabel(selectedPattern.reaction_audit.bars_to_618)}</dd></div>
+                        <div><dt>PRZ二次回测</dt><dd>{selectedPattern.reaction_audit.secondary_prz_retest_bar == null ? '未观察到' : `D后第 ${selectedPattern.reaction_audit.secondary_prz_retest_bar} 根`}</dd></div>
+                        <div><dt>Type-II候选</dt><dd>{selectedPattern.reaction_audit.type_ii_candidate ? '是（仍需确认）' : '否'}</dd></div>
+                      </dl>
+                      <p className="identity-note">Type-II这里只表示“离开原PRZ后再次回测”的结构候选；第三卷要求额外的价格与指标确认，系统不会把二次回测直接等同于有效反转。</p>
+                    </>
+                  )}
                 </div>
               )}
             </aside>
