@@ -1,0 +1,39 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+apps/web/dist/
+apps/web/.vite/
+
+# Local data and runtime artifacts
+data/**/*.parquet
+data/**/*.duckdb
+data/**/*.db
+artifacts/screenshots/*
+artifacts/debug/*
+artifacts/reports/*
+logs/*
+
+# Keep directory placeholders
+!data/.gitkeep
+!artifacts/screenshots/.gitkeep
+!artifacts/debug/.gitkeep
+!artifacts/reports/.gitkeep
+!logs/.gitkeep
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+!.env.example
