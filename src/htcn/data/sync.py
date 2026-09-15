@@ -9,6 +9,17 @@ from .provider import MarketDataProvider
 from .store import ParquetDailyStore
 
 
+def _source_from_frame(frame: pd.DataFrame, provider: MarketDataProvider) -> str:
+    if not frame.empty and "source" in frame.columns:
+        values = frame["source"].dropna()
+        if not values.empty:
+            return str(values.iloc[-1])
+    active = getattr(provider, "last_provider", None)
+    if active:
+        return str(active)
+    return provider.name
+
+
 def sync_daily(
     *,
     provider: MarketDataProvider,
@@ -27,6 +38,7 @@ def sync_daily(
     latest = store.latest_date(instrument_id)
     fetch_start = start if latest is None else max(start, latest + timedelta(days=1))
 
+    incoming = pd.DataFrame()
     if fetch_start <= end:
         incoming = provider.get_daily(instrument_id, fetch_start, end)
         if not incoming.empty:
@@ -43,7 +55,7 @@ def sync_daily(
 
     catalog.record_daily(
         instrument_id=instrument_id,
-        source=provider.name,
+        source=_source_from_frame(incoming if not incoming.empty else result, provider),
         parquet_path=str(path),
         row_count=len(result),
         first_trade_date=first_trade_date,
