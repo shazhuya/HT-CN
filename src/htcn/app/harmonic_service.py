@@ -137,6 +137,8 @@ class LocalHarmonicService:
         conflict_ids: list[str],
     ) -> dict[str, Any]:
         own_id = f"{item.pattern_id}@S{item.scale}"
+        c_index = int(item.points[-1].index)
+        latest_index = max(len(dates) - 1, 0)
         return {
             "pattern_id": item.pattern_id,
             "direction": item.direction.value,
@@ -150,6 +152,8 @@ class LocalHarmonicService:
             "prz": self._prz_payload(item.projection.prz),
             "metrics": {"b_xa": item.projection.b_xa},
             "source_tolerance_used": item.projection.source_tolerance_used,
+            "bars_since_c": max(0, latest_index - c_index),
+            "frontier": True,
         }
 
     @staticmethod
@@ -217,5 +221,5 @@ class LocalHarmonicService:
             "completed": completed,
             "forming": forming,
             "pivot_counts": {str(scale): len(pivots) for scale, pivots in scan.pivots_by_scale.items()},
-            "engine_note": "geometry_score 仅衡量几何贴合度，不代表胜率、预期收益或交易建议；同节点多身份不会静默删除。",
+            "engine_note": "geometry_score 仅衡量几何贴合度，不代表胜率、预期收益或交易建议；形成中只保留各尺度最新 XABC frontier，同节点多身份保留审计但默认只展示主身份。",
         }
