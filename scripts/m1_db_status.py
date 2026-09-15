@@ -23,15 +23,25 @@ def main() -> int:
         for instrument_id in listed_ids
         if instrument_id.startswith(SUPPORTED_INITIAL_DAILY_PREFIXES)
     ]
+    supported_set = set(supported)
     deferred_bse = sum(instrument_id.startswith("BSE.") for instrument_id in listed_ids)
-    datasets = catalog.daily_dataset_count()
+
+    dataset_rows = catalog.list_daily_datasets()
+    in_scope_datasets = sum(
+        str(row["instrument_id"]) in supported_set for row in dataset_rows
+    )
+    out_of_scope_datasets = len(dataset_rows) - in_scope_datasets
     counts = catalog.task_counts()
-    pct = (datasets / len(supported) * 100.0) if supported else 0.0
+    pct = (in_scope_datasets / len(supported) * 100.0) if supported else 0.0
 
     print(f"[HT-CN M1 STATUS] Securities total      : {securities}")
     print(f"[HT-CN M1 STATUS] SSE+SZSE in scope     : {len(supported)}")
     print(f"[HT-CN M1 STATUS] BSE out of scope      : {deferred_bse}")
-    print(f"[HT-CN M1 STATUS] Daily data            : {datasets} ({pct:.2f}% of in-scope)")
+    print(
+        f"[HT-CN M1 STATUS] Daily data in scope   : {in_scope_datasets} "
+        f"({pct:.2f}% of in-scope)"
+    )
+    print(f"[HT-CN M1 STATUS] Daily data out of scope: {out_of_scope_datasets}")
     print(f"[HT-CN M1 STATUS] Calendar              : {catalog.calendar_count()} trading days")
     print(f"[HT-CN M1 STATUS] Tasks                 : {counts}")
 
