@@ -119,6 +119,10 @@ class DataCatalog:
             columns = [description[0] for description in con.description]
             return dict(zip(columns, row, strict=True))
 
+    def daily_dataset_count(self) -> int:
+        with self._connect() as con:
+            return int(con.execute("SELECT COUNT(*) FROM daily_dataset").fetchone()[0])
+
     def upsert_securities(self, securities: list[Security], *, source: str) -> int:
         if not securities:
             return 0
@@ -163,6 +167,16 @@ class DataCatalog:
         with self._connect() as con:
             return int(con.execute("SELECT COUNT(*) FROM security_master").fetchone()[0])
 
+    def list_security_ids(self, *, listed_only: bool = True) -> list[str]:
+        sql = "SELECT instrument_id FROM security_master"
+        params: list[object] = []
+        if listed_only:
+            sql += " WHERE status = ?"
+            params.append("listed")
+        sql += " ORDER BY instrument_id"
+        with self._connect() as con:
+            return [row[0] for row in con.execute(sql, params).fetchall()]
+
     def record_trade_calendar(self, days: list[date], *, source: str) -> int:
         if not days:
             return 0
@@ -184,20 +198,48 @@ class DataCatalog:
         with self._connect() as con:
             return int(con.execute("SELECT COUNT(*) FROM trade_calendar").fetchone()[0])
 
-    def mark_task(self, instrument_id: str, status: str, error_message: str | None = None) -> None:
+    def begin_task(self, instrument_id: str) -> None:
+        """Start one synchronization attempt and increment attempt_count exactly once."""
         now = self._now()
         with self._connect() as con:
             con.execute(
                 """
-                INSERT INTO sync_task VALUES (?, ?, ?, 1, ?)
+                INSERT INTO sync_task VALUES (?, 'RUNNING', NULL, 1, ?)
+                ON CONFLICT(instrument_id) DO UPDATE SET
+                    status = 'RUNNING',
+                    error_message = NULL,
+                    attempt_count = sync_task.attempt_count + 1,
+                    updated_at = excluded.updated_at
+                """,
+                [instrument_id, now],
+            )
+
+    def finish_task(
+        self,
+        instrument_id: str,
+        status: str,
+        error_message: str | None = None,
+    ) -> None:
+        """Finish a task without incrementing attempt_count."""
+        now = self._now()
+        with self._connect() as con:
+            con.execute(
+                """
+                INSERT INTO sync_task VALUES (?, ?, ?, 0, ?)
                 ON CONFLICT(instrument_id) DO UPDATE SET
                     status = excluded.status,
                     error_message = excluded.error_message,
-                    attempt_count = sync_task.attempt_count + 1,
                     updated_at = excluded.updated_at
                 """,
                 [instrument_id, status, error_message, now],
             )
+
+    def mark_task(self, instrument_id: str, status: str, error_message: str | None = None) -> None:
+        """Compatibility wrapper retained for M1 scripts/tests."""
+        if status == "RUNNING":
+            self.begin_task(instrument_id)
+        else:
+            self.finish_task(instrument_id, status, error_message)
 
     def task_status(self, instrument_id: str) -> dict[str, object] | None:
         with self._connect() as con:
@@ -209,3 +251,53 @@ class DataCatalog:
                 return None
             columns = [description[0] for description in con.description]
             return dict(zip(columns, row, strict=True))
+
+    def task_counts(self) -> dict[str, int]:
+        with self._connect() as con:
+            rows = con.execute(
+                "SELECT status, COUNT(*) FROM sync_task GROUP BY status ORDER BY status"
+            ).fetchall()
+        return {str(status): int(count) for status, count in rows}
+
+    def failed_tasks(self, *, limit: int = 20) -> list[dict[str, object]]:
+        with self._connect() as con:
+            rows = con.execute(
+                """
+                SELECT instrument_id, status, error_message, attempt_count, updated_at
+                FROM sync_task
+                WHERE status = 'FAILED'
+                ORDER BY updated_at DESC
+                LIMIT ?
+                """,
+                [limit],
+            ).fetchall()
+            columns = [description[0] for description in con.description]
+        return [dict(zip(columns, row, strict=True)) for row in rows]
+
+    def sync_candidates(
+        self,
+        *,
+        max_attempts: int = 5,
+        limit: int | None = None,
+    ) -> list[str]:
+        """Return listed instruments that still need their initial durable daily dataset.
+
+        COMPLETED instruments with an existing daily_dataset entry are skipped. RUNNING rows
+        from an interrupted process are intentionally eligible again so a rerun resumes work.
+        """
+        sql = """
+            SELECT s.instrument_id
+            FROM security_master AS s
+            LEFT JOIN sync_task AS t ON t.instrument_id = s.instrument_id
+            LEFT JOIN daily_dataset AS d ON d.instrument_id = s.instrument_id
+            WHERE s.status = 'listed'
+              AND NOT (COALESCE(t.status, '') = 'COMPLETED' AND d.instrument_id IS NOT NULL)
+              AND COALESCE(t.attempt_count, 0) < ?
+            ORDER BY s.instrument_id
+        """
+        params: list[object] = [max_attempts]
+        if limit is not None and limit > 0:
+            sql += " LIMIT ?"
+            params.append(limit)
+        with self._connect() as con:
+            return [row[0] for row in con.execute(sql, params).fetchall()]
