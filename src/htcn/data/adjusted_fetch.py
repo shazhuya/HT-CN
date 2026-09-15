@@ -7,6 +7,8 @@ from typing import Protocol
 
 import pandas as pd
 
+from .validation import normalize_daily
+
 
 class AdjustedHistoryProvider(Protocol):
     name: str
@@ -38,11 +40,13 @@ def fetch_adjusted_history(
     retries_per_provider: int = 2,
     base_delay: float = 0.75,
 ) -> AdjustedFetchResult:
-    """Fetch adjusted daily history with retry + provider failover.
+    """Fetch adjusted daily history with retry, validation and provider failover.
 
-    Live free endpoints occasionally close connections or throttle requests. Adjustment
-    factor generation must therefore treat network instability as an adapter problem, not
-    as a failure of the factor math itself.
+    Live free endpoints occasionally close connections, throttle requests, or return a
+    provider-specific dtype layout. The fetch boundary therefore normalizes every
+    successful response into HT-CN's canonical daily schema before the factor layer sees
+    it. A malformed provider response is treated the same way as a transient provider
+    failure so another source can take over.
     """
     if mode not in {"qfq", "hfq"}:
         raise ValueError("mode must be 'qfq' or 'hfq'")
@@ -64,8 +68,9 @@ def fetch_adjusted_history(
                     mode=mode,
                 )
                 if frame is not None and not frame.empty:
+                    normalized = normalize_daily(frame)
                     return AdjustedFetchResult(
-                        frame=frame,
+                        frame=normalized,
                         source=f"{provider.name}_{mode}",
                         attempts=attempts,
                     )
