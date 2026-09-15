@@ -19,7 +19,7 @@ echo [HT-CN M2 ACCEPT] 2/3 Real local QFQ harmonic scan...
 if errorlevel 1 goto :fail
 
 echo.
-echo [HT-CN M2 ACCEPT] 3/3 Local market database health...
+echo [HT-CN M2 ACCEPT] 3/3 Initialized-dataset health ^(coverage is reported separately^) ...
 .venv\Scripts\python.exe scripts\m1_health_check.py
 if errorlevel 1 goto :fail
 
@@ -28,6 +28,7 @@ echo [HT-CN M2 ACCEPT] ========================================
 echo [HT-CN M2 ACCEPT] M2 WORKBENCH ACCEPTANCE PASSED.
 echo [HT-CN M2 ACCEPT] Fixture screenshot: artifacts\screenshots\m2-harmonic-workbench-fixture.png
 echo [HT-CN M2 ACCEPT] LIVE screenshot   : artifacts\screenshots\m2-harmonic-workbench-live.png
+echo [HT-CN M2 ACCEPT] NOTE: M2 pass does not mean all 5218 symbols are initialized locally.
 echo [HT-CN M2 ACCEPT] Start app with: 启动HT-CN.bat
 echo [HT-CN M2 ACCEPT] ========================================
 pause
