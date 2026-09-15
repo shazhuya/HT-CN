@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from htcn.harmonic.lifecycle import audit_completed_reaction
 from htcn.harmonic.models import HarmonicPoint, PatternDirection
@@ -15,7 +16,7 @@ def _points_bullish():
     )
 
 
-def _prz(low=118.0, high=122.0):
+def _prz(low=118.0, high=122.0, direction=PatternDirection.BULLISH):
     component = PRZComponent(
         name="test",
         ratio_low=1.0,
@@ -24,11 +25,8 @@ def _prz(low=118.0, high=122.0):
         price_high=high,
     )
     return PotentialReversalZone(
-        price_low=low,
-        price_high=high,
-        width=high - low,
-        component_price_low=low,
-        component_price_high=high,
+        pattern_id="test",
+        direction=direction,
         components=(component,),
     )
 
@@ -46,8 +44,8 @@ def test_bullish_reaction_hits_382_618_then_retests_prz() -> None:
         direction=PatternDirection.BULLISH,
         prz=_prz(),
     )
-    assert audit.target_382 == 150.56
-    assert audit.target_618 == 169.44
+    assert audit.target_382 == pytest.approx(150.56)
+    assert audit.target_618 == pytest.approx(169.44)
     assert audit.bars_to_382 == 2
     assert audit.bars_to_618 == 3
     assert audit.first_prz_exit_bar == 1
@@ -76,10 +74,10 @@ def test_bearish_reaction_targets_move_down_from_d_toward_a() -> None:
         frame,
         points=points,
         direction=PatternDirection.BEARISH,
-        prz=_prz(178.0, 182.0),
+        prz=_prz(178.0, 182.0, PatternDirection.BEARISH),
     )
-    assert audit.target_382 == 149.44
-    assert audit.target_618 == 130.56
+    assert audit.target_382 == pytest.approx(149.44)
+    assert audit.target_618 == pytest.approx(130.56)
     assert audit.bars_to_382 == 2
     assert audit.bars_to_618 == 3
     assert audit.type_ii_candidate is False
