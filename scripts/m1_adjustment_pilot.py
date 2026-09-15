@@ -9,6 +9,7 @@ from htcn.data.adjustment import AdjustmentFactorStore, apply_price_factors, der
 from htcn.data.catalog import DataCatalog
 from htcn.data.providers import AkShareProvider, BaoStockProvider
 from htcn.data.store import ParquetDailyStore
+from htcn.data.validation import normalize_daily
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -69,7 +70,7 @@ def main() -> int:
             )
             continue
 
-        adjusted = fetched.frame
+        adjusted = normalize_daily(fetched.frame)
         factors = derive_price_factors(raw, adjusted, mode="qfq", source=fetched.source)
         overlap_ratio = len(factors) / len(raw) if len(raw) else 0.0
         if overlap_ratio < 0.95:
@@ -84,9 +85,9 @@ def main() -> int:
             raw.loc[raw["trade_date"].isin(factors["trade_date"])],
             factors,
         )
-        expected = adjusted.copy()
-        expected["trade_date"] = pd.to_datetime(expected["trade_date"]).dt.normalize()
-        expected = expected[expected["trade_date"].isin(reconstructed["trade_date"])]
+        expected = adjusted.loc[
+            adjusted["trade_date"].isin(reconstructed["trade_date"])
+        ].copy()
         expected = expected.sort_values("trade_date").reset_index(drop=True)
         reconstructed = reconstructed.sort_values("trade_date").reset_index(drop=True)
 
