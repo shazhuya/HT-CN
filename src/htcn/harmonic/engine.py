@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from .abcd import ABCDMatch, scan_abcd_pivots
+from .abcd import ABCDFormingMatch, ABCDMatch, scan_abcd_pivots, scan_forming_abcd_pivots
 from .candidates import iter_completed_xabcd_windows, iter_forming_xabc_windows
 from .evaluator import PatternEvaluation
 from .models import HarmonicPoint, PatternDirection, PatternState, Pivot
@@ -43,6 +43,7 @@ class HarmonicScan:
     forming: tuple[FormingMatch, ...]
     pivots_by_scale: dict[int, tuple[Pivot, ...]]
     abcd_completed: tuple[ABCDMatch, ...] = ()
+    abcd_forming: tuple[ABCDFormingMatch, ...] = ()
 
 
 def _prz_width_ratio(prz: PotentialReversalZone, points: tuple[HarmonicPoint, ...]) -> float:
@@ -55,13 +56,7 @@ def _prz_width_ratio(prz: PotentialReversalZone, points: tuple[HarmonicPoint, ..
 
 
 def _completed_score(evaluation: PatternEvaluation, points: tuple[HarmonicPoint, ...]) -> float:
-    """Soft geometry quality, deliberately separate from pass/fail identity.
-
-    Preferred AB=CD variants are useful for ranking but the books often describe them as
-    minimum/common/preferred rather than an exact identity tolerance. Therefore a large
-    AB=CD deviation is capped as a quality penalty instead of zeroing a source-valid Crab,
-    Bat, etc. This score is never a probability or expected return.
-    """
+    """Soft geometry quality, deliberately separate from pass/fail identity."""
     check_error = sum(check.distance_to_canonical for check in evaluation.checks)
     raw_abcd_error = 0.0 if evaluation.abcd_distance == float("inf") else evaluation.abcd_distance
     abcd_error = min(raw_abcd_error, 0.20)
@@ -71,8 +66,6 @@ def _completed_score(evaluation: PatternEvaluation, points: tuple[HarmonicPoint,
 
 
 def _forming_score(projection: FormingPattern, points: tuple[HarmonicPoint, ...]) -> float:
-    # Forming patterns cannot be scored on D because D does not exist yet. Keep the
-    # score deliberately conservative and based only on B alignment + PRZ compactness.
     width_error = _prz_width_ratio(projection.prz, points)
     tolerance_penalty = 0.08 if projection.source_tolerance_used else 0.0
     penalty = tolerance_penalty + min(width_error, 0.8)
@@ -80,11 +73,6 @@ def _forming_score(projection: FormingPattern, points: tuple[HarmonicPoint, ...]
 
 
 def _dedupe_completed(items: list[CompletedMatch]) -> list[CompletedMatch]:
-    """Collapse the same semantic geometry rediscovered at multiple pivot scales.
-
-    Different pattern identities on the same node set are intentionally preserved so
-    genuine identity conflicts stay visible and auditable.
-    """
     out: list[CompletedMatch] = []
     seen: set[tuple[str, PatternDirection, tuple[int, ...]]] = set()
     for item in items:
@@ -162,20 +150,10 @@ def scan_pivots(
                 )
 
     completed.sort(
-        key=lambda item: (
-            -item.points[-1].index,
-            -item.geometry_score,
-            -item.scale,
-            item.pattern_id,
-        )
+        key=lambda item: (-item.points[-1].index, -item.geometry_score, -item.scale, item.pattern_id)
     )
     forming.sort(
-        key=lambda item: (
-            -item.points[-1].index,
-            -item.geometry_score,
-            -item.scale,
-            item.pattern_id,
-        )
+        key=lambda item: (-item.points[-1].index, -item.geometry_score, -item.scale, item.pattern_id)
     )
     completed = _dedupe_completed(completed)
     forming = _dedupe_forming(forming)
@@ -186,11 +164,17 @@ def scan_pivots(
         abcd_relative_tolerance=abcd_relative_tolerance,
         max_completed=max_completed,
     )
+    forming_abcd = scan_forming_abcd_pivots(
+        normalized,
+        c_relative_tolerance=abcd_relative_tolerance,
+        max_forming=max_forming,
+    )
     return HarmonicScan(
         completed=tuple(completed[:max_completed]),
         forming=tuple(forming[:max_forming]),
         pivots_by_scale=normalized,
         abcd_completed=standalone_abcd,
+        abcd_forming=forming_abcd,
     )
 
 
@@ -203,14 +187,15 @@ def scan_frame(
     max_completed: int = 40,
     max_forming: int = 40,
 ) -> HarmonicScan:
-    """Run the deterministic geometry pipeline on one OHLC history frame.
-
-    Input prices are expected to already be the desired continuous view (QFQ for HT-CN's
-    normal A-share harmonic workflow). This function never adjusts prices or injects A-share
-    market context into Carney geometry.
-    """
+    """Run the deterministic geometry pipeline on one OHLC history frame."""
     if frame.empty:
-        return HarmonicScan(completed=(), forming=(), pivots_by_scale={}, abcd_completed=())
+        return HarmonicScan(
+            completed=(),
+            forming=(),
+            pivots_by_scale={},
+            abcd_completed=(),
+            abcd_forming=(),
+        )
     pivots = detect_multi_scale_pivots(frame, scales=scales)
     return scan_pivots(
         pivots,
