@@ -6,29 +6,39 @@ The first true local-QFQ browser screenshot used `SSE.688256`, returned `420 / 4
 
 This screenshot is accepted as real-data evidence because it was generated through the live Playwright path without API fixture interception.
 
-## Findings
+## Findings and implemented corrections
 
 ### 1. Historical XABC windows were incorrectly kept as "forming"
 
 `iter_forming_xabc_windows` previously returned every historical 4-pivot slice. Once a later confirmed pivot exists, the older XABC is no longer the market frontier and must not remain a live forming candidate.
 
-Correction: forming semantics now use only the latest four confirmed pivots per scale. Historical XABC windows remain available through the generic historical window iterator for research/backtest work.
+Implemented: forming semantics now use only the latest four confirmed pivots per scale. Historical XABC windows remain available through the generic historical window iterator for research/backtest work.
 
 ### 2. Forming projection was checking B but not the already-known C retracement
 
 C exists before D projection. Therefore a source-invalid `C/AB` must reject the forming identity before any PRZ is shown. B-only filtering created too many visually plausible but Carney-invalid projections.
 
-Correction: forming projection now requires both source-backed `B/XA` and `C/AB` constraints before D/PRZ projection.
+The first SSE.688256 screenshot exposed this directly: the selected bearish Bat had C extending below A, making the visible C/AB retracement incompatible with the standard 0.382-0.886 C-point range even though B/XA could match a Bat family.
+
+Implemented: forming projection now requires both source-backed `B/XA` and `C/AB` constraints before D/PRZ projection, and C/AB is returned in the live audit payload.
 
 ### 3. Same-node identity conflicts created list noise
 
 Different identities can legitimately share the same XABC/XABCD nodes. They must remain auditable but should not look like independent opportunities.
 
-Correction: API still returns every identity; the UI defaults to the primary (best geometry) identity for each node set and exposes a toggle to reveal alternatives.
+Implemented: API still returns every identity; the UI defaults to the primary (best geometry) identity for each node set and exposes a toggle to reveal alternatives.
 
 ### 4. 420-bar overview made the active geometry too small to inspect
 
-Correction: the chart now defaults to a presentation-only focused viewport starting before X and continuing through the latest bar. The full research window remains the engine input and can be restored with the focus toggle.
+Implemented: the chart now defaults to a presentation-only focused viewport starting before X and continuing through the latest bar. The full research window remains the engine input and can be restored with the focus toggle.
+
+## Regression gates
+
+- forming node-set count must be <= the number of configured pivot scales;
+- every forming payload is marked `frontier=true`;
+- a source-invalid C retracement must not produce that XABCD family projection;
+- live browser acceptance still traverses local QFQ -> FastAPI -> Web without fixture interception;
+- deterministic fixture and live screenshot remain separate artifacts.
 
 ## Non-goals
 
@@ -36,9 +46,9 @@ These corrections do **not** loosen Carney identity rules and do not transform `
 
 ## Next calibration gate
 
-After deterministic CI passes, regenerate the live screenshot. Expected qualitative changes:
+Regenerate the live screenshot. Expected qualitative changes:
 
-- forming candidate count should fall sharply;
+- forming candidate count falls sharply from the previous 30;
 - each scale contributes at most one live XABC node set;
 - C/AB is visible in the forming audit;
 - same-node alternate identities are hidden by default but recoverable;
