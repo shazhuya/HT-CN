@@ -1,0 +1,82 @@
+from __future__ import annotations
+
+import time
+from dataclasses import dataclass
+from datetime import date
+from typing import Protocol
+
+import pandas as pd
+
+
+class AdjustedHistoryProvider(Protocol):
+    name: str
+
+    def get_daily_adjusted(
+        self,
+        instrument_id: str,
+        start: date,
+        end: date,
+        *,
+        mode: str = "qfq",
+    ) -> pd.DataFrame: ...
+
+
+@dataclass(slots=True)
+class AdjustedFetchResult:
+    frame: pd.DataFrame
+    source: str
+    attempts: int
+
+
+def fetch_adjusted_history(
+    *,
+    instrument_id: str,
+    start: date,
+    end: date,
+    providers: list[AdjustedHistoryProvider],
+    mode: str = "qfq",
+    retries_per_provider: int = 2,
+    base_delay: float = 0.75,
+) -> AdjustedFetchResult:
+    """Fetch adjusted daily history with retry + provider failover.
+
+    Live free endpoints occasionally close connections or throttle requests. Adjustment
+    factor generation must therefore treat network instability as an adapter problem, not
+    as a failure of the factor math itself.
+    """
+    if mode not in {"qfq", "hfq"}:
+        raise ValueError("mode must be 'qfq' or 'hfq'")
+    if not providers:
+        raise ValueError("at least one adjusted-history provider is required")
+
+    attempts = 0
+    errors: list[str] = []
+    tries = max(1, retries_per_provider + 1)
+
+    for provider in providers:
+        for retry in range(tries):
+            attempts += 1
+            try:
+                frame = provider.get_daily_adjusted(
+                    instrument_id,
+                    start,
+                    end,
+                    mode=mode,
+                )
+                if frame is not None and not frame.empty:
+                    return AdjustedFetchResult(
+                        frame=frame,
+                        source=f"{provider.name}_{mode}",
+                        attempts=attempts,
+                    )
+                errors.append(f"{provider.name}: empty response")
+            except Exception as exc:
+                errors.append(f"{provider.name}: {type(exc).__name__}: {exc}")
+
+            if retry < tries - 1 and base_delay > 0:
+                time.sleep(min(6.0, base_delay * (2**retry)))
+
+    tail = " | ".join(errors[-6:])
+    raise RuntimeError(
+        f"all adjusted-history providers failed for {instrument_id} {mode}; {tail}"
+    )
