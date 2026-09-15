@@ -9,7 +9,7 @@ if not exist ".venv\Scripts\python.exe" (
   exit /b 1
 )
 
-.venv\Scripts\python.exe scripts\m1_daily_update.py --limit 0 --sleep 0.15
+.venv\Scripts\python.exe scripts\m1_daily_update.py --limit 0 --sleep 0.05
 set EXITCODE=%ERRORLEVEL%
 
 echo.
