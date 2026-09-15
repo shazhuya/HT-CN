@@ -35,8 +35,8 @@ def project_forming_xabcd(
     if window.is_completed:
         raise ValueError("forming projection requires a 4-pivot XABC window")
     x, a, b, c = window.harmonic_points()
-    xa = leg_length(x, a)
-    b_xa = leg_length(a, b) / xa
+    xa = leg_length(x.price, a.price)
+    b_xa = leg_length(a.price, b.price) / xa
     direction = PatternDirection.BULLISH if a.price > x.price else PatternDirection.BEARISH
 
     # XABC must already alternate in the direction expected by a potential D reversal.
@@ -56,7 +56,7 @@ def project_forming_xabcd(
             prz = build_xabcd_prz(rule, (x, a, b, c))
         except ValueError:
             # A mathematically projected price can become non-positive for a pathological
-            # candidate.  That candidate is isolated here instead of crashing the scan.
+            # candidate. That candidate is isolated here instead of crashing the scan.
             continue
         projections.append(
             FormingPattern(
