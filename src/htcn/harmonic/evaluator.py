@@ -59,10 +59,10 @@ def measure_xabcd(
     if not (x.index < a.index < b.index < c.index < d.index):
         raise ValueError("X/A/B/C/D indices must be strictly increasing")
 
-    xa = leg_length(x, a)
-    ab = leg_length(a, b)
-    bc = leg_length(b, c)
-    cd = leg_length(c, d)
+    xa = leg_length(x.price, a.price)
+    ab = leg_length(a.price, b.price)
+    bc = leg_length(b.price, c.price)
+    cd = leg_length(c.price, d.price)
     ad = abs(d.price - a.price)
 
     return XABCDMetrics(
