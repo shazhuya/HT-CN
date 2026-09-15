@@ -30,6 +30,8 @@ export type Pattern = {
   scale: number
   geometry_score: number
   points: HarmonicPoint[]
+  identity_conflicts?: string[]
+  is_primary_identity?: boolean
   prz: {
     price_low: number
     price_high: number
@@ -42,6 +44,7 @@ export type Pattern = {
 type Props = {
   bars: Bar[]
   pattern: Pattern | null
+  focusPattern?: boolean
 }
 
 const WIDTH = 1100
@@ -55,28 +58,42 @@ function formatPrice(value: number) {
   return value >= 100 ? value.toFixed(2) : value.toFixed(3)
 }
 
-export default function HarmonicChart({ bars, pattern }: Props) {
+export default function HarmonicChart({ bars, pattern, focusPattern = true }: Props) {
   if (!bars.length) return <div className="chart-empty">暂无 K 线数据</div>
 
+  const fullFirstIndex = bars[0].index
+  const fullLastIndex = bars.at(-1)?.index ?? fullFirstIndex
+  const patternFirstIndex = pattern?.points[0]?.index ?? fullFirstIndex
+  // A 420/720-bar research window is useful for discovery, but plotting all of it can make a
+  // current XABC structure unreadably tiny. Focus starts before X while retaining recent price
+  // action through the latest bar. This changes presentation only, never engine input.
+  const focusPadding = Math.max(12, Math.min(40, Math.round((fullLastIndex - patternFirstIndex + 1) * 0.35)))
+  const viewportStart = focusPattern && pattern
+    ? Math.max(fullFirstIndex, patternFirstIndex - focusPadding)
+    : fullFirstIndex
+  const visibleBars = bars.filter((bar) => bar.index >= viewportStart)
+
   const extra = pattern ? [pattern.prz.price_low, pattern.prz.price_high] : []
-  const low = Math.min(...bars.map((bar) => bar.low), ...extra)
-  const high = Math.max(...bars.map((bar) => bar.high), ...extra)
+  const low = Math.min(...visibleBars.map((bar) => bar.low), ...extra)
+  const high = Math.max(...visibleBars.map((bar) => bar.high), ...extra)
   const span = Math.max(high - low, Math.abs(high) * 0.01, 0.01)
   const paddedLow = low - span * 0.04
   const paddedHigh = high + span * 0.04
   const priceSpan = paddedHigh - paddedLow
   const plotWidth = WIDTH - LEFT - RIGHT
   const plotHeight = HEIGHT - TOP - BOTTOM
-  const step = plotWidth / Math.max(bars.length - 1, 1)
+  const minIndex = visibleBars[0]?.index ?? fullFirstIndex
+  const maxIndex = visibleBars.at(-1)?.index ?? fullLastIndex
+  const indexSpan = Math.max(maxIndex - minIndex, 1)
+  const step = plotWidth / Math.max(visibleBars.length - 1, 1)
   const candleWidth = Math.max(1, Math.min(7, step * 0.64))
 
-  const x = (index: number) => LEFT + (index / Math.max(bars.length - 1, 1)) * plotWidth
+  const x = (index: number) => LEFT + ((index - minIndex) / indexSpan) * plotWidth
   const y = (price: number) => TOP + ((paddedHigh - price) / priceSpan) * plotHeight
 
   const grid = Array.from({ length: 6 }, (_, index) => paddedLow + (priceSpan * index) / 5)
   const patternPoints = pattern?.points.map((point) => `${x(point.index)},${y(point.price)}`).join(' ') ?? ''
-  const lastIndex = bars.length - 1
-  const przStart = pattern ? Math.min(pattern.points.at(-1)?.index ?? lastIndex, lastIndex) : lastIndex
+  const przStart = pattern ? Math.min(pattern.points.at(-1)?.index ?? maxIndex, maxIndex) : maxIndex
 
   return (
     <div className="chart-wrap" aria-label="harmonic-chart">
@@ -95,13 +112,13 @@ export default function HarmonicChart({ bars, pattern }: Props) {
           <rect
             x={x(przStart)}
             y={y(pattern.prz.price_high)}
-            width={Math.max(3, x(lastIndex) - x(przStart))}
+            width={Math.max(3, x(maxIndex) - x(przStart))}
             height={Math.max(2, y(pattern.prz.price_low) - y(pattern.prz.price_high))}
             className={`prz-zone ${pattern.direction}`}
           />
         )}
 
-        {bars.map((bar) => {
+        {visibleBars.map((bar) => {
           const rising = bar.close >= bar.open
           const top = y(Math.max(bar.open, bar.close))
           const bottom = y(Math.min(bar.open, bar.close))
@@ -133,10 +150,10 @@ export default function HarmonicChart({ bars, pattern }: Props) {
         )}
 
         <text x={LEFT} y={HEIGHT - 12} className="axis-label">
-          {bars[0]?.trade_date}
+          {visibleBars[0]?.trade_date}
         </text>
         <text x={WIDTH - RIGHT} y={HEIGHT - 12} textAnchor="end" className="axis-label">
-          {bars.at(-1)?.trade_date}
+          {visibleBars.at(-1)?.trade_date}
         </text>
       </svg>
     </div>
