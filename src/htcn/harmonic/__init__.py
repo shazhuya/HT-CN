@@ -29,7 +29,12 @@ from .models import (
     PivotKind,
     RatioMeasurement,
 )
-from .pivots import collapse_same_kind_pivots, detect_confirmed_pivots, detect_multi_scale_pivots
+from .pivots import (
+    build_pivot_consensus,
+    collapse_same_kind_pivots,
+    detect_confirmed_pivots,
+    detect_multi_scale_pivots,
+)
 from .prz import PRZComponent, PotentialReversalZone, build_xabcd_prz
 from .ratios import RECIPROCAL_ABCD, leg_length, ratio_of_legs, reciprocal_bc_targets
 from .rules import CARNEY_RULES, PatternRule, RatioConstraint
@@ -63,6 +68,7 @@ __all__ = [
     "SwingWindow",
     "XABCDMetrics",
     "audit_completed_reaction",
+    "build_pivot_consensus",
     "build_xabcd_prz",
     "classify_completed_xabcd",
     "collapse_same_kind_pivots",
