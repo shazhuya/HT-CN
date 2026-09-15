@@ -9,7 +9,8 @@ if not exist ".venv\Scripts\python.exe" (
   exit /b 1
 )
 
-echo [HT-CN M1 FULL] Starting 50-symbol resumable validation batch...
+echo [HT-CN M1 FULL] Starting 50-symbol resumable validation batch for SSE+SZSE...
+echo [HT-CN M1 FULL] BSE 920-code securities are temporarily deferred to the continuity adapter.
 .venv\Scripts\python.exe scripts\m1_full_market_init.py --limit 50 --max-attempts 5 --retries 2 --sleep 0.25
 set EXITCODE=%ERRORLEVEL%
 
