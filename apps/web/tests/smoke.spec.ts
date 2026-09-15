@@ -50,7 +50,7 @@ const analysis = {
   engine_note: 'geometry_score 仅衡量几何贴合度，不代表胜率、预期收益或交易建议。',
 }
 
-test('HT-CN M2 harmonic workbench renders analysis and chart', async ({ page }) => {
+test('HT-CN M2 fixture workbench renders deterministic analysis and chart', async ({ page }) => {
   await page.route('**/api/health', async (route) => {
     await route.fulfill({ json: { status: 'ok', service: 'ht-cn-api', version: '0.2.0' } })
   })
@@ -74,5 +74,5 @@ test('HT-CN M2 harmonic workbench renders analysis and chart', async ({ page }) 
 
   const outDir = '../../artifacts/screenshots'
   fs.mkdirSync(outDir, { recursive: true })
-  await page.screenshot({ path: `${outDir}/m2-harmonic-workbench.png`, fullPage: true })
+  await page.screenshot({ path: `${outDir}/m2-harmonic-workbench-fixture.png`, fullPage: true })
 })
