@@ -15,6 +15,15 @@ export type HarmonicPoint = {
   trade_date?: string
 }
 
+export type PivotSupport = {
+  label: string
+  index: number
+  kind: 'high' | 'low' | null
+  scales: number[]
+  support_count: number
+  max_scale: number
+}
+
 export type PrzComponent = {
   name: string
   price_low: number
@@ -53,11 +62,13 @@ export type ReactionAudit = {
 
 export type Pattern = {
   pattern_id: string
+  schema?: 'XABCD' | 'ABCD'
   direction: 'bullish' | 'bearish'
   state: 'forming' | 'completed'
   scale: number
   geometry_score: number
   points: HarmonicPoint[]
+  pivot_support?: PivotSupport[]
   identity_conflicts?: string[]
   is_primary_identity?: boolean
   reaction_audit?: ReactionAudit
