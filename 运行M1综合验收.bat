@@ -9,8 +9,8 @@ if not exist ".venv\Scripts\python.exe" (
   exit /b 1
 )
 
-echo [HT-CN M1 ACCEPT] 1/5 Full deterministic test suite...
-.venv\Scripts\python.exe -m pytest
+echo [HT-CN M1 ACCEPT] 1/5 Full QA: Python + Web build + API + Playwright...
+.venv\Scripts\python.exe scripts\qa_local.py
 if errorlevel 1 goto :fail
 
 echo.
@@ -19,12 +19,12 @@ echo [HT-CN M1 ACCEPT] 2/5 Local database health...
 if errorlevel 1 goto :fail
 
 echo.
-echo [HT-CN M1 ACCEPT] 3/5 Smart incremental update...
+echo [HT-CN M1 ACCEPT] 3/5 Smart incremental update / market delta...
 .venv\Scripts\python.exe scripts\m1_daily_update.py --limit 0 --sleep 0.02
 if errorlevel 1 goto :fail
 
 echo.
-echo [HT-CN M1 ACCEPT] 4/5 QFQ live pilot with provider failover...
+echo [HT-CN M1 ACCEPT] 4/5 QFQ live pilot with retry + provider failover...
 .venv\Scripts\python.exe scripts\m1_adjustment_pilot.py
 if errorlevel 1 goto :fail
 
@@ -44,6 +44,6 @@ exit /b 0
 
 :fail
 echo.
-echo [HT-CN M1 ACCEPT] FAILED. Send the last error block to ChatGPT.
+echo [HT-CN M1 ACCEPT] FAILED. Send only the final error block to ChatGPT.
 pause
 exit /b 1
