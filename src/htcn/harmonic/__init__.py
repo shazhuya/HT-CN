@@ -10,6 +10,7 @@ from .candidates import (
     iter_forming_xabc_windows,
     iter_swing_windows,
 )
+from .engine import CompletedMatch, FormingMatch, HarmonicScan, scan_frame, scan_pivots
 from .evaluator import (
     ConstraintCheck,
     PatternEvaluation,
@@ -39,9 +40,12 @@ from .scanner import (
 __all__ = [
     "CARNEY_RULES",
     "RECIPROCAL_ABCD",
+    "CompletedMatch",
     "ConstraintCheck",
+    "FormingMatch",
     "FormingPattern",
     "HarmonicPoint",
+    "HarmonicScan",
     "PRZComponent",
     "PatternDirection",
     "PatternEvaluation",
@@ -69,4 +73,6 @@ __all__ = [
     "project_forming_xabcd",
     "ratio_of_legs",
     "reciprocal_bc_targets",
+    "scan_frame",
+    "scan_pivots",
 ]
