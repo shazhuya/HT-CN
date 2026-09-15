@@ -169,6 +169,15 @@ class BaoStockProvider:
             "turnover",
         ]
         out = out[keep].copy()
+
+        # BaoStock returns its tabular payload as strings. Convert at the adapter
+        # boundary so every HT-CN provider exposes arithmetic-safe market data.
+        out["trade_date"] = pd.to_datetime(out["trade_date"], errors="raise").dt.normalize()
+        for column in ("open", "high", "low", "close", "volume"):
+            out[column] = pd.to_numeric(out[column], errors="raise")
+        for column in ("amount", "pre_close", "pct_change", "turnover"):
+            out[column] = pd.to_numeric(out[column], errors="coerce")
+
         out.insert(0, "instrument_id", instrument_id)
         out["source"] = source
         return out
