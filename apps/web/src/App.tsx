@@ -46,6 +46,10 @@ function fmt(value: number | undefined) {
   return value == null ? '—' : value.toFixed(3)
 }
 
+function primaryCount(patterns: Pattern[]) {
+  return patterns.filter((pattern) => pattern.is_primary_identity !== false).length
+}
+
 export default function App() {
   const [health, setHealth] = useState<Health | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -80,7 +84,6 @@ export default function App() {
 
   const allPatterns = useMemo(() => {
     if (showAllIdentities) return rawPatterns
-    // Backward-compatible with deterministic browser fixtures that predate the field.
     return rawPatterns.filter((pattern) => pattern.is_primary_identity !== false)
   }, [rawPatterns, showAllIdentities])
 
@@ -172,8 +175,8 @@ export default function App() {
             <div><span>价格视图</span><strong>{analysis.price_mode.toUpperCase()}</strong></div>
             <div><span>区间</span><strong>{analysis.first_trade_date} → {analysis.last_trade_date}</strong></div>
             <div><span>实际K线</span><strong>{analysis.bars_returned} / {analysis.bars_requested}</strong></div>
-            <div><span>完成形态</span><strong>{analysis.completed.length}</strong></div>
-            <div><span>形成中</span><strong>{analysis.forming.length}</strong></div>
+            <div><span>完成结构</span><strong>{primaryCount(analysis.completed)}</strong></div>
+            <div><span>形成中结构</span><strong>{primaryCount(analysis.forming)}</strong></div>
           </section>
 
           {analysis.warning && <div className="warning-card">{analysis.warning}</div>}
