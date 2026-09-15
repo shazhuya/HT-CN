@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 
-from .models import HarmonicPoint, Pivot, PivotKind
+from .models import HarmonicPoint, Pivot
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +49,11 @@ def _validate_sequence(pivots: Sequence[Pivot]) -> None:
 
 
 def iter_swing_windows(pivots: Sequence[Pivot], *, size: int) -> Iterator[SwingWindow]:
+    """Iterate every historical semantic window of the requested size.
+
+    This is intentionally the historical primitive. Completed XABCD recognition uses
+    all 5-pivot windows so past completed structures remain auditable.
+    """
     if size not in (4, 5):
         raise ValueError("size must be 4 or 5")
     _validate_sequence(pivots)
@@ -63,7 +68,22 @@ def iter_swing_windows(pivots: Sequence[Pivot], *, size: int) -> Iterator[SwingW
 
 
 def iter_forming_xabc_windows(pivots: Sequence[Pivot]) -> Iterable[SwingWindow]:
-    return iter_swing_windows(pivots, size=4)
+    """Return only the current frontier XABC window for one scale.
+
+    A historical four-pivot window stops being *forming* once a later confirmed pivot
+    exists. The previous implementation returned every historical XABC slice, which made
+    old projections survive forever and flooded a live chart with stale "forming" items.
+
+    Historical XABC research is still available through ``iter_swing_windows(..., size=4)``;
+    this function is deliberately live/frontier semantics only.
+    """
+    _validate_sequence(pivots)
+    if len(pivots) < 4:
+        return ()
+    chunk = tuple(pivots[-4:])
+    if any(left.kind == right.kind for left, right in zip(chunk, chunk[1:])):
+        return ()
+    return (SwingWindow(scale=chunk[0].scale, pivots=chunk),)
 
 
 def iter_completed_xabcd_windows(pivots: Sequence[Pivot]) -> Iterable[SwingWindow]:
