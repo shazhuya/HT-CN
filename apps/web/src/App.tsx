@@ -36,6 +36,7 @@ const PATTERN_NAMES: Record<string, string> = {
   butterfly: 'Butterfly',
   crab: 'Crab',
   deep_crab: 'Deep Crab',
+  abcd: 'AB=CD',
 }
 
 function patternName(id: string) {
@@ -59,6 +60,10 @@ function evidenceLabel(state: string) {
   if (state === 'price_confirmed_no_rsi') return '仅价格证据'
   if (state === 'retest_only') return '仅二次回测'
   return '非 Type-II 候选'
+}
+
+function isStandaloneAbcd(pattern: Pattern) {
+  return pattern.schema === 'ABCD' || (pattern.points.length === 4 && pattern.points[0]?.label === 'A')
 }
 
 export default function App() {
@@ -231,7 +236,7 @@ export default function App() {
                 当前显示 {allPatterns.length} / {rawPatterns.length} 个身份；默认只显示每组节点的主身份。
               </p>
               <div className="pattern-list">
-                {allPatterns.length === 0 && <p className="muted">当前窗口没有通过规则的 XABCD 候选。</p>}
+                {allPatterns.length === 0 && <p className="muted">当前窗口没有通过规则的谐波候选。</p>}
                 {allPatterns.map((pattern) => {
                   const key = patternKey(pattern)
                   return (
@@ -254,7 +259,7 @@ export default function App() {
                 <div className="audit-card">
                   <h3>节点区间</h3>
                   <p className="node-range">
-                    {selectedPattern.points[0]?.trade_date ?? '—'} → {selectedPattern.points.at(-1)?.trade_date ?? '—'} · S{selectedPattern.scale}
+                    {selectedPattern.points[0]?.trade_date ?? '—'} → {selectedPattern.points.at(-1)?.trade_date ?? '—'} · S{selectedPattern.scale} · {selectedPattern.schema ?? 'XABCD'}
                   </p>
                   {(selectedPattern.identity_conflicts?.length ?? 0) > 1 && (
                     <>
@@ -264,14 +269,40 @@ export default function App() {
                       </p>
                     </>
                   )}
+
+                  {selectedPattern.pivot_support && selectedPattern.pivot_support.length > 0 && (
+                    <>
+                      <h3>Pivot 跨尺度支持</h3>
+                      <ul>
+                        {selectedPattern.pivot_support.map((support) => (
+                          <li key={`${support.label}-${support.index}`}>
+                            <span>{support.label} · {support.kind ?? 'pivot'}</span>
+                            <b>{support.support_count}尺度 · S{support.scales.join('/')}</b>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="identity-note">跨尺度支持只表示同一极值被多个独立 Pivot 尺度重复识别，用于选点稳健性审计，不参与 Carney 身份判定。</p>
+                    </>
+                  )}
+
                   <h3>比例审计</h3>
-                  <dl>
-                    <div><dt>B/XA</dt><dd>{fmt(selectedPattern.metrics.b_xa)}</dd></div>
-                    <div><dt>C/AB</dt><dd>{fmt(selectedPattern.metrics.c_ab)}</dd></div>
-                    <div><dt>BC投影</dt><dd>{fmt(selectedPattern.metrics.bc_projection)}</dd></div>
-                    <div><dt>D/XA</dt><dd>{fmt(selectedPattern.metrics.d_xa)}</dd></div>
-                    <div><dt>CD/AB</dt><dd>{fmt(selectedPattern.metrics.cd_ab)}</dd></div>
-                  </dl>
+                  {isStandaloneAbcd(selectedPattern) ? (
+                    <dl>
+                      <div><dt>C/AB</dt><dd>{fmt(selectedPattern.metrics.c_ab)}</dd></div>
+                      <div><dt>CD/BC</dt><dd>{fmt(selectedPattern.metrics.bc_projection)}</dd></div>
+                      <div><dt>CD/AB</dt><dd>{fmt(selectedPattern.metrics.cd_ab)}</dd></div>
+                      <div><dt>目标C比率</dt><dd>{fmt(selectedPattern.metrics.reciprocal_c_target)}</dd></div>
+                      <div><dt>目标BC投影</dt><dd>{fmt(selectedPattern.metrics.reciprocal_bc_target)}</dd></div>
+                    </dl>
+                  ) : (
+                    <dl>
+                      <div><dt>B/XA</dt><dd>{fmt(selectedPattern.metrics.b_xa)}</dd></div>
+                      <div><dt>C/AB</dt><dd>{fmt(selectedPattern.metrics.c_ab)}</dd></div>
+                      <div><dt>BC投影</dt><dd>{fmt(selectedPattern.metrics.bc_projection)}</dd></div>
+                      <div><dt>D/XA</dt><dd>{fmt(selectedPattern.metrics.d_xa)}</dd></div>
+                      <div><dt>CD/AB</dt><dd>{fmt(selectedPattern.metrics.cd_ab)}</dd></div>
+                    </dl>
+                  )}
                   <h3>PRZ</h3>
                   <p className="prz-price">{selectedPattern.prz.price_low.toFixed(2)} – {selectedPattern.prz.price_high.toFixed(2)}</p>
                   <ul>
