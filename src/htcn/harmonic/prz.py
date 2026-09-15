@@ -6,6 +6,9 @@ from .models import HarmonicPoint, PatternDirection
 from .rules import PatternRule, RatioConstraint
 
 
+_PRICE_FLOOR = 1e-9
+
+
 @dataclass(frozen=True, slots=True)
 class PRZComponent:
     """One auditable price component that contributes to a PRZ.
@@ -47,12 +50,12 @@ class PotentialReversalZone:
 
     @property
     def component_price_low(self) -> float:
-        """Outer audit envelope across every permitted component/variant."""
+        """Outer audit envelope across every physically reachable component/variant."""
         return min(component.price_low for component in self.components)
 
     @property
     def component_price_high(self) -> float:
-        """Outer audit envelope across every permitted component/variant."""
+        """Outer audit envelope across every physically reachable component/variant."""
         return max(component.price_high for component in self.components)
 
     @property
@@ -63,8 +66,9 @@ class PotentialReversalZone:
         projection. That rendered a misleadingly huge rectangle. Carney PRZ logic is about
         convergence. We therefore anchor on the defining XA completion, take the point in
         each bounded complementary range nearest that anchor, and choose the single AB=CD
-        variant that converges most closely. Every alternative remains in ``components`` for
-        audit and later research; it simply does not inflate the displayed zone.
+        variant that converges most closely. Every reachable alternative remains in
+        ``components`` for audit and later research; it simply does not inflate the displayed
+        zone.
         """
         xa = [component for component in self.components if component.name == "XA completion"]
         anchor = xa[0].midpoint if xa else self.components[0].midpoint
@@ -148,10 +152,17 @@ def _component_from_constraint(
 ) -> PRZComponent:
     p1 = float(projector(constraint.minimum))
     p2 = float(projector(constraint.maximum))
+    raw_low = min(p1, p2)
+    raw_high = max(p1, p2)
+    if raw_high <= 0:
+        raise ValueError(f"{name} projects entirely outside the positive-price domain")
+    # A bounded ratio family may mathematically extend below zero for an extreme low-priced
+    # instrument even when the actual completion is valid. Intersect that range with the
+    # physically reachable positive-price domain instead of rejecting the whole candidate.
     return PRZComponent(
         name=name,
-        price_low=min(p1, p2),
-        price_high=max(p1, p2),
+        price_low=max(raw_low, _PRICE_FLOOR),
+        price_high=raw_high,
         ratio_low=constraint.minimum,
         ratio_high=constraint.maximum,
     )
@@ -204,6 +215,11 @@ def build_xabcd_prz(
 
     for ratio in rule.abcd_types:
         price = _project_abcd_completion(a, b, c, ratio, direction)
+        # This preferred alternate cannot be reached by a positive-priced instrument for
+        # the current geometry. Keep the source ratio in the rule registry but omit the
+        # physically impossible price component from this candidate's PRZ audit.
+        if price <= 0:
+            continue
         components.append(
             PRZComponent(
                 name=f"AB=CD x{ratio:g}",
@@ -215,9 +231,7 @@ def build_xabcd_prz(
         )
 
     if not components:
-        raise ValueError(f"rule {rule.pattern_id!r} has no XABCD PRZ components")
-    if any(component.price_low <= 0 for component in components):
-        raise ValueError("projected PRZ contains non-positive price; candidate geometry is invalid")
+        raise ValueError(f"rule {rule.pattern_id!r} has no reachable XABCD PRZ components")
 
     return PotentialReversalZone(
         pattern_id=rule.pattern_id,
