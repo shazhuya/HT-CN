@@ -6,6 +6,8 @@ import time
 from datetime import date
 from pathlib import Path
 
+import pandas as pd
+
 from htcn.data.catalog import DataCatalog
 from htcn.data.providers import AkShareProvider, AkShareSinaProvider, BaoStockProvider, FailoverProvider
 from htcn.data.store import ParquetDailyStore
@@ -34,29 +36,45 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _result_source(result: pd.DataFrame, provider: FailoverProvider) -> str:
+    if not result.empty and "source" in result.columns:
+        values = result["source"].dropna()
+        if not values.empty:
+            return str(values.iloc[-1])
+    return str(provider.last_provider or "unknown")
+
+
 def main() -> int:
     args = parse_args()
+    print("[HT-CN M1 DAILY] Starting incremental update...", flush=True)
     if not CATALOG_PATH.exists():
-        print("[HT-CN M1 DAILY] Database not found. Run initializer first.")
+        print("[HT-CN M1 DAILY] Database not found. Run initializer first.", flush=True)
         return 1
 
     catalog = DataCatalog(CATALOG_PATH)
     store = ParquetDailyStore(DAILY_ROOT)
     provider = build_provider()
 
-    candidates: list[str] = []
-    for instrument_id in catalog.list_security_ids(listed_only=True):
-        if not instrument_id.startswith(SUPPORTED_INITIAL_DAILY_PREFIXES):
-            continue
-        if catalog.get_daily(instrument_id) is not None:
-            candidates.append(instrument_id)
+    # Bulk-load metadata once. The old implementation opened DuckDB once per market
+    # security just to discover initialized datasets; at full-market scale that can look
+    # like a hang before the first progress line appears.
+    dataset_rows = catalog.list_daily_datasets()
+    metadata_by_id = {
+        str(row["instrument_id"]): row
+        for row in dataset_rows
+        if str(row["instrument_id"]).startswith(SUPPORTED_INITIAL_DAILY_PREFIXES)
+    }
+    candidates = sorted(metadata_by_id)
 
     if args.limit > 0:
         candidates = candidates[: args.limit]
 
-    print(f"[HT-CN M1 DAILY] Initialized SSE/SZSE datasets to update: {len(candidates)}")
+    print(
+        f"[HT-CN M1 DAILY] Initialized SSE/SZSE datasets to update: {len(candidates)}",
+        flush=True,
+    )
     if not candidates:
-        print("[HT-CN M1 DAILY] Nothing to update. PASS")
+        print("[HT-CN M1 DAILY] Nothing to update. PASS", flush=True)
         return 0
 
     end = date.today()
@@ -65,8 +83,7 @@ def main() -> int:
     failed = 0
 
     for index, instrument_id in enumerate(candidates, start=1):
-        before = catalog.get_daily(instrument_id) or {}
-        before_last = before.get("last_trade_date")
+        before_last = metadata_by_id[instrument_id].get("last_trade_date")
         try:
             result = sync_daily(
                 provider=provider,
@@ -76,8 +93,9 @@ def main() -> int:
                 start=START_DATE,
                 end=end,
             )
-            after = catalog.get_daily(instrument_id) or {}
-            after_last = after.get("last_trade_date")
+            after_last = None
+            if not result.empty:
+                after_last = pd.Timestamp(result["trade_date"].max()).date()
             if after_last != before_last:
                 updated += 1
                 state = "UPDATED"
@@ -86,7 +104,7 @@ def main() -> int:
                 state = "CURRENT"
             print(
                 f"[HT-CN M1 DAILY] [{index}/{len(candidates)}] {state} {instrument_id}: "
-                f"rows={len(result)}, last={after_last}, source={after.get('source')}",
+                f"rows={len(result)}, last={after_last}, source={_result_source(result, provider)}",
                 flush=True,
             )
         except KeyboardInterrupt:
