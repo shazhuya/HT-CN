@@ -9,6 +9,7 @@ import pandas as pd
 from htcn.data.adjustment import AdjustmentFactorStore, apply_price_factors
 from htcn.data.delta import DailyHistoryView, MarketDailyDeltaStore
 from htcn.data.store import ParquetDailyStore
+from htcn.harmonic.abcd import ABCDMatch
 from htcn.harmonic.engine import CompletedMatch, FormingMatch, HarmonicScan, scan_frame
 from htcn.harmonic.lifecycle import audit_completed_reaction
 from htcn.harmonic.models import HarmonicPoint, Pivot
@@ -159,6 +160,7 @@ class LocalHarmonicService:
         )
         return {
             "pattern_id": item.pattern_id,
+            "schema": "XABCD",
             "direction": item.direction.value,
             "state": item.state.value,
             "scale": item.scale,
@@ -186,6 +188,51 @@ class LocalHarmonicService:
             "reaction_audit": reaction.as_payload(),
         }
 
+    def _abcd_payload(
+        self,
+        item: ABCDMatch,
+        frame: pd.DataFrame,
+        dates: pd.Series,
+        pivots_by_scale: dict[int, tuple[Pivot, ...]],
+        pivot_consensus: dict,
+    ) -> dict[str, Any]:
+        evaluation = item.evaluation
+        metrics = evaluation.metrics
+        reaction = audit_completed_reaction(
+            frame,
+            points=item.points,
+            direction=item.direction,
+            prz=evaluation.prz,
+        )
+        return {
+            "pattern_id": "abcd",
+            "schema": "ABCD",
+            "direction": item.direction.value,
+            "state": item.state.value,
+            "scale": item.scale,
+            "geometry_score": item.geometry_score,
+            "conflict_key": list(item.conflict_key),
+            "identity_conflicts": [f"abcd@S{item.scale}"],
+            "is_primary_identity": True,
+            "points": [self._point_payload(point, dates) for point in item.points],
+            "pivot_support": self._pivot_support_payload(
+                item.points,
+                source_scale=item.scale,
+                pivots_by_scale=pivots_by_scale,
+                consensus=pivot_consensus,
+            ),
+            "prz": self._prz_payload(evaluation.prz),
+            "metrics": {
+                "c_ab": metrics.c_ab.value,
+                "bc_projection": metrics.bc_projection.value,
+                "cd_ab": metrics.cd_ab.value,
+                "reciprocal_c_target": evaluation.reciprocal_c_target,
+                "reciprocal_bc_target": evaluation.reciprocal_bc_target,
+            },
+            "checks": [asdict(check) for check in evaluation.checks],
+            "reaction_audit": reaction.as_payload(),
+        }
+
     def _forming_payload(
         self,
         item: FormingMatch,
@@ -199,6 +246,7 @@ class LocalHarmonicService:
         latest_index = max(len(dates) - 1, 0)
         return {
             "pattern_id": item.pattern_id,
+            "schema": "XABCD",
             "direction": item.direction.value,
             "state": item.state.value,
             "scale": item.scale,
@@ -270,7 +318,7 @@ class LocalHarmonicService:
         dates = selected["trade_date"]
         completed_conflicts = self._identity_conflicts(scan.completed)
         forming_conflicts = self._identity_conflicts(scan.forming)
-        completed = [
+        xabcd_completed = [
             self._completed_payload(
                 item,
                 selected,
@@ -281,6 +329,25 @@ class LocalHarmonicService:
             )
             for item in scan.completed
         ]
+        abcd_completed = [
+            self._abcd_payload(
+                item,
+                selected,
+                dates,
+                pivots_by_scale,
+                pivot_consensus,
+            )
+            for item in scan.abcd_completed
+        ]
+        completed = sorted(
+            [*xabcd_completed, *abcd_completed],
+            key=lambda pattern: (
+                -int(pattern["points"][-1]["index"]),
+                -float(pattern["geometry_score"]),
+                -int(pattern["scale"]),
+                str(pattern["pattern_id"]),
+            ),
+        )[:max_completed]
         forming = [
             self._forming_payload(
                 item,
@@ -305,5 +372,5 @@ class LocalHarmonicService:
             "completed": completed,
             "forming": forming,
             "pivot_counts": {str(scale): len(pivots) for scale, pivots in scan.pivots_by_scale.items()},
-            "engine_note": "geometry_score 仅衡量 Carney 几何贴合度；pivot_support 仅表示同一极值被多少独立尺度重复识别；两者都不是胜率。已完成形态附带 Type-I 目标、PRZ 回测及 Wilder RSI 确认证据，但不会自动转化为交易建议。",
+            "engine_note": "Carney 几何身份与后续证据严格分层：XABCD 与独立 AB=CD 使用各自 schema；geometry_score 与 pivot_support 都不是胜率。完成结构附带 Type-I 目标、PRZ 回测及 Wilder RSI 确认证据，但不会自动转化为交易建议。",
         }
