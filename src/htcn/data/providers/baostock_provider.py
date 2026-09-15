@@ -103,7 +103,15 @@ class BaoStockProvider:
         frame = frame[frame["is_trading_day"].astype(str) == "1"]
         return pd.to_datetime(frame["calendar_date"], errors="raise").dt.date.tolist()
 
-    def get_daily(self, instrument_id: str, start: date, end: date) -> pd.DataFrame:
+    def _get_daily_with_adjustflag(
+        self,
+        instrument_id: str,
+        start: date,
+        end: date,
+        *,
+        adjustflag: str,
+        source: str,
+    ) -> pd.DataFrame:
         fields = (
             "date,code,open,high,low,close,preclose,volume,amount,turn,"
             "tradestatus,pctChg,isST"
@@ -116,7 +124,7 @@ class BaoStockProvider:
                     start_date=start.isoformat(),
                     end_date=end.isoformat(),
                     frequency="d",
-                    adjustflag="3",
+                    adjustflag=adjustflag,
                 )
             )
 
@@ -162,5 +170,34 @@ class BaoStockProvider:
         ]
         out = out[keep].copy()
         out.insert(0, "instrument_id", instrument_id)
-        out["source"] = self.name
+        out["source"] = source
         return out
+
+    def get_daily(self, instrument_id: str, start: date, end: date) -> pd.DataFrame:
+        # BaoStock: 3=unadjusted, 2=QFQ, 1=HFQ.
+        return self._get_daily_with_adjustflag(
+            instrument_id,
+            start,
+            end,
+            adjustflag="3",
+            source=self.name,
+        )
+
+    def get_daily_adjusted(
+        self,
+        instrument_id: str,
+        start: date,
+        end: date,
+        *,
+        mode: str = "qfq",
+    ) -> pd.DataFrame:
+        if mode not in {"qfq", "hfq"}:
+            raise ValueError("mode must be 'qfq' or 'hfq'")
+        adjustflag = "2" if mode == "qfq" else "1"
+        return self._get_daily_with_adjustflag(
+            instrument_id,
+            start,
+            end,
+            adjustflag=adjustflag,
+            source=f"{self.name}_{mode}",
+        )
