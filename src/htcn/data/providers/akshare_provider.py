@@ -14,9 +14,9 @@ class AkShareProvider:
     The adapter translates provider-specific columns into HT-CN's stable schema.
     Core code must never depend on AKShare column names directly.
 
-    HT-CN canonical volume unit is shares. AKShare stock_zh_a_hist documents
-    its historical daily volume in hands (1 hand = 100 shares), so this adapter
-    converts volume to shares before returning data.
+    HT-CN canonical volume unit is shares. AKShare stock_zh_a_hist and the
+    Eastmoney all-market snapshot expose volume in hands (1 hand = 100 shares),
+    so this adapter converts volume to shares before returning data.
     """
 
     name = "akshare"
@@ -63,6 +63,92 @@ class AkShareProvider:
         column = self._column(frame, "trade_date", "日期")
         values = pd.to_datetime(frame[column], errors="raise").dt.date
         return [value for value in values if start <= value <= end]
+
+    def get_market_daily_snapshot(self, trade_date: date) -> pd.DataFrame:
+        """Fetch one all-market SSE/SZSE daily snapshot in a single HTTP request.
+
+        This is the fast path for post-close daily updates. It replaces thousands of
+        per-symbol history requests with one Eastmoney market snapshot. Missing/invalid
+        symbols are intentionally left out so callers can repair only those symbols via
+        the normal historical-provider chain.
+        """
+        frame = self._ak.stock_zh_a_spot_em()
+        columns = [
+            "instrument_id",
+            "trade_date",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+            "amount",
+            "pre_close",
+            "pct_change",
+            "turnover",
+            "source",
+        ]
+        if frame is None or frame.empty:
+            return pd.DataFrame(columns=columns)
+
+        code_col = self._column(frame, "代码", "code", "证券代码")
+        mapping = {
+            self._column(frame, "今开", "开盘", "open"): "open",
+            self._column(frame, "最高", "high"): "high",
+            self._column(frame, "最低", "low"): "low",
+            self._column(frame, "最新价", "收盘", "close"): "close",
+            self._column(frame, "成交量", "volume"): "volume",
+        }
+        optional = {
+            "成交额": "amount",
+            "昨收": "pre_close",
+            "涨跌幅": "pct_change",
+            "换手率": "turnover",
+            "amount": "amount",
+            "pre_close": "pre_close",
+            "pct_change": "pct_change",
+            "turnover": "turnover",
+        }
+        for provider_name, stable_name in optional.items():
+            if provider_name in frame.columns:
+                mapping[provider_name] = stable_name
+
+        records: list[dict[str, object]] = []
+        for raw in frame.to_dict("records"):
+            symbol = str(raw.get(code_col, "")).zfill(6)
+            try:
+                instrument_id = instrument_id_from_symbol(symbol)
+            except ValueError:
+                continue
+            if not instrument_id.startswith(("SSE.", "SZSE.")):
+                continue
+
+            record: dict[str, object] = {
+                "instrument_id": instrument_id,
+                "trade_date": trade_date,
+                "source": "akshare_spot",
+            }
+            valid = True
+            for provider_name, stable_name in mapping.items():
+                value = raw.get(provider_name)
+                numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
+                if pd.isna(numeric):
+                    if stable_name in {"open", "high", "low", "close", "volume"}:
+                        valid = False
+                        break
+                    continue
+                record[stable_name] = float(numeric)
+            if not valid:
+                continue
+            if any(float(record[name]) <= 0 for name in ("open", "high", "low", "close")):
+                continue
+            record["volume"] = float(record["volume"]) * 100.0
+            records.append(record)
+
+        if not records:
+            return pd.DataFrame(columns=columns)
+        out = pd.DataFrame.from_records(records)
+        ordered = [column for column in columns if column in out.columns]
+        return out[ordered].copy()
 
     def get_daily(self, instrument_id: str, start: date, end: date) -> pd.DataFrame:
         symbol = symbol_from_instrument_id(instrument_id)
