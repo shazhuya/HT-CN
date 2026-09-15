@@ -15,6 +15,7 @@ class FormingPattern:
     pattern_id: str
     direction: PatternDirection
     b_xa: float
+    c_ab: float
     prz: PotentialReversalZone
     source_tolerance_used: bool
 
@@ -32,11 +33,23 @@ def project_forming_xabcd(
     *,
     include_source_tolerance: bool = True,
 ) -> tuple[FormingPattern, ...]:
+    """Project D/PRZ only after XABC already satisfies source-backed B and C geometry.
+
+    A forming pattern is not merely "B looks like a Bat/Gartley". C already exists and its
+    AB retracement is therefore known. Letting an invalid C through creates large numbers of
+    visually plausible but source-invalid projected PRZs, exactly the kind of candidate noise
+    that a live A-share chart must avoid.
+    """
     if window.is_completed:
         raise ValueError("forming projection requires a 4-pivot XABC window")
     x, a, b, c = window.harmonic_points()
     xa = leg_length(x.price, a.price)
-    b_xa = leg_length(a.price, b.price) / xa
+    ab = leg_length(a.price, b.price)
+    bc = leg_length(b.price, c.price)
+    if xa <= 0 or ab <= 0:
+        return ()
+    b_xa = ab / xa
+    c_ab = bc / ab
     direction = PatternDirection.BULLISH if a.price > x.price else PatternDirection.BEARISH
 
     # XABC must already alternate in the direction expected by a potential D reversal.
@@ -48,9 +61,12 @@ def project_forming_xabcd(
     projections: list[FormingPattern] = []
     for rule in executable_xabcd_rules():
         b_constraint = rule.constraints.get("b_xa")
-        if b_constraint is None:
+        c_constraint = rule.constraints.get("c_ab")
+        if b_constraint is None or c_constraint is None:
             continue
         if not b_constraint.contains(b_xa, include_tolerance=include_source_tolerance):
+            continue
+        if not c_constraint.contains(c_ab, include_tolerance=include_source_tolerance):
             continue
         try:
             prz = build_xabcd_prz(rule, (x, a, b, c))
@@ -58,16 +74,18 @@ def project_forming_xabcd(
             # A mathematically projected price can become non-positive for a pathological
             # candidate. That candidate is isolated here instead of crashing the scan.
             continue
+        tolerance_used = include_source_tolerance and (
+            not b_constraint.contains(b_xa, include_tolerance=False)
+            or not c_constraint.contains(c_ab, include_tolerance=False)
+        )
         projections.append(
             FormingPattern(
                 pattern_id=rule.pattern_id,
                 direction=direction,
                 b_xa=b_xa,
+                c_ab=c_ab,
                 prz=prz,
-                source_tolerance_used=(
-                    not b_constraint.contains(b_xa, include_tolerance=False)
-                    and include_source_tolerance
-                ),
+                source_tolerance_used=tolerance_used,
             )
         )
     return tuple(projections)
