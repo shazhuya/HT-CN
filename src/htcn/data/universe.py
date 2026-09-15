@@ -9,15 +9,14 @@ def select_initial_daily_candidates(
     *,
     limit: int = 0,
 ) -> tuple[list[str], int]:
-    """Select the currently supported initial daily-history universe.
+    """Select the current HT-CN daily-history universe.
 
-    M1 initializes Shanghai and Shenzhen first. Beijing Stock Exchange securities are
-    deliberately deferred until the dedicated 920-code continuity adapter is available,
-    because the 2025 code migration requires old/new-code history stitching rather than a
-    simple provider symbol substitution.
+    The active M1 scope is Shanghai + Shenzhen only. Beijing Stock Exchange securities are
+    intentionally out of scope for now and must not block, consume validation-batch slots,
+    or distort completion percentages. BSE support can be added later as an independent
+    adapter/milestone without changing the SSE/SZSE data path.
 
-    The limit is applied *after* filtering so validation batches do not get consumed by
-    deferred BSE symbols that sort before SSE/SZSE identifiers.
+    The limit is applied *after* filtering.
     """
 
     deferred_bse = sum(instrument_id.startswith("BSE.") for instrument_id in candidates)
