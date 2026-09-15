@@ -34,7 +34,7 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.08; }
 .controls button { border: 0; border-radius: 9px; min-height: 42px; padding: 0 18px; background: #4668ff; color: white; font-weight: 700; }
 .controls button:disabled { opacity: .55; cursor: default; }
 
-.summary-grid { display: grid; grid-template-columns: 160px minmax(260px, 1.6fr) 140px 140px; gap: 1px; border: 1px solid #202a36; border-radius: 13px; overflow: hidden; background: #202a36; margin-bottom: 16px; }
+.summary-grid { display: grid; grid-template-columns: 150px minmax(260px, 1.6fr) 140px 130px 130px; gap: 1px; border: 1px solid #202a36; border-radius: 13px; overflow: hidden; background: #202a36; margin-bottom: 16px; }
 .summary-grid > div { background: #111821; padding: 14px 16px; min-width: 0; }
 .summary-grid span { display: block; color: #8291a3; font-size: 11px; margin-bottom: 6px; }
 .summary-grid strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
