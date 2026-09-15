@@ -9,25 +9,32 @@ if not exist ".venv\Scripts\python.exe" (
   exit /b 1
 )
 
-echo [HT-CN M2 ACCEPT] 1/3 Deterministic QA + Web build + API + fixture/live browser acceptance...
+echo [HT-CN M2 ACCEPT] 1/4 Deterministic QA + Web build + API + fixture/live browser acceptance...
 .venv\Scripts\python.exe scripts\qa_local.py
 if errorlevel 1 goto :fail
 
 echo.
-echo [HT-CN M2 ACCEPT] 2/3 Real local QFQ harmonic scan...
+echo [HT-CN M2 ACCEPT] 2/4 Real local QFQ harmonic scan...
 .venv\Scripts\python.exe scripts\m2_local_accept.py
 if errorlevel 1 goto :fail
 
 echo.
-echo [HT-CN M2 ACCEPT] 3/3 Initialized-dataset health ^(coverage is reported separately^) ...
+echo [HT-CN M2 ACCEPT] 3/4 Reaction / retest historical audit...
+.venv\Scripts\python.exe scripts\m2_outcome_audit.py
+if errorlevel 1 goto :fail
+
+echo.
+echo [HT-CN M2 ACCEPT] 4/4 Initialized-dataset health ^(coverage is reported separately^) ...
 .venv\Scripts\python.exe scripts\m1_health_check.py
 if errorlevel 1 goto :fail
 
 echo.
 echo [HT-CN M2 ACCEPT] ========================================
-echo [HT-CN M2 ACCEPT] M2 WORKBENCH ACCEPTANCE PASSED.
-echo [HT-CN M2 ACCEPT] Fixture screenshot: artifacts\screenshots\m2-harmonic-workbench-fixture.png
-echo [HT-CN M2 ACCEPT] LIVE screenshot   : artifacts\screenshots\m2-harmonic-workbench-live.png
+echo [HT-CN M2 ACCEPT] M2 AUTOMATED ACCEPTANCE PASSED.
+echo [HT-CN M2 ACCEPT] Visual artifacts are generated automatically; no manual screenshot review is required.
+echo [HT-CN M2 ACCEPT] Fixture visual : artifacts\screenshots\m2-harmonic-workbench-fixture.png
+echo [HT-CN M2 ACCEPT] Live visual    : artifacts\screenshots\m2-harmonic-workbench-live.png
+echo [HT-CN M2 ACCEPT] Outcome report : artifacts\reports\m2-reaction-audit.json
 echo [HT-CN M2 ACCEPT] NOTE: M2 pass does not mean all 5218 symbols are initialized locally.
 echo [HT-CN M2 ACCEPT] Start app with: 启动HT-CN.bat
 echo [HT-CN M2 ACCEPT] ========================================
@@ -36,6 +43,6 @@ exit /b 0
 
 :fail
 echo.
-echo [HT-CN M2 ACCEPT] FAILED. Send only the final error block to ChatGPT.
+echo [HT-CN M2 ACCEPT] FAILED. Keep the final error block; routine screenshots are not required.
 pause
 exit /b 1
