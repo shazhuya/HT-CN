@@ -43,9 +43,6 @@ class LocalHarmonicService:
         if not missing:
             return apply_price_factors(raw, factors), "qfq", None
 
-        # Daily deltas may be one session newer than the last factor refresh. A price factor is
-        # piecewise constant between corporate actions, so carrying the last known factor forward
-        # for newer sessions preserves continuity while clearly flagging the assumption.
         latest_factor_date = pd.Timestamp(factors["trade_date"].max()).normalize()
         if all(stamp > latest_factor_date for stamp in missing):
             extended = factors.copy()
@@ -150,7 +147,10 @@ class LocalHarmonicService:
             "is_primary_identity": bool(conflict_ids and conflict_ids[0] == own_id),
             "points": [self._point_payload(point, dates) for point in item.points],
             "prz": self._prz_payload(item.projection.prz),
-            "metrics": {"b_xa": item.projection.b_xa},
+            "metrics": {
+                "b_xa": item.projection.b_xa,
+                "c_ab": item.projection.c_ab,
+            },
             "source_tolerance_used": item.projection.source_tolerance_used,
             "bars_since_c": max(0, latest_index - c_index),
             "frontier": True,
