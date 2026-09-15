@@ -59,4 +59,5 @@ def test_daily_translation_matches_htcn_schema() -> None:
     normalized = normalize_daily(frame)
     assert len(normalized) == 1
     assert normalized.loc[0, "close"] == 108.0
+    assert normalized.loc[0, "volume"] == 1_234_500.0
     assert normalized.loc[0, "source"] == "akshare"
