@@ -56,9 +56,9 @@ def _completed_score(evaluation: PatternEvaluation, points: tuple[HarmonicPoint,
     """Soft geometry quality, deliberately separate from pass/fail identity.
 
     Preferred AB=CD variants are useful for ranking but the books often describe them as
-    minimum/common/preferred rather than an exact identity tolerance.  Therefore a large
+    minimum/common/preferred rather than an exact identity tolerance. Therefore a large
     AB=CD deviation is capped as a quality penalty instead of zeroing a source-valid Crab,
-    Bat, etc.  This score is never a probability or expected return.
+    Bat, etc. This score is never a probability or expected return.
     """
     check_error = sum(check.distance_to_canonical for check in evaluation.checks)
     raw_abcd_error = 0.0 if evaluation.abcd_distance == float("inf") else evaluation.abcd_distance
@@ -75,6 +75,35 @@ def _forming_score(projection: FormingPattern, points: tuple[HarmonicPoint, ...]
     tolerance_penalty = 0.08 if projection.source_tolerance_used else 0.0
     penalty = tolerance_penalty + min(width_error, 0.8)
     return round(max(0.0, min(100.0, 100.0 * (1.0 - penalty))), 2)
+
+
+def _dedupe_completed(items: list[CompletedMatch]) -> list[CompletedMatch]:
+    """Collapse the same semantic geometry rediscovered at multiple pivot scales.
+
+    Different pattern identities on the same node set are intentionally preserved so
+    genuine identity conflicts stay visible and auditable.
+    """
+    out: list[CompletedMatch] = []
+    seen: set[tuple[str, PatternDirection, tuple[int, ...]]] = set()
+    for item in items:
+        key = (item.pattern_id, item.direction, item.conflict_key)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return out
+
+
+def _dedupe_forming(items: list[FormingMatch]) -> list[FormingMatch]:
+    out: list[FormingMatch] = []
+    seen: set[tuple[str, PatternDirection, tuple[int, ...]]] = set()
+    for item in items:
+        key = (item.pattern_id, item.direction, item.conflict_key)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return out
 
 
 def scan_pivots(
@@ -146,6 +175,8 @@ def scan_pivots(
             item.pattern_id,
         )
     )
+    completed = _dedupe_completed(completed)
+    forming = _dedupe_forming(forming)
     return HarmonicScan(
         completed=tuple(completed[:max_completed]),
         forming=tuple(forming[:max_forming]),
