@@ -43,11 +43,20 @@ class PatternRule:
     pattern_id: str
     schema: str
     constraints: Mapping[str, RatioConstraint] = field(default_factory=dict)
+    # These are preferred/complementary AB=CD variants used for PRZ projection and
+    # geometry quality. They are NOT silently promoted to exact hard identity tests.
     abcd_types: tuple[float, ...] = ()
+    # Carney frequently describes an "AB=CD minimum" rather than an exact CD/AB ratio.
+    # When set, completed geometry must at least reach this CD/AB length ratio.
+    abcd_minimum: float | None = None
     executable_identity: bool = True
     source_conflict: bool = False
     source_note: str = ""
     implementation_note: str = ""
+
+    def __post_init__(self) -> None:
+        if self.abcd_minimum is not None and self.abcd_minimum <= 0:
+            raise ValueError("abcd_minimum must be positive")
 
 
 CARNEY_RULES: dict[str, PatternRule] = {
@@ -60,7 +69,9 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "d_xa": RatioConstraint(0.786, 0.786, ideal=0.786),
         },
         abcd_types=(1.0, 1.27),
+        abcd_minimum=1.0,
         source_note="Volume One Gartley chapter; Volume Three p.92 specification and B-point tolerance classification.",
+        implementation_note="AB=CD is required as a completed minimum/PRZ component; preferred variants contribute to quality but are not given an invented hard tolerance.",
     ),
     "bat": PatternRule(
         pattern_id="bat",
@@ -71,7 +82,8 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "d_xa": RatioConstraint(0.886, 0.886, ideal=0.886),
         },
         abcd_types=(1.0, 1.27, 1.618),
-        source_note="Volume One Bat chapter; Volume Three p.98 specification. V3 notes 0.50 B alignment with +/-5% maximum tolerance.",
+        abcd_minimum=1.0,
+        source_note="Volume One Bat chapter; Volume Three p.98 specification. V3 calls for a minimum AB=CD, typically 1.27AB=CD.",
     ),
     "alternate_bat": PatternRule(
         pattern_id="alternate_bat",
@@ -82,8 +94,13 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "d_xa": RatioConstraint(0.886, 1.13),
         },
         abcd_types=(1.618,),
-        source_note="Volume Two Alternate Bat chapter; Volume Three p.101 specification.",
-        implementation_note="V3 describes 0.382 as the maximum B alignment with 3% tolerance; tolerance policy remains separate from canonical identity.",
+        abcd_minimum=None,
+        source_conflict=True,
+        source_note="Volume Two Alternate Bat chapter vs. Volume Three p.101 specification.",
+        implementation_note=(
+            "Volume Two explicitly says AB=CD is not included in this setup, while Volume Three lists 1.618AB=CD. "
+            "Therefore AB=CD remains an auditable quality/PRZ reference, not a hard identity gate."
+        ),
     ),
     "butterfly": PatternRule(
         pattern_id="butterfly",
@@ -94,7 +111,8 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "d_xa": RatioConstraint(1.27, 1.27, ideal=1.27),
         },
         abcd_types=(1.0, 1.27),
-        source_note="Volume One Ideal/Perfect Butterfly chapters; Volume Three p.113 specification.",
+        abcd_minimum=1.0,
+        source_note="Volume One Ideal/Perfect Butterfly chapters; Volume Three p.113 specification. Equivalent AB=CD is a minimum; 1.27 alternate is common/preferred.",
     ),
     "crab": PatternRule(
         pattern_id="crab",
@@ -105,7 +123,9 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "d_xa": RatioConstraint(1.618, 1.618, ideal=1.618),
         },
         abcd_types=(1.0, 1.27, 1.618),
+        abcd_minimum=1.0,
         source_note="Volume One Crab chapter; Volume Three p.104 specification.",
+        implementation_note="Volume One describes minimum AB=CD completion; alternate 1.27/1.618 are common but not exact hard identity ratios.",
     ),
     "deep_crab": PatternRule(
         pattern_id="deep_crab",
@@ -116,6 +136,7 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "d_xa": RatioConstraint(1.618, 1.618, ideal=1.618),
         },
         abcd_types=(1.0, 1.27, 1.618),
+        abcd_minimum=1.0,
         source_note="Volume One Deep Crab chapter; Volume Three p.107 specification.",
     ),
     "abcd": PatternRule(
