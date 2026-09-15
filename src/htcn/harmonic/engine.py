@@ -53,17 +53,23 @@ def _prz_width_ratio(prz: PotentialReversalZone, points: tuple[HarmonicPoint, ..
 
 
 def _completed_score(evaluation: PatternEvaluation, points: tuple[HarmonicPoint, ...]) -> float:
-    # This is a geometry-quality score, not a probability or expected return.
-    # Canonical ratio misses, AB=CD deviation and wide PRZs reduce the score.
+    """Soft geometry quality, deliberately separate from pass/fail identity.
+
+    Preferred AB=CD variants are useful for ranking but the books often describe them as
+    minimum/common/preferred rather than an exact identity tolerance.  Therefore a large
+    AB=CD deviation is capped as a quality penalty instead of zeroing a source-valid Crab,
+    Bat, etc.  This score is never a probability or expected return.
+    """
     check_error = sum(check.distance_to_canonical for check in evaluation.checks)
-    abcd_error = 0.0 if evaluation.abcd_distance == float("inf") else evaluation.abcd_distance
-    width_error = _prz_width_ratio(evaluation.prz, points)
-    penalty = (2.2 * check_error) + (1.8 * abcd_error) + (1.2 * width_error)
+    raw_abcd_error = 0.0 if evaluation.abcd_distance == float("inf") else evaluation.abcd_distance
+    abcd_error = min(raw_abcd_error, 0.20)
+    width_error = min(_prz_width_ratio(evaluation.prz, points), 0.35)
+    penalty = (2.2 * check_error) + (0.9 * abcd_error) + (1.2 * width_error)
     return round(max(0.0, min(100.0, 100.0 * (1.0 - penalty))), 2)
 
 
 def _forming_score(projection: FormingPattern, points: tuple[HarmonicPoint, ...]) -> float:
-    # Forming patterns cannot be scored on D because D does not exist yet.  Keep the
+    # Forming patterns cannot be scored on D because D does not exist yet. Keep the
     # score deliberately conservative and based only on B alignment + PRZ compactness.
     width_error = _prz_width_ratio(projection.prz, points)
     tolerance_penalty = 0.08 if projection.source_tolerance_used else 0.0
@@ -159,8 +165,8 @@ def scan_frame(
     """Run the deterministic geometry pipeline on one OHLC history frame.
 
     Input prices are expected to already be the desired continuous view (QFQ for HT-CN's
-    normal A-share harmonic workflow).  This function never adjusts prices or injects
-    A-share market context into Carney geometry.
+    normal A-share harmonic workflow). This function never adjusts prices or injects A-share
+    market context into Carney geometry.
     """
     if frame.empty:
         return HarmonicScan(completed=(), forming=(), pivots_by_scale={})
