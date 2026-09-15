@@ -4,13 +4,17 @@ from dataclasses import dataclass, field
 from typing import Mapping
 
 
+_NUMERIC_EPSILON = 1e-12
+
+
 @dataclass(frozen=True, slots=True)
 class RatioConstraint:
     """Explicit ratio band used by a pattern rule.
 
     `minimum`/`maximum` are the canonical geometry. Optional tolerances are stored
     separately so strict identity and permissive real-time matching never become the
-    same operation by accident.
+    same operation by accident. A machine-precision epsilon is always used at the
+    inclusive boundary; this is numerical hygiene, not a trading tolerance.
     """
 
     minimum: float
@@ -35,7 +39,8 @@ class RatioConstraint:
         if include_tolerance:
             low -= self.tolerance_below
             high += self.tolerance_above
-        return low <= float(value) <= high
+        numeric_pad = _NUMERIC_EPSILON * max(1.0, abs(low), abs(high), abs(float(value)))
+        return (low - numeric_pad) <= float(value) <= (high + numeric_pad)
 
 
 @dataclass(frozen=True, slots=True)
