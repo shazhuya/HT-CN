@@ -9,22 +9,27 @@ if not exist ".venv\Scripts\python.exe" (
   exit /b 1
 )
 
-echo [HT-CN M2 ACCEPT] 1/4 Deterministic QA + Web build + API + fixture/live browser acceptance...
+echo [HT-CN M2 ACCEPT] 1/5 Deterministic QA + Web build + API + fixture/live browser acceptance...
 .venv\Scripts\python.exe scripts\qa_local.py
 if errorlevel 1 goto :fail
 
 echo.
-echo [HT-CN M2 ACCEPT] 2/4 Real local QFQ harmonic scan...
+echo [HT-CN M2 ACCEPT] 2/5 Real local QFQ harmonic scan...
 .venv\Scripts\python.exe scripts\m2_local_accept.py
 if errorlevel 1 goto :fail
 
 echo.
-echo [HT-CN M2 ACCEPT] 3/4 Reaction / retest historical audit...
+echo [HT-CN M2 ACCEPT] 3/5 Reaction / retest historical audit...
 .venv\Scripts\python.exe scripts\m2_outcome_audit.py
 if errorlevel 1 goto :fail
 
 echo.
-echo [HT-CN M2 ACCEPT] 4/4 Initialized-dataset health ^(coverage is reported separately^) ...
+echo [HT-CN M2 ACCEPT] 4/5 Mine real A-share Golden Case candidates...
+.venv\Scripts\python.exe scripts\m2_golden_candidate_miner.py
+if errorlevel 1 goto :fail
+
+echo.
+echo [HT-CN M2 ACCEPT] 5/5 Initialized-dataset health ^(coverage is reported separately^) ...
 .venv\Scripts\python.exe scripts\m1_health_check.py
 if errorlevel 1 goto :fail
 
@@ -35,6 +40,7 @@ echo [HT-CN M2 ACCEPT] Visual artifacts are generated automatically; no manual s
 echo [HT-CN M2 ACCEPT] Fixture visual : artifacts\screenshots\m2-harmonic-workbench-fixture.png
 echo [HT-CN M2 ACCEPT] Live visual    : artifacts\screenshots\m2-harmonic-workbench-live.png
 echo [HT-CN M2 ACCEPT] Outcome report : artifacts\reports\m2-reaction-audit.json
+echo [HT-CN M2 ACCEPT] Golden manifest: artifacts\golden_candidates\manifest.json
 echo [HT-CN M2 ACCEPT] NOTE: M2 pass does not mean all 5218 symbols are initialized locally.
 echo [HT-CN M2 ACCEPT] Start app with: 启动HT-CN.bat
 echo [HT-CN M2 ACCEPT] ========================================
