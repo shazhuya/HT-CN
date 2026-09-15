@@ -10,6 +10,7 @@ from htcn.data.adjustment import AdjustmentFactorStore, apply_price_factors
 from htcn.data.delta import DailyHistoryView, MarketDailyDeltaStore
 from htcn.data.store import ParquetDailyStore
 from htcn.harmonic.engine import CompletedMatch, FormingMatch, HarmonicScan, scan_frame
+from htcn.harmonic.lifecycle import audit_completed_reaction
 
 
 class DatasetNotFoundError(FileNotFoundError):
@@ -100,11 +101,18 @@ class LocalHarmonicService:
     def _completed_payload(
         self,
         item: CompletedMatch,
+        frame: pd.DataFrame,
         dates: pd.Series,
         conflict_ids: list[str],
     ) -> dict[str, Any]:
         metrics = item.evaluation.metrics
         own_id = f"{item.pattern_id}@S{item.scale}"
+        reaction = audit_completed_reaction(
+            frame,
+            points=item.points,
+            direction=item.direction,
+            prz=item.evaluation.prz,
+        )
         return {
             "pattern_id": item.pattern_id,
             "direction": item.direction.value,
@@ -125,6 +133,7 @@ class LocalHarmonicService:
             },
             "checks": [asdict(check) for check in item.evaluation.checks],
             "abcd_distance": item.evaluation.abcd_distance,
+            "reaction_audit": reaction.as_payload(),
         }
 
     def _forming_payload(
@@ -200,7 +209,7 @@ class LocalHarmonicService:
         completed_conflicts = self._identity_conflicts(scan.completed)
         forming_conflicts = self._identity_conflicts(scan.forming)
         completed = [
-            self._completed_payload(item, dates, completed_conflicts[item.conflict_key])
+            self._completed_payload(item, selected, dates, completed_conflicts[item.conflict_key])
             for item in scan.completed
         ]
         forming = [
@@ -221,5 +230,5 @@ class LocalHarmonicService:
             "completed": completed,
             "forming": forming,
             "pivot_counts": {str(scale): len(pivots) for scale, pivots in scan.pivots_by_scale.items()},
-            "engine_note": "geometry_score 仅衡量几何贴合度，不代表胜率、预期收益或交易建议；形成中只保留各尺度最新 XABC frontier，同节点多身份保留审计但默认只展示主身份。",
+            "engine_note": "geometry_score 仅衡量几何贴合度，不代表胜率、预期收益或交易建议；形成中只保留各尺度最新 XABC frontier；已完成形态附带 38.2%/61.8% 反应目标与 PRZ 二次回测审计，但 Type-II 仅标候选，不替代价格/指标确认。",
         }
