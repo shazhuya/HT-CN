@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -84,11 +83,31 @@ class LocalHarmonicService:
             "price_low": float(prz.price_low),
             "price_high": float(prz.price_high),
             "width": float(prz.width),
+            "component_price_low": float(prz.component_price_low),
+            "component_price_high": float(prz.component_price_high),
             "components": [asdict(component) for component in prz.components],
         }
 
-    def _completed_payload(self, item: CompletedMatch, dates: pd.Series) -> dict[str, Any]:
+    @staticmethod
+    def _identity_conflicts(items: tuple[CompletedMatch, ...] | tuple[FormingMatch, ...]) -> dict[tuple[int, ...], list[str]]:
+        groups: dict[tuple[int, ...], list[tuple[float, str, int]]] = {}
+        for item in items:
+            groups.setdefault(item.conflict_key, []).append(
+                (float(item.geometry_score), item.pattern_id, int(item.scale))
+            )
+        return {
+            key: [f"{pattern_id}@S{scale}" for _, pattern_id, scale in sorted(rows, reverse=True)]
+            for key, rows in groups.items()
+        }
+
+    def _completed_payload(
+        self,
+        item: CompletedMatch,
+        dates: pd.Series,
+        conflict_ids: list[str],
+    ) -> dict[str, Any]:
         metrics = item.evaluation.metrics
+        own_id = f"{item.pattern_id}@S{item.scale}"
         return {
             "pattern_id": item.pattern_id,
             "direction": item.direction.value,
@@ -96,6 +115,8 @@ class LocalHarmonicService:
             "scale": item.scale,
             "geometry_score": item.geometry_score,
             "conflict_key": list(item.conflict_key),
+            "identity_conflicts": conflict_ids,
+            "is_primary_identity": bool(conflict_ids and conflict_ids[0] == own_id),
             "points": [self._point_payload(point, dates) for point in item.points],
             "prz": self._prz_payload(item.evaluation.prz),
             "metrics": {
@@ -109,7 +130,13 @@ class LocalHarmonicService:
             "abcd_distance": item.evaluation.abcd_distance,
         }
 
-    def _forming_payload(self, item: FormingMatch, dates: pd.Series) -> dict[str, Any]:
+    def _forming_payload(
+        self,
+        item: FormingMatch,
+        dates: pd.Series,
+        conflict_ids: list[str],
+    ) -> dict[str, Any]:
+        own_id = f"{item.pattern_id}@S{item.scale}"
         return {
             "pattern_id": item.pattern_id,
             "direction": item.direction.value,
@@ -117,6 +144,8 @@ class LocalHarmonicService:
             "scale": item.scale,
             "geometry_score": item.geometry_score,
             "conflict_key": list(item.conflict_key),
+            "identity_conflicts": conflict_ids,
+            "is_primary_identity": bool(conflict_ids and conflict_ids[0] == own_id),
             "points": [self._point_payload(point, dates) for point in item.points],
             "prz": self._prz_payload(item.projection.prz),
             "metrics": {"b_xa": item.projection.b_xa},
@@ -164,8 +193,16 @@ class LocalHarmonicService:
             max_forming=max_forming,
         )
         dates = selected["trade_date"]
-        completed = [self._completed_payload(item, dates) for item in scan.completed]
-        forming = [self._forming_payload(item, dates) for item in scan.forming]
+        completed_conflicts = self._identity_conflicts(scan.completed)
+        forming_conflicts = self._identity_conflicts(scan.forming)
+        completed = [
+            self._completed_payload(item, dates, completed_conflicts[item.conflict_key])
+            for item in scan.completed
+        ]
+        forming = [
+            self._forming_payload(item, dates, forming_conflicts[item.conflict_key])
+            for item in scan.forming
+        ]
 
         return {
             "instrument_id": instrument_id,
@@ -180,5 +217,5 @@ class LocalHarmonicService:
             "completed": completed,
             "forming": forming,
             "pivot_counts": {str(scale): len(pivots) for scale, pivots in scan.pivots_by_scale.items()},
-            "engine_note": "geometry_score 仅衡量几何贴合度，不代表胜率、预期收益或交易建议。",
+            "engine_note": "geometry_score 仅衡量几何贴合度，不代表胜率、预期收益或交易建议；同节点多身份不会静默删除。",
         }
