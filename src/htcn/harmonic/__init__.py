@@ -1,7 +1,8 @@
 """HT-CN harmonic core.
 
-This package contains deterministic geometry only. A-share context and trading decisions
-must live outside this namespace so they cannot mutate Carney pattern identity.
+This package contains deterministic geometry and source-backed harmonic lifecycle audits.
+A-share context and trading decisions must live outside this namespace so they cannot mutate
+Carney pattern identity.
 """
 
 from .candidates import (
@@ -18,6 +19,7 @@ from .evaluator import (
     evaluate_xabcd,
     measure_xabcd,
 )
+from .lifecycle import ReactionAudit, audit_completed_reaction
 from .models import (
     HarmonicPoint,
     PatternDirection,
@@ -56,8 +58,10 @@ __all__ = [
     "PotentialReversalZone",
     "RatioConstraint",
     "RatioMeasurement",
+    "ReactionAudit",
     "SwingWindow",
     "XABCDMetrics",
+    "audit_completed_reaction",
     "build_xabcd_prz",
     "classify_completed_xabcd",
     "collapse_same_kind_pivots",
