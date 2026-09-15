@@ -39,3 +39,11 @@ def test_same_geometry_has_stable_conflict_key() -> None:
     assert scan.completed
     keys = {match.conflict_key for match in scan.completed}
     assert (0, 10, 20, 30, 40) in keys
+
+
+def test_identical_pattern_geometry_is_deduped_across_scales() -> None:
+    scan = scan_pivots({3: _gartley_pivots(3), 8: _gartley_pivots(8)})
+    gartleys = [match for match in scan.completed if match.pattern_id == "gartley"]
+    assert len(gartleys) == 1
+    # Sorting prefers the larger scale when recency and geometry score are equal.
+    assert gartleys[0].scale == 8
