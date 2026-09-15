@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from .abcd import ABCDMatch, scan_abcd_pivots
 from .candidates import iter_completed_xabcd_windows, iter_forming_xabc_windows
 from .evaluator import PatternEvaluation
 from .models import HarmonicPoint, PatternDirection, PatternState, Pivot
@@ -41,6 +42,7 @@ class HarmonicScan:
     completed: tuple[CompletedMatch, ...]
     forming: tuple[FormingMatch, ...]
     pivots_by_scale: dict[int, tuple[Pivot, ...]]
+    abcd_completed: tuple[ABCDMatch, ...] = ()
 
 
 def _prz_width_ratio(prz: PotentialReversalZone, points: tuple[HarmonicPoint, ...]) -> float:
@@ -177,10 +179,18 @@ def scan_pivots(
     )
     completed = _dedupe_completed(completed)
     forming = _dedupe_forming(forming)
+    standalone_abcd = scan_abcd_pivots(
+        normalized,
+        c_relative_tolerance=abcd_relative_tolerance,
+        bc_relative_tolerance=abcd_relative_tolerance,
+        abcd_relative_tolerance=abcd_relative_tolerance,
+        max_completed=max_completed,
+    )
     return HarmonicScan(
         completed=tuple(completed[:max_completed]),
         forming=tuple(forming[:max_forming]),
         pivots_by_scale=normalized,
+        abcd_completed=standalone_abcd,
     )
 
 
@@ -200,7 +210,7 @@ def scan_frame(
     market context into Carney geometry.
     """
     if frame.empty:
-        return HarmonicScan(completed=(), forming=(), pivots_by_scale={})
+        return HarmonicScan(completed=(), forming=(), pivots_by_scale={}, abcd_completed=())
     pivots = detect_multi_scale_pivots(frame, scales=scales)
     return scan_pivots(
         pivots,
