@@ -58,11 +58,13 @@ def main() -> int:
     # Bulk-load metadata once. The old implementation opened DuckDB once per market
     # security just to discover initialized datasets; at full-market scale that can look
     # like a hang before the first progress line appears.
+    listed_ids = set(catalog.list_security_ids(listed_only=True))
     dataset_rows = catalog.list_daily_datasets()
     metadata_by_id = {
         str(row["instrument_id"]): row
         for row in dataset_rows
-        if str(row["instrument_id"]).startswith(SUPPORTED_INITIAL_DAILY_PREFIXES)
+        if str(row["instrument_id"]) in listed_ids
+        and str(row["instrument_id"]).startswith(SUPPORTED_INITIAL_DAILY_PREFIXES)
     }
     candidates = sorted(metadata_by_id)
 
@@ -70,7 +72,7 @@ def main() -> int:
         candidates = candidates[: args.limit]
 
     print(
-        f"[HT-CN M1 DAILY] Initialized SSE/SZSE datasets to update: {len(candidates)}",
+        f"[HT-CN M1 DAILY] Initialized listed SSE/SZSE datasets to update: {len(candidates)}",
         flush=True,
     )
     if not candidates:
