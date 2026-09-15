@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 import pandas as pd
 
@@ -129,3 +129,23 @@ def detect_multi_scale_pivots(
             scale=scale,
         )
     return result
+
+
+def build_pivot_consensus(
+    pivots_by_scale: Mapping[int, Iterable[Pivot]],
+) -> dict[tuple[int, PivotKind], tuple[int, ...]]:
+    """Return exact-node support across independent pivot scales.
+
+    This is a diagnostic, not a pattern rule.  A swing extreme that is independently
+    rediscovered at S3/S5/S8 is more structurally persistent than one that only exists at
+    S3, but HT-CN deliberately does not use this fact to mutate Carney identity.  Exact
+    index+kind matching avoids adding another arbitrary price/time tolerance during the
+    calibration phase.
+    """
+
+    groups: dict[tuple[int, PivotKind], set[int]] = {}
+    for scale, pivots in pivots_by_scale.items():
+        for pivot in pivots:
+            key = (int(pivot.index), pivot.kind)
+            groups.setdefault(key, set()).add(int(scale))
+    return {key: tuple(sorted(scales)) for key, scales in groups.items()}
