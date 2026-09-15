@@ -110,9 +110,11 @@ def evaluate_xabcd(
 ) -> PatternEvaluation:
     """Evaluate one completed XABCD candidate against one Carney rule.
 
-    `abcd_relative_tolerance` is an engine matching tolerance, not a Carney B-point
-    tolerance.  It is deliberately an explicit argument so research can calibrate it
-    without mutating the source rule registry.
+    Important separation:
+    - source-backed identity constraints can reject a candidate;
+    - preferred AB=CD variants are measured for quality/PRZ convergence only;
+    - ``abcd_relative_tolerance`` therefore affects the reported quality distance but
+      never invents a hard identity rule that is absent from the books.
     """
 
     if rule.schema != "XABCD":
@@ -155,13 +157,28 @@ def evaluate_xabcd(
                 f"{name}={value:.6f} outside allowed {constraint.minimum:g}-{constraint.maximum:g}"
             )
 
+    if rule.abcd_minimum is not None:
+        passed = metrics.cd_ab.value + 1e-12 >= rule.abcd_minimum
+        checks.append(
+            ConstraintCheck(
+                name="abcd_minimum",
+                value=metrics.cd_ab.value,
+                passed=passed,
+                canonical_passed=passed,
+                distance_to_canonical=max(0.0, rule.abcd_minimum - metrics.cd_ab.value),
+            )
+        )
+        if not passed:
+            reasons.append(
+                f"CD/AB={metrics.cd_ab.value:.6f} below source minimum {rule.abcd_minimum:g}"
+            )
+
+    # Preferred AB=CD variants are retained as a soft geometry-quality measurement.
+    # A distance <= the caller's research tolerance means a near-ideal alignment, but a
+    # larger distance is not automatically a failed Carney identity unless the source
+    # registry separately defines a minimum constraint above.
     if rule.abcd_types:
         abcd_distance = min(abs(metrics.cd_ab.value - target) / target for target in rule.abcd_types)
-        if abcd_distance > abcd_relative_tolerance:
-            reasons.append(
-                f"CD/AB={metrics.cd_ab.value:.6f} does not match allowed AB=CD types "
-                f"{rule.abcd_types} within relative tolerance {abcd_relative_tolerance:.3f}"
-            )
     else:
         abcd_distance = inf
 
