@@ -42,15 +42,24 @@ def test_sync_task_state_is_resumable(tmp_path) -> None:
     catalog = DataCatalog(tmp_path / "catalog.duckdb")
     instrument_id = "SSE.688256"
 
+    # One RUNNING -> terminal transition is one attempt. Finishing a task must not
+    # inflate attempt_count; only starting a new attempt increments the counter.
     catalog.mark_task(instrument_id, "RUNNING")
     catalog.mark_task(instrument_id, "FAILED", "temporary provider error")
     state = catalog.task_status(instrument_id)
     assert state is not None
     assert state["status"] == "FAILED"
+    assert state["attempt_count"] == 1
+
+    # A resumed retry is a second attempt.
+    catalog.mark_task(instrument_id, "RUNNING")
+    state = catalog.task_status(instrument_id)
+    assert state is not None
+    assert state["status"] == "RUNNING"
     assert state["attempt_count"] == 2
 
     catalog.mark_task(instrument_id, "COMPLETED")
     state = catalog.task_status(instrument_id)
     assert state is not None
     assert state["status"] == "COMPLETED"
-    assert state["attempt_count"] == 3
+    assert state["attempt_count"] == 2
