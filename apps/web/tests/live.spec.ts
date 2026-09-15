@@ -1,6 +1,15 @@
 import fs from 'node:fs'
 import { expect, test } from '@playwright/test'
 
+type LivePattern = {
+  pattern_id: string
+  state: 'forming' | 'completed'
+  scale: number
+  is_primary_identity?: boolean
+  frontier?: boolean
+  points: Array<{ index: number }>
+}
+
 type LiveAnalysis = {
   instrument_id: string
   price_mode: string
@@ -9,8 +18,9 @@ type LiveAnalysis = {
   bars_returned: number
   first_trade_date: string
   last_trade_date: string
-  completed: unknown[]
-  forming: unknown[]
+  scales: number[]
+  completed: LivePattern[]
+  forming: LivePattern[]
 }
 
 const API = 'http://127.0.0.1:8765'
@@ -47,6 +57,11 @@ async function findLiveCandidate(request: import('@playwright/test').APIRequestC
 test('HT-CN M2 live local QFQ workbench renders real repository data', async ({ page, request }) => {
   const { instrumentId, analysis } = await findLiveCandidate(request)
 
+  // Forming is live/frontier semantics: each pivot scale contributes at most one XABC node set.
+  const formingNodeSets = new Set(analysis.forming.map((pattern) => pattern.points.map((point) => point.index).join('-')))
+  expect(formingNodeSets.size).toBeLessThanOrEqual(analysis.scales.length)
+  expect(analysis.forming.every((pattern) => pattern.frontier !== false)).toBeTruthy()
+
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'A 股谐波研究与辅助决策系统' })).toBeVisible()
   await expect(page.getByText(/API 0\.2\.0/)).toBeVisible()
@@ -72,7 +87,9 @@ test('HT-CN M2 live local QFQ workbench renders real repository data', async ({ 
 
   await expect(page.getByText(instrumentId, { exact: true })).toBeVisible()
   await expect(page.getByText(`${analysis.first_trade_date} → ${analysis.last_trade_date}`, { exact: true })).toBeVisible()
+  await expect(page.getByText(`${analysis.bars_returned} / 420`, { exact: true })).toBeVisible()
   await expect(page.getByLabel('harmonic-chart')).toBeVisible()
+  await expect(page.getByText(/当前显示 \d+ \/ \d+ 个身份/)).toBeVisible()
 
   const outDir = '../../artifacts/screenshots'
   fs.mkdirSync(outDir, { recursive: true })
