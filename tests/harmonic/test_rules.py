@@ -26,6 +26,20 @@ def test_gartley_and_butterfly_use_strict_three_point_b_tolerance() -> None:
     assert not butterfly.contains(0.83, include_tolerance=True)
 
 
+def test_standard_xabcd_rules_enforce_c_point_family() -> None:
+    for pattern_id in (
+        "gartley",
+        "bat",
+        "alternate_bat",
+        "butterfly",
+        "crab",
+        "deep_crab",
+    ):
+        c_point = CARNEY_RULES[pattern_id].constraints["c_ab"]
+        assert c_point.minimum == 0.382
+        assert c_point.maximum == 0.886
+
+
 def test_bat_and_crab_remain_distinct() -> None:
     bat = CARNEY_RULES["bat"]
     crab = CARNEY_RULES["crab"]
@@ -34,6 +48,16 @@ def test_bat_and_crab_remain_distinct() -> None:
     assert crab.constraints["d_xa"].ideal == 1.618
     assert bat.constraints["bc_projection"].maximum == 2.618
     assert crab.constraints["bc_projection"].minimum == 2.618
+    assert bat.abcd_minimum == 1.0
+    assert crab.abcd_minimum == 1.0
+
+
+def test_alternate_bat_conflict_is_explicit_and_not_a_hard_abcd_gate() -> None:
+    alternate = CARNEY_RULES["alternate_bat"]
+    assert alternate.source_conflict
+    assert alternate.abcd_types == (1.618,)
+    assert alternate.abcd_minimum is None
+    assert "Volume Two explicitly says AB=CD is not included" in alternate.implementation_note
 
 
 def test_special_schemas_are_not_forced_through_xabcd_identity() -> None:
