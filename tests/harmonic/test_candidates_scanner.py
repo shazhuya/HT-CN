@@ -1,6 +1,7 @@
 from htcn.harmonic.candidates import (
     iter_completed_xabcd_windows,
     iter_forming_xabc_windows,
+    iter_swing_windows,
 )
 from htcn.harmonic.models import Pivot, PivotKind
 from htcn.harmonic.scanner import classify_completed_xabcd, project_forming_xabcd
@@ -24,6 +25,17 @@ def test_candidate_windows_do_not_assign_pattern_identity() -> None:
     assert forming[0].scale == 2
     assert [point.label for point in forming[0].harmonic_points()] == ["X", "A", "B", "C"]
     assert [point.label for point in completed[0].harmonic_points()] == ["X", "A", "B", "C", "D"]
+
+
+def test_forming_window_is_frontier_only_after_new_confirmed_pivot() -> None:
+    pivots = _gartley_pivots()
+    historical_xabc = list(iter_swing_windows(pivots, size=4))
+    live_xabc = list(iter_forming_xabc_windows(pivots))
+
+    assert len(historical_xabc) == 2
+    assert len(live_xabc) == 1
+    assert [pivot.index for pivot in live_xabc[0].pivots] == [10, 20, 30, 40]
+    assert [pivot.index for pivot in historical_xabc[0].pivots] == [0, 10, 20, 30]
 
 
 def test_forming_scanner_uses_b_point_to_narrow_rule_families() -> None:
