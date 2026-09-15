@@ -20,7 +20,7 @@ def _qfq_symbols() -> list[str]:
 
 
 def main() -> int:
-    print("[HT-CN M2 OUTCOME] Building automatic reaction/retest audit...")
+    print("[HT-CN M2 OUTCOME] Building automatic reaction/retest/confirmation audit...")
     service = LocalHarmonicService(DATA_ROOT)
     symbols = _qfq_symbols()
     if not symbols:
@@ -65,12 +65,17 @@ def main() -> int:
     t1 = sum(row.get("bars_to_382") is not None for row in records)
     t2 = sum(row.get("bars_to_618") is not None for row in records)
     type_ii = sum(bool(row.get("type_ii_candidate")) for row in records)
+    full_retests = sum(row.get("full_prz_retest_bar") is not None for row in records)
+    price_reexits = sum(row.get("reversal_exit_after_retest_bar") is not None for row in records)
+    rsi_confirmed = sum(bool(row.get("rsi_confirmation")) for row in records)
+    third_tests = sum(row.get("third_prz_test_bar") is not None for row in records)
     mature = [row for row in records if int(row.get("bars_observed", 0)) >= 5]
     early_clean_5 = sum(row.get("no_prz_retest_first_5_bars") is True for row in mature)
     by_pattern = Counter(str(row["pattern_id"]) for row in records)
+    by_evidence = Counter(str(row.get("type_ii_evidence_state", "unknown")) for row in records)
 
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "scope": {
             "symbols_with_qfq_scanned": scanned_symbols,
             "completed_primary_structures": len(records),
@@ -80,15 +85,22 @@ def main() -> int:
             "t1_382_reached": t1,
             "t2_618_reached": t2,
             "secondary_prz_retest_candidates": type_ii,
+            "full_prz_retests": full_retests,
+            "price_reversal_exits_after_retest": price_reexits,
+            "rsi_confirmed_secondary_sequences": rsi_confirmed,
+            "third_prz_tests_after_secondary_exit": third_tests,
             "mature_at_least_5_bars": len(mature),
             "no_prz_retest_first_5_bars": early_clean_5,
             "by_pattern": dict(sorted(by_pattern.items())),
+            "by_type_ii_evidence": dict(sorted(by_evidence.items())),
         },
         "records": records,
         "methodology": {
             "type_i_targets": "38.2% and 61.8% retracements from D toward A using |A-D|.",
-            "type_ii_candidate": "Price exits the original PRZ in the reversal direction and later re-enters the same PRZ. This is not a validated Type-II reversal; Volume Three requires additional price/indicator confirmation.",
-            "source": "Scott M. Carney, Harmonic Trading Volume Three: Reaction vs. Reversal, Type-I/Type-II management sections.",
+            "type_ii_candidate": "Price exits the original PRZ in the reversal direction and later re-enters the same PRZ.",
+            "type_ii_confirmation_evidence": "HT-CN records full-PRZ retest, reversal-direction exit after the secondary test, Wilder RSI(14) extreme/reversal evidence at 30/70, and any third PRZ test. The evidence state is an audit label, not an automatic Carney-valid reversal declaration.",
+            "hsi_policy": "HSI is proprietary in Volume Three; HT-CN does not invent or reverse-engineer an unsupported formula.",
+            "source": "Scott M. Carney, Harmonic Trading Volume Three: Reaction vs. Reversal, Type-I/Type-II and Advanced Indicator Analysis sections.",
         },
     }
 
@@ -96,8 +108,9 @@ def main() -> int:
     REPORT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(
         f"[HT-CN M2 OUTCOME] symbols={scanned_symbols}, completed_primary={len(records)}, "
-        f"T1={t1}, T2={t2}, typeII_candidates={type_ii}"
+        f"T1={t1}, T2={t2}, typeII_candidates={type_ii}, price+RSI={rsi_confirmed}"
     )
+    print(f"[HT-CN M2 OUTCOME] Evidence states: {dict(sorted(by_evidence.items()))}")
     print(f"[HT-CN M2 OUTCOME] Report: {REPORT_PATH.relative_to(ROOT)}")
     print("[HT-CN M2 OUTCOME] PASS")
     return 0
