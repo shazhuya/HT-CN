@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from htcn.data.catalog import DataCatalog
+from htcn.data.delta import MarketDailyDeltaStore
 from htcn.data.providers import AkShareProvider, AkShareSinaProvider, BaoStockProvider, FailoverProvider
 from htcn.data.store import ParquetDailyStore
 from htcn.data.sync import sync_daily
@@ -20,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
 CATALOG_PATH = DATA_ROOT / "catalog.duckdb"
 DAILY_ROOT = DATA_ROOT / "daily"
+DELTA_ROOT = DATA_ROOT / "daily_delta"
 START_DATE = date(1990, 1, 1)
 SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 POST_CLOSE_CUTOFF = clock_time(16, 30)
@@ -44,7 +46,6 @@ def latest_closed_trade_dates(
     *,
     now: datetime | None = None,
 ) -> tuple[date, date | None, bool]:
-    """Return latest closed day, prior trade day, and whether today's bulk snapshot is safe."""
     sh_now = now.astimezone(SHANGHAI_TZ) if now is not None else datetime.now(SHANGHAI_TZ)
     after_cutoff = sh_now.timetz().replace(tzinfo=None) >= POST_CLOSE_CUTOFF
     candidate = sh_now.date() if after_cutoff else sh_now.date() - timedelta(days=1)
@@ -62,28 +63,12 @@ def _normalize_last_date(value: object) -> date | None:
     return pd.Timestamp(value).date()
 
 
-def _apply_snapshot_row(
-    *,
-    store: ParquetDailyStore,
-    catalog: DataCatalog,
-    instrument_id: str,
-    row: pd.DataFrame,
-) -> None:
-    merged = store.upsert(row)
-    if merged.empty:
-        raise RuntimeError("snapshot row produced empty local dataset")
-    first_date = pd.Timestamp(merged["trade_date"].min()).date().isoformat()
-    last_date = pd.Timestamp(merged["trade_date"].max()).date().isoformat()
-    source_values = row["source"].dropna() if "source" in row.columns else pd.Series(dtype=str)
-    source = str(source_values.iloc[-1]) if not source_values.empty else "akshare_spot"
-    catalog.record_daily(
-        instrument_id=instrument_id,
-        source=source,
-        parquet_path=str(store.path_for(instrument_id)),
-        row_count=len(merged),
-        first_trade_date=first_date,
-        last_trade_date=last_date,
-    )
+def _max_date(left: date | None, right: date | None) -> date | None:
+    if left is None:
+        return right
+    if right is None:
+        return left
+    return max(left, right)
 
 
 def main() -> int:
@@ -95,6 +80,7 @@ def main() -> int:
 
     catalog = DataCatalog(CATALOG_PATH)
     store = ParquetDailyStore(DAILY_ROOT)
+    delta_store = MarketDailyDeltaStore(DELTA_ROOT)
     provider = build_provider()
 
     target, previous_trade_day, allow_snapshot = latest_closed_trade_dates(provider)
@@ -105,6 +91,7 @@ def main() -> int:
     )
 
     listed_ids = set(catalog.list_security_ids(listed_only=True))
+    delta_latest = delta_store.latest_dates_by_instrument()
     datasets = [
         row
         for row in catalog.list_daily_datasets()
@@ -115,23 +102,27 @@ def main() -> int:
     if args.limit > 0:
         datasets = datasets[: args.limit]
 
+    effective_last: dict[str, date | None] = {}
     current: list[dict[str, object]] = []
     stale: list[dict[str, object]] = []
     for item in datasets:
-        last_date = _normalize_last_date(item.get("last_trade_date"))
-        if last_date is not None and last_date >= target:
+        instrument_id = str(item["instrument_id"])
+        base_last = _normalize_last_date(item.get("last_trade_date"))
+        latest = _max_date(base_last, delta_latest.get(instrument_id))
+        effective_last[instrument_id] = latest
+        if latest is not None and latest >= target:
             current.append(item)
         else:
             stale.append(item)
 
     print(
         f"[HT-CN M1 DAILY] Initialized={len(datasets)}, already_current={len(current)}, "
-        f"need_update={len(stale)}",
+        f"need_update={len(stale)}, pending_delta_files={len(delta_store.list_dates())}",
         flush=True,
     )
     if not stale:
         print(
-            "[HT-CN M1 DAILY] FAST PASS: all local datasets already cover the latest "
+            "[HT-CN M1 DAILY] FAST PASS: local base+delta view already covers the latest "
             "closed trading day; zero per-symbol network requests.",
             flush=True,
         )
@@ -152,38 +143,29 @@ def main() -> int:
                 instrument_id: group.reset_index(drop=True)
                 for instrument_id, group in snapshot.groupby("instrument_id", sort=False)
             }
-            eligible = [
-                item
+            eligible_ids = [
+                str(item["instrument_id"])
                 for item in stale
-                if _normalize_last_date(item.get("last_trade_date")) == previous_trade_day
+                if effective_last.get(str(item["instrument_id"])) == previous_trade_day
                 and str(item["instrument_id"]) in snapshot_map
             ]
             print(
-                f"[HT-CN M1 DAILY] Snapshot rows={len(snapshot)}, directly_applicable={len(eligible)}",
+                f"[HT-CN M1 DAILY] Snapshot rows={len(snapshot)}, directly_applicable={len(eligible_ids)}",
                 flush=True,
             )
-            for index, item in enumerate(eligible, start=1):
-                instrument_id = str(item["instrument_id"])
-                try:
-                    _apply_snapshot_row(
-                        store=store,
-                        catalog=catalog,
-                        instrument_id=instrument_id,
-                        row=snapshot_map[instrument_id],
-                    )
-                    snapshot_updated.add(instrument_id)
-                    updated += 1
-                    if index <= 5 or index % 250 == 0 or index == len(eligible):
-                        print(
-                            f"[HT-CN M1 DAILY] BULK {index}/{len(eligible)} {instrument_id}",
-                            flush=True,
-                        )
-                except Exception as exc:
-                    print(
-                        f"[HT-CN M1 DAILY] BULK-ROW fallback {instrument_id}: "
-                        f"{type(exc).__name__}: {exc}",
-                        flush=True,
-                    )
+            if eligible_ids:
+                delta_frame = pd.concat(
+                    [snapshot_map[instrument_id] for instrument_id in eligible_ids],
+                    ignore_index=True,
+                )
+                path = delta_store.write(delta_frame, trade_date=target)
+                snapshot_updated.update(eligible_ids)
+                updated += len(eligible_ids)
+                print(
+                    f"[HT-CN M1 DAILY] BULK DELTA WRITTEN: {path.name}; "
+                    f"rows={len(delta_frame)}; instruments={len(eligible_ids)}",
+                    flush=True,
+                )
         except Exception as exc:
             print(
                 f"[HT-CN M1 DAILY] Bulk snapshot unavailable; using repair path: "
@@ -199,7 +181,7 @@ def main() -> int:
 
     for index, item in enumerate(repair, start=1):
         instrument_id = str(item["instrument_id"])
-        before_last = _normalize_last_date(item.get("last_trade_date"))
+        before_last = effective_last.get(instrument_id)
         try:
             result = sync_daily(
                 provider=provider,
@@ -210,7 +192,10 @@ def main() -> int:
                 end=target,
             )
             after = catalog.get_daily(instrument_id) or {}
-            after_last = _normalize_last_date(after.get("last_trade_date"))
+            after_last = _max_date(
+                _normalize_last_date(after.get("last_trade_date")),
+                delta_latest.get(instrument_id),
+            )
             if after_last is not None and after_last >= target and after_last != before_last:
                 updated += 1
                 state = "UPDATED"
@@ -239,7 +224,8 @@ def main() -> int:
 
     print(
         f"[HT-CN M1 DAILY] DONE updated={updated}, preexisting_current={len(current)}, "
-        f"bulk={len(snapshot_updated)}, repair={len(repair)}, failed={failed}",
+        f"bulk={len(snapshot_updated)}, repair={len(repair)}, failed={failed}, "
+        f"delta_files={len(delta_store.list_dates())}",
         flush=True,
     )
     return 0 if failed == 0 else 2
