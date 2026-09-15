@@ -2,14 +2,18 @@
 .venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Node
+# Node / TypeScript
 node_modules/
 apps/web/dist/
 apps/web/.vite/
+apps/web/test-results/
+apps/web/playwright-report/
+*.tsbuildinfo
 
 # Local data and runtime artifacts
 data/**/*.parquet
