@@ -19,6 +19,7 @@ from .evaluator import (
     evaluate_xabcd,
     measure_xabcd,
 )
+from .indicators import wilder_rsi
 from .lifecycle import ReactionAudit, audit_completed_reaction
 from .models import (
     HarmonicPoint,
@@ -79,4 +80,5 @@ __all__ = [
     "reciprocal_bc_targets",
     "scan_frame",
     "scan_pivots",
+    "wilder_rsi",
 ]
