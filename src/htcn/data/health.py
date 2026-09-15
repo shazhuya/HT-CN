@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -8,6 +9,9 @@ import pandas as pd
 from .catalog import DataCatalog
 from .universe import SUPPORTED_INITIAL_DAILY_PREFIXES
 from .validation import DataValidationError, normalize_daily
+
+
+ProgressCallback = Callable[[int, int, str], None]
 
 
 @dataclass(slots=True)
@@ -36,25 +40,48 @@ class HealthReport:
         return not self.errors
 
 
-def audit_local_daily(catalog: DataCatalog) -> HealthReport:
+def audit_local_daily(
+    catalog: DataCatalog,
+    *,
+    progress: ProgressCallback | None = None,
+    progress_every: int = 10,
+) -> HealthReport:
+    """Audit initialized SSE/SZSE daily datasets.
+
+    Metadata is loaded in bulk from DuckDB first. The previous implementation opened one
+    DuckDB connection for every listed security, including thousands that had not yet been
+    initialized; on Windows that produced a long silent wait and looked like the batch file
+    had frozen.
+    """
     listed_ids = catalog.list_security_ids(listed_only=True)
     supported = [
         instrument_id
         for instrument_id in listed_ids
         if instrument_id.startswith(SUPPORTED_INITIAL_DAILY_PREFIXES)
     ]
+    supported_set = set(supported)
 
-    checked = 0
-    uninitialized = 0
+    metadata_by_id = {
+        str(item["instrument_id"]): item
+        for item in catalog.list_daily_datasets()
+        if str(item["instrument_id"]) in supported_set
+    }
+    initialized = [
+        (instrument_id, metadata_by_id[instrument_id])
+        for instrument_id in supported
+        if instrument_id in metadata_by_id
+    ]
+
+    uninitialized = len(supported) - len(initialized)
     issues: list[HealthIssue] = []
+    total = len(initialized)
 
-    for instrument_id in supported:
-        metadata = catalog.get_daily(instrument_id)
-        if metadata is None:
-            uninitialized += 1
-            continue
+    for index, (instrument_id, metadata) in enumerate(initialized, start=1):
+        if progress is not None and (
+            index == 1 or index == total or index % max(1, progress_every) == 0
+        ):
+            progress(index, total, instrument_id)
 
-        checked += 1
         path = Path(str(metadata["parquet_path"]))
         if not path.exists():
             issues.append(HealthIssue(instrument_id, "ERROR", f"missing parquet: {path}"))
@@ -63,7 +90,13 @@ def audit_local_daily(catalog: DataCatalog) -> HealthReport:
         try:
             frame = pd.read_parquet(path)
         except Exception as exc:
-            issues.append(HealthIssue(instrument_id, "ERROR", f"cannot read parquet: {type(exc).__name__}: {exc}"))
+            issues.append(
+                HealthIssue(
+                    instrument_id,
+                    "ERROR",
+                    f"cannot read parquet: {type(exc).__name__}: {exc}",
+                )
+            )
             continue
 
         if frame.empty:
@@ -127,4 +160,4 @@ def audit_local_daily(catalog: DataCatalog) -> HealthReport:
                 )
             )
 
-    return HealthReport(checked=checked, uninitialized=uninitialized, issues=issues)
+    return HealthReport(checked=total, uninitialized=uninitialized, issues=issues)
