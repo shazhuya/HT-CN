@@ -27,6 +27,20 @@ def _bearish_gartley() -> tuple[HarmonicPoint, ...]:
     )
 
 
+def _bullish_crab_with_nonideal_abcd() -> tuple[HarmonicPoint, ...]:
+    # XA=20, B/XA=.50, C/AB=.88, D/XA=1.618, BC projection≈3.541.
+    # CD/AB≈3.116 is deliberately far from the common 1.0/1.27/1.618 variants.
+    # The source defines a minimum AB=CD plus the defining XA/BC geometry, so this
+    # should remain an identity match while receiving a softer geometry score later.
+    return (
+        HarmonicPoint("X", 0, 100.0),
+        HarmonicPoint("A", 10, 120.0),
+        HarmonicPoint("B", 20, 110.0),
+        HarmonicPoint("C", 30, 118.8),
+        HarmonicPoint("D", 40, 87.64),
+    )
+
+
 def test_measure_xabcd_uses_price_leg_lengths() -> None:
     metrics = measure_xabcd(_bullish_gartley())
     assert metrics.b_xa.value == pytest.approx(0.618)
@@ -57,13 +71,45 @@ def test_wrong_b_point_rejects_gartley() -> None:
     assert any(reason.startswith("b_xa=") for reason in result.reasons)
 
 
-def test_forming_gartley_prz_contains_xa_completion() -> None:
+def test_source_minimum_abcd_is_hard_but_preferred_variant_is_soft() -> None:
+    result = evaluate_xabcd(CARNEY_RULES["crab"], _bullish_crab_with_nonideal_abcd())
+    assert result.state is PatternState.COMPLETED
+    assert result.metrics.cd_ab.value > 3.0
+    assert result.abcd_distance > 0.5
+    minimum = next(check for check in result.checks if check.name == "abcd_minimum")
+    assert minimum.passed
+
+
+def test_gartley_below_minimum_abcd_rejects_even_when_other_ratios_fit() -> None:
+    points = (
+        HarmonicPoint("X", 0, 100.0),
+        HarmonicPoint("A", 10, 120.0),
+        HarmonicPoint("B", 20, 107.64),
+        HarmonicPoint("C", 30, 113.10),
+        HarmonicPoint("D", 40, 104.28),
+    )
+    result = evaluate_xabcd(CARNEY_RULES["gartley"], points)
+    assert result.metrics.b_xa.value == pytest.approx(0.618)
+    assert result.metrics.d_xa.value == pytest.approx(0.786)
+    assert 1.13 <= result.metrics.bc_projection.value <= 1.618
+    assert result.metrics.cd_ab.value < 1.0
+    assert result.state is PatternState.REJECTED
+    assert any("below source minimum" in reason for reason in result.reasons)
+
+
+def test_forming_gartley_prz_uses_convergence_not_outer_union() -> None:
     x, a, b, c, _ = _bullish_gartley()
     prz = build_xabcd_prz(CARNEY_RULES["gartley"], (x, a, b, c))
     xa_component = next(component for component in prz.components if component.name == "XA completion")
     assert xa_component.price_low == pytest.approx(121.4)
     assert xa_component.price_high == pytest.approx(121.4)
     assert prz.direction is PatternDirection.BULLISH
+    # Full component envelope still contains alternate BC/AB=CD possibilities for audit.
+    assert prz.component_price_low < prz.price_low
+    assert prz.component_price_high > prz.price_high
+    # But the actual display/quality PRZ is the tight convergent cluster.
+    assert prz.price_low == pytest.approx(121.4)
+    assert prz.price_high == pytest.approx(121.4)
 
 
 def test_non_xabcd_rules_cannot_enter_xabcd_prz_path() -> None:
