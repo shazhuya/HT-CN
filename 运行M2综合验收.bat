@@ -9,7 +9,7 @@ if not exist ".venv\Scripts\python.exe" (
   exit /b 1
 )
 
-echo [HT-CN M2 ACCEPT] 1/3 Full deterministic QA + Web build + API + browser screenshot...
+echo [HT-CN M2 ACCEPT] 1/3 Deterministic QA + Web build + API + fixture/live browser acceptance...
 .venv\Scripts\python.exe scripts\qa_local.py
 if errorlevel 1 goto :fail
 
@@ -26,7 +26,8 @@ if errorlevel 1 goto :fail
 echo.
 echo [HT-CN M2 ACCEPT] ========================================
 echo [HT-CN M2 ACCEPT] M2 WORKBENCH ACCEPTANCE PASSED.
-echo [HT-CN M2 ACCEPT] Screenshot: artifacts\screenshots\m2-harmonic-workbench.png
+echo [HT-CN M2 ACCEPT] Fixture screenshot: artifacts\screenshots\m2-harmonic-workbench-fixture.png
+echo [HT-CN M2 ACCEPT] LIVE screenshot   : artifacts\screenshots\m2-harmonic-workbench-live.png
 echo [HT-CN M2 ACCEPT] Start app with: 启动HT-CN.bat
 echo [HT-CN M2 ACCEPT] ========================================
 pause
