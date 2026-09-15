@@ -43,8 +43,8 @@ class PatternRule:
     pattern_id: str
     schema: str
     constraints: Mapping[str, RatioConstraint] = field(default_factory=dict)
-    # These are preferred/complementary AB=CD variants used for PRZ projection and
-    # geometry quality. They are NOT silently promoted to exact hard identity tests.
+    # Preferred/complementary AB=CD variants used for PRZ projection and geometry
+    # quality. They are NOT silently promoted to exact hard identity tests.
     abcd_types: tuple[float, ...] = ()
     # Carney frequently describes an "AB=CD minimum" rather than an exact CD/AB ratio.
     # When set, completed geometry must at least reach this CD/AB length ratio.
@@ -59,12 +59,19 @@ class PatternRule:
             raise ValueError("abcd_minimum must be positive")
 
 
+# Standard M/W XABCD structures use a C-point retracement from the harmonic ratio
+# family bounded by 0.382 and 0.886. Keeping it explicit prevents visually alternating
+# but structurally impossible windows from leaking into completed/forming candidates.
+C_POINT_STANDARD = RatioConstraint(0.382, 0.886)
+
+
 CARNEY_RULES: dict[str, PatternRule] = {
     "gartley": PatternRule(
         pattern_id="gartley",
         schema="XABCD",
         constraints={
             "b_xa": RatioConstraint(0.618, 0.618, ideal=0.618, tolerance_below=0.03, tolerance_above=0.03),
+            "c_ab": C_POINT_STANDARD,
             "bc_projection": RatioConstraint(1.13, 1.618),
             "d_xa": RatioConstraint(0.786, 0.786, ideal=0.786),
         },
@@ -78,6 +85,7 @@ CARNEY_RULES: dict[str, PatternRule] = {
         schema="XABCD",
         constraints={
             "b_xa": RatioConstraint(0.382, 0.50, ideal=0.50, tolerance_above=0.05),
+            "c_ab": C_POINT_STANDARD,
             "bc_projection": RatioConstraint(1.618, 2.618),
             "d_xa": RatioConstraint(0.886, 0.886, ideal=0.886),
         },
@@ -90,6 +98,7 @@ CARNEY_RULES: dict[str, PatternRule] = {
         schema="XABCD",
         constraints={
             "b_xa": RatioConstraint(0.0, 0.382, ideal=0.382),
+            "c_ab": C_POINT_STANDARD,
             "bc_projection": RatioConstraint(2.0, 3.618),
             "d_xa": RatioConstraint(0.886, 1.13),
         },
@@ -107,6 +116,7 @@ CARNEY_RULES: dict[str, PatternRule] = {
         schema="XABCD",
         constraints={
             "b_xa": RatioConstraint(0.786, 0.786, ideal=0.786, tolerance_below=0.03, tolerance_above=0.03),
+            "c_ab": C_POINT_STANDARD,
             "bc_projection": RatioConstraint(1.618, 2.24),
             "d_xa": RatioConstraint(1.27, 1.27, ideal=1.27),
         },
@@ -119,6 +129,7 @@ CARNEY_RULES: dict[str, PatternRule] = {
         schema="XABCD",
         constraints={
             "b_xa": RatioConstraint(0.382, 0.618),
+            "c_ab": C_POINT_STANDARD,
             "bc_projection": RatioConstraint(2.618, 3.618),
             "d_xa": RatioConstraint(1.618, 1.618, ideal=1.618),
         },
@@ -132,6 +143,7 @@ CARNEY_RULES: dict[str, PatternRule] = {
         schema="XABCD",
         constraints={
             "b_xa": RatioConstraint(0.886, 0.886, ideal=0.886, tolerance_above=0.05),
+            "c_ab": C_POINT_STANDARD,
             "bc_projection": RatioConstraint(2.0, 3.618),
             "d_xa": RatioConstraint(1.618, 1.618, ideal=1.618),
         },
@@ -142,7 +154,7 @@ CARNEY_RULES: dict[str, PatternRule] = {
     "abcd": PatternRule(
         pattern_id="abcd",
         schema="ABCD",
-        constraints={"c_ab": RatioConstraint(0.382, 0.886)},
+        constraints={"c_ab": C_POINT_STANDARD},
         abcd_types=(1.0, 1.13, 1.27, 1.41, 1.618, 2.0),
         source_note="Volume One Ch.4 reciprocal table; Volume Three pp.76-80 AB=CD and reciprocal-ratio review.",
         implementation_note="Reciprocal C/AB -> BC projection mapping is frozen separately in ratios.RECIPROCAL_ABCD.",
