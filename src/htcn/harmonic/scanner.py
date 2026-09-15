@@ -52,12 +52,18 @@ def project_forming_xabcd(
             continue
         if not b_constraint.contains(b_xa, include_tolerance=include_source_tolerance):
             continue
+        try:
+            prz = build_xabcd_prz(rule, (x, a, b, c))
+        except ValueError:
+            # A mathematically projected price can become non-positive for a pathological
+            # candidate.  That candidate is isolated here instead of crashing the scan.
+            continue
         projections.append(
             FormingPattern(
                 pattern_id=rule.pattern_id,
                 direction=direction,
                 b_xa=b_xa,
-                prz=build_xabcd_prz(rule, (x, a, b, c)),
+                prz=prz,
                 source_tolerance_used=(
                     not b_constraint.contains(b_xa, include_tolerance=False)
                     and include_source_tolerance
@@ -78,12 +84,17 @@ def classify_completed_xabcd(
     points = window.harmonic_points()
     evaluations: list[PatternEvaluation] = []
     for rule in executable_xabcd_rules():
-        result = evaluate_xabcd(
-            rule,
-            points,
-            include_source_tolerance=include_source_tolerance,
-            abcd_relative_tolerance=abcd_relative_tolerance,
-        )
+        try:
+            result = evaluate_xabcd(
+                rule,
+                points,
+                include_source_tolerance=include_source_tolerance,
+                abcd_relative_tolerance=abcd_relative_tolerance,
+            )
+        except ValueError:
+            # Rule/candidate incompatibility must reject only this identity attempt; one
+            # malformed projected PRZ must never abort scanning other patterns/scales.
+            continue
         if result.passed:
             evaluations.append(result)
     return tuple(evaluations)
