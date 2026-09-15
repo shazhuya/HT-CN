@@ -44,6 +44,20 @@ class ABCDEvaluation:
 
 
 @dataclass(frozen=True, slots=True)
+class ABCDProjection:
+    pattern_id: str
+    direction: PatternDirection
+    state: PatternState
+    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint]
+    c_ab: float
+    reciprocal_c_target: float
+    reciprocal_bc_target: float
+    source_tolerance_used: bool
+    prz: PotentialReversalZone
+    geometry_score: float
+
+
+@dataclass(frozen=True, slots=True)
 class ABCDMatch:
     pattern_id: str
     direction: PatternDirection
@@ -51,6 +65,18 @@ class ABCDMatch:
     scale: int
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint]
     evaluation: ABCDEvaluation
+    geometry_score: float
+    conflict_key: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ABCDFormingMatch:
+    pattern_id: str
+    direction: PatternDirection
+    state: PatternState
+    scale: int
+    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint]
+    projection: ABCDProjection
     geometry_score: float
     conflict_key: tuple[int, ...]
 
@@ -87,10 +113,11 @@ def measure_abcd(
 
 
 def _infer_direction(points: tuple[HarmonicPoint, ...]) -> PatternDirection:
-    a, b, _, _ = points
+    if len(points) < 2:
+        raise ValueError("AB=CD direction requires at least A and B")
+    a, b = points[0], points[1]
     if b.price == a.price:
         raise ValueError("A and B cannot have the same price")
-    # AB down -> CD is expected to complete at a low -> bullish reversal structure.
     return PatternDirection.BULLISH if b.price < a.price else PatternDirection.BEARISH
 
 
@@ -104,19 +131,29 @@ def _turning_geometry_ok(
     return a.price < b.price and c.price < b.price and d.price > c.price
 
 
+def _forming_turning_geometry_ok(
+    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint],
+    direction: PatternDirection,
+) -> bool:
+    a, b, c = points
+    if direction is PatternDirection.BULLISH:
+        return a.price > b.price and c.price > b.price and c.price < a.price
+    return a.price < b.price and c.price < b.price and c.price > a.price
+
+
 def _relative_error(value: float, target: float) -> float:
     if target <= 0:
         return inf
     return abs(float(value) - float(target)) / float(target)
 
 
-def _nearest_reciprocal_pair(c_ab: float, bc_projection: float) -> tuple[float, float, float, float]:
-    """Return (C target, BC target, C relative error, BC relative error).
+def _nearest_c_target(c_ab: float) -> tuple[float, float]:
+    target = min(RECIPROCAL_ABCD, key=lambda value: _relative_error(c_ab, value))
+    return float(target), _relative_error(c_ab, target)
 
-    The Volume One reciprocal table contains two valid BC projections for a 0.382 C
-    retracement.  We evaluate every source-listed pair and choose the pair with the lowest
-    combined normalized error.  No arbitrary interpolation between Carney ratios is used.
-    """
+
+def _nearest_reciprocal_pair(c_ab: float, bc_projection: float) -> tuple[float, float, float, float]:
+    """Return (C target, BC target, C relative error, BC relative error)."""
 
     best: tuple[float, float, float, float] | None = None
     best_error = inf
@@ -133,6 +170,20 @@ def _nearest_reciprocal_pair(c_ab: float, bc_projection: float) -> tuple[float, 
     return best
 
 
+def _select_forming_bc_target(c_ab: float, c_target: float) -> float:
+    """Choose the source-listed reciprocal projection that best converges with x1 AB=CD.
+
+    The 0.382 row contains both 2.24 and 2.618. Before D exists there is no observed CD
+    leg to choose between them, so the projection closest to the equivalent AB=CD implied
+    ratio (1/C) is used for the primary live PRZ. Source alternatives remain recoverable
+    from ``RECIPROCAL_ABCD`` and are never rewritten.
+    """
+
+    targets = RECIPROCAL_ABCD[c_target]
+    implied = 1.0 / c_ab
+    return float(min(targets, key=lambda value: abs(float(value) - implied)))
+
+
 def _project_completion_price(
     *,
     c_price: float,
@@ -142,13 +193,13 @@ def _project_completion_price(
     return c_price - length if direction is PatternDirection.BULLISH else c_price + length
 
 
-def _build_prz(
-    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
+def _build_prz_from_abc(
+    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint] | tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
     *,
     direction: PatternDirection,
     reciprocal_bc_target: float,
 ) -> PotentialReversalZone:
-    a, b, c, _ = points
+    a, b, c = points[:3]
     ab = leg_length(a.price, b.price)
     bc = leg_length(b.price, c.price)
     abcd_price = _project_completion_price(c_price=c.price, length=ab, direction=direction)
@@ -190,13 +241,8 @@ def evaluate_abcd(
 ) -> ABCDEvaluation:
     """Evaluate one completed standalone AB=CD structure.
 
-    Carney's source geometry is discrete: C must align with one of the harmonic
-    retracements in the 0.382-0.886 family, its BC projection must align with the
-    corresponding reciprocal extension, and the defining completion is equivalent AB=CD.
-
-    The three tolerance values are explicit HT-CN matching policy, *not* claimed as book
-    constants.  Keeping them separate prevents an operational real-market tolerance from
-    silently becoming part of the canonical Carney rule registry.
+    The tolerance values are explicit HT-CN operational matching policy, not claimed as
+    constants published by Carney.
     """
 
     if min(c_relative_tolerance, bc_relative_tolerance, abcd_relative_tolerance) < 0:
@@ -236,7 +282,7 @@ def evaluate_abcd(
     if not abcd_passed:
         reasons.append(f"CD/AB={metrics.cd_ab.value:.6f} is not an equivalent AB=CD completion")
 
-    prz = _build_prz(points, direction=direction, reciprocal_bc_target=bc_target)
+    prz = _build_prz_from_abc(points, direction=direction, reciprocal_bc_target=bc_target)
     width_ratio = prz.width / max(leg_length(points[0].price, points[1].price), 1e-12)
     penalty = min(1.0, (2.0 * c_error) + (2.0 * bc_error) + (2.5 * abcd_error) + width_ratio)
     geometry_score = round(100.0 * (1.0 - penalty), 2)
@@ -253,6 +299,58 @@ def evaluate_abcd(
         reciprocal_bc_target=bc_target,
         geometry_score=geometry_score,
         reasons=tuple(reasons),
+    )
+
+
+def project_forming_abcd(
+    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint],
+    *,
+    c_relative_tolerance: float = 0.03,
+) -> ABCDProjection | None:
+    """Project a live D-zone from the current A/B/C frontier.
+
+    Only the latest three confirmed pivots for each scale are eligible upstream. C must
+    already align with a source-listed Carney retracement. No historical ABC slice remains
+    permanently "forming" after a later confirmed pivot appears.
+    """
+
+    if tuple(point.label for point in points) != ("A", "B", "C"):
+        raise ValueError("forming AB=CD points must be labelled A, B, C")
+    if any(left.index >= right.index for left, right in zip(points, points[1:])):
+        raise ValueError("A/B/C indices must be strictly increasing")
+    if c_relative_tolerance < 0:
+        raise ValueError("c_relative_tolerance must be non-negative")
+
+    direction = _infer_direction(points)
+    if not _forming_turning_geometry_ok(points, direction):
+        return None
+    a, b, c = points
+    ab = leg_length(a.price, b.price)
+    bc = leg_length(b.price, c.price)
+    if ab <= 0 or bc <= 0:
+        return None
+    c_ab = bc / ab
+    c_target, c_error = _nearest_c_target(c_ab)
+    if c_error > c_relative_tolerance:
+        return None
+    bc_target = _select_forming_bc_target(c_ab, c_target)
+    try:
+        prz = _build_prz_from_abc(points, direction=direction, reciprocal_bc_target=bc_target)
+    except ValueError:
+        return None
+    width_ratio = prz.width / max(ab, 1e-12)
+    penalty = min(1.0, (2.5 * c_error) + min(width_ratio, 0.5))
+    return ABCDProjection(
+        pattern_id="abcd",
+        direction=direction,
+        state=PatternState.FORMING,
+        points=points,
+        c_ab=float(c_ab),
+        reciprocal_c_target=float(c_target),
+        reciprocal_bc_target=float(bc_target),
+        source_tolerance_used=c_error > 1e-12,
+        prz=prz,
+        geometry_score=round(100.0 * (1.0 - penalty), 2),
     )
 
 
@@ -277,6 +375,25 @@ def iter_abcd_points(pivots: tuple[Pivot, ...] | list[Pivot]) -> tuple[tuple[Har
             )
         )
     return tuple(out)
+
+
+def forming_abc_points(pivots: tuple[Pivot, ...] | list[Pivot]) -> tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint] | None:
+    """Return only the current A/B/C frontier for one scale."""
+
+    ordered = tuple(pivots)
+    if len(ordered) < 3:
+        return None
+    if any(left.index >= right.index for left, right in zip(ordered, ordered[1:])):
+        raise ValueError("pivot sequence must be ordered")
+    if len({pivot.scale for pivot in ordered}) > 1:
+        raise ValueError("forming AB=CD candidate must operate on one scale")
+    chunk = ordered[-3:]
+    if any(left.kind == right.kind for left, right in zip(chunk, chunk[1:])):
+        return None
+    return tuple(
+        HarmonicPoint(label=label, index=pivot.index, price=pivot.price)
+        for label, pivot in zip(("A", "B", "C"), chunk)
+    )  # type: ignore[return-value]
 
 
 def scan_abcd_pivots(
@@ -315,11 +432,7 @@ def scan_abcd_pivots(
             )
 
     matches.sort(
-        key=lambda item: (
-            -item.points[-1].index,
-            -item.geometry_score,
-            -item.scale,
-        )
+        key=lambda item: (-item.points[-1].index, -item.geometry_score, -item.scale)
     )
     out: list[ABCDMatch] = []
     seen: set[tuple[PatternDirection, tuple[int, ...]]] = set()
@@ -330,3 +443,42 @@ def scan_abcd_pivots(
         seen.add(key)
         out.append(item)
     return tuple(out[:max_completed])
+
+
+def scan_forming_abcd_pivots(
+    pivots_by_scale: dict[int, tuple[Pivot, ...] | list[Pivot]],
+    *,
+    c_relative_tolerance: float = 0.03,
+    max_forming: int = 100,
+) -> tuple[ABCDFormingMatch, ...]:
+    matches: list[ABCDFormingMatch] = []
+    for scale, pivots in pivots_by_scale.items():
+        points = forming_abc_points(pivots)
+        if points is None:
+            continue
+        projection = project_forming_abcd(points, c_relative_tolerance=c_relative_tolerance)
+        if projection is None:
+            continue
+        matches.append(
+            ABCDFormingMatch(
+                pattern_id="abcd",
+                direction=projection.direction,
+                state=PatternState.FORMING,
+                scale=int(scale),
+                points=projection.points,
+                projection=projection,
+                geometry_score=projection.geometry_score,
+                conflict_key=tuple(point.index for point in projection.points),
+            )
+        )
+
+    matches.sort(key=lambda item: (-item.points[-1].index, -item.geometry_score, -item.scale))
+    out: list[ABCDFormingMatch] = []
+    seen: set[tuple[PatternDirection, tuple[int, ...]]] = set()
+    for item in matches:
+        key = (item.direction, item.conflict_key)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return tuple(out[:max_forming])
