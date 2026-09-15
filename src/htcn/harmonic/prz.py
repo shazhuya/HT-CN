@@ -10,9 +10,9 @@ from .rules import PatternRule, RatioConstraint
 class PRZComponent:
     """One auditable price component that contributes to a PRZ.
 
-    A component can be a single target or a bounded target interval.  We keep the
-    originating measurement and ratio bounds so the UI can later explain *why* a
-    zone exists instead of rendering an opaque rectangle.
+    A component can be a single target or a bounded target interval. We keep the
+    originating measurement and ratio bounds so the UI can explain *why* a zone exists
+    instead of rendering an opaque rectangle.
     """
 
     name: str
@@ -27,6 +27,13 @@ class PRZComponent:
         if self.price_low > self.price_high:
             raise ValueError("price_low must be <= price_high")
 
+    @property
+    def midpoint(self) -> float:
+        return (self.price_low + self.price_high) / 2.0
+
+    def nearest_price(self, target: float) -> float:
+        return min(max(target, self.price_low), self.price_high)
+
 
 @dataclass(frozen=True, slots=True)
 class PotentialReversalZone:
@@ -34,13 +41,56 @@ class PotentialReversalZone:
     direction: PatternDirection
     components: tuple[PRZComponent, ...]
 
+    def __post_init__(self) -> None:
+        if not self.components:
+            raise ValueError("PRZ must contain at least one component")
+
     @property
-    def price_low(self) -> float:
+    def component_price_low(self) -> float:
+        """Outer audit envelope across every permitted component/variant."""
         return min(component.price_low for component in self.components)
 
     @property
-    def price_high(self) -> float:
+    def component_price_high(self) -> float:
+        """Outer audit envelope across every permitted component/variant."""
         return max(component.price_high for component in self.components)
+
+    @property
+    def convergence_prices(self) -> tuple[float, ...]:
+        """Representative prices that actually form the projected reversal cluster.
+
+        The old M2 draft used the min/max of *all* BC ranges and every alternate AB=CD
+        projection. That rendered a misleadingly huge rectangle. Carney PRZ logic is about
+        convergence. We therefore anchor on the defining XA completion, take the point in
+        each bounded complementary range nearest that anchor, and choose the single AB=CD
+        variant that converges most closely. Every alternative remains in ``components`` for
+        audit and later research; it simply does not inflate the displayed zone.
+        """
+        xa = [component for component in self.components if component.name == "XA completion"]
+        anchor = xa[0].midpoint if xa else self.components[0].midpoint
+        prices: list[float] = [anchor]
+
+        non_abcd = [
+            component
+            for component in self.components
+            if component.name != "XA completion" and not component.name.startswith("AB=CD")
+        ]
+        prices.extend(component.nearest_price(anchor) for component in non_abcd)
+
+        abcd = [component for component in self.components if component.name.startswith("AB=CD")]
+        if abcd:
+            best = min(abcd, key=lambda component: abs(component.midpoint - anchor))
+            prices.append(best.midpoint)
+
+        return tuple(prices)
+
+    @property
+    def price_low(self) -> float:
+        return min(self.convergence_prices)
+
+    @property
+    def price_high(self) -> float:
+        return max(self.convergence_prices)
 
     @property
     def width(self) -> float:
@@ -113,9 +163,9 @@ def build_xabcd_prz(
 ) -> PotentialReversalZone:
     """Project an auditable forming PRZ from X/A/B/C.
 
-    This function intentionally supports only executable XABCD rules.  Shark and
-    5-0 use different segment semantics and must have dedicated projectors instead
-    of being coerced into this path.
+    This function intentionally supports only executable XABCD rules. Shark and 5-0 use
+    different segment semantics and must have dedicated projectors instead of being coerced
+    into this path.
     """
 
     if rule.schema != "XABCD":
