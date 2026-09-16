@@ -15,7 +15,7 @@ def _points() -> tuple[HarmonicPoint, ...]:
     )
 
 
-def _prz() -> PotentialReversalZone:
+def _prz(*, source_bounds: bool = True) -> PotentialReversalZone:
     component = PRZComponent(
         name="test",
         ratio_low=1.0,
@@ -27,13 +27,14 @@ def _prz() -> PotentialReversalZone:
         pattern_id="test",
         direction=PatternDirection.BULLISH,
         components=(component,),
+        source_prz_low=118.0 if source_bounds else None,
+        source_prz_high=122.0 if source_bounds else None,
     )
 
 
 def test_type_ii_full_retest_records_price_and_rsi_confirmation_evidence() -> None:
-    # D is at index 4. Price first exits the bullish PRZ at +1, later returns through
-    # the full lower/terminal side at +4, then exits in the reversal direction again at +5.
-    # The full retest is the retrospective Type-II Terminal Price Bar in this audit.
+    # D is at index 4. Price first exits the bullish source PRZ at +1, later returns
+    # through the full lower/terminal side at +4, then exits again at +5.
     close = [200, 190, 180, 170, 120, 130, 140, 150, 119, 126, 138, 146]
     frame = pd.DataFrame(
         {
@@ -51,6 +52,7 @@ def test_type_ii_full_retest_records_price_and_rsi_confirmation_evidence() -> No
         rsi_period=3,
     )
 
+    assert audit.source_prz_available is True
     assert audit.type_ii_candidate is True
     assert audit.first_prz_exit_bar == 1
     assert audit.secondary_prz_retest_bar == 4
@@ -83,6 +85,7 @@ def test_type_ii_full_retest_without_rsi_extreme_stays_price_only() -> None:
         prz=_prz(),
         rsi_period=3,
     )
+    assert audit.source_prz_available is True
     assert audit.type_ii_candidate is True
     assert audit.full_prz_retest_bar is not None
     assert audit.reversal_exit_after_retest_bar is not None
@@ -90,10 +93,9 @@ def test_type_ii_full_retest_without_rsi_extreme_stays_price_only() -> None:
     assert audit.type_ii_evidence_state == "price_confirmed_no_rsi"
 
 
-def test_partial_prz_overlap_is_not_promoted_to_type_ii_candidate() -> None:
-    # +1 exits PRZ. +4 only overlaps the upper half of the PRZ (low=120 > 118), then
-    # price exits again. Under Volume Three semantics this is not a full retest of all
-    # original PRZ measurements and therefore cannot become a confirmed Type-II event.
+def test_partial_source_prz_overlap_is_not_promoted_to_type_ii_candidate() -> None:
+    # +1 exits source PRZ. +4 overlaps its upper half (low=120 > 118), then price exits.
+    # This is not a full retest of the source PRZ terminal side.
     frame = pd.DataFrame(
         {
             "close": [100, 110, 120, 130, 120, 130, 140, 150, 121, 130, 140, 150],
@@ -110,9 +112,39 @@ def test_partial_prz_overlap_is_not_promoted_to_type_ii_candidate() -> None:
     )
 
     assert audit.secondary_prz_retest_bar == 4
+    assert audit.source_prz_available is True
     assert audit.full_prz_retest_bar is None
     assert audit.type_ii_terminal_bar is None
     assert audit.type_ii_candidate is False
     assert audit.reversal_exit_after_retest_bar is None
     assert audit.rsi_confirmation is False
     assert audit.type_ii_evidence_state == "partial_retest_only"
+
+
+def test_missing_source_prz_fails_closed_even_when_ideal_core_is_retested() -> None:
+    # The same path would touch the legacy ideal core, but no source Raw PRZ has been
+    # frozen. The audit may record a descriptive re-entry; it must not manufacture a
+    # full retest or Type-II candidate from the ideal core/component envelope.
+    frame = pd.DataFrame(
+        {
+            "close": [100, 110, 120, 130, 120, 130, 140, 150, 119, 130, 140, 150],
+            "high": [101, 111, 121, 131, 121, 132, 142, 152, 121, 132, 142, 152],
+            "low": [99, 109, 119, 129, 119, 128, 138, 148, 117, 128, 138, 148],
+        }
+    )
+    audit = audit_completed_reaction(
+        frame,
+        points=_points(),
+        direction=PatternDirection.BULLISH,
+        prz=_prz(source_bounds=False),
+        rsi_period=3,
+    )
+
+    assert audit.source_prz_available is False
+    assert audit.secondary_prz_retest_bar is not None
+    assert audit.full_prz_retest_bar is None
+    assert audit.type_ii_terminal_bar is None
+    assert audit.type_ii_candidate is False
+    assert audit.reversal_exit_after_retest_bar is None
+    assert audit.rsi_confirmation is False
+    assert audit.type_ii_evidence_state == "source_prz_unresolved"
