@@ -62,14 +62,20 @@ class PotentialReversalZone:
     def convergence_prices(self) -> tuple[float, ...]:
         """Representative prices that actually form the projected reversal cluster.
 
-        The old M2 draft used the min/max of *all* BC ranges and every alternate AB=CD
-        projection. That rendered a misleadingly huge rectangle. Carney PRZ logic is about
-        convergence. We therefore anchor on the defining XA completion, take the point in
-        each bounded complementary range nearest that anchor, and choose the single AB=CD
-        variant that converges most closely. Every reachable alternative remains in
-        ``components`` for audit and later research; it simply does not inflate the displayed
-        zone.
+        Standard XABCD patterns anchor on the defining XA completion and select the
+        complementary BC / AB=CD measurements that converge most closely with it.
+
+        Shark is structurally different: its PRZ is the *overlap* of the 0B 0.886-1.13
+        completion range and the 1.618-2.24 AB impulse range. Returning that intersection
+        explicitly prevents the dedicated Shark schema from being collapsed to an opaque
+        midpoint by the standard M/W convergence heuristic.
         """
+        if self.pattern_id == "shark" and len(self.components) >= 2:
+            overlap_low = max(component.price_low for component in self.components)
+            overlap_high = min(component.price_high for component in self.components)
+            if overlap_low <= overlap_high:
+                return (overlap_low, overlap_high)
+
         xa = [component for component in self.components if component.name == "XA completion"]
         anchor = xa[0].midpoint if xa else self.components[0].midpoint
         prices: list[float] = [anchor]
@@ -156,9 +162,6 @@ def _component_from_constraint(
     raw_high = max(p1, p2)
     if raw_high <= 0:
         raise ValueError(f"{name} projects entirely outside the positive-price domain")
-    # A bounded ratio family may mathematically extend below zero for an extreme low-priced
-    # instrument even when the actual completion is valid. Intersect that range with the
-    # physically reachable positive-price domain instead of rejecting the whole candidate.
     return PRZComponent(
         name=name,
         price_low=max(raw_low, _PRICE_FLOOR),
@@ -174,9 +177,8 @@ def build_xabcd_prz(
 ) -> PotentialReversalZone:
     """Project an auditable forming PRZ from X/A/B/C.
 
-    This function intentionally supports only executable XABCD rules. Shark and 5-0 use
-    different segment semantics and must have dedicated projectors instead of being coerced
-    into this path.
+    This function intentionally supports only executable standard XABCD rules. Shark and
+    5-0 use different segment semantics and have dedicated projectors.
     """
 
     if rule.schema != "XABCD":
@@ -215,9 +217,6 @@ def build_xabcd_prz(
 
     for ratio in rule.abcd_types:
         price = _project_abcd_completion(a, b, c, ratio, direction)
-        # This preferred alternate cannot be reached by a positive-priced instrument for
-        # the current geometry. Keep the source ratio in the rule registry but omit the
-        # physically impossible price component from this candidate's PRZ audit.
         if price <= 0:
             continue
         components.append(
