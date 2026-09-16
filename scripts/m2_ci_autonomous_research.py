@@ -15,6 +15,7 @@ from htcn.research.autonomous_calibration import (
     build_autonomous_quality_report,
     enrich_walk_forward_records,
 )
+from htcn.research.quality_robustness import build_quality_robustness_report
 from htcn.research.walk_forward import walk_forward_forming_signals
 
 
@@ -142,13 +143,20 @@ def main() -> int:
         horizon=horizon,
         minimum_mature_records=30,
     )
+    robustness = build_quality_robustness_report(
+        all_records,
+        horizon=horizon,
+        min_mature_records=100,
+    )
     research_status = (
         "calibration_complete"
-        if coverage_ok and calibration.get("status") == "research_quality_evidence_holdout_sealed"
+        if coverage_ok
+        and calibration.get("status") == "research_quality_evidence_holdout_sealed"
+        and robustness.get("status") == "research_robustness_holdout_sealed"
         else "insufficient_provider_or_sample_coverage"
     )
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": research_status,
         "dataset_id": manifest.get("dataset_id"),
         "snapshot_cutoff": manifest.get("snapshot_cutoff"),
@@ -160,12 +168,14 @@ def main() -> int:
         "failures": failures,
         "signals": len(all_records),
         "calibration": calibration,
+        "robustness": robustness,
         "methodology": {
             "runtime": "GitHub Actions / CI-accessible; no user workstation data is required.",
             "source": "Provider QFQ is used only for research calibration snapshots, separate from production raw+factor storage.",
             "determinism": "Snapshot cutoff and universe are pinned; provider restatements are detectable through per-file SHA256.",
-            "holdout": "Holdout outcomes remain sealed during iterative quality-gate research.",
+            "holdout": "Holdout outcomes remain sealed during iterative quality-gate and robustness research.",
             "identity": "Carney geometry/identity is frozen and never fitted to later outcomes.",
+            "robustness": "Strong gates are stress-tested across symbols, leave-one-symbol-out and coarse time segments before any policy freeze.",
             "network": "Provider availability is reported as evidence; network failure is not silently converted into a research conclusion.",
         },
     }
@@ -188,12 +198,13 @@ def main() -> int:
             f"[HT-CN AUTONOMOUS] strong_candidates={len(gate['strong_candidates'])}: "
             f"{', '.join(gate['strong_candidates']) or 'none'}"
         )
-        print("[HT-CN AUTONOMOUS] HOLDOUT SEALED")
-    else:
+    if robustness.get("status") == "research_robustness_holdout_sealed":
+        robust = robustness["robust_research_candidates"]
         print(
-            f"[HT-CN AUTONOMOUS] calibration={calibration.get('status')} "
-            "(no policy freeze; no holdout opening)"
+            f"[HT-CN AUTONOMOUS] robust_candidates={len(robust)}: "
+            f"{', '.join(robust) or 'none'}"
         )
+    print("[HT-CN AUTONOMOUS] HOLDOUT SEALED")
     print(f"[HT-CN AUTONOMOUS] report={REPORT_PATH.relative_to(ROOT)}")
     print("[HT-CN AUTONOMOUS] PASS: autonomous research pipeline completed.")
     return 0
