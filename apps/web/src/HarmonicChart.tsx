@@ -60,9 +60,19 @@ export type ReactionAudit = {
   type_ii_evidence_state: 'not_candidate' | 'retest_only' | 'price_confirmed_no_rsi' | 'price_and_rsi_confirmed'
 }
 
+export type ReactionTargets = {
+  target_50: number
+  target_618: number
+  reciprocal_abcd: number
+  bars_to_50: number | null
+  bars_to_618: number | null
+  bars_to_reciprocal_abcd: number | null
+  source_note?: string
+}
+
 export type Pattern = {
   pattern_id: string
-  schema?: 'XABCD' | 'ABCD'
+  schema?: 'XABCD' | 'ABCD' | '0XABC' | 'FIVE_ZERO'
   direction: 'bullish' | 'bearish'
   state: 'forming' | 'completed'
   scale: number
@@ -72,6 +82,9 @@ export type Pattern = {
   identity_conflicts?: string[]
   is_primary_identity?: boolean
   reaction_audit?: ReactionAudit
+  reaction_targets?: ReactionTargets
+  completion_class?: string
+  reciprocal_inside_execution_band?: boolean
   prz: {
     price_low: number
     price_high: number
