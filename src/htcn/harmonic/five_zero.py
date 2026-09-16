@@ -26,6 +26,9 @@ class FiveZeroEvaluation:
     geometry_score: float
     reciprocal_abcd_price: float
     reciprocal_inside_execution_band: bool
+    execution_price: float
+    execution_basis: str
+    volume3_make_or_break_price: float
     completion_class: str
     reasons: tuple[str, ...]
 
@@ -43,6 +46,10 @@ class FiveZeroProjection:
     c_ab: float
     prz: PotentialReversalZone
     reciprocal_abcd_price: float
+    reciprocal_inside_execution_band: bool
+    execution_price: float
+    execution_basis: str
+    volume3_make_or_break_price: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,7 +118,15 @@ def _point_component(name: str, price: float, ratio: float) -> PRZComponent:
 
 def _build_prz(
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
-) -> tuple[PotentialReversalZone, float, bool]:
+) -> tuple[PotentialReversalZone, float, bool, float, str, float]:
+    """Build the structural Raw PRZ and the separate Volume Three execution refinement.
+
+    Volume Two defines the structural 5-0 PRZ with exactly two measurements: the 50% BC
+    retracement and the Reciprocal AB=CD.  Volume Three does not replace that identity with
+    a generic 50%-61.8% band.  Instead, 61.8% becomes a conditional execution and
+    make-or-break level depending on where the Reciprocal AB=CD completes.
+    """
+
     x, a, b, c = points
     direction = _direction(points)
     bc = leg_length(b.price, c.price)
@@ -122,8 +137,22 @@ def _build_prz(
     price_50 = _project_from_c(c_price=c.price, length=bc, ratio=0.50, direction=direction)
     price_618 = _project_from_c(c_price=c.price, length=bc, ratio=0.618, direction=direction)
     reciprocal = _project_from_c(c_price=c.price, length=ab, ratio=1.0, direction=direction)
+
     band_low, band_high = sorted((price_50, price_618))
     reciprocal_inside = band_low <= reciprocal <= band_high
+
+    distance_50 = abs(float(price_50) - float(c.price))
+    distance_reciprocal = abs(float(reciprocal) - float(c.price))
+    eps = 1e-12 * max(1.0, distance_50, distance_reciprocal)
+    if distance_reciprocal < distance_50 - eps:
+        execution_price = reciprocal
+        execution_basis = "reciprocal_before_50"
+    elif abs(distance_reciprocal - distance_50) <= eps:
+        execution_price = price_50
+        execution_basis = "volume2_50_and_reciprocal"
+    else:
+        execution_price = price_618
+        execution_basis = "volume3_618_after_50"
 
     prz = PotentialReversalZone(
         pattern_id="five_zero",
@@ -134,7 +163,14 @@ def _build_prz(
             _point_component("Reciprocal AB=CD x1", reciprocal, 1.0),
         ),
     )
-    return prz, reciprocal, reciprocal_inside
+    return (
+        prz,
+        reciprocal,
+        reciprocal_inside,
+        float(execution_price),
+        execution_basis,
+        float(price_618),
+    )
 
 
 def measure_five_zero(
@@ -181,7 +217,18 @@ def _in_band(value: float, low: float, high: float) -> bool:
 
 def evaluate_five_zero(
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
+    *,
+    completion_relative_tolerance: float = 0.03,
 ) -> FiveZeroEvaluation:
+    """Evaluate a completed 5-0 without collapsing structure and execution semantics.
+
+    ``completion_relative_tolerance`` is an HT-CN operational tolerance against the BC span.
+    It is not claimed as a universal Carney constant.
+    """
+
+    if completion_relative_tolerance < 0:
+        raise ValueError("5-0 completion tolerance must be non-negative")
+
     direction = _direction(points)
     metrics = measure_five_zero(points)
     reasons: list[str] = []
@@ -192,26 +239,38 @@ def evaluate_five_zero(
         reasons.append(f"B/XA={metrics.b_xa.value:.6f} outside 1.13-1.618")
     if not _in_band(metrics.c_ab.value, 1.618, 2.24):
         reasons.append(f"C/AB={metrics.c_ab.value:.6f} outside 1.618-2.24")
-    if not _in_band(metrics.d_bc.value, 0.50, 0.618):
-        reasons.append(f"D/BC={metrics.d_bc.value:.6f} outside 0.50-0.618")
 
-    prz, reciprocal, reciprocal_inside = _build_prz(points[:4])
-    if not reciprocal_inside:
-        reasons.append("Reciprocal AB=CD does not converge inside the 50%-61.8% BC execution band")
+    (
+        prz,
+        reciprocal,
+        reciprocal_inside,
+        execution_price,
+        execution_basis,
+        make_or_break_price,
+    ) = _build_prz(points[:4])
 
     d = points[4]
     bc = leg_length(points[2].price, points[3].price)
-    nearest_source = min(
-        abs(metrics.d_bc.value - 0.50) / 0.50,
-        abs(float(d.price) - reciprocal) / max(bc, 1e-12),
-        abs(metrics.d_bc.value - 0.618) / 0.618,
+    completion_error = abs(float(d.price) - execution_price) / max(bc, 1e-12)
+    if completion_error > completion_relative_tolerance:
+        reasons.append(
+            "D does not test the source-aligned 5-0 execution level "
+            f"({execution_basis}); relative BC error={completion_error:.6f}"
+        )
+
+    price_50 = next(
+        component.midpoint for component in prz.components if component.name == "BC 50% completion"
     )
-    completion_class = (
-        "volume2_50"
-        if abs(metrics.d_bc.value - 0.50) <= abs(metrics.d_bc.value - 0.618)
-        else "volume3_618_refinement"
-    )
-    geometry_score = round(max(0.0, 100.0 * (1.0 - min(1.0, 3.0 * nearest_source))), 2)
+    raw_spread = abs(float(reciprocal) - float(price_50)) / max(bc, 1e-12)
+    penalty = min(1.0, (3.0 * completion_error) + min(raw_spread, 0.35))
+    geometry_score = round(max(0.0, 100.0 * (1.0 - penalty)), 2)
+
+    if execution_basis == "volume2_50_and_reciprocal":
+        completion_class = "volume2_50"
+    elif execution_basis == "reciprocal_before_50":
+        completion_class = "reciprocal_before_50"
+    else:
+        completion_class = "volume3_618_refinement"
 
     return FiveZeroEvaluation(
         pattern_id="five_zero",
@@ -223,6 +282,9 @@ def evaluate_five_zero(
         geometry_score=geometry_score,
         reciprocal_abcd_price=reciprocal,
         reciprocal_inside_execution_band=reciprocal_inside,
+        execution_price=execution_price,
+        execution_basis=execution_basis,
+        volume3_make_or_break_price=make_or_break_price,
         completion_class=completion_class,
         reasons=tuple(reasons),
     )
@@ -250,9 +312,14 @@ def project_forming_five_zero(
     if not _in_band(b_xa, 1.13, 1.618) or not _in_band(c_ab, 1.618, 2.24):
         return None
 
-    prz, reciprocal, reciprocal_inside = _build_prz(points)
-    if not reciprocal_inside:
-        return None
+    (
+        prz,
+        reciprocal,
+        reciprocal_inside,
+        execution_price,
+        execution_basis,
+        make_or_break_price,
+    ) = _build_prz(points)
     return FiveZeroProjection(
         pattern_id="five_zero",
         direction=direction,
@@ -261,6 +328,10 @@ def project_forming_five_zero(
         c_ab=c_ab,
         prz=prz,
         reciprocal_abcd_price=reciprocal,
+        reciprocal_inside_execution_band=reciprocal_inside,
+        execution_price=execution_price,
+        execution_basis=execution_basis,
+        volume3_make_or_break_price=make_or_break_price,
     )
 
 
@@ -315,7 +386,12 @@ def scan_five_zero_pivots(
                     projection = None
                 if projection is not None:
                     bc = max(leg_length(points[2].price, points[3].price), 1e-12)
-                    width_penalty = min(1.0, projection.prz.width / bc)
+                    source_width = (
+                        projection.prz.source_prz_high - projection.prz.source_prz_low
+                        if projection.prz.has_source_prz
+                        else projection.prz.width
+                    )
+                    width_penalty = min(1.0, source_width / bc)
                     forming.append(
                         FiveZeroFormingMatch(
                             pattern_id="five_zero",
