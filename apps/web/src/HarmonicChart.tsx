@@ -45,6 +45,7 @@ export type ReactionAudit = {
   first_prz_exit_bar: number | null
   secondary_prz_retest_bar: number | null
   full_prz_retest_bar: number | null
+  type_ii_terminal_bar?: number | null
   reversal_exit_after_retest_bar: number | null
   bars_to_reversal_exit_after_retest: number | null
   third_prz_test_bar: number | null
@@ -60,7 +61,15 @@ export type ReactionAudit = {
   rsi_trigger_bar: number | null
   rsi_trigger_value: number | null
   rsi_confirmation: boolean
-  type_ii_evidence_state: 'not_candidate' | 'retest_only' | 'price_confirmed_no_rsi' | 'price_and_rsi_confirmed'
+  indicator_evidence_kind?: string
+  indicator_evidence_is_rsi_bamm?: boolean
+  type_ii_evidence_state:
+    | 'not_candidate'
+    | 'partial_retest_only'
+    | 'full_retest_waiting_price'
+    | 'price_confirmed_no_rsi'
+    | 'price_and_rsi_confirmed'
+    | 'retest_only'
 }
 
 export type ReactionTargets = {
@@ -92,6 +101,8 @@ export type Pattern = {
     price_low: number
     price_high: number
     width: number
+    component_price_low?: number
+    component_price_high?: number
     components: PrzComponent[]
   }
   metrics: Record<string, number>
@@ -128,13 +139,13 @@ function lifecycleTargets(pattern: Pattern | null): LifecycleTarget[] {
   return [
     {
       id: 't1',
-      label: 'T1 38.2%',
+      label: '后验T1 38.2%',
       price: audit.target_382,
       reached: audit.bars_to_382 != null,
     },
     {
       id: 't2',
-      label: 'T2 61.8%',
+      label: '后验T2 61.8%',
       price: audit.target_618,
       reached: audit.bars_to_618 != null,
     },
