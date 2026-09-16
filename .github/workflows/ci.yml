@@ -7,6 +7,10 @@ on:
       - 'm*/**'
   pull_request:
 
+concurrency:
+  group: htcn-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deterministic-tests:
     runs-on: ubuntu-latest
@@ -83,6 +87,17 @@ jobs:
           key: m2-research-qfq-${{ runner.os }}-${{ hashFiles('research/a-share-research-universe-v1.json') }}
           restore-keys: |
             m2-research-qfq-${{ runner.os }}-
+
+      - name: Bootstrap frozen A-share snapshots on cache miss
+        if: steps.research-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: m2-autonomous-research-80421ff54cb0338906a3d34e5242740ec2d3469d
+          repository: shazhuya/HT-CN
+          run-id: 35114589602
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: artifacts/ci-research
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
