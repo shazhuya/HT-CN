@@ -6,15 +6,21 @@ from typing import Mapping
 
 _NUMERIC_EPSILON = 1e-12
 
+# Volume One explicitly defines the finite ratio family used to identify precise harmonic
+# structures. A broad min/max band is still useful as a fast structural guard, but values
+# inside that band are not automatically harmonic merely because they are numerically between
+# two valid ratios.
+HARMONIC_RETRACEMENT_FAMILY: tuple[float, ...] = (0.382, 0.50, 0.618, 0.707, 0.786, 0.886)
+
 
 @dataclass(frozen=True, slots=True)
 class RatioConstraint:
     """Explicit ratio band used by a pattern rule.
 
-    `minimum`/`maximum` are the canonical geometry. Optional tolerances are stored
-    separately so strict identity and permissive real-time matching never become the
-    same operation by accident. A machine-precision epsilon is always used at the
-    inclusive boundary; this is numerical hygiene, not a trading tolerance.
+    `minimum`/`maximum` are the canonical structural envelope. Optional source-backed
+    tolerances are stored separately so strict identity and permissive matching never become
+    the same operation by accident. A machine-precision epsilon is always used at inclusive
+    boundaries; this is numerical hygiene, not a trading tolerance.
     """
 
     minimum: float
@@ -48,8 +54,12 @@ class PatternRule:
     pattern_id: str
     schema: str
     constraints: Mapping[str, RatioConstraint] = field(default_factory=dict)
-    # Preferred/complementary AB=CD variants used for PRZ projection and geometry
-    # quality. They are NOT silently promoted to exact hard identity tests.
+    # Discrete source harmonic families. The evaluator may apply an explicit HT-CN
+    # operational matching tolerance around these source-listed values, but it must never
+    # interpret the entire min/max envelope as a continuous harmonic family.
+    harmonic_targets: Mapping[str, tuple[float, ...]] = field(default_factory=dict)
+    # Preferred/complementary AB=CD variants used for PRZ projection and geometry quality.
+    # They are NOT silently promoted to exact hard identity tests.
     abcd_types: tuple[float, ...] = ()
     # Carney frequently describes an "AB=CD minimum" rather than an exact CD/AB ratio.
     # When set, completed geometry must at least reach this CD/AB length ratio.
@@ -64,11 +74,23 @@ class PatternRule:
     def __post_init__(self) -> None:
         if self.abcd_minimum is not None and self.abcd_minimum <= 0:
             raise ValueError("abcd_minimum must be positive")
+        for name, targets in self.harmonic_targets.items():
+            if not targets:
+                raise ValueError(f"harmonic target family {name!r} cannot be empty")
+            if any(target <= 0 for target in targets):
+                raise ValueError(f"harmonic target family {name!r} must be positive")
+            constraint = self.constraints.get(name)
+            if constraint is not None:
+                for target in targets:
+                    if not constraint.contains(target, include_tolerance=True):
+                        raise ValueError(
+                            f"harmonic target {target:g} for {name!r} lies outside its structural envelope"
+                        )
 
 
-# Standard M/W XABCD structures use a C-point retracement from the harmonic ratio
-# family bounded by 0.382 and 0.886. Keeping it explicit prevents visually alternating
-# but structurally impossible windows from leaking into completed/forming candidates.
+# Standard M/W XABCD structures use a C-point retracement from the source-listed harmonic
+# family bounded by 0.382 and 0.886. The broad band is only the structural envelope; the
+# discrete family is enforced separately by PatternRule.harmonic_targets.
 C_POINT_STANDARD = RatioConstraint(0.382, 0.886)
 
 
@@ -82,10 +104,17 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "bc_projection": RatioConstraint(1.13, 1.618),
             "d_xa": RatioConstraint(0.786, 0.786, ideal=0.786),
         },
+        harmonic_targets={
+            "c_ab": HARMONIC_RETRACEMENT_FAMILY,
+            "bc_projection": (1.13, 1.27, 1.414, 1.618),
+        },
         abcd_types=(1.0, 1.27),
         abcd_minimum=1.0,
         source_note="Volume One Gartley chapter; Volume Three p.92 specification and B-point tolerance classification.",
-        implementation_note="AB=CD is required as a completed minimum/PRZ component; preferred variants contribute to quality but are not given an invented hard tolerance.",
+        implementation_note=(
+            "C and BC use source-listed harmonic ratio families rather than arbitrary continuous values. "
+            "AB=CD is required as a completed minimum/PRZ component; preferred variants contribute to quality."
+        ),
     ),
     "bat": PatternRule(
         pattern_id="bat",
@@ -96,9 +125,14 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "bc_projection": RatioConstraint(1.618, 2.618),
             "d_xa": RatioConstraint(0.886, 0.886, ideal=0.886),
         },
+        harmonic_targets={
+            "c_ab": HARMONIC_RETRACEMENT_FAMILY,
+            "bc_projection": (1.618, 2.0, 2.24, 2.618),
+        },
         abcd_types=(1.0, 1.27, 1.618),
         abcd_minimum=1.0,
         source_note="Volume One Bat chapter; Volume Three p.98 specification. V3 calls for a minimum AB=CD, typically 1.27AB=CD.",
+        implementation_note="C/BC are matched to the discrete harmonic family inside the source structural envelopes.",
     ),
     "alternate_bat": PatternRule(
         pattern_id="alternate_bat",
@@ -109,13 +143,18 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "bc_projection": RatioConstraint(2.0, 3.618),
             "d_xa": RatioConstraint(0.886, 1.13),
         },
+        harmonic_targets={
+            "c_ab": HARMONIC_RETRACEMENT_FAMILY,
+            "bc_projection": (2.0, 2.24, 2.618, 3.14, 3.618),
+        },
         abcd_types=(1.618,),
         abcd_minimum=None,
         source_conflict=True,
         source_note="Volume Two Alternate Bat chapter vs. Volume Three p.101 specification.",
         implementation_note=(
             "Volume Two explicitly says AB=CD is not included in this setup, while Volume Three lists 1.618AB=CD. "
-            "Therefore AB=CD remains an auditable quality/PRZ reference, not a hard identity gate."
+            "Therefore AB=CD remains an auditable quality/PRZ reference, not a hard identity gate. "
+            "Shared C/BC geometry is restricted to the source harmonic ratio family."
         ),
     ),
     "butterfly": PatternRule(
@@ -126,6 +165,10 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "c_ab": C_POINT_STANDARD,
             "bc_projection": RatioConstraint(1.618, 2.24),
             "d_xa": RatioConstraint(1.27, 1.27, ideal=1.27),
+        },
+        harmonic_targets={
+            "c_ab": HARMONIC_RETRACEMENT_FAMILY,
+            "bc_projection": (1.618, 2.0, 2.24),
         },
         abcd_types=(1.0, 1.27),
         abcd_minimum=1.0,
@@ -140,10 +183,17 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "bc_projection": RatioConstraint(2.618, 3.618),
             "d_xa": RatioConstraint(1.618, 1.618, ideal=1.618),
         },
+        harmonic_targets={
+            "c_ab": HARMONIC_RETRACEMENT_FAMILY,
+            "bc_projection": (2.618, 3.14, 3.618),
+        },
         abcd_types=(1.0, 1.27, 1.618),
         abcd_minimum=1.0,
-        source_note="Volume One Crab chapter; Volume Three p.104 specification.",
-        implementation_note="Volume One describes minimum AB=CD completion; alternate 1.27/1.618 are common but not exact hard identity ratios.",
+        source_note="Volume One Crab chapter; Volume Three p.104 canonical specification.",
+        implementation_note=(
+            "Volume Three canonical BC family is 2.618/3.14/3.618 inside 2.618-3.618. "
+            "Volume One mentions occasional 2.0/2.24 variants; those remain outside the canonical identity pending variant-level Golden Cases."
+        ),
     ),
     "deep_crab": PatternRule(
         pattern_id="deep_crab",
@@ -154,6 +204,10 @@ CARNEY_RULES: dict[str, PatternRule] = {
             "bc_projection": RatioConstraint(2.0, 3.618),
             "d_xa": RatioConstraint(1.618, 1.618, ideal=1.618),
         },
+        harmonic_targets={
+            "c_ab": HARMONIC_RETRACEMENT_FAMILY,
+            "bc_projection": (2.0, 2.24, 2.618, 3.14, 3.618),
+        },
         abcd_types=(1.0, 1.27, 1.618),
         abcd_minimum=1.0,
         source_note="Volume One Deep Crab chapter; Volume Three p.107 specification.",
@@ -162,6 +216,7 @@ CARNEY_RULES: dict[str, PatternRule] = {
         pattern_id="abcd",
         schema="ABCD",
         constraints={"c_ab": C_POINT_STANDARD},
+        harmonic_targets={"c_ab": HARMONIC_RETRACEMENT_FAMILY},
         abcd_types=(1.0, 1.13, 1.27, 1.41, 1.618, 2.0),
         source_note="Volume One Ch.4 reciprocal table; Volume Three pp.76-80 AB=CD and reciprocal-ratio review.",
         implementation_note="Reciprocal C/AB -> BC projection mapping is frozen separately in ratios.RECIPROCAL_ABCD.",
@@ -180,7 +235,7 @@ CARNEY_RULES: dict[str, PatternRule] = {
         implementation_note=(
             "Executed only by the dedicated Shark evaluator. A/0X=0.382-0.618, "
             "B/XA=1.13-1.618, C/AB=1.618-2.24 and C/0B=0.886-1.13 must converge. "
-            "Do not force Shark into standard XABCD semantics."
+            "Dedicated Shark figure reconciliation remains separate from standard XABCD family matching."
         ),
     ),
     "five_zero": PatternRule(
@@ -193,13 +248,10 @@ CARNEY_RULES: dict[str, PatternRule] = {
         },
         executable_identity=False,
         source_conflict=True,
-        source_note="Volume Two 5-0 chapter pp.83-110 plus Volume Three pp.129-136 refinement.",
+        source_note="Volume Two 5-0 chapter plus Volume Three pp.129-136 refinement.",
         implementation_note=(
-            "Executed only by the dedicated 5-0 evaluator. Volume Two defines the core X-A-B-C-D "
-            "geometry, mandatory B/XA=1.13-1.618 and C/AB=1.618-2.24, with D at the 50% BC "
-            "retracement plus Reciprocal AB=CD. Volume Three retains that structure but expands "
-            "execution/make-or-break handling toward 61.8%; HT-CN therefore records the 50%-61.8% "
-            "execution band while preserving 50% as the original defining completion."
+            "Research-only pending figure-level reconciliation. Volume Two structural PRZ and Volume Three "
+            "execution/make-or-break refinements must not be collapsed into a generic production band."
         ),
     ),
 }
