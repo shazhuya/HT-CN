@@ -35,6 +35,21 @@ export type PrzComponent = {
   ratio_high: number
 }
 
+export type PriceZoneLayer = {
+  price_low: number
+  price_high: number
+  width: number
+  status?: string
+}
+
+export type SourcePrzLayer = {
+  available: boolean
+  price_low: number | null
+  price_high: number | null
+  width: number | null
+  status: 'frozen' | 'unresolved_fail_closed' | string
+}
+
 export type ReactionAudit = {
   d_index: number
   bars_observed: number
@@ -81,6 +96,10 @@ export type ReactionTargets = {
   bars_to_50: number | null
   bars_to_618: number | null
   bars_to_reciprocal_abcd: number | null
+  initial_target?: number
+  initial_target_basis?: string
+  bars_to_initial_target?: number | null
+  management_rule?: string
   source_note?: string
 }
 
@@ -99,6 +118,8 @@ export type Pattern = {
   reaction_targets?: ReactionTargets
   completion_class?: string
   reciprocal_inside_execution_band?: boolean
+  execution_clock?: Record<string, unknown>
+  execution_clock_policy?: string
   prz: {
     price_low: number
     price_high: number
@@ -107,6 +128,11 @@ export type Pattern = {
     component_price_high?: number
     source_prz_low?: number | null
     source_prz_high?: number | null
+    semantics_version?: number
+    legacy_price_semantics?: string
+    ideal_core?: PriceZoneLayer
+    component_envelope?: PriceZoneLayer
+    source_prz?: SourcePrzLayer
     components: PrzComponent[]
   }
   metrics: Record<string, number>
@@ -218,6 +244,7 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
               width={Math.max(3, x(maxIndex) - x(przStart))}
               height={Math.max(2, y(pattern.prz.price_low) - y(pattern.prz.price_high))}
               className={`prz-zone ${pattern.direction}`}
+              aria-label="HT-CN收敛核心-非SourcePRZ"
             />
           )}
 
