@@ -22,20 +22,22 @@ def _validate_frame(frame: pd.DataFrame) -> None:
         raise ValueError("pivot source contains high < low")
 
 
-def detect_confirmed_pivots(
+def detect_pivot_events(
     frame: pd.DataFrame,
     *,
     left: int = 3,
     right: int = 3,
     scale: int | None = None,
 ) -> list[Pivot]:
-    """Detect non-repainting local pivots confirmed after `right` bars.
+    """Return every raw local-extreme confirmation event without global swing collapsing.
 
-    A pivot high must equal the maximum high inside its full left/right window; a pivot low
-    uses the equivalent minimum-low rule. Ties are resolved conservatively: if the same
-    extreme appears more than once in the window, no pivot is emitted for that center bar.
-    This prevents duplicate nodes on flat tops/bottoms.
+    Each emitted pivot is knowable at ``confirmed_at=center+right`` using only bars available
+    at that time.  The function deliberately does *not* collapse later same-kind pivots.  That
+    distinction is critical for walk-forward research: collapsing the full history first and
+    filtering it later can erase a pivot that was genuinely visible at an earlier date, which
+    would introduce look-ahead bias.
     """
+
     if left < 1 or right < 1:
         raise ValueError("left and right must be >= 1")
     _validate_frame(frame)
@@ -48,7 +50,7 @@ def detect_confirmed_pivots(
 
     highs = pd.to_numeric(frame["high"], errors="raise").to_numpy(dtype=float)
     lows = pd.to_numeric(frame["low"], errors="raise").to_numpy(dtype=float)
-    pivots: list[Pivot] = []
+    events: list[Pivot] = []
 
     for center in range(left, len(frame) - right):
         lo = center - left
@@ -58,7 +60,7 @@ def detect_confirmed_pivots(
 
         center_high = highs[center]
         if center_high == high_window.max() and (high_window == center_high).sum() == 1:
-            pivots.append(
+            events.append(
                 Pivot(
                     index=center,
                     price=float(center_high),
@@ -70,7 +72,7 @@ def detect_confirmed_pivots(
 
         center_low = lows[center]
         if center_low == low_window.min() and (low_window == center_low).sum() == 1:
-            pivots.append(
+            events.append(
                 Pivot(
                     index=center,
                     price=float(center_low),
@@ -80,7 +82,42 @@ def detect_confirmed_pivots(
                 )
             )
 
-    return collapse_same_kind_pivots(pivots)
+    events.sort(key=lambda pivot: (pivot.confirmed_at, pivot.index, pivot.kind.value))
+    return events
+
+
+def visible_confirmed_pivots(events: Iterable[Pivot], *, cutoff: int) -> list[Pivot]:
+    """Collapse only the pivot events that were actually confirmed by ``cutoff``.
+
+    This recreates the swing state that a live process could have known at the requested bar.
+    Later confirmation events are ignored before same-kind replacement is applied.
+    """
+
+    visible = [pivot for pivot in events if int(pivot.confirmed_at) <= int(cutoff)]
+    return collapse_same_kind_pivots(visible)
+
+
+def detect_confirmed_pivots(
+    frame: pd.DataFrame,
+    *,
+    left: int = 3,
+    right: int = 3,
+    scale: int | None = None,
+) -> list[Pivot]:
+    """Detect the final non-repainting local-pivot sequence for the supplied frame.
+
+    A pivot high must equal the maximum high inside its full left/right window; a pivot low
+    uses the equivalent minimum-low rule. Ties are resolved conservatively: if the same
+    extreme appears more than once in the window, no pivot is emitted for that center bar.
+
+    For historical walk-forward work use :func:`detect_pivot_events` together with
+    :func:`visible_confirmed_pivots`, because filtering this final collapsed sequence after the
+    fact can leak information from later same-kind replacements.
+    """
+
+    return collapse_same_kind_pivots(
+        detect_pivot_events(frame, left=left, right=right, scale=scale)
+    )
 
 
 def collapse_same_kind_pivots(pivots: Iterable[Pivot]) -> list[Pivot]:
@@ -117,7 +154,7 @@ def detect_multi_scale_pivots(
     *,
     scales: Iterable[int] = (2, 3, 5, 8),
 ) -> dict[int, list[Pivot]]:
-    """Build independent confirmed swing sequences for multiple scales."""
+    """Build independent final confirmed swing sequences for multiple scales."""
     result: dict[int, list[Pivot]] = {}
     for scale in sorted(set(int(value) for value in scales)):
         if scale < 1:
