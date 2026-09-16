@@ -1,6 +1,7 @@
 import pytest
 
-from htcn.harmonic.evaluator import evaluate_xabcd, measure_xabcd
+import htcn.harmonic.evaluator as evaluator_module
+from htcn.harmonic.evaluator import evaluate_xabcd, match_xabcd, measure_xabcd
 from htcn.harmonic.models import HarmonicPoint, PatternDirection, PatternState
 from htcn.harmonic.prz import build_xabcd_prz
 from htcn.harmonic.rules import CARNEY_RULES
@@ -61,6 +62,31 @@ def test_exact_bearish_gartley_completes() -> None:
     result = evaluate_xabcd(CARNEY_RULES["gartley"], _bearish_gartley())
     assert result.state is PatternState.COMPLETED
     assert result.direction is PatternDirection.BEARISH
+
+
+def test_match_xabcd_passed_path_is_identical_to_full_evaluator() -> None:
+    full = evaluate_xabcd(CARNEY_RULES["gartley"], _bullish_gartley())
+    matched = match_xabcd(CARNEY_RULES["gartley"], _bullish_gartley())
+    assert matched is not None
+    assert matched.pattern_id == full.pattern_id
+    assert matched.direction is full.direction
+    assert matched.state is full.state
+    assert matched.metrics == full.metrics
+    assert matched.checks == full.checks
+    assert matched.abcd_distance == full.abcd_distance
+    assert matched.reasons == full.reasons
+    assert matched.prz == full.prz
+
+
+def test_match_xabcd_rejection_never_builds_prz(monkeypatch: pytest.MonkeyPatch) -> None:
+    points = list(_bullish_gartley())
+    points[2] = HarmonicPoint("B", 20, 150.0)
+
+    def _unexpected_prz(*args: object, **kwargs: object) -> object:
+        raise AssertionError("rejected Scanner candidate must not construct a PRZ")
+
+    monkeypatch.setattr(evaluator_module, "build_xabcd_prz", _unexpected_prz)
+    assert match_xabcd(CARNEY_RULES["gartley"], tuple(points)) is None
 
 
 def test_wrong_b_point_rejects_gartley() -> None:
