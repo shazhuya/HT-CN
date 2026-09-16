@@ -30,11 +30,10 @@ def _prz() -> PotentialReversalZone:
     )
 
 
-def test_type_ii_retest_records_price_and_rsi_confirmation_evidence() -> None:
-    # D is at index 4. Price first exits the bullish PRZ at +1, retests its full lower
-    # edge at +4, then exits in the reversal direction again at +5. With a short RSI
-    # period for the deterministic fixture, the retest also contains an oversold reading
-    # that subsequently reverses back above 30.
+def test_type_ii_full_retest_records_price_and_rsi_confirmation_evidence() -> None:
+    # D is at index 4. Price first exits the bullish PRZ at +1, later returns through
+    # the full lower/terminal side at +4, then exits in the reversal direction again at +5.
+    # The full retest is the retrospective Type-II Terminal Price Bar in this audit.
     close = [200, 190, 180, 170, 120, 130, 140, 150, 119, 126, 138, 146]
     frame = pd.DataFrame(
         {
@@ -56,6 +55,7 @@ def test_type_ii_retest_records_price_and_rsi_confirmation_evidence() -> None:
     assert audit.first_prz_exit_bar == 1
     assert audit.secondary_prz_retest_bar == 4
     assert audit.full_prz_retest_bar == 4
+    assert audit.type_ii_terminal_bar == 4
     assert audit.reversal_exit_after_retest_bar == 5
     assert audit.bars_to_reversal_exit_after_retest == 1
     assert audit.rsi_extreme_bar is not None
@@ -63,15 +63,17 @@ def test_type_ii_retest_records_price_and_rsi_confirmation_evidence() -> None:
     assert audit.rsi_trigger_bar is not None
     assert audit.rsi_trigger_value is not None and audit.rsi_trigger_value > 30.0
     assert audit.rsi_confirmation is True
+    assert audit.indicator_evidence_kind == "wilder_rsi_extreme_reversal"
+    assert audit.indicator_evidence_is_rsi_bamm is False
     assert audit.type_ii_evidence_state == "price_and_rsi_confirmed"
 
 
-def test_type_ii_candidate_without_rsi_extreme_stays_price_only() -> None:
+def test_type_ii_full_retest_without_rsi_extreme_stays_price_only() -> None:
     frame = pd.DataFrame(
         {
             "close": [100, 110, 120, 130, 120, 130, 140, 150, 120, 130, 140, 150],
             "high": [101, 111, 121, 131, 121, 132, 142, 152, 121, 132, 142, 152],
-            "low": [99, 109, 119, 129, 119, 128, 138, 148, 119, 128, 138, 148],
+            "low": [99, 109, 119, 129, 119, 128, 138, 148, 117, 128, 138, 148],
         }
     )
     audit = audit_completed_reaction(
@@ -82,6 +84,35 @@ def test_type_ii_candidate_without_rsi_extreme_stays_price_only() -> None:
         rsi_period=3,
     )
     assert audit.type_ii_candidate is True
+    assert audit.full_prz_retest_bar is not None
     assert audit.reversal_exit_after_retest_bar is not None
     assert audit.rsi_confirmation is False
     assert audit.type_ii_evidence_state == "price_confirmed_no_rsi"
+
+
+def test_partial_prz_overlap_is_not_promoted_to_type_ii_candidate() -> None:
+    # +1 exits PRZ. +4 only overlaps the upper half of the PRZ (low=120 > 118), then
+    # price exits again. Under Volume Three semantics this is not a full retest of all
+    # original PRZ measurements and therefore cannot become a confirmed Type-II event.
+    frame = pd.DataFrame(
+        {
+            "close": [100, 110, 120, 130, 120, 130, 140, 150, 121, 130, 140, 150],
+            "high": [101, 111, 121, 131, 121, 132, 142, 152, 123, 132, 142, 152],
+            "low": [99, 109, 119, 129, 119, 128, 138, 148, 120, 128, 138, 148],
+        }
+    )
+    audit = audit_completed_reaction(
+        frame,
+        points=_points(),
+        direction=PatternDirection.BULLISH,
+        prz=_prz(),
+        rsi_period=3,
+    )
+
+    assert audit.secondary_prz_retest_bar == 4
+    assert audit.full_prz_retest_bar is None
+    assert audit.type_ii_terminal_bar is None
+    assert audit.type_ii_candidate is False
+    assert audit.reversal_exit_after_retest_bar is None
+    assert audit.rsi_confirmation is False
+    assert audit.type_ii_evidence_state == "partial_retest_only"
