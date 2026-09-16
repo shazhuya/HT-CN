@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Iterable
 
+from .quality_layers import pattern_family
 from .time_split import SplitBoundaries, assign_purged_split
 
 
@@ -28,7 +29,7 @@ def _terminal_events(
             {
                 "instrument_id": row.get("instrument_id"),
                 "pattern_id": row.get("pattern_id"),
-                "pattern_family": row.get("pattern_family"),
+                "pattern_family": pattern_family(row.get("pattern_id")),
                 "schema": row.get("schema"),
                 "direction": row.get("direction"),
                 "source_scale": int(row.get("source_scale") or 0),
