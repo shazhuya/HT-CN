@@ -52,7 +52,7 @@ jobs:
       - name: Run M3 deterministic browser acceptance
         if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/')
         working-directory: apps/web
-        run: npx playwright test tests/smoke.spec.ts
+        run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts
 
       - name: Upload M3 browser evidence
         if: always() && (startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/'))
