@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "preregistration_id": "m2-type-i-holdout-v1",
+  "status": "type_i_holdout_test_preregistered_sealed",
+  "dataset": {
+    "dataset_id": "a-share-research-v2-45",
+    "snapshot_cutoff": "2026-09-15",
+    "price_mode": "qfq"
+  },
+  "frozen_from_evidence_commit": "bc90af32963498d174aa2470852ec40330be7853",
+  "selected_hypothesis": "full_prz_exit_by_t5",
+  "visible_selection_evidence": {
+    "target": "Among Terminal-Bar cases whose T2 is still pending at T+5, first T2 hit from T+6 through T+20.",
+    "train": {
+      "exit_by_t3_pending": 274,
+      "exit_by_t3_later_t2_rate": 0.3248,
+      "exit_on_t4_t5_pending": 81,
+      "exit_on_t4_t5_later_t2_rate": 0.3210,
+      "no_full_exit_by_t5_pending": 559,
+      "no_full_exit_by_t5_later_t2_rate": 0.1628,
+      "fast_minus_late": 0.0038,
+      "late_minus_no_exit": 0.1582
+    },
+    "validation": {
+      "exit_by_t3_pending": 72,
+      "exit_by_t3_later_t2_rate": 0.4306,
+      "exit_on_t4_t5_pending": 22,
+      "exit_on_t4_t5_later_t2_rate": 0.4545,
+      "no_full_exit_by_t5_pending": 168,
+      "no_full_exit_by_t5_later_t2_rate": 0.1548,
+      "fast_minus_late": -0.0240,
+      "late_minus_no_exit": 0.2998
+    },
+    "decision_checks": {
+      "exclusive_sample_floor_ok": true,
+      "speed_advantage_fast_over_late_in_both_visible_splits": false,
+      "late_exit_beats_no_exit_in_both_visible_splits": true,
+      "pooled_exit_by_t5_beats_no_exit_in_both_visible_splits": true
+    },
+    "interpretation": "Visible Train/Validation evidence supports a five-bar full-PRZ-exit deadline, not a monotonic speed advantage inside the five-bar window."
+  },
+  "claim": "A full PRZ exit within five bars, rather than exit speed inside that window, is associated with higher later Type-I T2 progression.",
+  "population": {
+    "clock": "M2.17 source-aligned Terminal Price Bar",
+    "eligibility": "Terminal event is mature for the 20-bar reaction horizon and T2 remains pending at T+5.",
+    "split": "Only the already-sealed M2.17 Holdout is eligible for the confirmatory evaluation."
+  },
+  "primary_contrast": {
+    "exposure": {
+      "name": "full_prz_exit_by_t5",
+      "definition": "T2 pending at T+5 and a full PRZ exit occurs at least once from T+1 through T+5."
+    },
+    "comparator": {
+      "name": "no_full_exit_by_t5",
+      "definition": "T2 pending at T+5 and no full PRZ exit occurs from T+1 through T+5."
+    },
+    "endpoint": "First T2 hit from T+6 through T+20.",
+    "effect_measure": "absolute difference in endpoint proportions: exposure minus comparator"
+  },
+  "confirmatory_test": {
+    "method": "Newcombe score confidence interval for the difference of two independent proportions",
+    "confidence_level": 0.95,
+    "z": 1.959963984540054,
+    "minimum_records_per_group": 20,
+    "success_criterion": "lower bound of the 95% Newcombe interval for exposure-minus-comparator is > 0",
+    "insufficient_sample_result": "inconclusive",
+    "nonpositive_lower_bound_result": "not_confirmed"
+  },
+  "secondary_diagnostics": {
+    "dimensions": [
+      "direction",
+      "pattern_family",
+      "source_scale",
+      "instrument_id"
+    ],
+    "role": "descriptive only; they cannot rescue or overturn the primary confirmatory result"
+  },
+  "multiplicity": {
+    "primary_tests": 1,
+    "post_hoc_threshold_search_allowed": false,
+    "alternate_endpoint_substitution_allowed": false
+  },
+  "holdout": {
+    "sealed": true,
+    "records": 355,
+    "outcomes_exposed": false
+  },
+  "holdout_open_authorized": false,
+  "policy_frozen": false,
+  "notes": [
+    "This file is the repository-history pre-registration for the one-time M2.22 Holdout evaluation.",
+    "M2.21 must not read or summarize Holdout outcomes.",
+    "Any change to hypothesis, endpoint, comparator, sample floor or success criterion after this commit invalidates the confirmatory interpretation and requires a new untouched dataset version."
+  ]
+}

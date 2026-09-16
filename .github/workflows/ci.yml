@@ -88,6 +88,9 @@ jobs:
       - name: Resolve nested T+3/T+5 Type-I exit timing
         run: python scripts/m2_type_i_exit_timing_report.py
 
+      - name: Freeze one-time Type-I Holdout pre-registration
+        run: python scripts/m2_type_i_holdout_prereg_report.py
+
       - name: Build completed-reaction quality evidence
         run: python scripts/m2_completed_reaction_quality.py
 

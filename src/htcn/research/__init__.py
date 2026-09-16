@@ -60,6 +60,12 @@ from .type_i_exit_timing import (
     DEFAULT_MIN_EXCLUSIVE_VALIDATION,
     build_type_i_exit_timing_report,
 )
+from .type_i_holdout_prereg import (
+    DEFAULT_HOLDOUT_MIN_GROUP,
+    NEWCOMBE_Z_95,
+    PREREGISTRATION_ID,
+    build_type_i_holdout_preregistration,
+)
 from .type_i_robustness import (
     DEFAULT_MAX_SYMBOL_SHARE,
     DEFAULT_MIN_TRAIN_PENDING,
@@ -76,6 +82,7 @@ __all__ = [
     "DEFAULT_COMPLETED_REACTION_HORIZON",
     "DEFAULT_COMPLETED_REACTION_SCALES",
     "DEFAULT_FORWARD_HORIZON",
+    "DEFAULT_HOLDOUT_MIN_GROUP",
     "DEFAULT_MAX_SYMBOL_SHARE",
     "DEFAULT_MIN_EXCLUSIVE_TRAIN",
     "DEFAULT_MIN_EXCLUSIVE_VALIDATION",
@@ -87,7 +94,9 @@ __all__ = [
     "DEFAULT_WALK_FORWARD_SCALES",
     "GateClause",
     "GateSpec",
+    "NEWCOMBE_Z_95",
     "NumericThresholds",
+    "PREREGISTRATION_ID",
     "SplitBoundaries",
     "assign_purged_split",
     "audit_confirmed_reaction",
@@ -101,6 +110,7 @@ __all__ = [
     "build_type_i_early_path_report",
     "build_type_i_early_path_robustness_report",
     "build_type_i_exit_timing_report",
+    "build_type_i_holdout_preregistration",
     "canonical_case_key",
     "classify_gate_layer",
     "completed_reaction_summary",
