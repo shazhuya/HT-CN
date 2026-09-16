@@ -21,6 +21,7 @@ const analysis = {
   completed: [
     {
       pattern_id: 'gartley',
+      schema: 'XABCD',
       direction: 'bullish',
       state: 'completed',
       scale: 5,
@@ -36,6 +37,8 @@ const analysis = {
         price_low: 104.2,
         price_high: 104.4,
         width: 0.2,
+        source_prz_low: null,
+        source_prz_high: null,
         components: [
           { name: 'XA completion', price_low: 104.28, price_high: 104.28, ratio_low: 0.786, ratio_high: 0.786 },
           { name: 'BC projection', price_low: 102.1, price_high: 106.4, ratio_low: 1.13, ratio_high: 1.618 },
@@ -68,8 +71,9 @@ test('HT-CN M3 fixture workbench renders lifecycle navigation and harmonic chart
   await page.getByRole('button', { name: '运行谐波分析' }).click()
   await expect(page.getByRole('heading', { name: 'Gartley · 已完成' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '现在在哪 · 先看哪 · 到了再看哪' })).toBeVisible()
-  await expect(page.getByText('已完成 · 反应待确认')).toBeVisible()
-  await expect(page.getByText('这是生命周期观察顺序，不是买卖信号。', { exact: false })).toBeVisible()
+  await expect(page.getByText('几何已完成 · 执行时钟未接入')).toBeVisible()
+  await expect(page.getByText(/不能把 D Pivot 直接等同于执行完成/)).toBeVisible()
+  await expect(page.getByText(/后验 T1\/T2 只用于研究与审计，不作为实时买卖信号/)).toBeVisible()
   await expect(page.getByLabel('harmonic-chart')).toBeVisible()
   await expect(page.getByText('98.7')).toBeVisible()
   await expect(page.getByText('0.618')).toBeVisible()
