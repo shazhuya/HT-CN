@@ -79,9 +79,13 @@ def test_shark_source_ratios_are_explicit() -> None:
     assert (shark.constraints["c_0b"].minimum, shark.constraints["c_0b"].maximum) == (0.886, 1.13)
 
 
-def test_five_zero_source_ratios_and_v3_execution_refinement_are_explicit() -> None:
+def test_five_zero_source_conflict_remains_explicit_and_research_only() -> None:
     five_zero = CARNEY_RULES["five_zero"]
     assert (five_zero.constraints["b_xa"].minimum, five_zero.constraints["b_xa"].maximum) == (1.13, 1.618)
     assert (five_zero.constraints["c_ab"].minimum, five_zero.constraints["c_ab"].maximum) == (1.618, 2.24)
     assert (five_zero.constraints["d_bc"].minimum, five_zero.constraints["d_bc"].maximum) == (0.50, 0.618)
-    assert "50% as the original defining completion" in five_zero.implementation_note
+    assert five_zero.source_conflict is True
+    assert five_zero.executable_identity is False
+    assert "Research-only" in five_zero.implementation_note
+    assert "pending figure-level reconciliation" in five_zero.implementation_note
+    assert "must not be collapsed into a generic production band" in five_zero.implementation_note
