@@ -8,7 +8,7 @@ import pandas as pd
 from htcn.harmonic.abcd import evaluate_abcd, project_forming_abcd
 from htcn.harmonic.candidates import SwingWindow
 from htcn.harmonic.five_zero import evaluate_five_zero, project_forming_five_zero
-from htcn.harmonic.models import HarmonicPoint, PatternDirection, Pivot
+from htcn.harmonic.models import HarmonicPoint, Pivot
 from htcn.harmonic.pivots import collapse_same_kind_pivots, detect_pivot_events
 from htcn.harmonic.scanner import classify_completed_xabcd, project_forming_xabcd
 from htcn.harmonic.shark import evaluate_shark, project_forming_shark
@@ -184,6 +184,7 @@ def _completed_candidates(scale: int, pivots: list[Pivot]) -> list[dict[str, Any
         latest5 = tuple(pivots[-5:])
         if not any(left.kind == right.kind for left, right in zip(latest5, latest5[1:])):
             window = SwingWindow(scale=scale, pivots=latest5)
+            standard_points = window.harmonic_points()
             for evaluation in classify_completed_xabcd(window):
                 out.append(
                     {
@@ -191,7 +192,7 @@ def _completed_candidates(scale: int, pivots: list[Pivot]) -> list[dict[str, Any
                         "schema": "XABCD",
                         "direction": evaluation.direction.value,
                         "scale": scale,
-                        "points": evaluation.points,
+                        "points": standard_points,
                     }
                 )
 
@@ -328,7 +329,6 @@ def _finalize_signal(
     signal: dict[str, Any],
     *,
     frame: pd.DataFrame,
-    dates: pd.Series,
     completion: dict[str, Any] | None,
     retired_at: int | None,
     horizon: int,
@@ -513,7 +513,6 @@ def walk_forward_forming_signals(
             _finalize_signal(
                 signal,
                 frame=source,
-                dates=dates,
                 completion=completions.get(key),
                 retired_at=retirement.get(key),
                 horizon=horizon,
