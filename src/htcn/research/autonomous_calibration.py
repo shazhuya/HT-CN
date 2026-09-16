@@ -19,6 +19,7 @@ from .time_split import (
     split_manifest,
 )
 from .type_i_confirmation import build_type_i_early_path_report
+from .type_i_exit_timing import build_type_i_exit_timing_report
 from .type_i_robustness import build_type_i_early_path_robustness_report
 
 
@@ -148,6 +149,13 @@ def build_autonomous_quality_report(
         type_i_early_path,
         reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
     )
+    type_i_exit_timing = build_type_i_exit_timing_report(
+        all_rows,
+        terminal_bar_calibration,
+        type_i_early_path,
+        type_i_early_path_robustness,
+        reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
+    )
     mature = mature_forward_records(all_rows, horizon=horizon)
     if len(mature) < minimum_mature_records:
         return {
@@ -158,6 +166,7 @@ def build_autonomous_quality_report(
             "terminal_bar_calibration": terminal_bar_calibration,
             "type_i_early_path": type_i_early_path,
             "type_i_early_path_robustness": type_i_early_path_robustness,
+            "type_i_exit_timing": type_i_exit_timing,
             "policy_frozen": False,
             "holdout": {"sealed": True, "outcomes_reported": False},
         }
@@ -172,6 +181,7 @@ def build_autonomous_quality_report(
             "terminal_bar_calibration": terminal_bar_calibration,
             "type_i_early_path": type_i_early_path,
             "type_i_early_path_robustness": type_i_early_path_robustness,
+            "type_i_exit_timing": type_i_exit_timing,
             "policy_frozen": False,
             "holdout": {"sealed": True, "outcomes_reported": False},
         }
@@ -201,6 +211,7 @@ def build_autonomous_quality_report(
         "terminal_bar_calibration": terminal_bar_calibration,
         "type_i_early_path": type_i_early_path,
         "type_i_early_path_robustness": type_i_early_path_robustness,
+        "type_i_exit_timing": type_i_exit_timing,
         "holdout": {
             "sealed": True,
             "records": len(splits["holdout"]),
@@ -215,5 +226,6 @@ def build_autonomous_quality_report(
             "terminal_bar_outcomes_use_independent_purged_split": True,
             "type_i_early_path_reuses_m2_17_boundaries": True,
             "type_i_robustness_reuses_m2_17_boundaries": True,
+            "type_i_exit_timing_reuses_m2_17_boundaries": True,
         },
     }
