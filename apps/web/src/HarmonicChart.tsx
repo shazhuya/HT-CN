@@ -44,6 +44,7 @@ export type ReactionAudit = {
   bars_to_618: number | null
   first_prz_exit_bar: number | null
   secondary_prz_retest_bar: number | null
+  source_prz_available: boolean
   full_prz_retest_bar: number | null
   type_ii_terminal_bar?: number | null
   reversal_exit_after_retest_bar: number | null
@@ -65,6 +66,7 @@ export type ReactionAudit = {
   indicator_evidence_is_rsi_bamm?: boolean
   type_ii_evidence_state:
     | 'not_candidate'
+    | 'source_prz_unresolved'
     | 'partial_retest_only'
     | 'full_retest_waiting_price'
     | 'price_confirmed_no_rsi'
@@ -103,6 +105,8 @@ export type Pattern = {
     width: number
     component_price_low?: number
     component_price_high?: number
+    source_prz_low?: number | null
+    source_prz_high?: number | null
     components: PrzComponent[]
   }
   metrics: Record<string, number>
