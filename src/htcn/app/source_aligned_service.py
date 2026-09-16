@@ -8,6 +8,7 @@ from htcn.app.harmonic_service import LocalHarmonicService
 from htcn.harmonic.execution import observe_source_execution
 from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
+from htcn.harmonic.source_prz_evidence import source_prz_evidence
 
 
 class SourceAlignedHarmonicService(LocalHarmonicService):
@@ -29,6 +30,7 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
         source_available = bool(prz.has_source_prz)
         source_low = float(prz.source_prz_low) if prz.source_prz_low is not None else None
         source_high = float(prz.source_prz_high) if prz.source_prz_high is not None else None
+        evidence = source_prz_evidence(prz.pattern_id)
 
         return {
             **legacy,
@@ -63,6 +65,16 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
                 "source_note": prz.source_prz_note or None,
                 "unresolved_reason": prz.source_prz_reason,
                 "profile_version": 1,
+                "evidence_level": evidence.evidence_level if evidence else "unregistered",
+                "source_membership_authority": (
+                    evidence.source_membership_authority if evidence else None
+                ),
+                "selection_authority": evidence.selection_authority if evidence else None,
+                "market_case_ids": list(evidence.market_case_ids) if evidence else [],
+                "known_source_tensions": list(evidence.known_tensions) if evidence else [],
+                "coordinate_regression_status": (
+                    evidence.coordinate_regression_status if evidence else "unregistered"
+                ),
             },
         }
 
@@ -204,10 +216,13 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             "dynamic_layer": "execution_clock.pez",
             "fail_closed_without_source_prz": True,
             "legacy_price_low_high_mean": "ideal_core",
+            "source_membership_authority": "Carney source families per pattern",
+            "source_selection_authority": "HT-CN operational convergence inside source-valid families; exposed per pattern",
         }
         analysis["engine_note"] = (
             str(analysis.get("engine_note") or "")
             + " M2.27 标准 XABCD Source PRZ 使用逐形态 Golden Profile 选择并暴露组成测量/来源；"
-            "Ideal Core 继续作为独立 HT-CN 工程层，Alternate Bat 等冲突项继续 fail closed。"
+            "Carney 决定合法测量族，HT-CN 只在合法族内做收敛选择。Ideal Core 继续作为独立工程层，"
+            "Alternate Bat 等冲突项继续 fail closed；Book Case Ledger 与坐标级回归状态单独暴露。"
         ).strip()
         return analysis
