@@ -1,0 +1,31 @@
+.lifecycle-target-line {
+  stroke-width: 1.35;
+  stroke-dasharray: 7 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.lifecycle-target.pending .lifecycle-target-line {
+  stroke: #71829a;
+  opacity: .72;
+}
+
+.lifecycle-target.reached .lifecycle-target-line {
+  stroke: #82a7ff;
+  opacity: .96;
+  stroke-dasharray: none;
+}
+
+.lifecycle-target-label {
+  fill: #b9c8d9;
+  font-size: 10px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: #0b1017;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  font-variant-numeric: tabular-nums;
+}
+
+.lifecycle-target.reached .lifecycle-target-label {
+  fill: #dce8ff;
+}
