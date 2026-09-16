@@ -50,7 +50,7 @@ const analysis = {
   engine_note: 'geometry_score 仅衡量几何贴合度，不代表胜率、预期收益或交易建议。',
 }
 
-test('HT-CN M2 fixture workbench renders deterministic analysis and chart', async ({ page }) => {
+test('HT-CN M3 fixture workbench renders lifecycle navigation and harmonic chart', async ({ page }) => {
   await page.route('**/api/health', async (route) => {
     await route.fulfill({ json: { status: 'ok', service: 'ht-cn-api', version: '0.2.0' } })
   })
@@ -67,6 +67,9 @@ test('HT-CN M2 fixture workbench renders deterministic analysis and chart', asyn
 
   await page.getByRole('button', { name: '运行谐波分析' }).click()
   await expect(page.getByRole('heading', { name: 'Gartley · 已完成' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '现在在哪 · 先看哪 · 到了再看哪' })).toBeVisible()
+  await expect(page.getByText('已完成 · 反应待确认')).toBeVisible()
+  await expect(page.getByText('这是生命周期观察顺序，不是买卖信号。', { exact: false })).toBeVisible()
   await expect(page.getByLabel('harmonic-chart')).toBeVisible()
   await expect(page.getByText('98.7')).toBeVisible()
   await expect(page.getByText('0.618')).toBeVisible()

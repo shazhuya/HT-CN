@@ -1,0 +1,99 @@
+.lifecycle-compass {
+  margin-bottom: 16px;
+  border: 1px solid #2b3850;
+  border-radius: 15px;
+  padding: 16px;
+  background: #0e151e;
+}
+
+.lifecycle-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.lifecycle-title-row h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.lifecycle-boundary {
+  flex: 0 0 auto;
+  max-width: 48%;
+  border: 1px solid #33445b;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #111c28;
+  color: #a9b8c9;
+  font-size: 10px;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.lifecycle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.lifecycle-step {
+  min-width: 0;
+  border: 1px solid #223144;
+  border-radius: 11px;
+  padding: 12px;
+  background: #101821;
+}
+
+.lifecycle-step.current {
+  border-color: #516cf2;
+  box-shadow: inset 3px 0 #516cf2;
+  background: #111b29;
+}
+
+.lifecycle-step > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #7e90a4;
+  font-size: 10px;
+  letter-spacing: .08em;
+}
+
+.lifecycle-step > strong {
+  display: block;
+  color: #eef4fb;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.lifecycle-step > p {
+  margin: 7px 0 0;
+  color: #9babbc;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.lifecycle-note {
+  margin: 10px 1px 0;
+  color: #708296;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+@media (max-width: 850px) {
+  .lifecycle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lifecycle-title-row {
+    display: grid;
+  }
+
+  .lifecycle-boundary {
+    max-width: none;
+    justify-self: start;
+    text-align: left;
+  }
+}

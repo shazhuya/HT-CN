@@ -8,5 +8,11 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },
+  webServer: {
+    command: 'npm run dev -- --host 127.0.0.1',
+    url: 'http://127.0.0.1:5173',
+    reuseExistingServer: true,
+    timeout: 30_000,
+  },
   reporter: [['list'], ['html', { outputFolder: '../../artifacts/reports/playwright', open: 'never' }]],
 })

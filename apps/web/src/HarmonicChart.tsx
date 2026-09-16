@@ -1,3 +1,5 @@
+import LifecycleCompass from './LifecycleCompass'
+
 export type Bar = {
   index: number
   trade_date: string
@@ -146,66 +148,69 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
   const przStart = pattern ? Math.min(pattern.points.at(-1)?.index ?? maxIndex, maxIndex) : maxIndex
 
   return (
-    <div className="chart-wrap" aria-label="harmonic-chart">
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="A股K线与谐波形态">
-        <rect x="0" y="0" width={WIDTH} height={HEIGHT} className="chart-bg" />
-        {grid.map((price) => (
-          <g key={price}>
-            <line x1={LEFT} x2={WIDTH - RIGHT} y1={y(price)} y2={y(price)} className="grid-line" />
-            <text x={LEFT - 8} y={y(price) + 4} textAnchor="end" className="axis-label">
-              {formatPrice(price)}
-            </text>
-          </g>
-        ))}
-
-        {pattern && (
-          <rect
-            x={x(przStart)}
-            y={y(pattern.prz.price_high)}
-            width={Math.max(3, x(maxIndex) - x(przStart))}
-            height={Math.max(2, y(pattern.prz.price_low) - y(pattern.prz.price_high))}
-            className={`prz-zone ${pattern.direction}`}
-          />
-        )}
-
-        {visibleBars.map((bar) => {
-          const rising = bar.close >= bar.open
-          const top = y(Math.max(bar.open, bar.close))
-          const bottom = y(Math.min(bar.open, bar.close))
-          return (
-            <g key={`${bar.trade_date}-${bar.index}`} className={rising ? 'candle up' : 'candle down'}>
-              <line x1={x(bar.index)} x2={x(bar.index)} y1={y(bar.high)} y2={y(bar.low)} />
-              <rect
-                x={x(bar.index) - candleWidth / 2}
-                y={top}
-                width={candleWidth}
-                height={Math.max(1.2, bottom - top)}
-              />
+    <>
+      <LifecycleCompass pattern={pattern} bars={bars} />
+      <div className="chart-wrap" aria-label="harmonic-chart">
+        <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="A股K线与谐波形态">
+          <rect x="0" y="0" width={WIDTH} height={HEIGHT} className="chart-bg" />
+          {grid.map((price) => (
+            <g key={price}>
+              <line x1={LEFT} x2={WIDTH - RIGHT} y1={y(price)} y2={y(price)} className="grid-line" />
+              <text x={LEFT - 8} y={y(price) + 4} textAnchor="end" className="axis-label">
+                {formatPrice(price)}
+              </text>
             </g>
-          )
-        })}
+          ))}
 
-        {pattern && (
-          <>
-            <polyline points={patternPoints} className={`pattern-line ${pattern.state}`} />
-            {pattern.points.map((point) => (
-              <g key={`${point.label}-${point.index}`}>
-                <circle cx={x(point.index)} cy={y(point.price)} r="5" className="pattern-node" />
-                <text x={x(point.index)} y={y(point.price) - 10} textAnchor="middle" className="point-label">
-                  {point.label}
-                </text>
+          {pattern && (
+            <rect
+              x={x(przStart)}
+              y={y(pattern.prz.price_high)}
+              width={Math.max(3, x(maxIndex) - x(przStart))}
+              height={Math.max(2, y(pattern.prz.price_low) - y(pattern.prz.price_high))}
+              className={`prz-zone ${pattern.direction}`}
+            />
+          )}
+
+          {visibleBars.map((bar) => {
+            const rising = bar.close >= bar.open
+            const top = y(Math.max(bar.open, bar.close))
+            const bottom = y(Math.min(bar.open, bar.close))
+            return (
+              <g key={`${bar.trade_date}-${bar.index}`} className={rising ? 'candle up' : 'candle down'}>
+                <line x1={x(bar.index)} x2={x(bar.index)} y1={y(bar.high)} y2={y(bar.low)} />
+                <rect
+                  x={x(bar.index) - candleWidth / 2}
+                  y={top}
+                  width={candleWidth}
+                  height={Math.max(1.2, bottom - top)}
+                />
               </g>
-            ))}
-          </>
-        )}
+            )
+          })}
 
-        <text x={LEFT} y={HEIGHT - 12} className="axis-label">
-          {visibleBars[0]?.trade_date}
-        </text>
-        <text x={WIDTH - RIGHT} y={HEIGHT - 12} textAnchor="end" className="axis-label">
-          {visibleBars.at(-1)?.trade_date}
-        </text>
-      </svg>
-    </div>
+          {pattern && (
+            <>
+              <polyline points={patternPoints} className={`pattern-line ${pattern.state}`} />
+              {pattern.points.map((point) => (
+                <g key={`${point.label}-${point.index}`}>
+                  <circle cx={x(point.index)} cy={y(point.price)} r="5" className="pattern-node" />
+                  <text x={x(point.index)} y={y(point.price) - 10} textAnchor="middle" className="point-label">
+                    {point.label}
+                  </text>
+                </g>
+              ))}
+            </>
+          )}
+
+          <text x={LEFT} y={HEIGHT - 12} className="axis-label">
+            {visibleBars[0]?.trade_date}
+          </text>
+          <text x={WIDTH - RIGHT} y={HEIGHT - 12} textAnchor="end" className="axis-label">
+            {visibleBars.at(-1)?.trade_date}
+          </text>
+        </svg>
+      </div>
+    </>
   )
 }
