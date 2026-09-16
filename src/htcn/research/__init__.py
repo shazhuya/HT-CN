@@ -18,6 +18,12 @@ from .quality_gate import (
     evaluate_gate_library,
     gate_matches,
 )
+from .quality_layers import (
+    classify_gate_layer,
+    gate_generalization_diagnostics,
+    pattern_family,
+)
+from .quality_robustness import build_quality_robustness_report
 from .time_split import (
     NumericThresholds,
     SplitBoundaries,
@@ -47,15 +53,19 @@ __all__ = [
     "assign_purged_split",
     "build_completed_case_record",
     "build_gate_library",
+    "build_quality_robustness_report",
     "canonical_case_key",
+    "classify_gate_layer",
     "dedupe_case_records",
     "derive_boundaries",
     "evaluate_gate_library",
+    "gate_generalization_diagnostics",
     "gate_matches",
     "grouped_summary",
     "learn_numeric_thresholds",
     "mature_forward_records",
     "outcome_summary",
+    "pattern_family",
     "signal_features",
     "split_manifest",
     "walk_forward_forming_signals",

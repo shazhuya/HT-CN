@@ -15,6 +15,7 @@ from htcn.research.autonomous_calibration import (
     build_autonomous_quality_report,
     enrich_walk_forward_records,
 )
+from htcn.research.quality_layers import build_layered_quality_report
 from htcn.research.quality_robustness import build_quality_robustness_report
 from htcn.research.walk_forward import walk_forward_forming_signals
 
@@ -148,15 +149,22 @@ def main() -> int:
         horizon=horizon,
         min_mature_records=100,
     )
+    layered = build_layered_quality_report(
+        all_records,
+        robust_gate_names=robustness.get("robust_research_candidates", []),
+        horizon=horizon,
+        min_mature_records=100,
+    )
     research_status = (
         "calibration_complete"
         if coverage_ok
         and calibration.get("status") == "research_quality_evidence_holdout_sealed"
         and robustness.get("status") == "research_robustness_holdout_sealed"
+        and layered.get("status") == "research_layers_holdout_sealed"
         else "insufficient_provider_or_sample_coverage"
     )
     report = {
-        "schema_version": 2,
+        "schema_version": 3,
         "status": research_status,
         "dataset_id": manifest.get("dataset_id"),
         "snapshot_cutoff": manifest.get("snapshot_cutoff"),
@@ -169,13 +177,15 @@ def main() -> int:
         "signals": len(all_records),
         "calibration": calibration,
         "robustness": robustness,
+        "layers": layered,
         "methodology": {
             "runtime": "GitHub Actions / CI-accessible; no user workstation data is required.",
             "source": "Provider QFQ is used only for research calibration snapshots, separate from production raw+factor storage.",
             "determinism": "Snapshot cutoff and universe are pinned; provider restatements are detectable through per-file SHA256.",
-            "holdout": "Holdout outcomes remain sealed during iterative quality-gate and robustness research.",
+            "holdout": "Holdout outcomes remain sealed during iterative calibration, robustness and semantic-layer research.",
             "identity": "Carney geometry/identity is frozen and never fitted to later outcomes.",
             "robustness": "Strong gates are stress-tested across symbols, leave-one-symbol-out and coarse time segments before any policy freeze.",
+            "semantic_layers": "Structural quality, readiness and context are separated before generalization; distance-to-PRZ is readiness, not geometry quality.",
             "network": "Provider availability is reported as evidence; network failure is not silently converted into a research conclusion.",
         },
     }
@@ -203,6 +213,28 @@ def main() -> int:
         print(
             f"[HT-CN AUTONOMOUS] robust_candidates={len(robust)}: "
             f"{', '.join(robust) or 'none'}"
+        )
+    if layered.get("status") == "research_layers_holdout_sealed":
+        robust_layers = layered["robust_candidates_by_layer"]
+        print(
+            "[HT-CN AUTONOMOUS] robust semantic layers: "
+            f"quality={','.join(robust_layers['quality']) or 'none'} | "
+            f"readiness={','.join(robust_layers['readiness']) or 'none'} | "
+            f"context={','.join(robust_layers['context']) or 'none'} | "
+            f"mixed={','.join(robust_layers['mixed']) or 'none'}"
+        )
+        universal = layered["universal_quality_candidates"]
+        print(
+            f"[HT-CN AUTONOMOUS] universal_quality_candidates={len(universal)}: "
+            f"{', '.join(universal) or 'none'}"
+        )
+        family_hypotheses = layered["family_specific_quality_hypotheses"]
+        compact = "; ".join(
+            f"{name}=>{','.join(values)}" for name, values in sorted(family_hypotheses.items())
+        )
+        print(
+            "[HT-CN AUTONOMOUS] family_specific_quality_hypotheses="
+            f"{compact or 'none'}"
         )
     print("[HT-CN AUTONOMOUS] HOLDOUT SEALED")
     print(f"[HT-CN AUTONOMOUS] report={REPORT_PATH.relative_to(ROOT)}")
