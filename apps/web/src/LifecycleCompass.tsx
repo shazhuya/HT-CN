@@ -1,4 +1,4 @@
-import { Bar, Pattern } from './HarmonicChart'
+import type { Bar, Pattern } from './HarmonicChart'
 import './LifecycleCompass.css'
 
 type Props = {
