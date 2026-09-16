@@ -104,24 +104,32 @@ test('forming candidate stays explicitly uncompleted', async ({ page }) => {
   await openScenario(page, { ...basePattern, state: 'forming' })
   await expect(page.getByText('形成中 · 尚未完成')).toBeVisible()
   await expect(page.getByText(/Terminal Price Bar/)).toBeVisible()
+  await expect(page.getByTestId('type-i-target-t1')).toHaveCount(0)
+  await expect(page.getByTestId('type-i-target-t2')).toHaveCount(0)
 })
 
-test('Type-I T1 reached keeps T2 versus retest as the next fork', async ({ page }) => {
+test('Type-I T1 reached keeps T2 versus retest as the next fork and chart states agree', async ({ page }) => {
   await openScenario(page, {
     ...basePattern,
     reaction_audit: reactionAudit({ bars_to_382: 2 }),
   })
   await expect(page.getByText('Type-I · 已到 T1，T2 未到')).toBeVisible()
   await expect(page.getByText(/T2（61.8%）与二次 PRZ 回测哪一个先出现/)).toBeVisible()
+  await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-state', 'reached')
+  await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-state', 'pending')
+  await expect(page.getByText(/T1 38\.2% · 110\.28 · 已到达/)).toBeVisible()
+  await expect(page.getByText(/T2 61\.8% · 114\.00 · 待到达/)).toBeVisible()
 })
 
-test('Type-I T2 reached does not get mislabeled as long-term reversal', async ({ page }) => {
+test('Type-I T2 reached does not get mislabeled as long-term reversal and both targets are reached', async ({ page }) => {
   await openScenario(page, {
     ...basePattern,
     reaction_audit: reactionAudit({ bars_to_382: 2, bars_to_618: 5 }),
   })
   await expect(page.getByText('Type-I · 已到 T2（61.8%）')).toBeVisible()
   await expect(page.getByText(/不自动等于长期反转/)).toBeVisible()
+  await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-state', 'reached')
+  await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-state', 'reached')
 })
 
 test('secondary PRZ retest with price and RSI evidence maps to Type-II evidence state', async ({ page }) => {
@@ -144,4 +152,6 @@ test('secondary PRZ retest with price and RSI evidence maps to Type-II evidence 
   })
   await expect(page.getByText('Type-II · 价格 + RSI 证据')).toBeVisible()
   await expect(page.getByText(/生命周期证据，不是新的谐波身份/)).toBeVisible()
+  await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-state', 'reached')
+  await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-state', 'reached')
 })
