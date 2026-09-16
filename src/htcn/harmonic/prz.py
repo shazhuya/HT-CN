@@ -34,6 +34,136 @@ class PRZComponent:
         return min(max(target, self.price_low), self.price_high)
 
 
+def _components_by_name(
+    components: tuple[PRZComponent, ...], *names: str
+) -> tuple[PRZComponent, ...] | None:
+    lookup = {component.name: component for component in components}
+    selected: list[PRZComponent] = []
+    for name in names:
+        component = lookup.get(name)
+        if component is None:
+            return None
+        selected.append(component)
+    return tuple(selected)
+
+
+def _special_source_contract(
+    pattern_id: str,
+    components: tuple[PRZComponent, ...],
+) -> dict[str, object] | None:
+    """Return source-frozen semantics for non-standard-XABCD schemas.
+
+    Standard XABCD patterns continue to use ``SourcePRZProfile``.  AB=CD, Shark and 5-0
+    have different source semantics and are intentionally frozen here instead of being
+    coerced into the three-measure XABCD selector.
+    """
+
+    if pattern_id == "abcd":
+        pair = _components_by_name(components, "AB=CD x1", "BC reciprocal")
+        if pair is None:
+            return {
+                "reason": "required_components_missing",
+                "defining": "AB=CD x1",
+                "method": "reciprocal_pair",
+                "refs": ("Volume One pp.45-46", "Volume One pp.51-76"),
+                "note": (
+                    "Equivalent AB=CD is the defining completion limit; the source-listed "
+                    "reciprocal BC projection complements it to form the standalone Raw PRZ."
+                ),
+            }
+        low = min(component.price_low for component in pair)
+        high = max(component.price_high for component in pair)
+        return {
+            "low": low,
+            "high": high,
+            "names": tuple(component.name for component in pair),
+            "defining": "AB=CD x1",
+            "method": "reciprocal_pair",
+            "refs": ("Volume One pp.45-46", "Volume One pp.51-76"),
+            "note": (
+                "Equivalent AB=CD is the defining completion limit; the source-listed "
+                "reciprocal BC projection complements it to form the standalone Raw PRZ."
+            ),
+        }
+
+    if pattern_id == "shark":
+        pair = _components_by_name(components, "0B completion", "AB impulse completion")
+        if pair is None:
+            return {
+                "reason": "required_components_missing",
+                "defining": "0B completion",
+                "method": "impulse_0b_convergence",
+                "refs": ("Volume Three pp.116-129",),
+                "note": (
+                    "Shark completion is the convergence of the 0.886-1.13 0B retest and "
+                    "1.618-2.24 Extreme Harmonic Impulse.  The 1.13 0B level remains the "
+                    "maximum source limit."
+                ),
+            }
+        overlap_low = max(component.price_low for component in pair)
+        overlap_high = min(component.price_high for component in pair)
+        if overlap_low > overlap_high:
+            return {
+                "reason": "source_components_do_not_converge",
+                "defining": "0B completion",
+                "method": "impulse_0b_convergence",
+                "refs": ("Volume Three pp.116-129",),
+                "note": (
+                    "Shark source measurements exist but the 0B and Extreme Harmonic Impulse "
+                    "ranges do not converge; execution therefore fails closed."
+                ),
+            }
+        return {
+            "low": overlap_low,
+            "high": overlap_high,
+            "names": tuple(component.name for component in pair),
+            "defining": "0B completion",
+            "method": "impulse_0b_convergence",
+            "refs": ("Volume Three pp.116-129",),
+            "note": (
+                "Raw Shark PRZ is the source-measure convergence between the 0.886-1.13 0B "
+                "retest and 1.618-2.24 Extreme Harmonic Impulse.  The 1.13 0B level is the "
+                "maximum source/stop-side limit, not a generic XABCD rule."
+            ),
+        }
+
+    if pattern_id == "five_zero":
+        pair = _components_by_name(
+            components,
+            "BC 50% completion",
+            "Reciprocal AB=CD x1",
+        )
+        if pair is None:
+            return {
+                "reason": "required_components_missing",
+                "defining": "BC 50% completion",
+                "method": "volume2_50_plus_reciprocal",
+                "refs": ("Volume Two ch.3 pp.1-14", "Volume Three pp.129-136"),
+                "note": (
+                    "The structural 5-0 Raw PRZ is defined by the 50% BC retracement plus the "
+                    "Reciprocal AB=CD.  Volume Three's 61.8% level is an execution/stop "
+                    "refinement and is deliberately not folded into the structural Raw PRZ."
+                ),
+            }
+        low = min(component.price_low for component in pair)
+        high = max(component.price_high for component in pair)
+        return {
+            "low": low,
+            "high": high,
+            "names": tuple(component.name for component in pair),
+            "defining": "BC 50% completion",
+            "method": "volume2_50_plus_reciprocal",
+            "refs": ("Volume Two ch.3 pp.1-14", "Volume Three pp.129-136"),
+            "note": (
+                "The structural 5-0 Raw PRZ is defined by the 50% BC retracement plus the "
+                "Reciprocal AB=CD.  The 61.8% measurement is retained separately as Volume "
+                "Three execution/make-or-break evidence."
+            ),
+        }
+
+    return None
+
+
 @dataclass(frozen=True, slots=True)
 class PotentialReversalZone:
     """Auditable harmonic measurements plus explicitly separated PRZ semantics.
@@ -43,8 +173,9 @@ class PotentialReversalZone:
     Neither is automatically the source Raw PRZ.
 
     ``source_prz_low/high`` are populated only by a pattern-specific frozen Source-PRZ
-    profile.  The selected component names and source references remain attached so the API
-    can explain why those bounds exist.  Unsupported or source-conflict patterns fail closed.
+    contract.  Standard XABCD structures use ``SourcePRZProfile`` while standalone AB=CD,
+    Shark and 5-0 use their dedicated source semantics.  The selected component names and
+    source references remain attached so the API can explain why those bounds exist.
     """
 
     pattern_id: str
@@ -62,6 +193,22 @@ class PotentialReversalZone:
     def __post_init__(self) -> None:
         if not self.components:
             raise ValueError("PRZ must contain at least one component")
+
+        # M2.28: special schemas get source semantics from their own source contracts.
+        # Explicit caller-provided source bounds always win for backwards compatibility.
+        if self.source_prz_low is None and self.source_prz_high is None:
+            special = _special_source_contract(self.pattern_id, self.components)
+            if special is not None:
+                if "low" in special and "high" in special:
+                    object.__setattr__(self, "source_prz_low", float(special["low"]))
+                    object.__setattr__(self, "source_prz_high", float(special["high"]))
+                    object.__setattr__(self, "source_prz_component_names", tuple(special.get("names", ())))
+                object.__setattr__(self, "source_prz_defining_component", special.get("defining"))
+                object.__setattr__(self, "source_prz_selection_method", special.get("method"))
+                object.__setattr__(self, "source_prz_source_refs", tuple(special.get("refs", ())))
+                object.__setattr__(self, "source_prz_note", str(special.get("note", "")))
+                object.__setattr__(self, "source_prz_reason", special.get("reason"))
+
         if (self.source_prz_low is None) != (self.source_prz_high is None):
             raise ValueError("source PRZ bounds must be both set or both omitted")
         if self.source_prz_low is not None and self.source_prz_high is not None:
@@ -75,7 +222,7 @@ class PotentialReversalZone:
             raise ValueError(f"source PRZ references unknown components: {sorted(unknown)}")
         if self.has_source_prz and not self.source_prz_component_names:
             # Compatibility: historical/tests may construct explicit source bounds directly.
-            # Runtime XABCD builders always provide auditable source component names.
+            # Runtime builders populate auditable source component names.
             pass
 
     @property
