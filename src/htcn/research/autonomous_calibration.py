@@ -20,6 +20,42 @@ from .time_split import (
 )
 
 
+_TERMINAL_AUDIT_REQUIRED_FIELDS = {
+    "pattern_id",
+    "schema",
+    "direction",
+    "prz",
+    "prefix_points",
+}
+
+
+def _terminal_audit_payload(
+    row: dict[str, Any],
+    *,
+    frame: pd.DataFrame,
+    horizon: int,
+) -> dict[str, Any]:
+    """Attach M2.17 only when the record actually describes a harmonic projection.
+
+    Older/general-purpose enrichment callers may provide only timing fields. Those records remain
+    valid inputs to the pre-existing enrichment API and are explicitly marked not-applicable rather
+    than being forced through the Terminal Price Bar audit.
+    """
+    missing = sorted(field for field in _TERMINAL_AUDIT_REQUIRED_FIELDS if field not in row)
+    if missing:
+        return {
+            "status": "not_applicable_missing_projection_fields",
+            "missing_fields": missing,
+            "source_semantics": "Terminal Price Bar audit applies only to a fully described harmonic projection; legacy timing-only records remain valid enrichment inputs.",
+        }
+    return audit_projected_terminal_price_bar(
+        row,
+        frame=frame,
+        forming_horizon=horizon,
+        reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
+    )
+
+
 def enrich_walk_forward_records(
     records: Iterable[dict[str, Any]],
     *,
@@ -49,11 +85,10 @@ def enrich_walk_forward_records(
             row["observation_end_trade_date"] = pd.Timestamp(
                 source.iloc[end_bar]["trade_date"]
             ).date().isoformat()
-        row["terminal_bar_audit"] = audit_projected_terminal_price_bar(
+        row["terminal_bar_audit"] = _terminal_audit_payload(
             row,
             frame=source,
-            forming_horizon=horizon,
-            reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
+            horizon=horizon,
         )
         out.append(row)
     return out
