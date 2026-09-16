@@ -40,7 +40,7 @@ class PRZComponent:
 
 @dataclass(frozen=True, slots=True)
 class PotentialReversalZone:
-    """Auditable harmonic measurements plus an HT-CN ideal convergence core.
+    """Auditable harmonic measurements plus explicitly separated PRZ semantics.
 
     Source-fidelity boundary:
 
@@ -51,6 +51,11 @@ class PotentialReversalZone:
     ``ideal_core_*`` is the narrower HT-CN convergence selection used by the current UI and
     geometry-quality layer. It MUST NOT be described as the entire source PRZ.
 
+    ``source_prz_low/high`` are deliberately optional. They may be populated only when a
+    pattern-specific source review/Book Golden Set has frozen which measurements actually
+    constitute the executable Carney PRZ. Downstream execution logic must fail closed when
+    these bounds are unknown instead of substituting the ideal core or component envelope.
+
     ``price_low``/``price_high`` remain backward-compatible aliases for ``ideal_core_*``
     until downstream payloads are migrated to explicit names.
     """
@@ -58,10 +63,23 @@ class PotentialReversalZone:
     pattern_id: str
     direction: PatternDirection
     components: tuple[PRZComponent, ...]
+    source_prz_low: float | None = None
+    source_prz_high: float | None = None
 
     def __post_init__(self) -> None:
         if not self.components:
             raise ValueError("PRZ must contain at least one component")
+        if (self.source_prz_low is None) != (self.source_prz_high is None):
+            raise ValueError("source PRZ bounds must be both set or both omitted")
+        if self.source_prz_low is not None and self.source_prz_high is not None:
+            if self.source_prz_low <= 0 or self.source_prz_high <= 0:
+                raise ValueError("source PRZ prices must be positive")
+            if self.source_prz_low > self.source_prz_high:
+                raise ValueError("source_prz_low must be <= source_prz_high")
+
+    @property
+    def has_source_prz(self) -> bool:
+        return self.source_prz_low is not None and self.source_prz_high is not None
 
     @property
     def component_envelope_low(self) -> float:
@@ -215,10 +233,10 @@ def build_xabcd_prz(
 ) -> PotentialReversalZone:
     """Project auditable XABCD measurements from X/A/B/C.
 
-    The returned object deliberately exposes both the full component envelope and the
-    narrower HT-CN ideal convergence core. Source-level Raw PRZ selection will be frozen
-    per pattern only after textbook Golden Cases establish which retained variants belong
-    to the executable source zone.
+    The returned object deliberately exposes the full component envelope and narrower
+    HT-CN ideal convergence core. It intentionally leaves ``source_prz_*`` unresolved.
+    Those bounds will be populated per pattern only after textbook Golden Cases establish
+    which retained variants belong to the executable source zone.
 
     Shark and 5-0 use different segment semantics and dedicated projectors.
     """
