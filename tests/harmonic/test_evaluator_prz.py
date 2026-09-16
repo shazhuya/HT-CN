@@ -105,20 +105,27 @@ def test_gartley_prz_separates_component_envelope_from_ideal_core() -> None:
     assert xa_component.price_high == pytest.approx(121.4)
     assert prz.direction is PatternDirection.BULLISH
 
-    # The component envelope contains every stored projection/variant and is an audit
-    # envelope only. It is intentionally not renamed to the source Raw PRZ yet.
+    # The component envelope contains every stored discrete harmonic measurement/variant.
+    # It is an audit envelope only and is intentionally not renamed to the source Raw PRZ.
     assert prz.component_envelope_low == pytest.approx(prz.component_price_low)
     assert prz.component_envelope_high == pytest.approx(prz.component_price_high)
     assert prz.component_envelope_low < prz.ideal_core_low
     assert prz.component_envelope_high > prz.ideal_core_high
 
-    # Current display/quality semantics remain the narrower HT-CN ideal core. Legacy
-    # price_low/high aliases are frozen to the same values until payload migration.
-    assert prz.ideal_core_low == pytest.approx(121.4)
-    assert prz.ideal_core_high == pytest.approx(121.4)
+    # The HT-CN ideal core is a convergence selection, not an alias for the XA target.
+    # The defining XA completion must remain inside it, while multiple nearby discrete
+    # measurements are allowed to give the core a non-zero width.
+    assert prz.ideal_core_low <= xa_component.midpoint <= prz.ideal_core_high
+    assert prz.ideal_core_width >= 0.0
     assert prz.price_low == pytest.approx(prz.ideal_core_low)
     assert prz.price_high == pytest.approx(prz.ideal_core_high)
     assert prz.width == pytest.approx(prz.ideal_core_width)
+
+    # Until a textbook Golden Set freezes the executable source zone, downstream
+    # Terminal/Type-II logic must fail closed instead of promoting this ideal core.
+    assert prz.has_source_prz is False
+    assert prz.source_prz_low is None
+    assert prz.source_prz_high is None
 
 
 def test_non_xabcd_rules_cannot_enter_xabcd_prz_path() -> None:
