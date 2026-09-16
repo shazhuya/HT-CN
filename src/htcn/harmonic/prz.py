@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from .models import HarmonicPoint, PatternDirection
 from .rules import PatternRule, RatioConstraint
+from .source_prz import select_source_prz
 
 
 _PRICE_FLOOR = 1e-9
@@ -38,12 +39,12 @@ class PotentialReversalZone:
     """Auditable harmonic measurements plus explicitly separated PRZ semantics.
 
     ``component_envelope_*`` is the outer envelope of every stored measurement/variant and
-    is audit data only. ``ideal_core_*`` is HT-CN's narrow convergence selection. Neither
-    is automatically the source Raw PRZ.
+    is audit data only. ``ideal_core_*`` is HT-CN's generic narrow convergence selection.
+    Neither is automatically the source Raw PRZ.
 
-    ``source_prz_low/high`` may be populated only after pattern-specific textbook Golden
-    Cases freeze the executable Carney PRZ. Execution logic fails closed when these bounds
-    are unknown.
+    ``source_prz_low/high`` are populated only by a pattern-specific frozen Source-PRZ
+    profile.  The selected component names and source references remain attached so the API
+    can explain why those bounds exist.  Unsupported or source-conflict patterns fail closed.
     """
 
     pattern_id: str
@@ -51,6 +52,12 @@ class PotentialReversalZone:
     components: tuple[PRZComponent, ...]
     source_prz_low: float | None = None
     source_prz_high: float | None = None
+    source_prz_component_names: tuple[str, ...] = ()
+    source_prz_defining_component: str | None = None
+    source_prz_selection_method: str | None = None
+    source_prz_source_refs: tuple[str, ...] = ()
+    source_prz_note: str = ""
+    source_prz_reason: str | None = None
 
     def __post_init__(self) -> None:
         if not self.components:
@@ -62,10 +69,26 @@ class PotentialReversalZone:
                 raise ValueError("source PRZ prices must be positive")
             if self.source_prz_low > self.source_prz_high:
                 raise ValueError("source_prz_low must be <= source_prz_high")
+        known_names = {component.name for component in self.components}
+        unknown = set(self.source_prz_component_names).difference(known_names)
+        if unknown:
+            raise ValueError(f"source PRZ references unknown components: {sorted(unknown)}")
+        if self.has_source_prz and not self.source_prz_component_names:
+            # Compatibility: historical/tests may construct explicit source bounds directly.
+            # Runtime XABCD builders always provide auditable source component names.
+            pass
 
     @property
     def has_source_prz(self) -> bool:
         return self.source_prz_low is not None and self.source_prz_high is not None
+
+    @property
+    def source_prz_status(self) -> str:
+        if self.has_source_prz:
+            return "frozen"
+        if self.source_prz_reason == "source_conflict":
+            return "source_conflict_fail_closed"
+        return "unresolved_fail_closed"
 
     @property
     def component_envelope_low(self) -> float:
@@ -87,12 +110,9 @@ class PotentialReversalZone:
     def convergence_prices(self) -> tuple[float, ...]:
         """Representative measurements that form the current HT-CN ideal core.
 
-        Standard XABCD structures anchor on the defining XA completion, then select the
-        single discrete BC projection and single AB=CD variant that converge most closely
-        with that anchor. This replaces the older behavior where a continuous BC min/max
-        interval could manufacture a mathematically convenient but non-harmonic midpoint.
-
-        Shark retains its dedicated overlap semantics.
+        This remains a generic engineering layer and is intentionally independent from the
+        pattern-specific Source-PRZ selector.  The two layers may happen to select the same
+        prices in an ideal example, but they do not share semantics or authority.
         """
         if self.pattern_id == "shark" and len(self.components) >= 2:
             overlap_low = max(component.price_low for component in self.components)
@@ -234,14 +254,12 @@ def build_xabcd_prz(
     rule: PatternRule,
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
 ) -> PotentialReversalZone:
-    """Project auditable XABCD measurements from X/A/B/C.
+    """Project auditable XABCD measurements from X/A/B/C and select Source PRZ.
 
-    Source-listed discrete BC ratios are projected as distinct measurements. The older
-    continuous band remains in ``PatternRule.constraints`` only as a structural envelope
-    and is not itself rendered as a continuum of equally harmonic completion prices.
-
-    ``source_prz_*`` remains unresolved until textbook Golden Cases freeze which of the
-    stored measurements/variants form the executable source PRZ for each pattern.
+    Source-listed discrete BC ratios and AB=CD variants are all retained as audit
+    components.  A separate pattern-specific Source-PRZ profile then selects the subset
+    that forms the executable Raw PRZ.  No selector may fall back to the all-component
+    envelope or the HT-CN ideal core.
     """
 
     if rule.schema != "XABCD":
@@ -303,8 +321,17 @@ def build_xabcd_prz(
     if not components:
         raise ValueError(f"rule {rule.pattern_id!r} has no reachable XABCD PRZ components")
 
+    selection = select_source_prz(rule.pattern_id, components)
     return PotentialReversalZone(
         pattern_id=rule.pattern_id,
         direction=direction,
         components=tuple(components),
+        source_prz_low=selection.price_low if selection.available else None,
+        source_prz_high=selection.price_high if selection.available else None,
+        source_prz_component_names=selection.component_names,
+        source_prz_defining_component=selection.defining_component,
+        source_prz_selection_method=selection.selection_method,
+        source_prz_source_refs=selection.source_refs,
+        source_prz_note=selection.note,
+        source_prz_reason=selection.reason,
     )

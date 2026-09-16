@@ -123,7 +123,7 @@ def test_gartley_below_minimum_abcd_rejects_even_when_other_ratios_fit() -> None
     assert any("below source minimum" in reason for reason in result.reasons)
 
 
-def test_gartley_prz_separates_component_envelope_from_ideal_core() -> None:
+def test_gartley_prz_separates_component_envelope_ideal_core_and_source_raw_prz() -> None:
     x, a, b, c, _ = _bullish_gartley()
     prz = build_xabcd_prz(CARNEY_RULES["gartley"], (x, a, b, c))
     xa_component = next(component for component in prz.components if component.name == "XA completion")
@@ -132,26 +132,31 @@ def test_gartley_prz_separates_component_envelope_from_ideal_core() -> None:
     assert prz.direction is PatternDirection.BULLISH
 
     # The component envelope contains every stored discrete harmonic measurement/variant.
-    # It is an audit envelope only and is intentionally not renamed to the source Raw PRZ.
+    # It remains audit data and is intentionally wider than the selected source zone.
     assert prz.component_envelope_low == pytest.approx(prz.component_price_low)
     assert prz.component_envelope_high == pytest.approx(prz.component_price_high)
     assert prz.component_envelope_low < prz.ideal_core_low
     assert prz.component_envelope_high > prz.ideal_core_high
 
-    # The HT-CN ideal core is a convergence selection, not an alias for the XA target.
-    # The defining XA completion must remain inside it, while multiple nearby discrete
-    # measurements are allowed to give the core a non-zero width.
+    # The HT-CN ideal core remains a generic engineering convergence layer.
     assert prz.ideal_core_low <= xa_component.midpoint <= prz.ideal_core_high
-    assert prz.ideal_core_width >= 0.0
     assert prz.price_low == pytest.approx(prz.ideal_core_low)
     assert prz.price_high == pytest.approx(prz.ideal_core_high)
     assert prz.width == pytest.approx(prz.ideal_core_width)
 
-    # Until a textbook Golden Set freezes the executable source zone, downstream
-    # Terminal/Type-II logic must fail closed instead of promoting this ideal core.
-    assert prz.has_source_prz is False
-    assert prz.source_prz_low is None
-    assert prz.source_prz_high is None
+    # M2.27 freezes Gartley Raw PRZ membership independently from the ideal-core code path.
+    assert prz.has_source_prz is True
+    assert prz.source_prz_status == "frozen"
+    assert prz.source_prz_component_names == (
+        "XA completion",
+        "BC projection x1.414",
+        "AB=CD x1",
+    )
+    selected = [component for component in prz.components if component.name in prz.source_prz_component_names]
+    assert prz.source_prz_low == pytest.approx(min(component.price_low for component in selected))
+    assert prz.source_prz_high == pytest.approx(max(component.price_high for component in selected))
+    assert prz.component_envelope_low < prz.source_prz_low
+    assert prz.component_envelope_high > prz.source_prz_high
 
 
 def test_non_xabcd_rules_cannot_enter_xabcd_prz_path() -> None:
