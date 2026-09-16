@@ -31,7 +31,7 @@ def _bullish_crab_with_nonideal_abcd() -> tuple[HarmonicPoint, ...]:
     # XA=20, B/XA=.50, C/AB=.88, D/XA=1.618, BC projection≈3.541.
     # CD/AB≈3.116 is deliberately far from the common 1.0/1.27/1.618 variants.
     # The source defines a minimum AB=CD plus the defining XA/BC geometry, so this
-    # should remain an identity match while receiving a softer geometry score later.
+    # remains an identity match while receiving a softer geometry score later.
     return (
         HarmonicPoint("X", 0, 100.0),
         HarmonicPoint("A", 10, 120.0),
@@ -97,19 +97,28 @@ def test_gartley_below_minimum_abcd_rejects_even_when_other_ratios_fit() -> None
     assert any("below source minimum" in reason for reason in result.reasons)
 
 
-def test_forming_gartley_prz_uses_convergence_not_outer_union() -> None:
+def test_gartley_prz_separates_component_envelope_from_ideal_core() -> None:
     x, a, b, c, _ = _bullish_gartley()
     prz = build_xabcd_prz(CARNEY_RULES["gartley"], (x, a, b, c))
     xa_component = next(component for component in prz.components if component.name == "XA completion")
     assert xa_component.price_low == pytest.approx(121.4)
     assert xa_component.price_high == pytest.approx(121.4)
     assert prz.direction is PatternDirection.BULLISH
-    # Full component envelope still contains alternate BC/AB=CD possibilities for audit.
-    assert prz.component_price_low < prz.price_low
-    assert prz.component_price_high > prz.price_high
-    # But the actual display/quality PRZ is the tight convergent cluster.
-    assert prz.price_low == pytest.approx(121.4)
-    assert prz.price_high == pytest.approx(121.4)
+
+    # The component envelope contains every stored projection/variant and is an audit
+    # envelope only. It is intentionally not renamed to the source Raw PRZ yet.
+    assert prz.component_envelope_low == pytest.approx(prz.component_price_low)
+    assert prz.component_envelope_high == pytest.approx(prz.component_price_high)
+    assert prz.component_envelope_low < prz.ideal_core_low
+    assert prz.component_envelope_high > prz.ideal_core_high
+
+    # Current display/quality semantics remain the narrower HT-CN ideal core. Legacy
+    # price_low/high aliases are frozen to the same values until payload migration.
+    assert prz.ideal_core_low == pytest.approx(121.4)
+    assert prz.ideal_core_high == pytest.approx(121.4)
+    assert prz.price_low == pytest.approx(prz.ideal_core_low)
+    assert prz.price_high == pytest.approx(prz.ideal_core_high)
+    assert prz.width == pytest.approx(prz.ideal_core_width)
 
 
 def test_non_xabcd_rules_cannot_enter_xabcd_prz_path() -> None:
