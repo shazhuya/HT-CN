@@ -73,6 +73,17 @@ SOURCE_PRZ_EVIDENCE: dict[str, SourcePRZEvidence] = {
         selection_authority="htcn_operational_convergence_within_source_valid_family",
         market_case_ids=("v1-deep-crab-nqz3-15m",),
     ),
+    "abcd": SourcePRZEvidence(
+        pattern_id="abcd",
+        evidence_level="source_specification_plus_market_examples_membership_only",
+        source_membership_authority="carney_vol1_vol3",
+        selection_authority="carney_equivalent_abcd_plus_reciprocal_bc_pair",
+        market_case_ids=(
+            "v1-perfect-abcd-nqh4-10m",
+            "v1-abcd-es-bearish",
+        ),
+        coordinate_regression_status="pending_reliable_source_pivots",
+    ),
 }
 
 
