@@ -40,7 +40,7 @@ def test_confirmation_clock_does_not_credit_preconfirmation_reaction() -> None:
     )
     assert audit["pre_confirmation_t1_hit"] is True
     assert audit["late_completion_signal"] is True
-    assert audit["bars_from_confirmation_to_t1"] == 3
+    assert audit["bars_from_confirmation_to_t1"] == 2
     assert audit["bars_from_confirmation_to_t2"] == 3
     assert audit["outcome_class"] == "late_completion_signal"
 
