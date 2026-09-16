@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .candidates import SwingWindow
-from .evaluator import PatternEvaluation, evaluate_xabcd
+from .evaluator import PatternEvaluation, match_xabcd
 from .models import PatternDirection
 from .prz import PotentialReversalZone, build_xabcd_prz
 from .ratios import leg_length
@@ -118,7 +118,7 @@ def classify_completed_xabcd(
     evaluations: list[PatternEvaluation] = []
     for rule in executable_xabcd_rules():
         try:
-            result = evaluate_xabcd(
+            result = match_xabcd(
                 rule,
                 points,
                 include_source_tolerance=include_source_tolerance,
@@ -127,6 +127,6 @@ def classify_completed_xabcd(
             )
         except ValueError:
             continue
-        if result.passed:
+        if result is not None:
             evaluations.append(result)
     return tuple(evaluations)
