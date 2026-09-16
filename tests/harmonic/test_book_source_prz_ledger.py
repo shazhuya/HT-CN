@@ -19,7 +19,13 @@ def _payload() -> dict:
 
 
 def _ratio_in(values: tuple[float, ...], target: float) -> bool:
-    return any(float(value) == pytest.approx(float(target), rel=0, abs=1e-9) for value in values)
+    """Match printed source ratios to canonical internal precision.
+
+    Carney's prose/figure labels sometimes print a derived ratio as 1.41 while the canonical
+    registry stores sqrt(2) rounded to 1.414.  Keep the book value verbatim in the ledger and
+    allow only a narrow display-rounding tolerance here; this is not a trading tolerance.
+    """
+    return any(float(value) == pytest.approx(float(target), rel=0, abs=0.005) for value in values)
 
 
 def test_book_ledger_has_market_evidence_for_each_executable_standard_xabcd_profile() -> None:
