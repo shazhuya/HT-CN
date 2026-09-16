@@ -2,9 +2,43 @@
   "schema_version": 1,
   "ledger_id": "book-source-prz-cases-v1",
   "authority": "Scott M. Carney, Harmonic Trading Volumes One/Two/Three",
-  "scope": "Source-measurement membership and reported PRZ evidence for M2.27. This ledger does not invent X/A/B/C coordinates when the prose/figure does not expose them reliably.",
+  "scope": "Source-measurement membership and reported PRZ evidence through M2.28. This ledger does not invent X/A/B/C coordinates when the prose/figure does not expose them reliably.",
   "selector_coordinate_regression_policy": "A case may constrain source membership without being used as a coordinate-level selector oracle. Coordinate regression requires reliable source pivot prices; approximate chart reading is insufficient.",
   "cases": [
+    {
+      "case_id": "v1-abcd-nqh4-10m",
+      "pattern_id": "abcd",
+      "volume": 1,
+      "printed_pages": [73, 74],
+      "instrument": "NASDAQ 100 March 2004 Mini-Contract (NQ_H4)",
+      "timeframe": "10-Minute",
+      "direction": "bullish",
+      "source_components": [
+        {"kind": "abcd", "ratio": 1.0, "role": "defining", "reported_price": 1379.0},
+        {"kind": "bc", "ratio": 1.618, "role": "primary_complementary", "price_precision": "converging_tight_range"}
+      ],
+      "reported_prz": {"low": null, "high": 1379.0, "precision": "defining_limit_explicit_other_bound_not_printed_in_text"},
+      "evidence_level": "market_example_defining_price_plus_primary_bc",
+      "coordinate_regression_eligible": false,
+      "notes": "Perfect Bullish AB=CD: exact completion at 1379 is the defining PRZ limit and the 1.618 BC projection converges in a tight range."
+    },
+    {
+      "case_id": "v1-abcd-esu3-60m",
+      "pattern_id": "abcd",
+      "volume": 1,
+      "printed_pages": [76, 77],
+      "instrument": "S&P 500 September 2003 Mini-Contract (ES_U3)",
+      "timeframe": "60-Minute",
+      "direction": "bearish",
+      "source_components": [
+        {"kind": "abcd", "ratio": 1.0, "role": "defining", "reported_price": 1008.50},
+        {"kind": "bc", "ratio": 1.618, "role": "primary_complementary"}
+      ],
+      "reported_prz": {"low": 1008.50, "high": null, "precision": "defining_limit_explicit_other_bound_not_printed_in_text"},
+      "evidence_level": "market_example_defining_price_plus_primary_bc",
+      "coordinate_regression_eligible": false,
+      "notes": "Perfect Bearish AB=CD: exact completion at 1008.50 is the defining PRZ limit; 1.618 BC complements the same zone."
+    },
     {
       "case_id": "v1-gartley-plce-weekly",
       "pattern_id": "gartley",
@@ -169,9 +203,9 @@
     }
   ],
   "known_open_items": [
-    "Extract reliable X/A/B/C coordinates for a subset of book market examples before calling selector behavior coordinate-figure-backed.",
+    "Extract reliable X/A/B/C or A/B/C coordinates for a subset of book market examples before calling selector behavior coordinate-figure-backed.",
     "Reconcile the Perfect Bat ideal-ratio tension without changing Carney leg-length formulas by fiat.",
     "Alternate Bat remains source-conflict and is excluded from executable Source PRZ.",
-    "Standalone AB=CD, Shark and 5-0 require their own Source PRZ Golden profiles."
+    "Shark and 5-0 require their own Source PRZ Golden profiles."
   ]
 }
