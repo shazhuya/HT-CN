@@ -40,10 +40,32 @@ The official sequence is:
 The workbench must not label a completed D Pivot as an observed Terminal Price Bar unless the
 source-aligned execution-clock event exists independently.
 
-Until runtime consumes the M2.17 no-lookahead Terminal-Bar pipeline, D-based T1/T2 values must be
-shown as **retrospective** evidence only.
+For the current pivot detector, a frontier pivot is observable at
+`confirmed_at = pivot.index + scale`. Runtime execution observation starts **after** that bar.
+The API must expose this clock basis rather than silently starting from the historical pivot bar.
 
-## Invariant B — PRZ data requires explicit semantics
+## Invariant B — Identity uses the harmonic ratio family, not arbitrary points inside a band
+
+Carney's standard harmonic structures use specific harmonic measurements. A C point that merely
+falls numerically somewhere between 0.382 and 0.886 is not automatically equivalent to a C point
+aligned with one of the source harmonic ratios.
+
+HT-CN therefore freezes the current standard C family as discrete measurements:
+
+- 0.382
+- 0.500
+- 0.618
+- 0.707
+- 0.786
+- 0.886
+
+BC completion measurements are likewise represented as discrete harmonic projections rather than
+one synthetic continuous projection band.
+
+The current nearest-family 3% matching threshold is explicitly an **HT-CN operational tolerance**.
+It is not claimed as a universal Carney source constant.
+
+## Invariant C — PRZ data requires explicit semantics
 
 A single pair named `price_low/price_high` is no longer sufficient as a conceptual model.
 
@@ -57,10 +79,32 @@ HT-CN distinguishes:
 - **Terminal extreme** — real price extreme of the source-aligned T-Bar;
 - **PEZ** — source PRZ plus the T-Bar extreme, following Volume Three execution semantics.
 
-Legacy `price_low/price_high` currently remain aliases for the ideal convergence core only for
-compatibility. UI and docs must not call that pair the entire source PRZ.
+Legacy `price_low/price_high` remain compatibility aliases for the ideal convergence core only.
+UI and docs must not call that pair the entire source PRZ.
 
-## Invariant C — Type-II requires full retest before confirmation
+### API v2 price-zone contract
+
+Every PRZ payload exposes:
+
+```text
+prz.ideal_core
+prz.component_envelope
+prz.source_prz
+```
+
+The top-level response publishes:
+
+```text
+price_zone_contract.version = 2
+price_zone_contract.dynamic_layer = execution_clock.pez
+price_zone_contract.fail_closed_without_source_prz = true
+price_zone_contract.legacy_price_low_high_mean = ideal_core
+```
+
+PEZ is not a static PRZ property. It may appear only under `execution_clock.pez` after a source
+PRZ is frozen and a Terminal Price Bar is actually observed.
+
+## Invariant D — Type-II requires full retest before confirmation
 
 A mere secondary overlap is not a confirmed Type-II event.
 
@@ -81,20 +125,22 @@ HT-CN therefore uses these states:
 - `price_confirmed_no_rsi`
 - `price_and_rsi_confirmed`
 
-Only states after the full retest may be called Type-II candidates/confirmations.
+Only states after the full retest may be called Type-II candidates/confirmations. If source PRZ
+is unresolved, Type-II must fail closed with `source_prz_unresolved`.
 
-## Invariant D — Wilder RSI evidence is not RSI BAMM
+## Invariant E — Wilder RSI evidence is not RSI BAMM
 
 The current lifecycle module records a simple Wilder RSI extreme-zone reversal. It is an
 auxiliary indicator evidence layer only.
 
-It must never be named or implied to be RSI BAMM.
+It must never be named or implied to be RSI BAMM. The payload explicitly records
+`indicator_evidence_is_rsi_bamm = false`.
 
 A future RSI BAMM implementation must independently model the Volume Two multi-step process,
 including the complex RSI structure, trigger bar, reaction, divergence, 1.13/1.618 confirmation
 and coordinated harmonic pattern completion.
 
-## Invariant E — 5-0 is quarantined from default production output
+## Invariant F — 5-0 is quarantined from default production output
 
 Volume Two defines the 5-0 structural PRZ around the 50% BC retracement and Reciprocal AB=CD.
 Volume Three adds conditional execution refinement involving where Reciprocal AB=CD completes
@@ -111,7 +157,26 @@ Therefore:
 - production eligibility remains blocked until Volume Two / Volume Three figure-level Golden
   Cases reconcile the structural PRZ and execution refinement.
 
-## Invariant F — Geometry score cannot rescue identity
+## Invariant G — Shark uses its own first-target contract
+
+Shark is a reaction-oriented precursor to 5-0 and must not be forced through generic XABCD
+T1/T2 semantics.
+
+The engine retains three auditable post-C measurements:
+
+- 50% BC retracement;
+- 61.8% BC retracement;
+- Reciprocal AB=CD, with prospective CD measured against the earlier AB counter-move.
+
+Volume Three management is encoded as:
+
+`initial_target = first encountered of (50% BC, Reciprocal AB=CD)`
+
+"Lesser / comes first" is evaluated by reaction **distance from C**, not by numeric price value,
+so bullish and bearish structures are symmetric. Ties remain explicit. The 61.8% measurement is
+retained as a later 5-0/risk measurement and is not mechanically renamed Shark T1.
+
+## Invariant H — Geometry score cannot rescue identity
 
 Existing behavior remains frozen:
 
@@ -124,8 +189,7 @@ Existing behavior remains frozen:
 
 Synthetic fixtures are necessary but insufficient.
 
-Before source-fidelity repair closes, the repository must contain a textbook regression ledger
-covering, where supported by the books:
+The repository must maintain a textbook regression ledger covering, where supported by the books:
 
 - AB=CD
 - Gartley
@@ -141,22 +205,38 @@ covering, where supported by the books:
 - Type-II
 - representative RSI BAMM sequencing (future module)
 
-Each case must record source volume/page or figure, source measurements, expected identity,
-expected PRZ measurements, completion semantics and any deliberate HT-CN approximation.
+Each case records source volume/page or figure, source measurements, expected identity, expected
+PRZ measurements, completion semantics and any deliberate HT-CN approximation.
+
+## What M2.26 deliberately leaves unresolved
+
+The repair must **not** invent answers for these items merely to produce live-looking states:
+
+- per-pattern `source_prz_low/high` for Gartley / Bat / Alternate Bat / Butterfly / Crab / Deep Crab;
+- which AB=CD variants belong to each executable source PRZ;
+- how each source C ratio selects the executable BC measurement inside Raw PRZ;
+- Shark source PRZ terminal-side freeze;
+- 5-0 Volume Two / Volume Three figure-level reconciliation;
+- full RSI BAMM state machine.
+
+Until each item is resolved by the Book Golden Set, the corresponding execution state remains
+`unresolved_fail_closed`.
 
 ## Acceptance order
 
 M3 normal feature work remains paused until these gates are satisfied in order:
 
-1. Type-II full-retest semantics and non-BAMM indicator labels — implemented in M2.26.
-2. PRZ component-envelope vs ideal-core semantics — implemented in M2.26; source Raw PRZ still
-   requires Book Golden Set resolution.
-3. 5-0 default-production quarantine — implemented in M2.26.
-4. Runtime data contract exposes a source-aligned Terminal-Bar/PEZ event independently from the
-   retrospective D audit.
-5. Book Golden Set freezes Raw PRZ component selection and reconciles 5-0 Volume Two/Three.
-6. M3 T1/T2 overlays switch from retrospective D targets to source-aligned Terminal-Bar targets.
-7. Only then resume normal Type-II/product expansion.
+1. Type-II full-retest semantics and non-BAMM indicator labels — implemented.
+2. Discrete harmonic-family identity checks — implemented.
+3. PRZ component-envelope / ideal-core / source-PRZ separation — implemented.
+4. 5-0 default-production quarantine — implemented.
+5. Source-aligned Terminal-Bar/PEZ runtime contract — implemented for current forming XABCD/AB=CD;
+   unresolved source PRZ correctly fails closed.
+6. Shark first-of-50%-or-Reciprocal target semantics — implemented.
+7. API v2 price-zone contract — implemented while preserving legacy aliases.
+8. Deterministic Python + Web + Playwright CI must be green.
+9. Merge M2.26, then continue source PRZ Golden Set on a separate branch before replacing M3
+   retrospective overlays with live execution-clock targets.
 
 ## Research preservation
 
