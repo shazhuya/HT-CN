@@ -9,11 +9,13 @@ import pandas as pd
 from htcn.data.adjustment import AdjustmentFactorStore, apply_price_factors
 from htcn.data.delta import DailyHistoryView, MarketDailyDeltaStore
 from htcn.data.store import ParquetDailyStore
-from htcn.harmonic.abcd import ABCDMatch
+from htcn.harmonic.abcd import ABCDFormingMatch, ABCDMatch
 from htcn.harmonic.engine import CompletedMatch, FormingMatch, HarmonicScan, scan_frame
+from htcn.harmonic.five_zero import FiveZeroFormingMatch, FiveZeroMatch
 from htcn.harmonic.lifecycle import audit_completed_reaction
-from htcn.harmonic.models import HarmonicPoint, Pivot
+from htcn.harmonic.models import HarmonicPoint, PatternDirection, Pivot
 from htcn.harmonic.pivots import build_pivot_consensus
+from htcn.harmonic.shark import SharkFormingMatch, SharkMatch
 
 
 class DatasetNotFoundError(FileNotFoundError):
@@ -141,6 +143,22 @@ class LocalHarmonicService:
             )
         return out
 
+    @staticmethod
+    def _bars_to_target(
+        frame: pd.DataFrame,
+        *,
+        completion_index: int,
+        target: float,
+        direction: PatternDirection,
+    ) -> int | None:
+        future = frame.iloc[completion_index + 1 :]
+        for offset, (_, row) in enumerate(future.iterrows(), start=1):
+            if direction is PatternDirection.BULLISH and float(row["high"]) >= target:
+                return offset
+            if direction is PatternDirection.BEARISH and float(row["low"]) <= target:
+                return offset
+        return None
+
     def _completed_payload(
         self,
         item: CompletedMatch,
@@ -233,6 +251,215 @@ class LocalHarmonicService:
             "reaction_audit": reaction.as_payload(),
         }
 
+    def _abcd_forming_payload(
+        self,
+        item: ABCDFormingMatch,
+        dates: pd.Series,
+        pivots_by_scale: dict[int, tuple[Pivot, ...]],
+        pivot_consensus: dict,
+    ) -> dict[str, Any]:
+        projection = item.projection
+        return {
+            "pattern_id": "abcd",
+            "schema": "ABCD",
+            "direction": item.direction.value,
+            "state": item.state.value,
+            "scale": item.scale,
+            "geometry_score": item.geometry_score,
+            "conflict_key": list(item.conflict_key),
+            "identity_conflicts": [f"abcd@S{item.scale}"],
+            "is_primary_identity": True,
+            "points": [self._point_payload(point, dates) for point in item.points],
+            "pivot_support": self._pivot_support_payload(
+                item.points,
+                source_scale=item.scale,
+                pivots_by_scale=pivots_by_scale,
+                consensus=pivot_consensus,
+            ),
+            "prz": self._prz_payload(projection.prz),
+            "metrics": {
+                "c_ab": projection.c_ab,
+                "reciprocal_c_target": projection.reciprocal_c_target,
+                "reciprocal_bc_target": projection.reciprocal_bc_target,
+            },
+            "source_tolerance_used": projection.source_tolerance_used,
+            "frontier": True,
+        }
+
+    def _shark_payload(
+        self,
+        item: SharkMatch,
+        frame: pd.DataFrame,
+        dates: pd.Series,
+        pivots_by_scale: dict[int, tuple[Pivot, ...]],
+        pivot_consensus: dict,
+    ) -> dict[str, Any]:
+        evaluation = item.evaluation
+        metrics = evaluation.metrics
+        completion_index = int(item.points[-1].index)
+        return {
+            "pattern_id": "shark",
+            "schema": "0XABC",
+            "direction": item.direction.value,
+            "state": item.state.value,
+            "scale": item.scale,
+            "geometry_score": item.geometry_score,
+            "conflict_key": list(item.conflict_key),
+            "identity_conflicts": [f"shark@S{item.scale}"],
+            "is_primary_identity": True,
+            "points": [self._point_payload(point, dates) for point in item.points],
+            "pivot_support": self._pivot_support_payload(
+                item.points,
+                source_scale=item.scale,
+                pivots_by_scale=pivots_by_scale,
+                consensus=pivot_consensus,
+            ),
+            "prz": self._prz_payload(evaluation.prz),
+            "metrics": {
+                "a_0x": metrics.a_0x.value,
+                "b_xa": metrics.b_xa.value,
+                "c_ab": metrics.c_ab.value,
+                "c_0b": metrics.c_0b.value,
+            },
+            "reaction_targets": {
+                "target_50": evaluation.target_50,
+                "target_618": evaluation.target_618,
+                "reciprocal_abcd": evaluation.reciprocal_abcd_target,
+                "bars_to_50": self._bars_to_target(
+                    frame,
+                    completion_index=completion_index,
+                    target=evaluation.target_50,
+                    direction=item.direction,
+                ),
+                "bars_to_618": self._bars_to_target(
+                    frame,
+                    completion_index=completion_index,
+                    target=evaluation.target_618,
+                    direction=item.direction,
+                ),
+                "bars_to_reciprocal_abcd": self._bars_to_target(
+                    frame,
+                    completion_index=completion_index,
+                    target=evaluation.reciprocal_abcd_target,
+                    direction=item.direction,
+                ),
+                "source_note": "Shark 是反应型结构；第三卷优先关注进入 5-0 PRZ 的 50%-61.8% 与 Reciprocal AB=CD 目标。",
+            },
+        }
+
+    def _shark_forming_payload(
+        self,
+        item: SharkFormingMatch,
+        dates: pd.Series,
+        pivots_by_scale: dict[int, tuple[Pivot, ...]],
+        pivot_consensus: dict,
+    ) -> dict[str, Any]:
+        projection = item.projection
+        return {
+            "pattern_id": "shark",
+            "schema": "0XABC",
+            "direction": item.direction.value,
+            "state": item.state.value,
+            "scale": item.scale,
+            "geometry_score": item.geometry_score,
+            "conflict_key": list(item.conflict_key),
+            "identity_conflicts": [f"shark@S{item.scale}"],
+            "is_primary_identity": True,
+            "points": [self._point_payload(point, dates) for point in item.points],
+            "pivot_support": self._pivot_support_payload(
+                item.points,
+                source_scale=item.scale,
+                pivots_by_scale=pivots_by_scale,
+                consensus=pivot_consensus,
+            ),
+            "prz": self._prz_payload(projection.prz),
+            "metrics": {
+                "a_0x": projection.a_0x,
+                "b_xa": projection.b_xa,
+            },
+            "frontier": True,
+        }
+
+    def _five_zero_payload(
+        self,
+        item: FiveZeroMatch,
+        frame: pd.DataFrame,
+        dates: pd.Series,
+        pivots_by_scale: dict[int, tuple[Pivot, ...]],
+        pivot_consensus: dict,
+    ) -> dict[str, Any]:
+        evaluation = item.evaluation
+        metrics = evaluation.metrics
+        reaction = audit_completed_reaction(
+            frame,
+            points=item.points,
+            direction=item.direction,
+            prz=evaluation.prz,
+        )
+        return {
+            "pattern_id": "five_zero",
+            "schema": "FIVE_ZERO",
+            "direction": item.direction.value,
+            "state": item.state.value,
+            "scale": item.scale,
+            "geometry_score": item.geometry_score,
+            "conflict_key": list(item.conflict_key),
+            "identity_conflicts": [f"five_zero@S{item.scale}"],
+            "is_primary_identity": True,
+            "points": [self._point_payload(point, dates) for point in item.points],
+            "pivot_support": self._pivot_support_payload(
+                item.points,
+                source_scale=item.scale,
+                pivots_by_scale=pivots_by_scale,
+                consensus=pivot_consensus,
+            ),
+            "prz": self._prz_payload(evaluation.prz),
+            "metrics": {
+                "b_xa": metrics.b_xa.value,
+                "c_ab": metrics.c_ab.value,
+                "d_bc": metrics.d_bc.value,
+                "cd_ab": metrics.cd_ab.value,
+                "reciprocal_abcd_price": evaluation.reciprocal_abcd_price,
+            },
+            "completion_class": evaluation.completion_class,
+            "reciprocal_inside_execution_band": evaluation.reciprocal_inside_execution_band,
+            "reaction_audit": reaction.as_payload(),
+        }
+
+    def _five_zero_forming_payload(
+        self,
+        item: FiveZeroFormingMatch,
+        dates: pd.Series,
+        pivots_by_scale: dict[int, tuple[Pivot, ...]],
+        pivot_consensus: dict,
+    ) -> dict[str, Any]:
+        projection = item.projection
+        return {
+            "pattern_id": "five_zero",
+            "schema": "FIVE_ZERO",
+            "direction": item.direction.value,
+            "state": item.state.value,
+            "scale": item.scale,
+            "geometry_score": item.geometry_score,
+            "conflict_key": list(item.conflict_key),
+            "identity_conflicts": [f"five_zero@S{item.scale}"],
+            "is_primary_identity": True,
+            "points": [self._point_payload(point, dates) for point in item.points],
+            "pivot_support": self._pivot_support_payload(
+                item.points,
+                source_scale=item.scale,
+                pivots_by_scale=pivots_by_scale,
+                consensus=pivot_consensus,
+            ),
+            "prz": self._prz_payload(projection.prz),
+            "metrics": {
+                "b_xa": projection.b_xa,
+                "c_ab": projection.c_ab,
+                "reciprocal_abcd_price": projection.reciprocal_abcd_price,
+            },
+            "frontier": True,
+        }
+
     def _forming_payload(
         self,
         item: FormingMatch,
@@ -318,6 +545,7 @@ class LocalHarmonicService:
         dates = selected["trade_date"]
         completed_conflicts = self._identity_conflicts(scan.completed)
         forming_conflicts = self._identity_conflicts(scan.forming)
+
         xabcd_completed = [
             self._completed_payload(
                 item,
@@ -330,17 +558,19 @@ class LocalHarmonicService:
             for item in scan.completed
         ]
         abcd_completed = [
-            self._abcd_payload(
-                item,
-                selected,
-                dates,
-                pivots_by_scale,
-                pivot_consensus,
-            )
+            self._abcd_payload(item, selected, dates, pivots_by_scale, pivot_consensus)
             for item in scan.abcd_completed
         ]
+        shark_completed = [
+            self._shark_payload(item, selected, dates, pivots_by_scale, pivot_consensus)
+            for item in scan.shark_completed
+        ]
+        five_zero_completed = [
+            self._five_zero_payload(item, selected, dates, pivots_by_scale, pivot_consensus)
+            for item in scan.five_zero_completed
+        ]
         completed = sorted(
-            [*xabcd_completed, *abcd_completed],
+            [*xabcd_completed, *abcd_completed, *shark_completed, *five_zero_completed],
             key=lambda pattern: (
                 -int(pattern["points"][-1]["index"]),
                 -float(pattern["geometry_score"]),
@@ -348,7 +578,8 @@ class LocalHarmonicService:
                 str(pattern["pattern_id"]),
             ),
         )[:max_completed]
-        forming = [
+
+        xabcd_forming = [
             self._forming_payload(
                 item,
                 dates,
@@ -358,6 +589,27 @@ class LocalHarmonicService:
             )
             for item in scan.forming
         ]
+        abcd_forming = [
+            self._abcd_forming_payload(item, dates, pivots_by_scale, pivot_consensus)
+            for item in scan.abcd_forming
+        ]
+        shark_forming = [
+            self._shark_forming_payload(item, dates, pivots_by_scale, pivot_consensus)
+            for item in scan.shark_forming
+        ]
+        five_zero_forming = [
+            self._five_zero_forming_payload(item, dates, pivots_by_scale, pivot_consensus)
+            for item in scan.five_zero_forming
+        ]
+        forming = sorted(
+            [*xabcd_forming, *abcd_forming, *shark_forming, *five_zero_forming],
+            key=lambda pattern: (
+                -int(pattern["points"][-1]["index"]),
+                -float(pattern["geometry_score"]),
+                -int(pattern["scale"]),
+                str(pattern["pattern_id"]),
+            ),
+        )[:max_forming]
 
         return {
             "instrument_id": instrument_id,
@@ -372,5 +624,5 @@ class LocalHarmonicService:
             "completed": completed,
             "forming": forming,
             "pivot_counts": {str(scale): len(pivots) for scale, pivots in scan.pivots_by_scale.items()},
-            "engine_note": "Carney 几何身份与后续证据严格分层：XABCD 与独立 AB=CD 使用各自 schema；geometry_score 与 pivot_support 都不是胜率。完成结构附带 Type-I 目标、PRZ 回测及 Wilder RSI 确认证据，但不会自动转化为交易建议。",
+            "engine_note": "Carney 几何身份与后续证据严格分层：M/W XABCD、独立 AB=CD、Shark 0XABC 与 5-0 使用独立 schema；geometry_score 与 pivot_support 都不是胜率。Shark 单独审计 50%/61.8% 与 Reciprocal AB=CD 反应目标；其他完成结构可附带 Type-I/Type-II 与 Wilder RSI 证据，但不会自动转化为交易建议。",
         }
