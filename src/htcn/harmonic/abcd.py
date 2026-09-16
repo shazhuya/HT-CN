@@ -2,10 +2,26 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import inf
+from typing import Any
 
 from .models import HarmonicPoint, PatternDirection, PatternState, Pivot, RatioMeasurement
 from .prz import PRZComponent, PotentialReversalZone
 from .ratios import RECIPROCAL_ABCD, leg_length
+
+
+ABCD_SOURCE_PRZ_REFS = ("Volume One pp.45-46", "Volume Three pp.76-85")
+ABCD_SOURCE_PRZ_NOTE = (
+    "Standalone AB=CD Source Raw PRZ is the range between the exact equivalent AB=CD "
+    "completion and the primary reciprocal BC projection selected by the C retracement. "
+    "The exact AB=CD completion is the defining minimum; BC complements the zone."
+)
+ABCD_EXECUTION_LAYERING_REFS = ("Volume Three pp.81-86",)
+# Only source-cleared secondary BC layers are executable here.  Do not infer a universal
+# "next ratio" for every reciprocal row merely because a larger harmonic number exists.
+ABCD_EXECUTION_LAYERING: dict[float, float] = {
+    1.618: 2.0,
+    2.0: 2.24,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,6 +38,38 @@ class ABCDCheck:
     target: float | None
     passed: bool
     relative_error: float
+
+
+@dataclass(frozen=True, slots=True)
+class ABCDExecutionToleranceLayer:
+    """Volume Three secondary BC layer; explicitly not part of identity or Source Raw PRZ."""
+
+    status: str
+    primary_bc_target: float
+    secondary_bc_target: float | None
+    price: float | None
+    source_refs: tuple[str, ...]
+    source_note: str
+
+    @property
+    def available(self) -> bool:
+        return self.status == "source_backed" and self.secondary_bc_target is not None and self.price is not None
+
+    def as_payload(self) -> dict[str, Any]:
+        return {
+            "available": self.available,
+            "status": self.status,
+            "primary_bc_target": float(self.primary_bc_target),
+            "secondary_bc_target": (
+                None if self.secondary_bc_target is None else float(self.secondary_bc_target)
+            ),
+            "price": None if self.price is None else float(self.price),
+            "source_refs": list(self.source_refs),
+            "source_note": self.source_note,
+            "affects_identity": False,
+            "included_in_source_raw_prz": False,
+            "role": "execution_tolerance_layer",
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -193,6 +241,68 @@ def _project_completion_price(
     return c_price - length if direction is PatternDirection.BULLISH else c_price + length
 
 
+def _source_layer_target(primary_bc_target: float) -> float | None:
+    for source_primary, secondary in ABCD_EXECUTION_LAYERING.items():
+        if abs(float(primary_bc_target) - float(source_primary)) <= 1e-9:
+            return float(secondary)
+    return None
+
+
+def build_abcd_execution_tolerance_layer(
+    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint] | tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
+    *,
+    direction: PatternDirection,
+    primary_bc_target: float,
+) -> ABCDExecutionToleranceLayer:
+    """Build only source-cleared Volume Three secondary BC execution layers.
+
+    This is deliberately separate from identity and Source Raw PRZ.  Unsupported primary BC
+    rows remain unresolved rather than extrapolating a universal next-ratio rule.
+    """
+
+    secondary = _source_layer_target(primary_bc_target)
+    if secondary is None:
+        return ABCDExecutionToleranceLayer(
+            status="unresolved_fail_closed",
+            primary_bc_target=float(primary_bc_target),
+            secondary_bc_target=None,
+            price=None,
+            source_refs=ABCD_EXECUTION_LAYERING_REFS,
+            source_note=(
+                "No figure-backed secondary BC layer is frozen for this primary reciprocal row; "
+                "HT-CN does not infer a generic next harmonic ratio."
+            ),
+        )
+    _, b, c = points[:3]
+    bc = leg_length(b.price, c.price)
+    price = _project_completion_price(
+        c_price=c.price,
+        length=bc * secondary,
+        direction=direction,
+    )
+    if price <= 0:
+        return ABCDExecutionToleranceLayer(
+            status="unresolved_fail_closed",
+            primary_bc_target=float(primary_bc_target),
+            secondary_bc_target=float(secondary),
+            price=None,
+            source_refs=ABCD_EXECUTION_LAYERING_REFS,
+            source_note="Projected secondary BC layer is non-positive and is therefore not executable.",
+        )
+    return ABCDExecutionToleranceLayer(
+        status="source_backed",
+        primary_bc_target=float(primary_bc_target),
+        secondary_bc_target=float(secondary),
+        price=float(price),
+        source_refs=ABCD_EXECUTION_LAYERING_REFS,
+        source_note=(
+            "Volume Three BC Layering is a secondary execution-tolerance measurement for price "
+            "action that exceeds the ideal AB=CD completion; it is not part of pattern identity "
+            "and is not included in the Source Raw PRZ."
+        ),
+    )
+
+
 def _build_prz_from_abc(
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint] | tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
     *,
@@ -210,6 +320,8 @@ def _build_prz_from_abc(
     )
     if min(abcd_price, reciprocal_price) <= 0:
         raise ValueError("AB=CD projection produced a non-positive PRZ price")
+    source_low = min(float(abcd_price), float(reciprocal_price))
+    source_high = max(float(abcd_price), float(reciprocal_price))
     return PotentialReversalZone(
         pattern_id="abcd",
         direction=direction,
@@ -229,6 +341,14 @@ def _build_prz_from_abc(
                 ratio_high=reciprocal_bc_target,
             ),
         ),
+        source_prz_low=source_low,
+        source_prz_high=source_high,
+        source_prz_component_names=("AB=CD x1", "BC reciprocal"),
+        source_prz_defining_component="AB=CD x1",
+        source_prz_selection_method="exact_abcd_plus_primary_reciprocal_bc",
+        source_prz_source_refs=ABCD_SOURCE_PRZ_REFS,
+        source_prz_note=ABCD_SOURCE_PRZ_NOTE,
+        source_prz_reason=None,
     )
 
 
