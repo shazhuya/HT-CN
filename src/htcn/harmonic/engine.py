@@ -111,9 +111,17 @@ def scan_pivots(
     *,
     include_source_tolerance: bool = True,
     abcd_relative_tolerance: float = 0.03,
+    include_source_conflict_patterns: bool = False,
     max_completed: int = 40,
     max_forming: int = 40,
 ) -> HarmonicScan:
+    """Scan one pivot set using only source-cleared patterns by default.
+
+    ``include_source_conflict_patterns`` is intentionally opt-in. At present it controls
+    the 5-0 research implementation, whose Volume Two structural definition and Volume
+    Three execution refinement still require figure-level reconciliation. Source-conflict
+    patterns must not silently enter the production Scanner or workbench.
+    """
     completed: list[CompletedMatch] = []
     forming: list[FormingMatch] = []
     normalized: dict[int, tuple[Pivot, ...]] = {
@@ -185,11 +193,15 @@ def scan_pivots(
         max_completed=max_completed,
         max_forming=max_forming,
     )
-    five_zero_completed, five_zero_forming = scan_five_zero_pivots(
-        normalized,
-        max_completed=max_completed,
-        max_forming=max_forming,
-    )
+
+    if include_source_conflict_patterns:
+        five_zero_completed, five_zero_forming = scan_five_zero_pivots(
+            normalized,
+            max_completed=max_completed,
+            max_forming=max_forming,
+        )
+    else:
+        five_zero_completed, five_zero_forming = (), ()
 
     return HarmonicScan(
         completed=tuple(completed[:max_completed]),
@@ -210,6 +222,7 @@ def scan_frame(
     scales: tuple[int, ...] = (3, 5, 8, 13),
     include_source_tolerance: bool = True,
     abcd_relative_tolerance: float = 0.03,
+    include_source_conflict_patterns: bool = False,
     max_completed: int = 40,
     max_forming: int = 40,
 ) -> HarmonicScan:
@@ -231,6 +244,7 @@ def scan_frame(
         pivots,
         include_source_tolerance=include_source_tolerance,
         abcd_relative_tolerance=abcd_relative_tolerance,
+        include_source_conflict_patterns=include_source_conflict_patterns,
         max_completed=max_completed,
         max_forming=max_forming,
     )
