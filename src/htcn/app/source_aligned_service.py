@@ -5,8 +5,9 @@ from typing import Any
 import pandas as pd
 
 from htcn.app.harmonic_service import LocalHarmonicService
+from htcn.harmonic.abcd import build_abcd_execution_tolerance_layer
 from htcn.harmonic.execution import observe_source_execution
-from htcn.harmonic.models import PatternDirection
+from htcn.harmonic.models import HarmonicPoint, PatternDirection
 from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
 from htcn.harmonic.source_prz_evidence import source_prz_evidence
 
@@ -134,6 +135,39 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             source_prz_reason=source.get("unresolved_reason"),
         )
 
+    @staticmethod
+    def _attach_abcd_execution_tolerance_layer(pattern: dict[str, Any]) -> None:
+        """Expose Volume Three BC layering without folding it into identity or Source Raw PRZ."""
+        if str(pattern.get("schema")) != "ABCD":
+            return
+        metrics = pattern.get("metrics") or {}
+        primary = metrics.get("reciprocal_bc_target")
+        raw_points = list(pattern.get("points") or [])
+        by_label = {str(point.get("label")): point for point in raw_points}
+        if primary is None or any(label not in by_label for label in ("A", "B", "C")):
+            pattern["execution_tolerance_layer"] = {
+                "available": False,
+                "status": "payload_incomplete_fail_closed",
+                "affects_identity": False,
+                "included_in_source_raw_prz": False,
+                "role": "execution_tolerance_layer",
+            }
+            return
+        points = tuple(
+            HarmonicPoint(
+                label=label,
+                index=int(by_label[label]["index"]),
+                price=float(by_label[label]["price"]),
+            )
+            for label in ("A", "B", "C")
+        )
+        layer = build_abcd_execution_tolerance_layer(
+            points,  # type: ignore[arg-type]
+            direction=PatternDirection(str(pattern["direction"])),
+            primary_bc_target=float(primary),
+        )
+        pattern["execution_tolerance_layer"] = layer.as_payload()
+
     @classmethod
     def _execution_clock_from_forming_payload(
         cls,
@@ -201,7 +235,10 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
     def analyze(self, *args, **kwargs) -> dict[str, Any]:
         analysis = super().analyze(*args, **kwargs)
         frame = pd.DataFrame(analysis.get("bars") or [])
+        for pattern in analysis.get("completed") or []:
+            self._attach_abcd_execution_tolerance_layer(pattern)
         for pattern in analysis.get("forming") or []:
+            self._attach_abcd_execution_tolerance_layer(pattern)
             clock = self._execution_clock_from_forming_payload(pattern, frame)
             if clock is not None:
                 pattern["execution_clock"] = clock
@@ -214,6 +251,7 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             "source_prz_profile_version": 1,
             "static_layers": ["ideal_core", "component_envelope", "source_prz"],
             "dynamic_layer": "execution_clock.pez",
+            "execution_tolerance_layer": "ABCD only where figure-backed; never part of Source Raw PRZ",
             "fail_closed_without_source_prz": True,
             "legacy_price_low_high_mean": "ideal_core",
             "source_membership_authority": "Carney source families per pattern",
@@ -221,8 +259,8 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
         }
         analysis["engine_note"] = (
             str(analysis.get("engine_note") or "")
-            + " M2.27 标准 XABCD Source PRZ 使用逐形态 Golden Profile 选择并暴露组成测量/来源；"
-            "Carney 决定合法测量族，HT-CN 只在合法族内做收敛选择。Ideal Core 继续作为独立工程层，"
-            "Alternate Bat 等冲突项继续 fail closed；Book Case Ledger 与坐标级回归状态单独暴露。"
+            + " M2.28 standalone AB=CD Source Raw PRZ 已冻结为 exact AB=CD + primary reciprocal BC；"
+            "Volume Three BC Layering 独立为 execution tolerance，不进入 identity/Raw PRZ。"
+            "标准 XABCD Golden Profile 继续沿用 M2.27；Alternate Bat 等冲突项继续 fail closed。"
         ).strip()
         return analysis
