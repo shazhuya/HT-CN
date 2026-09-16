@@ -18,6 +18,7 @@ from .time_split import (
     outcome_summary,
     split_manifest,
 )
+from .type_i_confirmation import build_type_i_early_path_report
 
 
 _TERMINAL_AUDIT_REQUIRED_FIELDS = {
@@ -135,6 +136,11 @@ def build_autonomous_quality_report(
         all_rows,
         reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
     )
+    type_i_early_path = build_type_i_early_path_report(
+        all_rows,
+        terminal_bar_calibration,
+        reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
+    )
     mature = mature_forward_records(all_rows, horizon=horizon)
     if len(mature) < minimum_mature_records:
         return {
@@ -143,6 +149,7 @@ def build_autonomous_quality_report(
             "mature_records": len(mature),
             "minimum_mature_records": minimum_mature_records,
             "terminal_bar_calibration": terminal_bar_calibration,
+            "type_i_early_path": type_i_early_path,
             "policy_frozen": False,
             "holdout": {"sealed": True, "outcomes_reported": False},
         }
@@ -155,6 +162,7 @@ def build_autonomous_quality_report(
             "horizon_bars": horizon,
             "mature_records": len(mature),
             "terminal_bar_calibration": terminal_bar_calibration,
+            "type_i_early_path": type_i_early_path,
             "policy_frozen": False,
             "holdout": {"sealed": True, "outcomes_reported": False},
         }
@@ -182,6 +190,7 @@ def build_autonomous_quality_report(
         "validation_outcome_summary": outcome_summary(splits["validation"], horizon=horizon),
         "quality_gate": gates,
         "terminal_bar_calibration": terminal_bar_calibration,
+        "type_i_early_path": type_i_early_path,
         "holdout": {
             "sealed": True,
             "records": len(splits["holdout"]),
@@ -194,5 +203,6 @@ def build_autonomous_quality_report(
             "validation_redefines_gates": False,
             "holdout_outcomes_opened": False,
             "terminal_bar_outcomes_use_independent_purged_split": True,
+            "type_i_early_path_reuses_m2_17_boundaries": True,
         },
     }

@@ -79,6 +79,9 @@ jobs:
       - name: Report source-aligned Terminal Price Bar calibration
         run: python scripts/m2_terminal_bar_report.py
 
+      - name: Report source-backed Type-I early-path evidence
+        run: python scripts/m2_type_i_confirmation_report.py
+
       - name: Build completed-reaction quality evidence
         run: python scripts/m2_completed_reaction_quality.py
 

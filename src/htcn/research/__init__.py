@@ -51,6 +51,10 @@ from .time_split import (
     signal_features,
     split_manifest,
 )
+from .type_i_confirmation import (
+    DEFAULT_TYPE_I_LANDMARK_BAR,
+    build_type_i_early_path_report,
+)
 from .walk_forward import (
     DEFAULT_FORWARD_HORIZON,
     DEFAULT_WALK_FORWARD_SCALES,
@@ -63,6 +67,7 @@ __all__ = [
     "DEFAULT_FORWARD_HORIZON",
     "DEFAULT_OBSERVATION_HORIZON",
     "DEFAULT_TERMINAL_REACTION_HORIZON",
+    "DEFAULT_TYPE_I_LANDMARK_BAR",
     "DEFAULT_WALK_FORWARD_SCALES",
     "GateClause",
     "GateSpec",
@@ -77,6 +82,7 @@ __all__ = [
     "build_layered_quality_report",
     "build_quality_robustness_report",
     "build_terminal_bar_calibration",
+    "build_type_i_early_path_report",
     "canonical_case_key",
     "classify_gate_layer",
     "completed_reaction_summary",
