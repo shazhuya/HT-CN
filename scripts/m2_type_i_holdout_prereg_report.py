@@ -3,114 +3,125 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from htcn.research.type_i_holdout_prereg import build_type_i_holdout_preregistration
-
 
 ROOT = Path(__file__).resolve().parents[1]
-REPORT = ROOT / "artifacts" / "ci-research" / "m2-autonomous-research-report.json"
-REGISTRY = ROOT / "research" / "m2-type-i-holdout-prereg-v1.json"
-OUTPUT = ROOT / "artifacts" / "ci-research" / "m2-type-i-holdout-preregistration.json"
+PREREG = ROOT / "research" / "m2-type-i-holdout-prereg-v1.json"
+AUTHORIZATION = ROOT / "research" / "m2-type-i-holdout-open-v1.json"
 
 
-def _frozen_projection(payload: dict) -> dict:
-    """Fields that must match the committed repository pre-registration exactly."""
-    contrast = payload.get("primary_contrast") or {}
-    test = payload.get("confirmatory_test") or {}
-    holdout = payload.get("holdout") or {}
-    dataset = payload.get("dataset") or {}
-    return {
-        "preregistration_id": payload.get("preregistration_id"),
-        "dataset_id": dataset.get("dataset_id"),
-        "snapshot_cutoff": dataset.get("snapshot_cutoff"),
-        "price_mode": dataset.get("price_mode"),
-        "source_commit": payload.get("source_commit"),
-        "selected_hypothesis": payload.get("selected_hypothesis"),
-        "exposure": (contrast.get("exposure") or {}).get("name"),
-        "comparator": (contrast.get("comparator") or {}).get("name"),
-        "endpoint": contrast.get("endpoint"),
-        "effect_measure": contrast.get("effect_measure"),
-        "method": test.get("method"),
-        "confidence_level": test.get("confidence_level"),
-        "z": test.get("z"),
-        "minimum_records_per_group": test.get("minimum_records_per_group"),
-        "success_criterion": test.get("success_criterion"),
-        "primary_tests": (payload.get("multiplicity") or {}).get("primary_tests"),
-        "holdout_records": holdout.get("records"),
-        "holdout_sealed": holdout.get("sealed"),
-        "holdout_outcomes_exposed": holdout.get("outcomes_exposed"),
-        "holdout_open_authorized": payload.get("holdout_open_authorized"),
-        "policy_frozen": payload.get("policy_frozen"),
-    }
+EXPECTED_PREREGISTRATION_ID = "m2-type-i-holdout-v1"
+EXPECTED_DATASET_ID = "a-share-research-v2-45"
+EXPECTED_CUTOFF = "2026-09-15"
+EXPECTED_SOURCE_COMMIT = "bc90af32963498d174aa2470852ec40330be7853"
+EXPECTED_HOLDOUT_RECORDS = 355
+EXPECTED_HYPOTHESIS = "full_prz_exit_by_t5"
+EXPECTED_COMPARATOR = "no_full_exit_by_t5"
 
 
 def main() -> int:
-    payload = json.loads(REPORT.read_text(encoding="utf-8"))
-    frozen = json.loads(REGISTRY.read_text(encoding="utf-8"))
-    calibration = payload.get("calibration") or {}
-    timing = calibration.get("type_i_exit_timing") or {}
-    prereg = build_type_i_holdout_preregistration(
-        timing,
-        dataset_id=payload.get("dataset_id"),
-        snapshot_cutoff=payload.get("snapshot_cutoff"),
-        source_commit=frozen.get("frozen_from_evidence_commit"),
-        minimum_holdout_group=int((frozen.get("confirmatory_test") or {}).get("minimum_records_per_group", 20)),
-    )
+    """Verify historical v1 preregistration without rebuilding it from the current engine.
 
-    expected = {
-        "preregistration_id": frozen.get("preregistration_id"),
-        "dataset_id": (frozen.get("dataset") or {}).get("dataset_id"),
-        "snapshot_cutoff": (frozen.get("dataset") or {}).get("snapshot_cutoff"),
-        "price_mode": (frozen.get("dataset") or {}).get("price_mode"),
-        "source_commit": frozen.get("frozen_from_evidence_commit"),
-        "selected_hypothesis": frozen.get("selected_hypothesis"),
-        "exposure": ((frozen.get("primary_contrast") or {}).get("exposure") or {}).get("name"),
-        "comparator": ((frozen.get("primary_contrast") or {}).get("comparator") or {}).get("name"),
-        "endpoint": (frozen.get("primary_contrast") or {}).get("endpoint"),
-        "effect_measure": (frozen.get("primary_contrast") or {}).get("effect_measure"),
-        "method": (frozen.get("confirmatory_test") or {}).get("method"),
-        "confidence_level": (frozen.get("confirmatory_test") or {}).get("confidence_level"),
-        "z": (frozen.get("confirmatory_test") or {}).get("z"),
-        "minimum_records_per_group": (frozen.get("confirmatory_test") or {}).get("minimum_records_per_group"),
-        "success_criterion": (frozen.get("confirmatory_test") or {}).get("success_criterion"),
-        "primary_tests": (frozen.get("multiplicity") or {}).get("primary_tests"),
-        "holdout_records": (frozen.get("holdout") or {}).get("records"),
-        "holdout_sealed": (frozen.get("holdout") or {}).get("sealed"),
-        "holdout_outcomes_exposed": (frozen.get("holdout") or {}).get("outcomes_exposed"),
-        "holdout_open_authorized": frozen.get("holdout_open_authorized"),
-        "policy_frozen": frozen.get("policy_frozen"),
-    }
-    actual = _frozen_projection(prereg)
-    if actual != expected:
-        print("[HT-CN M2 HOLDOUT PREREG] FAIL: runtime plan does not match committed pre-registration.")
-        print(json.dumps({"expected": expected, "actual": actual}, ensure_ascii=False, indent=2))
+    M2.26 changes source-fidelity/identity semantics, so current runtime sample membership is a
+    different research definition. Reconstructing the consumed v1 preregistration from current
+    calibration would be scientifically invalid. This verifier therefore reads only the frozen
+    historical registry and its closed authorization record.
+    """
+    prereg = json.loads(PREREG.read_text(encoding="utf-8"))
+    authorization = json.loads(AUTHORIZATION.read_text(encoding="utf-8"))
+
+    dataset = prereg.get("dataset") or {}
+    contrast = prereg.get("primary_contrast") or {}
+    exposure = contrast.get("exposure") or {}
+    comparator = contrast.get("comparator") or {}
+    test = prereg.get("confirmatory_test") or {}
+    multiplicity = prereg.get("multiplicity") or {}
+    holdout = prereg.get("holdout") or {}
+
+    failures: list[str] = []
+
+    def require(condition: bool, message: str) -> None:
+        if not condition:
+            failures.append(message)
+
+    require(
+        prereg.get("preregistration_id") == EXPECTED_PREREGISTRATION_ID,
+        "historical preregistration id changed",
+    )
+    require(dataset.get("dataset_id") == EXPECTED_DATASET_ID, "historical dataset id changed")
+    require(dataset.get("snapshot_cutoff") == EXPECTED_CUTOFF, "historical cutoff changed")
+    require(dataset.get("price_mode") == "qfq", "historical price mode changed")
+    require(
+        prereg.get("frozen_from_evidence_commit") == EXPECTED_SOURCE_COMMIT,
+        "historical source evidence commit changed",
+    )
+    require(
+        prereg.get("selected_hypothesis") == EXPECTED_HYPOTHESIS,
+        "historical selected hypothesis changed",
+    )
+    require(exposure.get("name") == EXPECTED_HYPOTHESIS, "historical exposure definition changed")
+    require(comparator.get("name") == EXPECTED_COMPARATOR, "historical comparator definition changed")
+    require(
+        contrast.get("endpoint") == "First T2 hit from T+6 through T+20.",
+        "historical endpoint changed",
+    )
+    require(
+        int(test.get("minimum_records_per_group") or 0) == 20,
+        "historical minimum group size changed",
+    )
+    require(
+        float(test.get("z") or 0.0) == 1.959963984540054,
+        "historical Newcombe z value changed",
+    )
+    require(
+        multiplicity.get("primary_tests") == 1,
+        "historical preregistration must contain exactly one primary test",
+    )
+    require(
+        multiplicity.get("post_hoc_threshold_search_allowed") is False,
+        "historical post-hoc threshold search must remain forbidden",
+    )
+    require(
+        multiplicity.get("alternate_endpoint_substitution_allowed") is False,
+        "historical endpoint substitution must remain forbidden",
+    )
+    require(holdout.get("sealed") is True, "historical v1 Holdout must remain sealed")
+    require(
+        int(holdout.get("records") or 0) == EXPECTED_HOLDOUT_RECORDS,
+        "historical v1 preregistered Holdout size must remain 355",
+    )
+    require(
+        holdout.get("outcomes_exposed") is False,
+        "historical preregistration must preserve the pre-open outcomes_exposed=false state",
+    )
+    require(
+        authorization.get("preregistration_id") == EXPECTED_PREREGISTRATION_ID,
+        "closed authorization no longer points to historical preregistration",
+    )
+    require(
+        authorization.get("frozen_evidence_commit") == EXPECTED_SOURCE_COMMIT,
+        "closed authorization evidence commit changed",
+    )
+    require(authorization.get("authorized") is False, "historical Holdout authorization must be closed")
+    require(
+        authorization.get("one_time_holdout_open") is False,
+        "historical one-time Holdout must remain closed",
+    )
+    require(authorization.get("evaluated_once") is True, "historical Holdout must remain marked consumed")
+
+    if failures:
+        for failure in failures:
+            print(f"[HT-CN M2 HOLDOUT PREREG V1] FAIL: {failure}")
         return 2
 
-    artifact = {
-        **prereg,
-        "registry_path": str(REGISTRY.relative_to(ROOT)),
-        "registry_match": True,
-    }
-    OUTPUT.write_text(json.dumps(artifact, ensure_ascii=False, indent=2), encoding="utf-8")
     print(
-        "[HT-CN M2 HOLDOUT PREREG] "
-        f"status={prereg.get('status')}, selected={prereg.get('selected_hypothesis') or 'none'}, "
-        f"holdout={(prereg.get('holdout') or {}).get('records', 0)} SEALED"
+        "[HT-CN M2 HOLDOUT PREREG V1] PASS: "
+        f"prereg={EXPECTED_PREREGISTRATION_ID}, dataset={EXPECTED_DATASET_ID}, "
+        f"holdout={EXPECTED_HOLDOUT_RECORDS}, source_commit={EXPECTED_SOURCE_COMMIT[:12]}..."
     )
-    contrast = prereg.get("primary_contrast") or {}
-    exposure = (contrast.get("exposure") or {}).get("name")
-    comparator = (contrast.get("comparator") or {}).get("name")
     print(
-        "[HT-CN M2 HOLDOUT PREREG] primary="
-        f"{exposure} vs {comparator}; endpoint=T+6..T+20 first T2"
+        "[HT-CN M2 HOLDOUT PREREG V1] STATIC HISTORICAL INTEGRITY ONLY; "
+        "current runtime was not used to rebuild, reopen or reinterpret v1."
     )
-    test = prereg.get("confirmatory_test") or {}
-    print(
-        "[HT-CN M2 HOLDOUT PREREG] criterion="
-        f"{test.get('success_criterion')}; min_group={test.get('minimum_records_per_group')}"
-    )
-    print(f"[HT-CN M2 HOLDOUT PREREG] registry_match=True path={REGISTRY.relative_to(ROOT)}")
-    print("[HT-CN M2 HOLDOUT PREREG] HOLDOUT REMAINS SEALED")
-    print(f"[HT-CN M2 HOLDOUT PREREG] report={OUTPUT.relative_to(ROOT)}")
     return 0
 
 
