@@ -196,7 +196,8 @@ test('full source PRZ retest with price and RSI evidence stays explicitly non-BA
     }),
   })
   await expect(page.getByText('后验 Type-II · 价格 + RSI 辅助证据')).toBeVisible()
-  await expect(page.getByText(/明确不是 RSI BAMM/)).toBeVisible()
+  const auditCard = page.locator('.audit-card')
+  await expect(auditCard.getByText(/明确不是 RSI BAMM/)).toBeVisible()
   await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-state', 'reached')
   await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-state', 'reached')
 })
