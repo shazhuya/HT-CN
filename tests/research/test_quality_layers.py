@@ -50,7 +50,7 @@ def _row(
 def _balanced_rows() -> list[dict]:
     rows: list[dict] = []
     for pattern, scale in (("abcd", 3), ("bat", 5), ("shark", 8)):
-        for _ in range(12):
+        for _ in range(20):
             rows.append(
                 _row(
                     pattern=pattern,
@@ -60,7 +60,7 @@ def _balanced_rows() -> list[dict]:
                     retired=False,
                 )
             )
-        for _ in range(12):
+        for _ in range(20):
             rows.append(
                 _row(
                     pattern=pattern,
