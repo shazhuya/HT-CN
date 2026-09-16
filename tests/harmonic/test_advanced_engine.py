@@ -33,7 +33,7 @@ def test_engine_emits_completed_shark_from_dedicated_schema():
     assert shark.evaluation.prz.price_low < shark.evaluation.prz.price_high
 
 
-def test_engine_emits_completed_five_zero_from_dedicated_schema():
+def test_default_engine_quarantines_source_conflict_five_zero():
     pivots = _pivots(
         (
             (100.0, PivotKind.LOW),
@@ -44,6 +44,22 @@ def test_engine_emits_completed_five_zero_from_dedicated_schema():
         )
     )
     scan = scan_pivots({3: pivots})
+
+    assert scan.five_zero_completed == ()
+    assert scan.five_zero_forming == ()
+
+
+def test_research_opt_in_can_still_emit_five_zero_for_reconciliation():
+    pivots = _pivots(
+        (
+            (100.0, PivotKind.LOW),
+            (120.0, PivotKind.HIGH),
+            (90.0, PivotKind.LOW),
+            (150.0, PivotKind.HIGH),
+            (120.0, PivotKind.LOW),
+        )
+    )
+    scan = scan_pivots({3: pivots}, include_source_conflict_patterns=True)
 
     assert len(scan.five_zero_completed) == 1
     five_zero = scan.five_zero_completed[0]
@@ -71,5 +87,11 @@ def test_engine_projects_only_frontier_advanced_forming_structures():
             (150.0, PivotKind.HIGH),
         )
     )
-    five_zero_scan = scan_pivots({3: five_zero_frontier})
-    assert len(five_zero_scan.five_zero_forming) == 1
+    default_scan = scan_pivots({3: five_zero_frontier})
+    assert default_scan.five_zero_forming == ()
+
+    research_scan = scan_pivots(
+        {3: five_zero_frontier},
+        include_source_conflict_patterns=True,
+    )
+    assert len(research_scan.five_zero_forming) == 1
