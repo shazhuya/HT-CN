@@ -1,4 +1,5 @@
 import LifecycleCompass from './LifecycleCompass'
+import './HarmonicChartLifecycle.css'
 
 export type Bar = {
   index: number
@@ -102,6 +103,13 @@ type Props = {
   focusPattern?: boolean
 }
 
+type LifecycleTarget = {
+  id: 't1' | 't2'
+  label: string
+  price: number
+  reached: boolean
+}
+
 const WIDTH = 1100
 const HEIGHT = 520
 const LEFT = 62
@@ -111,6 +119,26 @@ const BOTTOM = 42
 
 function formatPrice(value: number) {
   return value >= 100 ? value.toFixed(2) : value.toFixed(3)
+}
+
+function lifecycleTargets(pattern: Pattern | null): LifecycleTarget[] {
+  const audit = pattern?.reaction_audit
+  if (!audit) return []
+
+  return [
+    {
+      id: 't1',
+      label: 'T1 38.2%',
+      price: audit.target_382,
+      reached: audit.bars_to_382 != null,
+    },
+    {
+      id: 't2',
+      label: 'T2 61.8%',
+      price: audit.target_618,
+      reached: audit.bars_to_618 != null,
+    },
+  ]
 }
 
 export default function HarmonicChart({ bars, pattern, focusPattern = true }: Props) {
@@ -124,8 +152,11 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
     ? Math.max(fullFirstIndex, patternFirstIndex - focusPadding)
     : fullFirstIndex
   const visibleBars = bars.filter((bar) => bar.index >= viewportStart)
+  const targets = lifecycleTargets(pattern)
 
-  const extra = pattern ? [pattern.prz.price_low, pattern.prz.price_high] : []
+  const extra = pattern
+    ? [pattern.prz.price_low, pattern.prz.price_high, ...targets.map((target) => target.price)]
+    : []
   const low = Math.min(...visibleBars.map((bar) => bar.low), ...extra)
   const high = Math.max(...visibleBars.map((bar) => bar.high), ...extra)
   const span = Math.max(high - low, Math.abs(high) * 0.01, 0.01)
@@ -146,6 +177,9 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
   const grid = Array.from({ length: 6 }, (_, index) => paddedLow + (priceSpan * index) / 5)
   const patternPoints = pattern?.points.map((point) => `${x(point.index)},${y(point.price)}`).join(' ') ?? ''
   const przStart = pattern ? Math.min(pattern.points.at(-1)?.index ?? maxIndex, maxIndex) : maxIndex
+  const lifecycleStart = pattern?.reaction_audit
+    ? Math.max(minIndex, Math.min(pattern.reaction_audit.d_index, maxIndex))
+    : maxIndex
 
   return (
     <>
@@ -171,6 +205,31 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
               className={`prz-zone ${pattern.direction}`}
             />
           )}
+
+          {targets.map((target) => (
+            <g
+              key={target.id}
+              className={`lifecycle-target ${target.reached ? 'reached' : 'pending'}`}
+              data-testid={`type-i-target-${target.id}`}
+              data-state={target.reached ? 'reached' : 'pending'}
+            >
+              <line
+                x1={x(lifecycleStart)}
+                x2={x(maxIndex)}
+                y1={y(target.price)}
+                y2={y(target.price)}
+                className="lifecycle-target-line"
+              />
+              <text
+                x={x(maxIndex) - 5}
+                y={y(target.price) - 7}
+                textAnchor="end"
+                className="lifecycle-target-label"
+              >
+                {target.label} · {formatPrice(target.price)} · {target.reached ? '已到达' : '待到达'}
+              </text>
+            </g>
+          ))}
 
           {visibleBars.map((bar) => {
             const rising = bar.close >= bar.open
