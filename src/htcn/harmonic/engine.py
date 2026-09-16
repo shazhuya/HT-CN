@@ -7,10 +7,16 @@ import pandas as pd
 from .abcd import ABCDFormingMatch, ABCDMatch, scan_abcd_pivots, scan_forming_abcd_pivots
 from .candidates import iter_completed_xabcd_windows, iter_forming_xabc_windows
 from .evaluator import PatternEvaluation
+from .five_zero import (
+    FiveZeroFormingMatch,
+    FiveZeroMatch,
+    scan_five_zero_pivots,
+)
 from .models import HarmonicPoint, PatternDirection, PatternState, Pivot
 from .pivots import detect_multi_scale_pivots
 from .prz import PotentialReversalZone
 from .scanner import FormingPattern, classify_completed_xabcd, project_forming_xabcd
+from .shark import SharkFormingMatch, SharkMatch, scan_shark_pivots
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,6 +50,10 @@ class HarmonicScan:
     pivots_by_scale: dict[int, tuple[Pivot, ...]]
     abcd_completed: tuple[ABCDMatch, ...] = ()
     abcd_forming: tuple[ABCDFormingMatch, ...] = ()
+    shark_completed: tuple[SharkMatch, ...] = ()
+    shark_forming: tuple[SharkFormingMatch, ...] = ()
+    five_zero_completed: tuple[FiveZeroMatch, ...] = ()
+    five_zero_forming: tuple[FiveZeroFormingMatch, ...] = ()
 
 
 def _prz_width_ratio(prz: PotentialReversalZone, points: tuple[HarmonicPoint, ...]) -> float:
@@ -157,6 +167,7 @@ def scan_pivots(
     )
     completed = _dedupe_completed(completed)
     forming = _dedupe_forming(forming)
+
     standalone_abcd = scan_abcd_pivots(
         normalized,
         c_relative_tolerance=abcd_relative_tolerance,
@@ -169,12 +180,27 @@ def scan_pivots(
         c_relative_tolerance=abcd_relative_tolerance,
         max_forming=max_forming,
     )
+    shark_completed, shark_forming = scan_shark_pivots(
+        normalized,
+        max_completed=max_completed,
+        max_forming=max_forming,
+    )
+    five_zero_completed, five_zero_forming = scan_five_zero_pivots(
+        normalized,
+        max_completed=max_completed,
+        max_forming=max_forming,
+    )
+
     return HarmonicScan(
         completed=tuple(completed[:max_completed]),
         forming=tuple(forming[:max_forming]),
         pivots_by_scale=normalized,
         abcd_completed=standalone_abcd,
         abcd_forming=forming_abcd,
+        shark_completed=shark_completed,
+        shark_forming=shark_forming,
+        five_zero_completed=five_zero_completed,
+        five_zero_forming=five_zero_forming,
     )
 
 
@@ -195,6 +221,10 @@ def scan_frame(
             pivots_by_scale={},
             abcd_completed=(),
             abcd_forming=(),
+            shark_completed=(),
+            shark_forming=(),
+            five_zero_completed=(),
+            five_zero_forming=(),
         )
     pivots = detect_multi_scale_pivots(frame, scales=scales)
     return scan_pivots(
