@@ -94,6 +94,9 @@ jobs:
       - name: Verify frozen one-time Type-I Holdout result
         run: python scripts/m2_type_i_holdout_result_report.py
 
+      - name: Verify external Type-I replication pre-registration
+        run: python scripts/m2_type_i_external_prereg_report.py
+
       - name: Build completed-reaction quality evidence
         run: python scripts/m2_completed_reaction_quality.py
 
