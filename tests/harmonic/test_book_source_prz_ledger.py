@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from htcn.harmonic.ratios import RECIPROCAL_ABCD
 from htcn.harmonic.rules import CARNEY_RULES
 from htcn.harmonic.source_prz import SOURCE_PRZ_PROFILES
 from htcn.harmonic.source_prz_evidence import SOURCE_PRZ_EVIDENCE
@@ -22,20 +23,21 @@ def _ratio_in(values: tuple[float, ...], target: float) -> bool:
     """Match printed source ratios to canonical internal precision.
 
     Carney's prose/figure labels sometimes print a derived ratio as 1.41 while the canonical
-    registry stores sqrt(2) rounded to 1.414.  Keep the book value verbatim in the ledger and
+    registry stores sqrt(2) rounded to 1.414. Keep the book value verbatim in the ledger and
     allow only a narrow display-rounding tolerance here; this is not a trading tolerance.
     """
     return any(float(value) == pytest.approx(float(target), rel=0, abs=0.005) for value in values)
 
 
-def test_book_ledger_has_market_evidence_for_each_executable_standard_xabcd_profile() -> None:
+def test_book_ledger_has_market_evidence_for_each_executable_source_prz_family() -> None:
     cases = _payload()["cases"]
     by_pattern: dict[str, list[dict]] = {}
     for case in cases:
         by_pattern.setdefault(case["pattern_id"], []).append(case)
 
-    for pattern_id in ("gartley", "bat", "butterfly", "crab", "deep_crab"):
-        assert SOURCE_PRZ_PROFILES[pattern_id].status == "frozen"
+    for pattern_id in ("abcd", "gartley", "bat", "butterfly", "crab", "deep_crab"):
+        if pattern_id != "abcd":
+            assert SOURCE_PRZ_PROFILES[pattern_id].status == "frozen"
         assert by_pattern.get(pattern_id), f"missing market case for {pattern_id}"
         evidence = SOURCE_PRZ_EVIDENCE[pattern_id]
         assert evidence.market_case_ids
@@ -44,8 +46,23 @@ def test_book_ledger_has_market_evidence_for_each_executable_standard_xabcd_prof
 
 
 def test_every_ledger_component_belongs_to_the_registered_source_family() -> None:
+    reciprocal_bc_values = tuple(
+        float(value) for values in RECIPROCAL_ABCD.values() for value in values
+    )
     for case in _payload()["cases"]:
         pattern_id = case["pattern_id"]
+        if pattern_id == "abcd":
+            for component in case["source_components"]:
+                kind = component["kind"]
+                ratio = float(component["ratio"])
+                if kind == "abcd":
+                    assert ratio == pytest.approx(1.0)
+                elif kind == "bc":
+                    assert _ratio_in(reciprocal_bc_values, ratio)
+                else:
+                    raise AssertionError(f"unexpected standalone AB=CD ledger component: {kind}")
+            continue
+
         profile = SOURCE_PRZ_PROFILES[pattern_id]
         rule = CARNEY_RULES[pattern_id]
         d_xa = rule.constraints.get("d_xa")
@@ -70,9 +87,23 @@ def test_every_ledger_component_belongs_to_the_registered_source_family() -> Non
 
 def test_book_ledger_distinguishes_membership_evidence_from_coordinate_selector_oracles() -> None:
     payload = _payload()
-    assert "does not invent X/A/B/C coordinates" in payload["scope"]
+    assert "does not invent" in payload["scope"]
     assert all(case["coordinate_regression_eligible"] is False for case in payload["cases"])
     assert any("coordinates" in item.lower() for item in payload["known_open_items"])
+
+
+def test_abcd_book_cases_freeze_exact_completion_as_defining_measure() -> None:
+    cases = [case for case in _payload()["cases"] if case["pattern_id"] == "abcd"]
+    assert len(cases) >= 2
+    for case in cases:
+        defining = [item for item in case["source_components"] if item["role"] == "defining"]
+        assert defining == [
+            next(item for item in case["source_components"] if item["kind"] == "abcd")
+        ]
+        assert defining[0]["ratio"] == pytest.approx(1.0)
+        assert any(item["kind"] == "bc" for item in case["source_components"])
+    evidence = SOURCE_PRZ_EVIDENCE["abcd"]
+    assert evidence.selection_authority == "carney_exact_abcd_plus_primary_reciprocal_bc"
 
 
 def test_perfect_bat_source_tension_is_recorded_not_silently_resolved() -> None:
