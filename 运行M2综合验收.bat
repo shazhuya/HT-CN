@@ -35,7 +35,9 @@ if errorlevel 1 goto :fail
 
 echo.
 echo [HT-CN M2 ACCEPT] 6/7 Verify frozen historical Type-I / external-replication integrity...
-rem Historical v1 is consumed and immutable. Do NOT rebuild its preregistration from the current M2.26 engine.
+rem Historical v1 is consumed and immutable. The verifier below is static and never rebuilds v1 from the current M2.26 engine.
+.venv\Scripts\python.exe scripts\m2_type_i_holdout_prereg_report.py
+if errorlevel 1 goto :fail
 .venv\Scripts\python.exe scripts\m2_type_i_holdout_result_report.py
 if errorlevel 1 goto :fail
 .venv\Scripts\python.exe scripts\m2_type_i_external_prereg_report.py
