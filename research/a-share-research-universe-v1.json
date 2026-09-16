@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "dataset_id": "a-share-research-v1",
+  "snapshot_cutoff": "2026-09-15",
+  "start_date": "2016-01-01",
+  "max_bars": 3000,
+  "horizon_bars": 60,
+  "minimum_successful_symbols": 6,
+  "scales": [3, 5, 8, 13, 21],
+  "instruments": [
+    {"instrument_id": "SSE.600519", "name": "贵州茅台", "bucket": "消费/大市值"},
+    {"instrument_id": "SZSE.300750", "name": "宁德时代", "bucket": "新能源/成长"},
+    {"instrument_id": "SSE.688256", "name": "寒武纪", "bucket": "AI芯片/高波动"},
+    {"instrument_id": "SZSE.300394", "name": "天孚通信", "bucket": "光通信/CPO"},
+    {"instrument_id": "SSE.600183", "name": "生益科技", "bucket": "PCB/电子材料"},
+    {"instrument_id": "SSE.688300", "name": "联瑞新材", "bucket": "电子材料/中小市值"},
+    {"instrument_id": "SZSE.000603", "name": "盛达资源", "bucket": "资源/贵金属"},
+    {"instrument_id": "SZSE.300820", "name": "英杰电气", "bucket": "电源设备/高弹性"},
+    {"instrument_id": "SSE.600036", "name": "招商银行", "bucket": "银行/低波动"},
+    {"instrument_id": "SSE.601318", "name": "中国平安", "bucket": "保险/大市值"},
+    {"instrument_id": "SSE.600276", "name": "恒瑞医药", "bucket": "医药/核心资产"},
+    {"instrument_id": "SSE.601899", "name": "紫金矿业", "bucket": "资源/周期"},
+    {"instrument_id": "SZSE.002594", "name": "比亚迪", "bucket": "汽车/成长"}
+  ],
+  "policy": {
+    "purpose": "CI-accessible research calibration only; not production market data.",
+    "price_mode": "qfq",
+    "identity_freeze": "Carney identity rules are never fitted to outcome statistics.",
+    "holdout": "Holdout outcomes stay sealed until a quality policy is explicitly frozen.",
+    "metadata_only": "name and bucket are descriptive metadata and are not model features."
+  }
+}
