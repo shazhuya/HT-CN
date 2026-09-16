@@ -20,7 +20,7 @@ SOURCE_PRZ_EVIDENCE: dict[str, SourcePRZEvidence] = {
         evidence_level="source_specification_plus_market_examples",
         source_membership_authority="carney_vol1_vol3",
         selection_authority="carney_exact_abcd_plus_primary_reciprocal_bc",
-        market_case_ids=("v1-abcd-nqh4-10m", "v3-abcd-eurusd-15m"),
+        market_case_ids=("v1-abcd-nqh4-10m", "v1-abcd-esu3-60m"),
         coordinate_regression_status="source_price_examples_recorded_pivots_pending",
     ),
     "gartley": SourcePRZEvidence(
