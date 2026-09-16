@@ -108,8 +108,14 @@ async function openScenario(page: import('@playwright/test').Page, pattern: Reco
 
 test('forming candidate stays explicitly uncompleted and waits for source-aligned T-Bar', async ({ page }) => {
   await openScenario(page, { ...basePattern, state: 'forming' })
-  await expect(page.getByText('形成中 · 尚未完成')).toBeVisible()
-  await expect(page.getByText(/Terminal Price Bar/)).toBeVisible()
+  const compass = page.getByTestId('lifecycle-compass')
+  await expect(compass.getByText('形成中 · 尚未完成')).toBeVisible()
+  await expect(
+    compass.getByText(
+      '先看价格是否在仍有效的 forming 投影下测试 source PRZ 的最终/极端测量，并形成 Terminal Price Bar。',
+      { exact: true },
+    ),
+  ).toBeVisible()
   await expect(page.getByTestId('type-i-target-t1')).toHaveCount(0)
   await expect(page.getByTestId('type-i-target-t2')).toHaveCount(0)
 })
