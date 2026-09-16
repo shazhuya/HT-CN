@@ -10,7 +10,7 @@ on:
 jobs:
   deterministic-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,6 +43,27 @@ jobs:
       - name: Build web
         working-directory: apps/web
         run: npm run build
+
+      - name: Install Playwright Chromium for M3
+        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/')
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Run M3 deterministic browser acceptance
+        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/')
+        working-directory: apps/web
+        run: npx playwright test tests/smoke.spec.ts
+
+      - name: Upload M3 browser evidence
+        if: always() && (startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/'))
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-browser-evidence-${{ github.sha }}
+          path: |
+            artifacts/screenshots/
+            artifacts/reports/playwright/
+          if-no-files-found: warn
+          retention-days: 14
 
   autonomous-research:
     name: autonomous-real-a-share-research
