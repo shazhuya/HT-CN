@@ -10,9 +10,11 @@ from .walk_forward import DEFAULT_FORWARD_HORIZON, walk_forward_forming_signals
 
 
 TYPE_I_T5_EVIDENCE_VERSION = "m2-type-i-holdout-v1"
+TYPE_I_T5_EXTERNAL_REPLICATION_VERSION = "m2-type-i-external-replication-v1"
 
-# Frozen once in M2.22. These values are historical evidence references, not live
-# probabilities and not inputs to Carney geometry/identity.
+# Frozen historical evidence references. These values are not live probabilities and never
+# participate in Carney geometry/identity. The 45-symbol Holdout and the disjoint 60-symbol
+# external replication are deliberately kept separate instead of being silently pooled.
 _FROZEN_REFERENCE: dict[str, Any] = {
     "status": "confirmed",
     "preregistration_id": TYPE_I_T5_EVIDENCE_VERSION,
@@ -37,16 +39,51 @@ _FROZEN_REFERENCE: dict[str, Any] = {
         "lower": 0.049612411917687296,
         "upper": 0.2541290679331789,
     },
+    "external_replication": {
+        "status": "confirmed",
+        "preregistration_id": TYPE_I_T5_EXTERNAL_REPLICATION_VERSION,
+        "dataset_id": "a-share-type-i-external-replication-v1-60",
+        "snapshot_cutoff": "2026-09-15",
+        "requested_symbols": 60,
+        "successful_symbols": 60,
+        "eligible_pending_t2_at_t5": 1918,
+        "exposure": {
+            "name": "full_prz_exit_by_t5",
+            "records": 736,
+            "endpoint_hits": 257,
+            "endpoint_rate": 0.3491847826086957,
+        },
+        "comparator": {
+            "name": "no_full_exit_by_t5",
+            "records": 1182,
+            "endpoint_hits": 213,
+            "endpoint_rate": 0.1802030456852792,
+        },
+        "absolute_rate_difference": 0.16898173692341648,
+        "newcombe_95_ci": {
+            "lower": 0.12831888515284715,
+            "upper": 0.2098515212802209,
+        },
+        "concentration": {
+            "eligible_symbols": 60,
+            "largest_symbol_share": 0.026068821689259645,
+        },
+        "interpretation": (
+            "独立60股、与原45股零重叠的历史复现再次确认相同T+5关系。"
+            "复现集是预先冻结的跨行业convenience set，不是随机全A股样本。"
+        ),
+    },
     "interpretation": (
-        "冻结45股Holdout的历史确认性证据：仅对T+5时仍未到达T2的source-aligned "
-        "Terminal Price Bar事件，T+5内完整脱离PRZ与随后T+6..T+20更高的T2 progression比例相关。"
-        "这不是个股收益概率、胜率或交易建议，也不修改Carney形态身份。"
+        "冻结45股Holdout与独立60股外部复现均支持同一个source-aligned Type-I T+5关系："
+        "仅对T+5时仍未到达T2的Terminal Price Bar事件，T+5内完整脱离PRZ与随后"
+        "T+6..T+20更高的T2 progression比例相关。这不是个股收益概率、胜率或交易建议，"
+        "也不修改Carney形态身份。"
     ),
 }
 
 
 def frozen_type_i_t5_reference() -> dict[str, Any]:
-    """Return an isolated copy of the consumed M2.22 Holdout reference."""
+    """Return an isolated copy of the consumed Holdout + external replication references."""
 
     return deepcopy(_FROZEN_REFERENCE)
 
@@ -56,7 +93,8 @@ def classify_type_i_t5_audit(audit: dict[str, Any]) -> dict[str, Any]:
 
     The classification deliberately starts from the M2.17 Terminal Price Bar rather than
     the later right-confirmed D Pivot. This keeps the live state aligned with the frozen
-    M2.22 confirmatory test. It never changes geometry, pattern identity or PRZ.
+    M2.22 confirmatory test and M2.24 external replication. It never changes geometry,
+    pattern identity or PRZ.
     """
 
     if audit.get("status") != "terminal_price_bar_observed":
@@ -133,9 +171,9 @@ def build_type_i_t5_events(
     """Build recent source-aligned Type-I T+5 evidence events for the workbench.
 
     This is intentionally a separate evidence stream. Static completed-pattern payloads use
-    later confirmed Pivots and therefore must not be retrofitted with the M2.22 Terminal-Bar
-    evidence. The replay here reproduces the no-lookahead forming signal and then audits the
-    first source-aligned Terminal Price Bar from that projection.
+    later confirmed Pivots and therefore must not be retrofitted with the Terminal-Bar evidence.
+    The replay here reproduces the no-lookahead forming signal and then audits the first
+    source-aligned Terminal Price Bar from that projection.
     """
 
     if max_events < 1:

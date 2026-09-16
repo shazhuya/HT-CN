@@ -7,6 +7,38 @@ export type TypeIT5EvidenceState = {
   endpoint_state: 't2_hit_by_t5' | 't2_hit_t6_t20' | 'pending_t20' | 'no_t2_by_t20' | 'not_applicable'
 }
 
+export type TypeIT5ReplicationEvidence = {
+  status: string
+  preregistration_id: string
+  dataset_id: string
+  snapshot_cutoff: string
+  requested_symbols: number
+  successful_symbols: number
+  eligible_pending_t2_at_t5: number
+  exposure: {
+    name: string
+    records: number
+    endpoint_hits: number
+    endpoint_rate: number
+  }
+  comparator: {
+    name: string
+    records: number
+    endpoint_hits: number
+    endpoint_rate: number
+  }
+  absolute_rate_difference: number
+  newcombe_95_ci: {
+    lower: number
+    upper: number
+  }
+  concentration: {
+    eligible_symbols: number
+    largest_symbol_share: number
+  }
+  interpretation: string
+}
+
 export type TypeIT5HistoricalEvidence = {
   status: string
   preregistration_id: string
@@ -31,6 +63,7 @@ export type TypeIT5HistoricalEvidence = {
     lower: number
     upper: number
   }
+  external_replication?: TypeIT5ReplicationEvidence
   interpretation: string
 }
 
@@ -106,13 +139,14 @@ export default function TypeIT5Evidence({ events }: Props) {
   if (!events.length) return null
 
   const reference = events[0].historical_evidence
+  const replication = reference.external_replication
   const latest = events[0]
 
   return (
     <section className="type-i-panel" aria-label="type-i-t5-evidence">
       <div className="type-i-heading">
         <div>
-          <span className="kicker">SOURCE-ALIGNED TERMINAL BAR · M2.23</span>
+          <span className="kicker">SOURCE-ALIGNED TERMINAL BAR · M2.23 / M2.24</span>
           <h2>Type-I T+5 早期证据</h2>
         </div>
         <div className="type-i-latest">
@@ -122,14 +156,29 @@ export default function TypeIT5Evidence({ events }: Props) {
       </div>
 
       <div className="type-i-freeze-note">
-        <strong>冻结45股 Holdout：确认性结果 {reference.status === 'confirmed' ? '已确认' : reference.status}</strong>
+        <strong>
+          冻结45股 Holdout：{reference.status === 'confirmed' ? '已确认' : reference.status}
+          {replication ? ` · 独立60股复现：${replication.status === 'confirmed' ? '已确认' : replication.status}` : ''}
+        </strong>
         <span>
-          T+5 时仍待 T2 的历史样本中，5 根内完整脱离 PRZ 组后续 T2 progression 为
-          {' '}{pct(reference.exposure.endpoint_rate)}（{reference.exposure.endpoint_hits}/{reference.exposure.records}），
-          未完整脱离组为 {pct(reference.comparator.endpoint_rate)}（{reference.comparator.endpoint_hits}/{reference.comparator.records}）；
-          差 {points(reference.absolute_rate_difference)}，95% Newcombe CI {points(reference.newcombe_95_ci.lower)} ～ {points(reference.newcombe_95_ci.upper)}。
+          原45股中，T+5 内完整脱离 PRZ 组后续 T2 progression 为 {pct(reference.exposure.endpoint_rate)}
+          （{reference.exposure.endpoint_hits}/{reference.exposure.records}），未完整脱离组为 {pct(reference.comparator.endpoint_rate)}
+          （{reference.comparator.endpoint_hits}/{reference.comparator.records}）；差 {points(reference.absolute_rate_difference)}，
+          95% CI {points(reference.newcombe_95_ci.lower)} ～ {points(reference.newcombe_95_ci.upper)}。
         </span>
-        <small>仅适用于 source-aligned Terminal Bar 且 T+5 时仍未到达 T2 的事件；这是历史证据，不是当前个股收益概率、胜率或交易建议。</small>
+        {replication && (
+          <span className="type-i-replication-line">
+            独立60股、与原45股零重叠的冻结复现中，同一两组分别为 {pct(replication.exposure.endpoint_rate)}
+            （{replication.exposure.endpoint_hits}/{replication.exposure.records}）与 {pct(replication.comparator.endpoint_rate)}
+            （{replication.comparator.endpoint_hits}/{replication.comparator.records}）；差 {points(replication.absolute_rate_difference)}，
+            95% CI {points(replication.newcombe_95_ci.lower)} ～ {points(replication.newcombe_95_ci.upper)}，
+            provider coverage {replication.successful_symbols}/{replication.requested_symbols}。
+          </span>
+        )}
+        <small>
+          只适用于 source-aligned Terminal Bar 且 T+5 时仍未到达 T2 的事件。两组冻结样本只提供历史证据，
+          不等于当前个股收益概率、胜率或交易建议，也不修改 Carney 几何身份。
+        </small>
       </div>
 
       <div className="type-i-event-grid">
