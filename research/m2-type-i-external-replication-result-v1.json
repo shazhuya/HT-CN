@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "result_id": "m2-type-i-external-replication-result-v1",
+  "preregistration_id": "m2-type-i-external-replication-v1",
+  "frozen_preregistration_commit": "7f62ff4abde3e9154738e949233a9b6745b2461c",
+  "evaluation_commit": "b1879e0b11d7ac89d1e09f515ba9f2bc3256ea50",
+  "dataset": {
+    "dataset_id": "a-share-type-i-external-replication-v1-60",
+    "snapshot_cutoff": "2026-09-15",
+    "requested_symbols": 60,
+    "successful_symbols": 60,
+    "minimum_successful_symbols": 48,
+    "coverage_ok": true,
+    "original_45_symbol_overlap": 0
+  },
+  "source": {
+    "workflow_run_id": 35086009263,
+    "job_id": 104761064827,
+    "artifact_id": 10444095342,
+    "artifact_name": "m2-type-i-external-replication-b1879e0b11d7ac89d1e09f515ba9f2bc3256ea50",
+    "artifact_sha256": "61db1866ef91cf570a6d6224acf0dca37313f982b61927ce1890f50948775f93",
+    "evaluation_report_path_in_artifact": "m2-type-i-external-replication-evaluation.json",
+    "evaluation_report_sha256": "61b858c9fa17f3149dbdb5a982734cb3b57884d739246147bf4b30eb885b4df8",
+    "snapshot_manifest_path_in_artifact": "m2-type-i-external-replication-snapshot-manifest.json",
+    "snapshot_manifest_sha256": "daa8758067b1da0660248c55ef274807b4f2988af21ac3e5958ca01da9f0a718"
+  },
+  "status": "external_type_i_replication_evaluated_once",
+  "mature_terminal_events": 2212,
+  "eligible_pending_t2_at_t5": 1918,
+  "primary_contrast": {
+    "exposure_name": "full_prz_exit_by_t5",
+    "comparator_name": "no_full_exit_by_t5",
+    "exposure": {
+      "records": 736,
+      "endpoint_hits": 257,
+      "endpoint_rate": 0.3491847826086957
+    },
+    "comparator": {
+      "records": 1182,
+      "endpoint_hits": 213,
+      "endpoint_rate": 0.1802030456852792
+    },
+    "absolute_rate_difference": 0.16898173692341648,
+    "newcombe_95_ci": {
+      "lower": 0.12831888515284715,
+      "upper": 0.2098515212802209
+    },
+    "minimum_records_per_group": 20,
+    "sample_floor_ok": true,
+    "result": "confirmed"
+  },
+  "concentration": {
+    "eligible_symbols": 60,
+    "largest_symbol_records": 50,
+    "largest_symbol_share": 0.026068821689259645
+  },
+  "multiplicity": {
+    "primary_tests_run": 1,
+    "alternate_thresholds_searched": false,
+    "alternate_endpoints_searched": false,
+    "subgroup_results_can_replace_primary": false
+  },
+  "identity": {
+    "carney_geometry_changed": false,
+    "prz_changed": false,
+    "t5_threshold_fitted_on_replication": false,
+    "endpoint_fitted_on_replication": false
+  },
+  "replication_consumed": true,
+  "original_holdout_reopened": false,
+  "policy_frozen": false,
+  "interpretation": "Independent 60-symbol historical external-instrument replication of the frozen M2.22 Type-I T+5 association. The preregistered primary contrast replicated with a positive Newcombe 95% lower bound. This is not a return probability, trading win rate, buy/sell rule, or modification of Carney geometry."
+}

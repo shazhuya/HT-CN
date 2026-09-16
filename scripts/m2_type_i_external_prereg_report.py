@@ -116,7 +116,7 @@ def main() -> int:
         "[HT-CN M2 EXT-PREREG] criterion=95% Newcombe lower bound > 0; "
         "min_group=20; primary_tests=1"
     )
-    print("[HT-CN M2 EXT-PREREG] REPLICATION OUTCOMES NOT OPENED")
+    print("[HT-CN M2 EXT-PREREG] PREREGISTRATION FROZEN; this verifier does not inspect replication outcomes.")
     return 0
 
 

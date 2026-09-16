@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "authorization_id": "m2-type-i-external-replication-open-v1",
   "preregistration_id": "m2-type-i-external-replication-v1",
   "frozen_preregistration_commit": "7f62ff4abde3e9154738e949233a9b6745b2461c",
@@ -8,10 +8,24 @@
     "snapshot_cutoff": "2026-09-15",
     "manifest_git_blob_sha": "0061fc46d37c383594846ccc606f6f6efad504be"
   },
-  "authorized": true,
-  "one_time_external_replication": true,
+  "authorized": false,
+  "one_time_external_replication": false,
+  "evaluated_once": true,
   "scope": "Evaluate exactly the single frozen external replication contrast in research/m2-type-i-external-replication-prereg-v1.json. No alternate threshold, endpoint, subgroup or symbol subset may replace the primary test.",
-  "operational_retry_policy": "Each symbol uses the frozen provider order with internal retry/failover. The completed replication run is consumed regardless of confirm/not_confirmed/inconclusive; do not rerun to seek a different statistical outcome.",
-  "closeout_policy": "After the first completed evaluation artifact is captured, persist the result in research/, set authorized=false and one_time_external_replication=false, and replace CI evaluation with frozen-result verification.",
+  "evaluation": {
+    "workflow_run_id": 35086009263,
+    "job_id": 104761064827,
+    "evaluated_commit": "b1879e0b11d7ac89d1e09f515ba9f2bc3256ea50",
+    "artifact_id": 10444095342,
+    "artifact_sha256": "61db1866ef91cf570a6d6224acf0dca37313f982b61927ce1890f50948775f93",
+    "source_evaluation_report_sha256": "61b858c9fa17f3149dbdb5a982734cb3b57884d739246147bf4b30eb885b4df8",
+    "snapshot_manifest_sha256": "daa8758067b1da0660248c55ef274807b4f2988af21ac3e5958ca01da9f0a718",
+    "frozen_result_path": "research/m2-type-i-external-replication-result-v1.json",
+    "frozen_result_sha256": "4116aeaae8e783f2f5ebc244a001cf78b407cd39b5265eae4e24906c3b819f09",
+    "primary_result": "confirmed",
+    "successful_symbols": 60
+  },
+  "closeout": "The one-time external replication has been consumed. Future CI may verify the frozen result but must not recompute or rerun this replication set for iterative tuning.",
+  "reopen_policy": "Do not reopen the 60-symbol external replication dataset. Any new confirmatory replication requires a separately frozen disjoint dataset or prospectively advanced snapshot and a new preregistration.",
   "original_holdout_reopened": false
 }
