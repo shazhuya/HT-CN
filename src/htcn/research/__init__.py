@@ -11,10 +11,18 @@ from .case_calibration import (
     canonical_case_key,
     dedupe_case_records,
 )
+from .walk_forward import (
+    DEFAULT_FORWARD_HORIZON,
+    DEFAULT_WALK_FORWARD_SCALES,
+    walk_forward_forming_signals,
+)
 
 __all__ = [
+    "DEFAULT_FORWARD_HORIZON",
     "DEFAULT_OBSERVATION_HORIZON",
+    "DEFAULT_WALK_FORWARD_SCALES",
     "build_completed_case_record",
     "canonical_case_key",
     "dedupe_case_records",
+    "walk_forward_forming_signals",
 ]
