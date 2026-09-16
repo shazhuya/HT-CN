@@ -60,22 +60,28 @@ def test_alternate_bat_conflict_is_explicit_and_not_a_hard_abcd_gate() -> None:
     assert "Volume Two explicitly says AB=CD is not included" in alternate.implementation_note
 
 
-def test_special_schemas_are_not_forced_through_xabcd_identity() -> None:
+def test_special_schemas_use_dedicated_evaluators_not_generic_xabcd_identity() -> None:
     shark = CARNEY_RULES["shark"]
     five_zero = CARNEY_RULES["five_zero"]
 
     assert shark.schema == "0XABC"
     assert not shark.executable_identity
-    assert five_zero.schema == "0XABCD"
+    assert five_zero.schema == "FIVE_ZERO"
     assert not five_zero.executable_identity
     assert five_zero.source_conflict
 
 
-def test_shark_limits_are_explicit() -> None:
+def test_shark_source_ratios_are_explicit() -> None:
     shark = CARNEY_RULES["shark"]
-    assert shark.constraints["a_0x"].minimum == 0.382
-    assert shark.constraints["a_0x"].maximum == 0.618
-    assert shark.constraints["extreme_impulse"].minimum == 1.618
-    assert shark.constraints["extreme_impulse"].maximum == 2.24
-    assert shark.constraints["completion_0b"].minimum == 0.886
-    assert shark.constraints["completion_0b"].maximum == 1.13
+    assert (shark.constraints["a_0x"].minimum, shark.constraints["a_0x"].maximum) == (0.382, 0.618)
+    assert (shark.constraints["b_xa"].minimum, shark.constraints["b_xa"].maximum) == (1.13, 1.618)
+    assert (shark.constraints["c_ab"].minimum, shark.constraints["c_ab"].maximum) == (1.618, 2.24)
+    assert (shark.constraints["c_0b"].minimum, shark.constraints["c_0b"].maximum) == (0.886, 1.13)
+
+
+def test_five_zero_source_ratios_and_v3_execution_refinement_are_explicit() -> None:
+    five_zero = CARNEY_RULES["five_zero"]
+    assert (five_zero.constraints["b_xa"].minimum, five_zero.constraints["b_xa"].maximum) == (1.13, 1.618)
+    assert (five_zero.constraints["c_ab"].minimum, five_zero.constraints["c_ab"].maximum) == (1.618, 2.24)
+    assert (five_zero.constraints["d_bc"].minimum, five_zero.constraints["d_bc"].maximum) == (0.50, 0.618)
+    assert "50% as the original defining completion" in five_zero.implementation_note
