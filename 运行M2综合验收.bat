@@ -34,9 +34,8 @@ echo [HT-CN M2 ACCEPT] 5/7 Mine real A-share Golden Case candidates...
 if errorlevel 1 goto :fail
 
 echo.
-echo [HT-CN M2 ACCEPT] 6/7 Verify frozen Type-I evidence integrity...
-.venv\Scripts\python.exe scripts\m2_type_i_holdout_prereg_report.py
-if errorlevel 1 goto :fail
+echo [HT-CN M2 ACCEPT] 6/7 Verify frozen historical Type-I / external-replication integrity...
+rem Historical v1 is consumed and immutable. Do NOT rebuild its preregistration from the current M2.26 engine.
 .venv\Scripts\python.exe scripts\m2_type_i_holdout_result_report.py
 if errorlevel 1 goto :fail
 .venv\Scripts\python.exe scripts\m2_type_i_external_prereg_report.py
@@ -53,7 +52,8 @@ echo.
 echo [HT-CN M2 ACCEPT] ========================================
 echo [HT-CN M2 ACCEPT] M2 AUTOMATED ACCEPTANCE PASSED.
 echo [HT-CN M2 ACCEPT] Visual artifacts are generated automatically; no manual screenshot review is required.
-echo [HT-CN M2 ACCEPT] Frozen historical Holdout/replication were verified only; they were NOT recomputed.
+echo [HT-CN M2 ACCEPT] Frozen historical v1 Holdout/replication were verified only; they were NOT recomputed.
+echo [HT-CN M2 ACCEPT] Current source-fidelity-v2 sealed research boundary is verified by the GitHub push research job.
 echo [HT-CN M2 ACCEPT] Prospective registry is intentionally NOT mutated by acceptance.
 echo [HT-CN M2 ACCEPT] Fixture visual : artifacts\screenshots\m2-harmonic-workbench-fixture.png
 echo [HT-CN M2 ACCEPT] Live visual    : artifacts\screenshots\m2-harmonic-workbench-live.png
