@@ -45,17 +45,17 @@ jobs:
         run: npm run build
 
       - name: Install Playwright Chromium for M3
-        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/')
+        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || github.ref == 'refs/heads/m2/source-fidelity-repair' || github.head_ref == 'm2/source-fidelity-repair'
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
       - name: Run M3 deterministic browser acceptance
-        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/')
+        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || github.ref == 'refs/heads/m2/source-fidelity-repair' || github.head_ref == 'm2/source-fidelity-repair'
         working-directory: apps/web
         run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts
 
       - name: Upload M3 browser evidence
-        if: always() && (startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/'))
+        if: always() && (startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || github.ref == 'refs/heads/m2/source-fidelity-repair' || github.head_ref == 'm2/source-fidelity-repair')
         uses: actions/upload-artifact@v4
         with:
           name: m3-browser-evidence-${{ github.sha }}
