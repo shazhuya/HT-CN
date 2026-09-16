@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "preregistration_id": "m2-type-i-external-replication-v1",
+  "purpose": "One-time external replication of the already frozen M2.22 Type-I T+5 contrast on a disjoint 60-symbol A-share set.",
+  "source_result": {
+    "result_id": "m2-type-i-holdout-result-v1",
+    "path": "research/m2-type-i-holdout-result-v1.json",
+    "primary_result": "confirmed"
+  },
+  "replication_dataset": {
+    "dataset_id": "a-share-type-i-external-replication-v1-60",
+    "manifest_path": "research/a-share-type-i-external-replication-universe-v1.json",
+    "manifest_git_blob_sha": "0061fc46d37c383594846ccc606f6f6efad504be",
+    "snapshot_cutoff": "2026-09-15",
+    "required_disjoint_from": "research/a-share-research-universe-v1.json",
+    "minimum_successful_symbols": 48
+  },
+  "population": {
+    "source_clock": "M2.17 source-aligned Terminal Price Bar reconstructed from no-lookahead forming projections.",
+    "maturity": "At least 20 post-Terminal trading bars must be visible by the frozen snapshot cutoff.",
+    "eligibility": "T2 must still be pending at T+5. Events that reach T2 on T+1..T+5 are excluded before group assignment.",
+    "outcome_independent_exclusions_only": true
+  },
+  "primary_contrast": {
+    "exposure": {
+      "name": "full_prz_exit_by_t5",
+      "definition": "First conservative full PRZ exit in the reversal direction occurs on T+1..T+5."
+    },
+    "comparator": {
+      "name": "no_full_exit_by_t5",
+      "definition": "No conservative full PRZ exit in the reversal direction occurs on T+1..T+5."
+    },
+    "mutually_exclusive": true,
+    "exhaustive_within_eligible_population": true
+  },
+  "endpoint": {
+    "name": "first_t2_hit_t6_t20",
+    "definition": "Among T+5-pending-T2 events, first T2 hit occurs on T+6..T+20.",
+    "landmark_bar": 5,
+    "reaction_horizon_bars": 20
+  },
+  "confirmatory_test": {
+    "effect": "p_exposure - p_comparator",
+    "interval": "Newcombe score interval method 10",
+    "confidence_level": 0.95,
+    "z": 1.959963984540054,
+    "minimum_records_per_group": 20,
+    "coverage_gate": "At least 48 of the 60 frozen replication symbols must provide valid QFQ research snapshots; otherwise the replication is inconclusive regardless of effect.",
+    "confirm_if": "coverage gate passes, both groups meet the sample floor, and the lower bound of the 95% Newcombe interval for exposure-minus-comparator is strictly greater than 0.",
+    "not_confirmed_if": "coverage and group floors pass but the 95% Newcombe lower bound is <= 0.",
+    "inconclusive_if": "provider coverage is below the frozen gate or either group is below the frozen sample floor."
+  },
+  "multiplicity": {
+    "primary_tests_planned": 1,
+    "alternate_thresholds_allowed": false,
+    "alternate_endpoints_allowed": false,
+    "family_scale_direction_subgroups_can_replace_primary": false,
+    "secondary_subgroups": "descriptive_only"
+  },
+  "freeze": {
+    "identity_rules_fitted": false,
+    "t5_threshold_fitted_on_replication": false,
+    "endpoint_fitted_on_replication": false,
+    "symbol_outcomes_read_before_freeze": false,
+    "original_45_symbol_holdout_reopened": false
+  },
+  "interpretation_contract": "A confirmed replication would provide independent-instrument historical corroboration of the frozen Type-I T+5 association. It would still not be a return probability, trading win rate, buy/sell rule, or modification of Carney geometry. A failed or inconclusive replication must be reported as such without retuning on the same replication set."
+}

@@ -43,3 +43,74 @@ jobs:
       - name: Build web
         working-directory: apps/web
         run: npm run build
+
+  autonomous-research:
+    name: autonomous-real-a-share-research
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/m2/')
+    needs: deterministic-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore pinned A-share research snapshots
+        uses: actions/cache@v4
+        with:
+          path: artifacts/ci-research/data
+          key: m2-research-qfq-${{ runner.os }}-${{ hashFiles('research/a-share-research-universe-v1.json') }}
+          restore-keys: |
+            m2-research-qfq-${{ runner.os }}-
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+
+      - name: Run autonomous real A-share calibration
+        run: python scripts/m2_ci_autonomous_research.py
+
+      - name: Report source-aligned Terminal Price Bar calibration
+        run: python scripts/m2_terminal_bar_report.py
+
+      - name: Report source-backed Type-I early-path evidence
+        run: python scripts/m2_type_i_confirmation_report.py
+
+      - name: Stress-test Type-I early-path evidence
+        run: python scripts/m2_type_i_robustness_report.py
+
+      - name: Resolve nested T+3/T+5 Type-I exit timing
+        run: python scripts/m2_type_i_exit_timing_report.py
+
+      - name: Verify frozen Type-I Holdout pre-registration
+        run: python scripts/m2_type_i_holdout_prereg_report.py
+
+      - name: Verify frozen one-time Type-I Holdout result
+        run: python scripts/m2_type_i_holdout_result_report.py
+
+      - name: Verify frozen external Type-I replication pre-registration
+        run: python scripts/m2_type_i_external_prereg_report.py
+
+      - name: Verify frozen one-time external Type-I replication result
+        run: python scripts/m2_type_i_external_result_report.py
+
+      - name: Build completed-reaction quality evidence
+        run: python scripts/m2_completed_reaction_quality.py
+
+      - name: Stress-test completed-reaction quality evidence
+        run: python scripts/m2_completed_reaction_robustness.py
+
+      - name: Upload autonomous research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m2-autonomous-research-${{ github.sha }}
+          path: artifacts/ci-research/
+          if-no-files-found: warn
+          retention-days: 30
