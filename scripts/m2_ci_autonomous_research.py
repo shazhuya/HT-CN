@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
+from collections import Counter
 from datetime import date
 from pathlib import Path
 
@@ -27,6 +27,12 @@ from htcn.research.completed_reaction_calibration import (
 )
 from htcn.research.quality_layers import build_layered_quality_report
 from htcn.research.quality_robustness import build_quality_robustness_report
+from htcn.research.snapshot_cache import (
+    CachedResearchSnapshot,
+    load_research_snapshot,
+    snapshot_manifest_entry,
+    write_research_snapshot,
+)
 from htcn.research.walk_forward import walk_forward_forming_signals
 
 
@@ -36,21 +42,19 @@ OUT_DIR = ROOT / "artifacts" / "ci-research"
 DATA_DIR = OUT_DIR / "data"
 REPORT_PATH = OUT_DIR / "m2-autonomous-research-report.json"
 COMPLETED_REACTION_PATH = OUT_DIR / "m2-confirmed-completed-reactions.json"
+SNAPSHOT_MANIFEST_PATH = OUT_DIR / "m2-research-snapshot-manifest.json"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run autonomous real-A-share calibration in CI")
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--max-symbols", type=int, default=0)
+    parser.add_argument(
+        "--no-snapshot-cache",
+        action="store_true",
+        help="ignore restored research snapshots and fetch every requested symbol",
+    )
     return parser.parse_args()
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _load_manifest(path: Path) -> dict:
@@ -58,6 +62,51 @@ def _load_manifest(path: Path) -> dict:
     if not payload.get("instruments"):
         raise ValueError("research manifest has no instruments")
     return payload
+
+
+def _research_snapshot(
+    *,
+    instrument_id: str,
+    start: date,
+    end: date,
+    max_bars: int,
+    providers: list,
+    use_cache: bool,
+) -> tuple[CachedResearchSnapshot, int, str]:
+    miss_reason = "cache_disabled"
+    if use_cache:
+        cached, miss_reason = load_research_snapshot(
+            DATA_DIR,
+            instrument_id=instrument_id,
+            requested_start=start,
+            requested_end=end,
+            max_bars=max_bars,
+            price_mode="qfq",
+        )
+        if cached is not None:
+            return cached, 0, miss_reason
+
+    fetched = fetch_adjusted_history(
+        instrument_id=instrument_id,
+        start=start,
+        end=end,
+        providers=providers,
+        mode="qfq",
+        retries_per_provider=1,
+        base_delay=0.5,
+    )
+    frame = normalize_daily(fetched.frame).tail(max_bars).reset_index(drop=True)
+    snapshot = write_research_snapshot(
+        DATA_DIR,
+        instrument_id=instrument_id,
+        frame=frame,
+        source=fetched.source,
+        requested_start=start,
+        requested_end=end,
+        max_bars=max_bars,
+        price_mode="qfq",
+    )
+    return snapshot, fetched.attempts, miss_reason
 
 
 def main() -> int:
@@ -94,32 +143,33 @@ def main() -> int:
     all_records: list[dict] = []
     all_completed_reactions: list[dict] = []
     datasets: list[dict] = []
+    snapshot_entries: list[dict] = []
     failures: list[dict] = []
+    cache_miss_reasons: Counter[str] = Counter()
 
     print(
         f"[HT-CN AUTONOMOUS] real-A-share research: symbols={len(instruments)}, "
         f"window={start}..{end}, forming_horizon={horizon}, "
-        f"reaction_horizon={reaction_horizon}, bars<={max_bars}, scales={scales}"
+        f"reaction_horizon={reaction_horizon}, bars<={max_bars}, scales={scales}, "
+        f"snapshot_cache={'off' if args.no_snapshot_cache else 'on'}"
     )
 
     for position, item in enumerate(instruments, start=1):
         instrument_id = str(item["instrument_id"])
         try:
-            fetched = fetch_adjusted_history(
+            snapshot, attempts, cache_reason = _research_snapshot(
                 instrument_id=instrument_id,
                 start=start,
                 end=end,
+                max_bars=max_bars,
                 providers=providers,
-                mode="qfq",
-                retries_per_provider=1,
-                base_delay=0.5,
+                use_cache=not args.no_snapshot_cache,
             )
-            frame = normalize_daily(fetched.frame).tail(max_bars).reset_index(drop=True)
+            frame = snapshot.frame
             if len(frame) < 120:
                 raise RuntimeError(f"too few QFQ bars: {len(frame)}")
-
-            snapshot_path = DATA_DIR / f"{instrument_id}.parquet"
-            frame.to_parquet(snapshot_path, index=False)
+            if snapshot.cache_status != "hit_verified":
+                cache_miss_reasons[cache_reason] += 1
 
             symbol_records = walk_forward_forming_signals(
                 frame,
@@ -147,26 +197,30 @@ def main() -> int:
 
             all_records.extend(enriched)
             all_completed_reactions.extend(completed_reactions)
+            snapshot_entry = snapshot_manifest_entry(snapshot)
+            snapshot_entries.append(snapshot_entry)
             datasets.append(
                 {
                     "instrument_id": instrument_id,
                     "name": item.get("name"),
                     "bucket": item.get("bucket"),
-                    "source": fetched.source,
-                    "attempts": fetched.attempts,
+                    "source": snapshot.source,
+                    "attempts": attempts,
+                    "cache_status": snapshot.cache_status,
+                    "cache_miss_reason": None if snapshot.cache_status == "hit_verified" else cache_reason,
                     "bars": len(frame),
                     "first_trade_date": pd.Timestamp(frame.iloc[0]["trade_date"]).date().isoformat(),
                     "last_trade_date": pd.Timestamp(frame.iloc[-1]["trade_date"]).date().isoformat(),
                     "forming_signals": len(symbol_records),
                     "confirmed_completed_reactions": len(completed_reactions),
-                    "snapshot": str(snapshot_path.relative_to(ROOT)),
-                    "sha256": _sha256(snapshot_path),
+                    "snapshot": str((DATA_DIR / f"{instrument_id}.parquet").relative_to(ROOT)),
+                    "sha256": snapshot.sha256,
                 }
             )
             print(
                 f"[HT-CN AUTONOMOUS] {position}/{len(instruments)} OK {instrument_id}: "
-                f"source={fetched.source}, bars={len(frame)}, forming={len(symbol_records)}, "
-                f"completed={len(completed_reactions)}"
+                f"cache={snapshot.cache_status}, source={snapshot.source}, bars={len(frame)}, "
+                f"forming={len(symbol_records)}, completed={len(completed_reactions)}"
             )
         except Exception as exc:
             failures.append(
@@ -182,6 +236,9 @@ def main() -> int:
             )
 
     coverage_ok = len(datasets) >= minimum_symbols
+    cache_hits = sum(row["cache_status"] == "hit_verified" for row in datasets)
+    cache_misses = len(datasets) - cache_hits
+
     calibration = build_autonomous_quality_report(
         all_records,
         horizon=horizon,
@@ -229,8 +286,30 @@ def main() -> int:
     else:
         research_status = "insufficient_provider_or_sample_coverage"
 
+    snapshot_manifest = {
+        "schema_version": 1,
+        "dataset_id": manifest.get("dataset_id"),
+        "snapshot_cutoff": manifest.get("snapshot_cutoff"),
+        "price_mode": "qfq",
+        "requested_symbols": len(instruments),
+        "successful_symbols": len(snapshot_entries),
+        "cache_hits": cache_hits,
+        "cache_misses": cache_misses,
+        "cache_miss_reasons": dict(sorted(cache_miss_reasons.items())),
+        "snapshots": sorted(snapshot_entries, key=lambda row: row["instrument_id"]),
+        "policy": {
+            "cache_hit": "A cached parquet is reused only after sidecar metadata and exact parquet SHA256 verification.",
+            "cutoff": "A different snapshot cutoff invalidates the restored symbol snapshot.",
+            "expansion": "Manifest expansion may restore older same-cutoff symbol snapshots and fetch only missing/incompatible symbols.",
+            "provider_restatement": "Accepted cache hits are byte-frozen for the pinned cutoff; provider restatements cannot silently replace them.",
+        },
+    }
+    SNAPSHOT_MANIFEST_PATH.write_text(
+        json.dumps(snapshot_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
     report = {
-        "schema_version": 5,
+        "schema_version": 6,
         "status": research_status,
         "dataset_id": manifest.get("dataset_id"),
         "snapshot_cutoff": manifest.get("snapshot_cutoff"),
@@ -238,6 +317,13 @@ def main() -> int:
         "successful_symbols": len(datasets),
         "minimum_successful_symbols": minimum_symbols,
         "coverage_ok": coverage_ok,
+        "snapshot_cache": {
+            "enabled": not args.no_snapshot_cache,
+            "hits": cache_hits,
+            "misses": cache_misses,
+            "miss_reasons": dict(sorted(cache_miss_reasons.items())),
+            "manifest": str(SNAPSHOT_MANIFEST_PATH.relative_to(ROOT)),
+        },
         "datasets": datasets,
         "failures": failures,
         "forming_signals": len(all_records),
@@ -249,8 +335,8 @@ def main() -> int:
         "completed_reaction_calibration": completed_calibration,
         "methodology": {
             "runtime": "GitHub Actions / CI-accessible; no user workstation data is required.",
-            "source": "Provider QFQ is used only for research calibration snapshots, separate from production raw+factor storage.",
-            "determinism": "Snapshot cutoff and universe are pinned; provider restatements are detectable through per-file SHA256.",
+            "source": "Provider QFQ is used only to create missing pinned research snapshots, separate from production raw+factor storage.",
+            "snapshot_freeze": "A verified same-cutoff cached parquet is reused byte-for-byte; each symbol carries a source sidecar and SHA256.",
             "forming_holdout": "Forming-signal Holdout outcomes remain sealed during iterative calibration, robustness and semantic-layer research.",
             "completed_holdout": "Completed-reaction Holdout outcomes are omitted from calibration summaries and redacted from the emitted reaction record artifact.",
             "identity": "Carney geometry/identity is frozen and never fitted to later outcomes.",
@@ -280,8 +366,9 @@ def main() -> int:
 
     print(
         f"[HT-CN AUTONOMOUS] coverage={len(datasets)}/{len(instruments)} "
-        f"minimum={minimum_symbols}, forming={len(all_records)}, "
-        f"completed={len(all_completed_reactions)}, status={research_status}"
+        f"minimum={minimum_symbols}, cache={cache_hits} hit/{cache_misses} miss, "
+        f"forming={len(all_records)}, completed={len(all_completed_reactions)}, "
+        f"status={research_status}"
     )
     if calibration.get("status") == "research_quality_evidence_holdout_sealed":
         gate = calibration["quality_gate"]
@@ -348,6 +435,7 @@ def main() -> int:
 
     print("[HT-CN AUTONOMOUS] FORMING HOLDOUT SEALED")
     print("[HT-CN AUTONOMOUS] COMPLETED-REACTION HOLDOUT SEALED")
+    print(f"[HT-CN AUTONOMOUS] snapshots={SNAPSHOT_MANIFEST_PATH.relative_to(ROOT)}")
     print(f"[HT-CN AUTONOMOUS] report={REPORT_PATH.relative_to(ROOT)}")
     print(
         f"[HT-CN AUTONOMOUS] completed_reactions={COMPLETED_REACTION_PATH.relative_to(ROOT)}"

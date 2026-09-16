@@ -54,6 +54,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Restore pinned A-share research snapshots
+        uses: actions/cache@v4
+        with:
+          path: artifacts/ci-research/data
+          key: m2-research-qfq-${{ runner.os }}-${{ hashFiles('research/a-share-research-universe-v1.json') }}
+          restore-keys: |
+            m2-research-qfq-${{ runner.os }}-
+
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
