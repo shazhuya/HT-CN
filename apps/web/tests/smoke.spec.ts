@@ -79,6 +79,14 @@ test('HT-CN M3 fixture workbench renders lifecycle navigation and harmonic chart
   await expect(page.getByText('0.618')).toBeVisible()
   await expect(page.getByText('XA completion')).toBeVisible()
 
+  const audit = page.locator('.audit-card')
+  await expect(audit.getByRole('heading', { name: '价格区语义' })).toBeVisible()
+  await expect(audit.getByText('HT-CN收敛核心', { exact: true })).toBeVisible()
+  await expect(audit.getByText('组件审计包络', { exact: true })).toBeVisible()
+  await expect(audit.getByText('Source PRZ', { exact: true })).toBeVisible()
+  await expect(audit.getByText('未冻结 · fail closed', { exact: true })).toBeVisible()
+  await expect(audit.getByText(/图中着色区与旧 price_low\/high 均表示 HT-CN 收敛核心/)).toBeVisible()
+
   const outDir = '../../artifacts/screenshots'
   fs.mkdirSync(outDir, { recursive: true })
   await page.screenshot({ path: `${outDir}/m2-harmonic-workbench-fixture.png`, fullPage: true })
