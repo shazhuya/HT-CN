@@ -79,6 +79,9 @@ jobs:
       - name: Build completed-reaction quality evidence
         run: python scripts/m2_completed_reaction_quality.py
 
+      - name: Stress-test completed-reaction quality evidence
+        run: python scripts/m2_completed_reaction_robustness.py
+
       - name: Upload autonomous research evidence
         if: always()
         uses: actions/upload-artifact@v4

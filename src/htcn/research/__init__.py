@@ -18,6 +18,7 @@ from .completed_reaction import (
     completed_reaction_summary,
     confirmed_completed_reaction_records,
 )
+from .completed_reaction_robustness import build_completed_reaction_robustness_report
 from .quality_gate import (
     GateClause,
     GateSpec,
@@ -63,6 +64,7 @@ __all__ = [
     "assign_purged_split",
     "audit_confirmed_reaction",
     "build_completed_case_record",
+    "build_completed_reaction_robustness_report",
     "build_gate_library",
     "build_layered_quality_report",
     "build_quality_robustness_report",
