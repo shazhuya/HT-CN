@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from htcn.app.harmonic_service import DatasetNotFoundError, LocalHarmonicService
 from htcn.harmonic.rules import CARNEY_RULES
+from htcn.research.type_i_live_evidence import build_type_i_t5_events
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
@@ -71,7 +73,18 @@ def harmonic_analysis(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail="scales must be comma-separated integers") from exc
     try:
-        return service.analyze(instrument_id, bars=bars, scales=parsed_scales)
+        analysis = service.analyze(instrument_id, bars=bars, scales=parsed_scales)
+        # M2.23 stays outside the static completed-pattern identity payload. Rebuild the exact
+        # selected continuous OHLC window from the service response, replay source-visible forming
+        # projections, then attach a separate Terminal-Bar/T+5 evidence stream.
+        analysis_frame = pd.DataFrame(analysis.get("bars") or [])
+        analysis["type_i_t5_events"] = build_type_i_t5_events(
+            analysis_frame,
+            instrument_id=instrument_id,
+            scales=parsed_scales,
+            max_events=12,
+        )
+        return analysis
     except DatasetNotFoundError as exc:
         raise HTTPException(status_code=404, detail=f"local dataset not found: {instrument_id}") from exc
     except ValueError as exc:
