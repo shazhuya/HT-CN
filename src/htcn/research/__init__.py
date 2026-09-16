@@ -33,6 +33,12 @@ from .quality_layers import (
     pattern_family,
 )
 from .quality_robustness import build_quality_robustness_report
+from .terminal_bar import (
+    DEFAULT_TERMINAL_REACTION_HORIZON,
+    audit_projected_terminal_price_bar,
+    build_terminal_bar_calibration,
+    redact_terminal_bar_holdout,
+)
 from .time_split import (
     NumericThresholds,
     SplitBoundaries,
@@ -56,6 +62,7 @@ __all__ = [
     "DEFAULT_COMPLETED_REACTION_SCALES",
     "DEFAULT_FORWARD_HORIZON",
     "DEFAULT_OBSERVATION_HORIZON",
+    "DEFAULT_TERMINAL_REACTION_HORIZON",
     "DEFAULT_WALK_FORWARD_SCALES",
     "GateClause",
     "GateSpec",
@@ -63,11 +70,13 @@ __all__ = [
     "SplitBoundaries",
     "assign_purged_split",
     "audit_confirmed_reaction",
+    "audit_projected_terminal_price_bar",
     "build_completed_case_record",
     "build_completed_reaction_robustness_report",
     "build_gate_library",
     "build_layered_quality_report",
     "build_quality_robustness_report",
+    "build_terminal_bar_calibration",
     "canonical_case_key",
     "classify_gate_layer",
     "completed_reaction_summary",
@@ -82,6 +91,7 @@ __all__ = [
     "mature_forward_records",
     "outcome_summary",
     "pattern_family",
+    "redact_terminal_bar_holdout",
     "signal_features",
     "split_manifest",
     "walk_forward_forming_signals",

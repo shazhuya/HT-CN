@@ -5,6 +5,11 @@ from typing import Any, Iterable
 import pandas as pd
 
 from .quality_gate import evaluate_gate_library
+from .terminal_bar import (
+    DEFAULT_TERMINAL_REACTION_HORIZON,
+    audit_projected_terminal_price_bar,
+    build_terminal_bar_calibration,
+)
 from .time_split import (
     assign_purged_split,
     derive_boundaries,
@@ -22,7 +27,12 @@ def enrich_walk_forward_records(
     instrument_id: str,
     horizon: int,
 ) -> list[dict[str, Any]]:
-    """Attach symbol identity and exact observation-end dates without changing signal state."""
+    """Attach symbol identity and exact observation-end dates without changing signal state.
+
+    M2.17 also attaches a separate source-aligned Terminal Price Bar audit. That audit uses the
+    already-frozen forming signal and later price bars only; it never changes the original
+    signal, Pivot frontier, Carney identity or forming outcome class.
+    """
     if horizon < 1:
         raise ValueError("horizon must be >= 1")
     if "trade_date" not in frame.columns:
@@ -39,6 +49,12 @@ def enrich_walk_forward_records(
             row["observation_end_trade_date"] = pd.Timestamp(
                 source.iloc[end_bar]["trade_date"]
             ).date().isoformat()
+        row["terminal_bar_audit"] = audit_projected_terminal_price_bar(
+            row,
+            frame=source,
+            forming_horizon=horizon,
+            reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
+        )
         out.append(row)
     return out
 
@@ -80,6 +96,10 @@ def build_autonomous_quality_report(
 ) -> dict[str, Any]:
     """Build a purged Train/Validation report while keeping Holdout outcomes sealed."""
     all_rows = list(records)
+    terminal_bar_calibration = build_terminal_bar_calibration(
+        all_rows,
+        reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
+    )
     mature = mature_forward_records(all_rows, horizon=horizon)
     if len(mature) < minimum_mature_records:
         return {
@@ -87,6 +107,7 @@ def build_autonomous_quality_report(
             "horizon_bars": horizon,
             "mature_records": len(mature),
             "minimum_mature_records": minimum_mature_records,
+            "terminal_bar_calibration": terminal_bar_calibration,
             "policy_frozen": False,
             "holdout": {"sealed": True, "outcomes_reported": False},
         }
@@ -98,6 +119,7 @@ def build_autonomous_quality_report(
             "status": "insufficient_split_coverage",
             "horizon_bars": horizon,
             "mature_records": len(mature),
+            "terminal_bar_calibration": terminal_bar_calibration,
             "policy_frozen": False,
             "holdout": {"sealed": True, "outcomes_reported": False},
         }
@@ -124,6 +146,7 @@ def build_autonomous_quality_report(
         "train_outcome_summary": outcome_summary(splits["train"], horizon=horizon),
         "validation_outcome_summary": outcome_summary(splits["validation"], horizon=horizon),
         "quality_gate": gates,
+        "terminal_bar_calibration": terminal_bar_calibration,
         "holdout": {
             "sealed": True,
             "records": len(splits["holdout"]),
@@ -135,5 +158,6 @@ def build_autonomous_quality_report(
             "numeric_thresholds_train_only": True,
             "validation_redefines_gates": False,
             "holdout_outcomes_opened": False,
+            "terminal_bar_outcomes_use_independent_purged_split": True,
         },
     }
