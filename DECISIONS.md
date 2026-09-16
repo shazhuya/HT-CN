@@ -100,6 +100,25 @@ T+1、涨跌停、流动性、ATR、指数/板块相对强弱、开收盘微观�
 
 原因：模型能力可以保持，但旧聊天的细粒度上下文不能保证逐轮完整继承；把长期事实写入仓库能防止失忆式返工。
 
+## D-014 — Standalone AB=CD Source Raw PRZ 与 BC Layering 永久分层
+
+**状态：Frozen**
+
+Standalone AB=CD 的 Source Raw PRZ 采用：
+
+- equivalent `AB=CD x1` completion 作为 defining measurement；
+- reciprocal BC 作为 complementary source measurement。
+
+Volume Three 的 BC layering / extension refinement（例如从 1.618 向 2.0 的执行层观察）只能进入 execution tolerance / execution refinement，明确不属于 harmonic identity，也不属于 Source Raw PRZ membership。
+
+该决定从 M2.28 起形成 `m2-source-prz-v4` research definition。v4 真实 A 股可见研究即使发现 `full_prz_exit_by_t5` 通过当前 robustness gate，也不得把它升级为 source rule、个股概率、机械五日倒计时或 confirmatory policy；冻结历史 Holdout / replication 不因 v4 定义变化而重算。
+
+原因：如果把 BC layering 并入 Raw PRZ，会再次重演 Ideal Core 替代 Source PRZ 的语义污染，并使 Terminal Price Bar、PEZ、Type-I 全部建立在错误边界上。
+
+影响范围：standalone AB=CD runtime payload、Source PRZ registry、Terminal Price Bar research、M3 future overlays、research version governance。
+
+验证方式：AB=CD Book Golden Gate + API contract tests + v4 sealed boundary guard + 45-symbol real A-share CI。
+
 ## 后续新增格式
 
 ```text
