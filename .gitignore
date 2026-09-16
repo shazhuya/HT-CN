@@ -22,6 +22,7 @@ data/**/*.db
 artifacts/screenshots/*
 artifacts/debug/*
 artifacts/reports/*
+artifacts/prospective/*
 logs/*
 
 # Keep directory placeholders

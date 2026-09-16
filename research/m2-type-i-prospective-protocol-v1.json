@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "protocol_id": "m2-type-i-prospective-v1",
+  "purpose": "Append-only prospective monitoring of the already frozen Type-I T+5 lifecycle evidence after all retrospective confirmatory datasets have been consumed.",
+  "registered_cutoff": "2026-09-15",
+  "first_eligible_terminal_trade_date": "2026-09-16",
+  "source_evidence": [
+    {
+      "result_id": "m2-type-i-holdout-result-v1",
+      "dataset_id": "a-share-research-v2-45",
+      "status": "confirmed",
+      "consumed": true
+    },
+    {
+      "result_id": "m2-type-i-external-replication-result-v1",
+      "dataset_id": "a-share-type-i-external-replication-v1-60",
+      "status": "confirmed",
+      "consumed": true
+    }
+  ],
+  "event_clock": {
+    "source": "M2.17 source-aligned Terminal Price Bar reconstructed from no-lookahead forming projections",
+    "scales": [3, 5, 8, 13, 21],
+    "forming_horizon_bars": 60,
+    "landmark_bar": 5,
+    "endpoint_horizon_bar": 20,
+    "endpoint": "first T2 hit during T+6..T+20 among events still pending T2 at T+5"
+  },
+  "registration": {
+    "prospective_if_first_observed_available_future_bars_lte": 5,
+    "reason": "At T+5 the exposure/comparator is observable while the T+6..T+20 endpoint window has not yet begun. Events first discovered after T+5 are retained as audit backfills but permanently excluded from a future prospective primary evaluation.",
+    "pre_cutoff_events_allowed": false,
+    "delete_event_if_later_rescan_missing": false,
+    "event_identity_uses_bar_indices": false
+  },
+  "state_contract": {
+    "t5_states": [
+      "pending_t5_observation",
+      "t2_already_reached_by_t5",
+      "full_prz_exit_by_t5",
+      "no_full_prz_exit_by_t5"
+    ],
+    "endpoint_states": [
+      "t2_hit_by_t5",
+      "t2_hit_t6_t20",
+      "pending_t20",
+      "no_t2_by_t20"
+    ],
+    "full_exit_threshold_frozen": 5,
+    "endpoint_frozen": true
+  },
+  "inference": {
+    "confirmatory_test_in_registry": false,
+    "interim_significance_testing": false,
+    "dynamic_success_probability": false,
+    "dynamic_return_forecast": false,
+    "reason": "The registry is an evidence ledger only. A future confirmatory evaluation requires a separate preregistration before its endpoint outcomes are used for inference."
+  },
+  "identity_separation": {
+    "carney_geometry_mutated": false,
+    "prz_mutated": false,
+    "pattern_identity_mutated": false,
+    "geometry_score_reinterpreted_as_probability": false
+  }
+}
