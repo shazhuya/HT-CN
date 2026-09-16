@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import HarmonicChart, { Bar, Pattern } from './HarmonicChart'
+import TypeIT5Evidence, { TypeIT5Event } from './TypeIT5Evidence'
 
 type Health = {
   status: string
@@ -25,6 +26,7 @@ type Analysis = {
   completed: Pattern[]
   forming: Pattern[]
   pivot_counts: Record<string, number>
+  type_i_t5_events?: TypeIT5Event[]
   engine_note: string
 }
 
@@ -206,6 +208,8 @@ export default function App() {
           </section>
 
           {analysis.warning && <div className="warning-card">{analysis.warning}</div>}
+
+          <TypeIT5Evidence events={analysis.type_i_t5_events ?? []} />
 
           <section className="workspace">
             <div className="chart-panel">
