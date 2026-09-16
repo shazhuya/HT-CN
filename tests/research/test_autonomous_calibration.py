@@ -33,6 +33,14 @@ def test_enrich_walk_forward_records_uses_exact_future_trade_date() -> None:
     assert enriched[0]["instrument_id"] == "SSE.600519"
     assert enriched[0]["observation_end_bar"] == 10
     assert enriched[0]["observation_end_trade_date"] == frame.iloc[10]["trade_date"].date().isoformat()
+    assert enriched[0]["terminal_bar_audit"]["status"] == "not_applicable_missing_projection_fields"
+    assert set(enriched[0]["terminal_bar_audit"]["missing_fields"]) == {
+        "pattern_id",
+        "schema",
+        "direction",
+        "prz",
+        "prefix_points",
+    }
 
 
 def _record(index: int) -> dict:
