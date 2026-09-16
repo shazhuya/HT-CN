@@ -5,9 +5,12 @@ from typing import Any, Iterable
 import pandas as pd
 
 from .quality_gate import evaluate_gate_library
+from .source_terminal_bar import (
+    SOURCE_TERMINAL_RESEARCH_DEFINITION,
+    audit_source_prz_terminal_price_bar,
+)
 from .terminal_bar import (
     DEFAULT_TERMINAL_REACTION_HORIZON,
-    audit_projected_terminal_price_bar,
     build_terminal_bar_calibration,
 )
 from .time_split import (
@@ -38,20 +41,22 @@ def _terminal_audit_payload(
     frame: pd.DataFrame,
     horizon: int,
 ) -> dict[str, Any]:
-    """Attach M2.17 only when the record actually describes a harmonic projection.
+    """Attach the current source-Raw-PRZ Terminal Price Bar audit where possible.
 
-    Older/general-purpose enrichment callers may provide only timing fields. Those records remain
-    valid inputs to the pre-existing enrichment API and are explicitly marked not-applicable rather
-    than being forced through the Terminal Price Bar audit.
+    Historical M2.17/M2.26 research remains reproducible through the legacy terminal-bar
+    function.  Current M2.27 research uses ``m2-source-prz-v3``: it reconstructs a frozen
+    source Raw PRZ from signal-time XABC geometry and fails closed for schemas/patterns whose
+    source PRZ is still unresolved.  Legacy ideal-core bounds are never promoted to source PRZ.
     """
     missing = sorted(field for field in _TERMINAL_AUDIT_REQUIRED_FIELDS if field not in row)
     if missing:
         return {
             "status": "not_applicable_missing_projection_fields",
+            "research_definition": SOURCE_TERMINAL_RESEARCH_DEFINITION,
             "missing_fields": missing,
             "source_semantics": "Terminal Price Bar audit applies only to a fully described harmonic projection; legacy timing-only records remain valid enrichment inputs.",
         }
-    return audit_projected_terminal_price_bar(
+    return audit_source_prz_terminal_price_bar(
         row,
         frame=frame,
         forming_horizon=horizon,
@@ -66,12 +71,7 @@ def enrich_walk_forward_records(
     instrument_id: str,
     horizon: int,
 ) -> list[dict[str, Any]]:
-    """Attach symbol identity and exact observation-end dates without changing signal state.
-
-    M2.17 also attaches a separate source-aligned Terminal Price Bar audit. That audit uses the
-    already-frozen forming signal and later price bars only; it never changes the original
-    signal, Pivot frontier, Carney identity or forming outcome class.
-    """
+    """Attach symbol identity, observation dates and the current v3 Terminal-Bar audit."""
     if horizon < 1:
         raise ValueError("horizon must be >= 1")
     if "trade_date" not in frame.columns:
@@ -138,17 +138,21 @@ def build_autonomous_quality_report(
         all_rows,
         reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
     )
+    terminal_bar_calibration["research_definition"] = SOURCE_TERMINAL_RESEARCH_DEFINITION
+    terminal_bar_calibration["prz_basis"] = "source_raw_prz_only_fail_closed_otherwise"
     type_i_early_path = build_type_i_early_path_report(
         all_rows,
         terminal_bar_calibration,
         reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
     )
+    type_i_early_path["research_definition"] = SOURCE_TERMINAL_RESEARCH_DEFINITION
     type_i_early_path_robustness = build_type_i_early_path_robustness_report(
         all_rows,
         terminal_bar_calibration,
         type_i_early_path,
         reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
     )
+    type_i_early_path_robustness["research_definition"] = SOURCE_TERMINAL_RESEARCH_DEFINITION
     type_i_exit_timing = build_type_i_exit_timing_report(
         all_rows,
         terminal_bar_calibration,
@@ -156,10 +160,12 @@ def build_autonomous_quality_report(
         type_i_early_path_robustness,
         reaction_horizon=DEFAULT_TERMINAL_REACTION_HORIZON,
     )
+    type_i_exit_timing["research_definition"] = SOURCE_TERMINAL_RESEARCH_DEFINITION
     mature = mature_forward_records(all_rows, horizon=horizon)
     if len(mature) < minimum_mature_records:
         return {
             "status": "insufficient_mature_records",
+            "research_definition": SOURCE_TERMINAL_RESEARCH_DEFINITION,
             "horizon_bars": horizon,
             "mature_records": len(mature),
             "minimum_mature_records": minimum_mature_records,
@@ -176,6 +182,7 @@ def build_autonomous_quality_report(
     if not splits["train"] or not splits["validation"] or not splits["holdout"]:
         return {
             "status": "insufficient_split_coverage",
+            "research_definition": SOURCE_TERMINAL_RESEARCH_DEFINITION,
             "horizon_bars": horizon,
             "mature_records": len(mature),
             "terminal_bar_calibration": terminal_bar_calibration,
@@ -201,6 +208,7 @@ def build_autonomous_quality_report(
     manifest = split_manifest(splits, purged=purged, boundaries=boundaries)
     return {
         "status": "research_quality_evidence_holdout_sealed",
+        "research_definition": SOURCE_TERMINAL_RESEARCH_DEFINITION,
         "horizon_bars": horizon,
         "mature_records": len(mature),
         "manifest": manifest,
@@ -227,5 +235,7 @@ def build_autonomous_quality_report(
             "type_i_early_path_reuses_m2_17_boundaries": True,
             "type_i_robustness_reuses_m2_17_boundaries": True,
             "type_i_exit_timing_reuses_m2_17_boundaries": True,
+            "source_prz_rebuilt_from_signal_time_geometry": True,
+            "legacy_ideal_core_used_as_source_prz": False,
         },
     }
