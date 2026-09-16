@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 import pandas as pd
 
 from htcn.app.harmonic_service import LocalHarmonicService
+from htcn.harmonic.abcd_source import abcd_bc_layering_example, with_abcd_source_prz
 from htcn.harmonic.execution import observe_source_execution
 from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
@@ -12,29 +14,29 @@ from htcn.harmonic.source_prz_evidence import source_prz_evidence
 
 
 class SourceAlignedHarmonicService(LocalHarmonicService):
-    """Compatibility-preserving API adapter for the source-fidelity contract.
-
-    The legacy service remains the deterministic geometry producer. This adapter makes the
-    semantic layers explicit at the API boundary and adds the no-lookahead execution clock to
-    current forming patterns. It does not rewrite identity, PRZ geometry or historical outcome
-    evidence.
-    """
+    """Compatibility-preserving API adapter for the source-fidelity contract."""
 
     @staticmethod
     def _prz_payload(prz: PotentialReversalZone) -> dict[str, Any]:
+        effective = with_abcd_source_prz(prz) if prz.pattern_id == "abcd" else prz
         legacy = LocalHarmonicService._prz_payload(prz)
         component_low = float(prz.component_envelope_low)
         component_high = float(prz.component_envelope_high)
         ideal_low = float(prz.ideal_core_low)
         ideal_high = float(prz.ideal_core_high)
-        source_available = bool(prz.has_source_prz)
-        source_low = float(prz.source_prz_low) if prz.source_prz_low is not None else None
-        source_high = float(prz.source_prz_high) if prz.source_prz_high is not None else None
+        source_available = bool(effective.has_source_prz)
+        source_low = float(effective.source_prz_low) if effective.source_prz_low is not None else None
+        source_high = float(effective.source_prz_high) if effective.source_prz_high is not None else None
         evidence = source_prz_evidence(prz.pattern_id)
+        abcd_evidence_level = (
+            "source_specification_plus_market_examples_membership_only"
+            if prz.pattern_id == "abcd"
+            else "unregistered"
+        )
 
         return {
             **legacy,
-            "semantics_version": 2,
+            "semantics_version": 3,
             "legacy_price_semantics": "ideal_core",
             "ideal_core": {
                 "price_low": ideal_low,
@@ -57,26 +59,68 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
                     if source_low is not None and source_high is not None
                     else None
                 ),
-                "status": prz.source_prz_status,
-                "component_names": list(prz.source_prz_component_names),
-                "defining_component": prz.source_prz_defining_component,
-                "selection_method": prz.source_prz_selection_method,
-                "source_refs": list(prz.source_prz_source_refs),
-                "source_note": prz.source_prz_note or None,
-                "unresolved_reason": prz.source_prz_reason,
-                "profile_version": 1,
-                "evidence_level": evidence.evidence_level if evidence else "unregistered",
-                "source_membership_authority": (
-                    evidence.source_membership_authority if evidence else None
+                "status": effective.source_prz_status,
+                "component_names": list(effective.source_prz_component_names),
+                "defining_component": effective.source_prz_defining_component,
+                "selection_method": effective.source_prz_selection_method,
+                "source_refs": list(effective.source_prz_source_refs),
+                "source_note": effective.source_prz_note or None,
+                "unresolved_reason": effective.source_prz_reason,
+                "profile_version": 2,
+                "evidence_level": (
+                    evidence.evidence_level if evidence else abcd_evidence_level
                 ),
-                "selection_authority": evidence.selection_authority if evidence else None,
+                "source_membership_authority": (
+                    evidence.source_membership_authority
+                    if evidence
+                    else ("Carney Vol1/Vol3" if prz.pattern_id == "abcd" else None)
+                ),
+                "selection_authority": (
+                    evidence.selection_authority
+                    if evidence
+                    else (
+                        "Carney-defined equivalent AB=CD + reciprocal BC pair"
+                        if prz.pattern_id == "abcd"
+                        else None
+                    )
+                ),
                 "market_case_ids": list(evidence.market_case_ids) if evidence else [],
                 "known_source_tensions": list(evidence.known_tensions) if evidence else [],
                 "coordinate_regression_status": (
-                    evidence.coordinate_regression_status if evidence else "unregistered"
+                    evidence.coordinate_regression_status if evidence else "pending_book_coordinates"
                 ),
             },
         }
+
+    def _abcd_payload(self, *args, **kwargs) -> dict[str, Any]:
+        payload = super()._abcd_payload(*args, **kwargs)
+        item = args[0] if args else kwargs["item"]
+        evaluation = item.evaluation
+        layer = abcd_bc_layering_example(
+            item.points,
+            reciprocal_bc_target=float(evaluation.reciprocal_bc_target),
+        )
+        payload["execution_tolerance"] = {
+            **asdict(layer),
+            "raw_prz_membership": False,
+            "identity_membership": False,
+        }
+        return payload
+
+    def _abcd_forming_payload(self, *args, **kwargs) -> dict[str, Any]:
+        payload = super()._abcd_forming_payload(*args, **kwargs)
+        item = args[0] if args else kwargs["item"]
+        projection = item.projection
+        layer = abcd_bc_layering_example(
+            item.points,
+            reciprocal_bc_target=float(projection.reciprocal_bc_target),
+        )
+        payload["execution_tolerance"] = {
+            **asdict(layer),
+            "raw_prz_membership": False,
+            "identity_membership": False,
+        }
+        return payload
 
     def _shark_payload(self, *args, **kwargs) -> dict[str, Any]:
         payload = super()._shark_payload(*args, **kwargs)
@@ -140,13 +184,6 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
         pattern: dict[str, Any],
         frame: pd.DataFrame,
     ) -> dict[str, Any] | None:
-        """Attach a source clock only where the generic Type-I anchor is well-defined.
-
-        Standard XABCD and standalone AB=CD project D from a confirmed C frontier and use
-        A as the later reaction anchor. Shark has a pattern-specific 5-0 target contract and
-        5-0 itself remains source-conflict/research-only, so neither is silently forced through
-        this generic clock.
-        """
         schema = str(pattern.get("schema"))
         if schema not in {"XABCD", "ABCD"}:
             return None
@@ -210,19 +247,20 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             elif pattern.get("schema") == "FIVE_ZERO":
                 pattern["execution_clock_policy"] = "source_conflict_research_only"
         analysis["price_zone_contract"] = {
-            "version": 2,
-            "source_prz_profile_version": 1,
+            "version": 3,
+            "source_prz_profile_version": 2,
             "static_layers": ["ideal_core", "component_envelope", "source_prz"],
             "dynamic_layer": "execution_clock.pez",
+            "execution_only_layers": ["ABCD.execution_tolerance"],
             "fail_closed_without_source_prz": True,
             "legacy_price_low_high_mean": "ideal_core",
             "source_membership_authority": "Carney source families per pattern",
-            "source_selection_authority": "HT-CN operational convergence inside source-valid families; exposed per pattern",
+            "source_selection_authority": "HT-CN operational convergence only where Carney leaves multiple source-valid complements",
         }
         analysis["engine_note"] = (
             str(analysis.get("engine_note") or "")
-            + " M2.27 标准 XABCD Source PRZ 使用逐形态 Golden Profile 选择并暴露组成测量/来源；"
-            "Carney 决定合法测量族，HT-CN 只在合法族内做收敛选择。Ideal Core 继续作为独立工程层，"
-            "Alternate Bat 等冲突项继续 fail closed；Book Case Ledger 与坐标级回归状态单独暴露。"
+            + " M2.28 已把 standalone AB=CD 的等距完成价 + reciprocal BC 解冻为 Source Raw PRZ；"
+            "Volume Three BC layering 单列为 execution tolerance，绝不进入 identity 或 Raw PRZ。"
+            "标准 XABCD 继续沿用 M2.27 Golden Profile；Alternate Bat/5-0 等冲突项继续 fail closed。"
         ).strip()
         return analysis
