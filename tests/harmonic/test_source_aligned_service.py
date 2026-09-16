@@ -24,7 +24,7 @@ def test_prz_api_contract_separates_three_static_layers_and_keeps_legacy_aliases
     )
     payload = SourceAlignedHarmonicService._prz_payload(prz)
 
-    assert payload["semantics_version"] == 2
+    assert payload["semantics_version"] == 3
     assert payload["legacy_price_semantics"] == "ideal_core"
     assert payload["price_low"] == pytest.approx(payload["ideal_core"]["price_low"])
     assert payload["price_high"] == pytest.approx(payload["ideal_core"]["price_high"])
@@ -55,14 +55,14 @@ def test_frozen_source_prz_is_explicit_and_not_inferred_from_ideal_core() -> Non
     assert source["width"] == pytest.approx(10.0)
     assert source["status"] == "frozen"
     # Explicit source bounds constructed by older compatibility callers remain valid even
-    # without M2.27 provenance. Runtime XABCD builders populate these fields.
+    # without pattern provenance. M2.28 keeps that compatibility while versioning the contract.
     assert source["component_names"] == []
     assert source["defining_component"] is None
     assert source["selection_method"] is None
     assert source["source_refs"] == []
     assert source["source_note"] is None
     assert source["unresolved_reason"] is None
-    assert source["profile_version"] == 1
+    assert source["profile_version"] == 2
     assert payload["component_envelope"]["price_low"] == pytest.approx(88.0)
     assert payload["component_envelope"]["price_high"] == pytest.approx(102.0)
 

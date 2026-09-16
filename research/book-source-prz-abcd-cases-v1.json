@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "ledger_id": "book-source-prz-abcd-cases-v1",
+  "scope": "Standalone AB=CD Source Raw PRZ membership evidence. This ledger preserves published completion/BC facts and does not invent unavailable A/B/C coordinates.",
+  "source_contract": {
+    "defining_measurement": "equivalent AB=CD completion",
+    "complementary_measurement": "reciprocal BC projection selected from C retracement",
+    "raw_prz_members": ["AB=CD x1", "BC reciprocal"],
+    "volume3_bc_layering_role": "execution_tolerance_only_not_identity_or_raw_prz"
+  },
+  "reciprocal_table": [
+    {"c_retracement": 0.382, "bc_projection": [2.24, 2.618]},
+    {"c_retracement": 0.50, "bc_projection": [2.0]},
+    {"c_retracement": 0.618, "bc_projection": [1.618]},
+    {"c_retracement": 0.707, "bc_projection": [1.414]},
+    {"c_retracement": 0.786, "bc_projection": [1.27]},
+    {"c_retracement": 0.886, "bc_projection": [1.13]}
+  ],
+  "cases": [
+    {
+      "case_id": "v1-perfect-abcd-nqh4-10m",
+      "source_ref": "Volume One p.73",
+      "instrument": "NASDAQ 100 March 2004 Mini-Contract (NQ_H4)",
+      "timeframe": "10-minute",
+      "direction": "bullish",
+      "published_facts": {
+        "abcd_completion_price": 1379.0,
+        "defining_limit": "AB=CD completion",
+        "bc_projection_ratio": 1.618,
+        "relationship": "AB=CD completion and 1.618 BC converge in a tight range"
+      },
+      "coordinate_regression_eligible": false
+    },
+    {
+      "case_id": "v1-abcd-es-bearish",
+      "source_ref": "Volume One pp.75-76",
+      "instrument": "S&P 500 Mini-contract example",
+      "timeframe": "book example",
+      "direction": "bearish",
+      "published_facts": {
+        "abcd_completion_price": 1008.5,
+        "defining_limit": "AB=CD completion",
+        "bc_projection_ratio": 1.618,
+        "relationship": "distinct AB=CD structure complemented by 1.618 BC"
+      },
+      "coordinate_regression_eligible": false
+    }
+  ],
+  "volume3_execution_layer": {
+    "source_ref": "Volume Three pp.81-85",
+    "frozen_example": {
+      "primary_bc": 1.618,
+      "secondary_bc": 2.0,
+      "role": "gauge permissible price action beyond ideal completion"
+    },
+    "universal_mapping_claimed": false
+  },
+  "known_open_items": [
+    "Coordinate-level regression remains pending until reliable source pivots can be transcribed without inferring chart pixels.",
+    "BC layering beyond the explicitly illustrated 1.618-to-2.0 example remains fail-closed."
+  ]
+}
