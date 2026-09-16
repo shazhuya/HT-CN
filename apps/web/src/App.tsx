@@ -37,6 +37,8 @@ const PATTERN_NAMES: Record<string, string> = {
   crab: 'Crab',
   deep_crab: 'Deep Crab',
   abcd: 'AB=CD',
+  shark: 'Shark',
+  five_zero: '5-0',
 }
 
 function patternName(id: string) {
@@ -63,7 +65,15 @@ function evidenceLabel(state: string) {
 }
 
 function isStandaloneAbcd(pattern: Pattern) {
-  return pattern.schema === 'ABCD' || (pattern.points.length === 4 && pattern.points[0]?.label === 'A')
+  return pattern.schema === 'ABCD'
+}
+
+function isShark(pattern: Pattern) {
+  return pattern.schema === '0XABC' || pattern.pattern_id === 'shark'
+}
+
+function isFiveZero(pattern: Pattern) {
+  return pattern.schema === 'FIVE_ZERO' || pattern.pattern_id === 'five_zero'
 }
 
 export default function App() {
@@ -261,6 +271,7 @@ export default function App() {
                   <p className="node-range">
                     {selectedPattern.points[0]?.trade_date ?? '—'} → {selectedPattern.points.at(-1)?.trade_date ?? '—'} · S{selectedPattern.scale} · {selectedPattern.schema ?? 'XABCD'}
                   </p>
+
                   {(selectedPattern.identity_conflicts?.length ?? 0) > 1 && (
                     <>
                       <h3>同节点身份冲突</h3>
@@ -286,7 +297,22 @@ export default function App() {
                   )}
 
                   <h3>比例审计</h3>
-                  {isStandaloneAbcd(selectedPattern) ? (
+                  {isShark(selectedPattern) ? (
+                    <dl>
+                      <div><dt>A/0X</dt><dd>{fmt(selectedPattern.metrics.a_0x)}</dd></div>
+                      <div><dt>B/XA</dt><dd>{fmt(selectedPattern.metrics.b_xa)}</dd></div>
+                      <div><dt>C/AB</dt><dd>{fmt(selectedPattern.metrics.c_ab)}</dd></div>
+                      <div><dt>C/0B</dt><dd>{fmt(selectedPattern.metrics.c_0b)}</dd></div>
+                    </dl>
+                  ) : isFiveZero(selectedPattern) ? (
+                    <dl>
+                      <div><dt>B/XA</dt><dd>{fmt(selectedPattern.metrics.b_xa)}</dd></div>
+                      <div><dt>C/AB</dt><dd>{fmt(selectedPattern.metrics.c_ab)}</dd></div>
+                      <div><dt>D/BC</dt><dd>{fmt(selectedPattern.metrics.d_bc)}</dd></div>
+                      <div><dt>CD/AB</dt><dd>{fmt(selectedPattern.metrics.cd_ab)}</dd></div>
+                      <div><dt>Reciprocal AB=CD</dt><dd>{fmt(selectedPattern.metrics.reciprocal_abcd_price)}</dd></div>
+                    </dl>
+                  ) : isStandaloneAbcd(selectedPattern) ? (
                     <dl>
                       <div><dt>C/AB</dt><dd>{fmt(selectedPattern.metrics.c_ab)}</dd></div>
                       <div><dt>CD/BC</dt><dd>{fmt(selectedPattern.metrics.bc_projection)}</dd></div>
@@ -303,6 +329,13 @@ export default function App() {
                       <div><dt>CD/AB</dt><dd>{fmt(selectedPattern.metrics.cd_ab)}</dd></div>
                     </dl>
                   )}
+
+                  {isFiveZero(selectedPattern) && selectedPattern.completion_class && (
+                    <p className="identity-note">
+                      5-0 完成分类：{selectedPattern.completion_class === 'volume2_50' ? 'Volume Two 50% 核心完成' : 'Volume Three 61.8% 执行细化'}。50% 是原始定义完成位，61.8% 用作第三卷的执行/失效边界细化。
+                    </p>
+                  )}
+
                   <h3>PRZ</h3>
                   <p className="prz-price">{selectedPattern.prz.price_low.toFixed(2)} – {selectedPattern.prz.price_high.toFixed(2)}</p>
                   <ul>
@@ -313,6 +346,21 @@ export default function App() {
                       </li>
                     ))}
                   </ul>
+
+                  {selectedPattern.state === 'completed' && selectedPattern.reaction_targets && (
+                    <>
+                      <h3>Shark 反应目标审计</h3>
+                      <dl>
+                        <div><dt>50%目标</dt><dd>{selectedPattern.reaction_targets.target_50.toFixed(2)}</dd></div>
+                        <div><dt>到达50%</dt><dd>{hitLabel(selectedPattern.reaction_targets.bars_to_50)}</dd></div>
+                        <div><dt>61.8%目标</dt><dd>{selectedPattern.reaction_targets.target_618.toFixed(2)}</dd></div>
+                        <div><dt>到达61.8%</dt><dd>{hitLabel(selectedPattern.reaction_targets.bars_to_618)}</dd></div>
+                        <div><dt>Reciprocal AB=CD</dt><dd>{selectedPattern.reaction_targets.reciprocal_abcd.toFixed(2)}</dd></div>
+                        <div><dt>到达Reciprocal</dt><dd>{hitLabel(selectedPattern.reaction_targets.bars_to_reciprocal_abcd)}</dd></div>
+                      </dl>
+                      <p className="identity-note">{selectedPattern.reaction_targets.source_note}</p>
+                    </>
+                  )}
 
                   {selectedPattern.state === 'completed' && selectedPattern.reaction_audit && (
                     <>
