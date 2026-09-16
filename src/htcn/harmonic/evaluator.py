@@ -16,6 +16,9 @@ class ConstraintCheck:
     passed: bool
     canonical_passed: bool
     distance_to_canonical: float
+    target: float | None = None
+    relative_error: float | None = None
+    policy: str = "band"
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,20 +104,30 @@ def _distance_to_band(value: float, minimum: float, maximum: float) -> float:
     return min(abs(value - minimum), abs(value - maximum))
 
 
+def _nearest_harmonic_target(value: float, targets: tuple[float, ...]) -> tuple[float, float, float]:
+    target = min(targets, key=lambda item: abs(float(value) - float(item)) / float(item))
+    absolute_error = abs(float(value) - float(target))
+    relative_error = absolute_error / float(target)
+    return float(target), absolute_error, relative_error
+
+
 def evaluate_xabcd(
     rule: PatternRule,
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
     *,
     include_source_tolerance: bool = True,
     abcd_relative_tolerance: float = 0.03,
+    harmonic_family_relative_tolerance: float = 0.03,
 ) -> PatternEvaluation:
     """Evaluate one completed XABCD candidate against one Carney rule.
 
     Important separation:
-    - source-backed identity constraints can reject a candidate;
-    - preferred AB=CD variants are measured for quality/PRZ convergence only;
-    - ``abcd_relative_tolerance`` therefore affects the reported quality distance but
-      never invents a hard identity rule that is absent from the books.
+    - source-backed structural envelopes and tolerances can reject a candidate;
+    - source-listed discrete harmonic ratio families are not treated as continuous bands;
+    - ``harmonic_family_relative_tolerance`` is an explicit HT-CN operational matching
+      policy around those source values, not a Carney-published universal constant;
+    - preferred AB=CD variants remain quality/PRZ evidence unless the source rule separately
+      defines a hard minimum.
     """
 
     if rule.schema != "XABCD":
@@ -123,6 +136,8 @@ def evaluate_xabcd(
         raise ValueError(f"rule {rule.pattern_id!r} is not executable yet")
     if abcd_relative_tolerance < 0:
         raise ValueError("abcd_relative_tolerance must be non-negative")
+    if harmonic_family_relative_tolerance < 0:
+        raise ValueError("harmonic_family_relative_tolerance must be non-negative")
 
     x, a, b, c, _ = points
     direction = _infer_direction(x, a)
@@ -137,6 +152,7 @@ def evaluate_xabcd(
         "c_ab": metrics.c_ab.value,
     }
 
+    # First apply source structural envelopes/tolerances.
     for name, constraint in rule.constraints.items():
         if name not in metric_by_name:
             continue
@@ -150,11 +166,41 @@ def evaluate_xabcd(
                 passed=passed,
                 canonical_passed=canonical,
                 distance_to_canonical=_distance_to_band(value, constraint.minimum, constraint.maximum),
+                policy="source_band",
             )
         )
         if not passed:
             reasons.append(
                 f"{name}={value:.6f} outside allowed {constraint.minimum:g}-{constraint.maximum:g}"
+            )
+
+    # Then enforce that measurements described as harmonic ratios actually lie near one of
+    # the finite source-listed ratios. This closes the old loophole where, for example, any
+    # arbitrary C/AB value between 0.382 and 0.886 was accepted as equally harmonic.
+    for name, targets in rule.harmonic_targets.items():
+        if name not in metric_by_name:
+            continue
+        value = metric_by_name[name]
+        target, absolute_error, relative_error = _nearest_harmonic_target(value, targets)
+        exact = absolute_error <= 1e-12 * max(1.0, abs(value), abs(target))
+        passed = relative_error <= harmonic_family_relative_tolerance
+        checks.append(
+            ConstraintCheck(
+                name=f"{name}_harmonic_family",
+                value=value,
+                passed=passed,
+                canonical_passed=exact,
+                distance_to_canonical=absolute_error,
+                target=target,
+                relative_error=relative_error,
+                policy="operational_match_to_source_family",
+            )
+        )
+        if not passed:
+            rendered = ",".join(f"{item:g}" for item in targets)
+            reasons.append(
+                f"{name}={value:.6f} not within HT-CN {harmonic_family_relative_tolerance:.1%} "
+                f"matching tolerance of source harmonic family [{rendered}]"
             )
 
     if rule.abcd_minimum is not None:
@@ -166,6 +212,13 @@ def evaluate_xabcd(
                 passed=passed,
                 canonical_passed=passed,
                 distance_to_canonical=max(0.0, rule.abcd_minimum - metrics.cd_ab.value),
+                target=rule.abcd_minimum,
+                relative_error=(
+                    max(0.0, rule.abcd_minimum - metrics.cd_ab.value) / rule.abcd_minimum
+                    if rule.abcd_minimum > 0
+                    else None
+                ),
+                policy="source_minimum",
             )
         )
         if not passed:
@@ -173,10 +226,6 @@ def evaluate_xabcd(
                 f"CD/AB={metrics.cd_ab.value:.6f} below source minimum {rule.abcd_minimum:g}"
             )
 
-    # Preferred AB=CD variants are retained as a soft geometry-quality measurement.
-    # A distance <= the caller's research tolerance means a near-ideal alignment, but a
-    # larger distance is not automatically a failed Carney identity unless the source
-    # registry separately defines a minimum constraint above.
     if rule.abcd_types:
         abcd_distance = min(abs(metrics.cd_ab.value - target) / target for target in rule.abcd_types)
     else:
