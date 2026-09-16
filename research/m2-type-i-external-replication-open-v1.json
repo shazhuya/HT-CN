@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "authorization_id": "m2-type-i-external-replication-open-v1",
+  "preregistration_id": "m2-type-i-external-replication-v1",
+  "frozen_preregistration_commit": "7f62ff4abde3e9154738e949233a9b6745b2461c",
+  "dataset": {
+    "dataset_id": "a-share-type-i-external-replication-v1-60",
+    "snapshot_cutoff": "2026-09-15",
+    "manifest_git_blob_sha": "0061fc46d37c383594846ccc606f6f6efad504be"
+  },
+  "authorized": true,
+  "one_time_external_replication": true,
+  "scope": "Evaluate exactly the single frozen external replication contrast in research/m2-type-i-external-replication-prereg-v1.json. No alternate threshold, endpoint, subgroup or symbol subset may replace the primary test.",
+  "operational_retry_policy": "Each symbol uses the frozen provider order with internal retry/failover. The completed replication run is consumed regardless of confirm/not_confirmed/inconclusive; do not rerun to seek a different statistical outcome.",
+  "closeout_policy": "After the first completed evaluation artifact is captured, persist the result in research/, set authorized=false and one_time_external_replication=false, and replace CI evaluation with frozen-result verification.",
+  "original_holdout_reopened": false
+}
