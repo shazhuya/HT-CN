@@ -88,7 +88,8 @@ def main() -> int:
         "provider coverage gate no longer passes",
     )
     require(dataset.get("coverage_ok") is True, "coverage_ok must be true")
-    require(int(dataset.get("original_45_symbol_overlap") or -1) == 0, "replication set must remain disjoint")
+    overlap = dataset.get("original_45_symbol_overlap")
+    require(overlap is not None and int(overlap) == 0, "replication set must remain disjoint")
 
     exposure_name = (prereg_contrast.get("exposure") or {}).get("name")
     comparator_name = (prereg_contrast.get("comparator") or {}).get("name")
