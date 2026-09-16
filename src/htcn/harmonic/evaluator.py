@@ -46,6 +46,21 @@ class PatternEvaluation:
         return self.state is PatternState.COMPLETED
 
 
+@dataclass(frozen=True, slots=True)
+class _IdentityEvaluation:
+    """Cheap identity result before any projected PRZ objects are constructed."""
+
+    direction: PatternDirection
+    metrics: XABCDMetrics
+    checks: tuple[ConstraintCheck, ...]
+    abcd_distance: float
+    reasons: tuple[str, ...]
+
+    @property
+    def passed(self) -> bool:
+        return not self.reasons
+
+
 def _ratio(name: str, numerator: float, denominator: float) -> RatioMeasurement:
     if denominator <= 0:
         raise ValueError(f"{name}: denominator must be positive")
@@ -111,25 +126,20 @@ def _nearest_harmonic_target(value: float, targets: tuple[float, ...]) -> tuple[
     return float(target), absolute_error, relative_error
 
 
-def evaluate_xabcd(
+def _evaluate_identity(
     rule: PatternRule,
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
     *,
-    include_source_tolerance: bool = True,
-    abcd_relative_tolerance: float = 0.03,
-    harmonic_family_relative_tolerance: float = 0.03,
-) -> PatternEvaluation:
-    """Evaluate one completed XABCD candidate against one Carney rule.
+    include_source_tolerance: bool,
+    abcd_relative_tolerance: float,
+    harmonic_family_relative_tolerance: float,
+) -> _IdentityEvaluation:
+    """Evaluate source-backed identity without constructing any PRZ projection.
 
-    Important separation:
-    - source-backed structural envelopes and tolerances can reject a candidate;
-    - source-listed discrete harmonic ratio families are not treated as continuous bands;
-    - ``harmonic_family_relative_tolerance`` is an explicit HT-CN operational matching
-      policy around those source values, not a Carney-published universal constant;
-    - preferred AB=CD variants remain quality/PRZ evidence unless the source rule separately
-      defines a hard minimum.
+    This function owns the identity logic used by both the public full evaluator and the
+    Scanner fast path. Keeping one implementation prevents a performance optimization from
+    creating a second, subtly different pattern definition.
     """
-
     if rule.schema != "XABCD":
         raise ValueError(f"rule {rule.pattern_id!r} is not XABCD")
     if not rule.executable_identity:
@@ -139,7 +149,7 @@ def evaluate_xabcd(
     if harmonic_family_relative_tolerance < 0:
         raise ValueError("harmonic_family_relative_tolerance must be non-negative")
 
-    x, a, b, c, _ = points
+    x, a, _, _, _ = points
     direction = _infer_direction(x, a)
     metrics = measure_xabcd(points)
     reasons = list(_validate_turning_geometry(points, direction))
@@ -152,7 +162,6 @@ def evaluate_xabcd(
         "c_ab": metrics.c_ab.value,
     }
 
-    # First apply source structural envelopes/tolerances.
     for name, constraint in rule.constraints.items():
         if name not in metric_by_name:
             continue
@@ -174,9 +183,6 @@ def evaluate_xabcd(
                 f"{name}={value:.6f} outside allowed {constraint.minimum:g}-{constraint.maximum:g}"
             )
 
-    # Then enforce that measurements described as harmonic ratios actually lie near one of
-    # the finite source-listed ratios. This closes the old loophole where, for example, any
-    # arbitrary C/AB value between 0.382 and 0.886 was accepted as equally harmonic.
     for name, targets in rule.harmonic_targets.items():
         if name not in metric_by_name:
             continue
@@ -231,15 +237,84 @@ def evaluate_xabcd(
     else:
         abcd_distance = inf
 
-    prz = build_xabcd_prz(rule, (x, a, b, c))
-    state = PatternState.COMPLETED if not reasons else PatternState.REJECTED
-    return PatternEvaluation(
-        pattern_id=rule.pattern_id,
+    return _IdentityEvaluation(
         direction=direction,
-        state=state,
         metrics=metrics,
         checks=tuple(checks),
-        prz=prz,
         abcd_distance=abcd_distance,
         reasons=tuple(reasons),
+    )
+
+
+def match_xabcd(
+    rule: PatternRule,
+    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
+    *,
+    include_source_tolerance: bool = True,
+    abcd_relative_tolerance: float = 0.03,
+    harmonic_family_relative_tolerance: float = 0.03,
+) -> PatternEvaluation | None:
+    """Return a full completed match, or ``None`` without building PRZ for a rejection.
+
+    This is the Scanner/research hot-path API. It is semantically identical to asking
+    ``evaluate_xabcd(...).passed`` but avoids constructing the much richer M2.26 component
+    audit for the overwhelming majority of rule/candidate pairs that already fail identity.
+    """
+    identity = _evaluate_identity(
+        rule,
+        points,
+        include_source_tolerance=include_source_tolerance,
+        abcd_relative_tolerance=abcd_relative_tolerance,
+        harmonic_family_relative_tolerance=harmonic_family_relative_tolerance,
+    )
+    if not identity.passed:
+        return None
+
+    x, a, b, c, _ = points
+    prz = build_xabcd_prz(rule, (x, a, b, c))
+    return PatternEvaluation(
+        pattern_id=rule.pattern_id,
+        direction=identity.direction,
+        state=PatternState.COMPLETED,
+        metrics=identity.metrics,
+        checks=identity.checks,
+        prz=prz,
+        abcd_distance=identity.abcd_distance,
+        reasons=(),
+    )
+
+
+def evaluate_xabcd(
+    rule: PatternRule,
+    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
+    *,
+    include_source_tolerance: bool = True,
+    abcd_relative_tolerance: float = 0.03,
+    harmonic_family_relative_tolerance: float = 0.03,
+) -> PatternEvaluation:
+    """Evaluate one completed XABCD candidate against one Carney rule.
+
+    The public audit evaluator preserves the historical contract and therefore still emits
+    a projected PRZ even for a rejected candidate. High-volume Scanner/research code should
+    use :func:`match_xabcd`, which shares the exact same identity logic but constructs PRZ
+    only after that identity passes.
+    """
+    identity = _evaluate_identity(
+        rule,
+        points,
+        include_source_tolerance=include_source_tolerance,
+        abcd_relative_tolerance=abcd_relative_tolerance,
+        harmonic_family_relative_tolerance=harmonic_family_relative_tolerance,
+    )
+    x, a, b, c, _ = points
+    prz = build_xabcd_prz(rule, (x, a, b, c))
+    return PatternEvaluation(
+        pattern_id=rule.pattern_id,
+        direction=identity.direction,
+        state=PatternState.COMPLETED if identity.passed else PatternState.REJECTED,
+        metrics=identity.metrics,
+        checks=identity.checks,
+        prz=prz,
+        abcd_distance=identity.abcd_distance,
+        reasons=identity.reasons,
     )
