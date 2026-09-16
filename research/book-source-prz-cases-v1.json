@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "ledger_id": "book-source-prz-cases-v1",
+  "authority": "Scott M. Carney, Harmonic Trading Volumes One/Two/Three",
+  "scope": "Source-measurement membership and reported PRZ evidence for M2.27. This ledger does not invent X/A/B/C coordinates when the prose/figure does not expose them reliably.",
+  "selector_coordinate_regression_policy": "A case may constrain source membership without being used as a coordinate-level selector oracle. Coordinate regression requires reliable source pivot prices; approximate chart reading is insufficient.",
+  "cases": [
+    {
+      "case_id": "v1-gartley-plce-weekly",
+      "pattern_id": "gartley",
+      "volume": 1,
+      "printed_pages": [111],
+      "instrument": "Children's Place (PLCE)",
+      "timeframe": "Weekly",
+      "direction": "bullish",
+      "source_components": [
+        {"kind": "xa", "ratio": 0.786, "role": "defining"},
+        {"kind": "bc", "ratio": 1.41, "role": "complementary"},
+        {"kind": "abcd", "ratio": 1.0, "role": "distinct_completion", "ratio_precision": "family_inferred_from_AB=CD_label_not_printed_numeric"}
+      ],
+      "reported_prz": {"low": 8.45, "high": 8.65, "precision": "explicit_text"},
+      "evidence_level": "market_example_explicit_range",
+      "coordinate_regression_eligible": false,
+      "notes": "Text states AB=CD completion, 0.786 XA and 1.41 BC converged in a tight quarter-point range from 8.45 to 8.65."
+    },
+    {
+      "case_id": "v1-bat-jpm-weekly",
+      "pattern_id": "bat",
+      "volume": 1,
+      "printed_pages": [91, 92],
+      "instrument": "J.P. Morgan (JPM)",
+      "timeframe": "Weekly",
+      "direction": "bearish",
+      "source_components": [
+        {"kind": "xa", "ratio": 0.886, "role": "defining", "reported_price": 55.40},
+        {"kind": "bc", "ratio": 1.618, "role": "complementary", "reported_price": 53.33},
+        {"kind": "abcd", "ratio": 1.27, "role": "complementary", "reported_price": 53.33, "price_precision": "converged_almost_exactly"}
+      ],
+      "reported_prz": {"low": 53.30, "high": 55.40, "precision": "explicit_text"},
+      "evidence_level": "market_example_explicit_range",
+      "coordinate_regression_eligible": false,
+      "notes": "0.886 XA is explicitly called the defining upside limit after a full PRZ test."
+    },
+    {
+      "case_id": "v1-bat-dji-weekly",
+      "pattern_id": "bat",
+      "volume": 1,
+      "printed_pages": [83, 84],
+      "instrument": "Dow Jones Industrial Average (^DJI)",
+      "timeframe": "Weekly",
+      "direction": "bullish",
+      "source_components": [
+        {"kind": "xa", "ratio": 0.886, "role": "defining", "reported_price": 7400, "price_precision": "rounded_text"},
+        {"kind": "bc", "ratio": 2.24, "role": "complementary", "reported_price": 7400, "price_precision": "just_under"},
+        {"kind": "abcd", "ratio": 1.618, "role": "complementary", "reported_price": 7500}
+      ],
+      "reported_prz": {"low": 7400, "high": 7500, "precision": "rounded_text"},
+      "evidence_level": "market_example_approximate_range",
+      "coordinate_regression_eligible": false,
+      "notes": "Demonstrates that a valid Bat is not restricted to the Perfect-Bat 2.0 BC / 1.27 AB=CD combination."
+    },
+    {
+      "case_id": "v1-perfect-bat-ara-weekly",
+      "pattern_id": "bat",
+      "volume": 1,
+      "printed_pages": [97, 98, 99, 100],
+      "instrument": "Aracruz Cellulose ADR (ARA)",
+      "timeframe": "Weekly",
+      "direction": "bullish",
+      "source_components": [
+        {"kind": "xa", "ratio": 0.886, "role": "defining", "reported_price": 14.233, "price_precision": "figure_annotation"},
+        {"kind": "bc", "ratio": 2.0, "role": "complementary", "reported_price": 14.000, "price_precision": "figure_annotation"},
+        {"kind": "abcd", "ratio": 1.27, "role": "complementary", "reported_price": 14.161, "price_precision": "figure_annotation"}
+      ],
+      "reported_prz": {"low": 14.0, "high": 14.233, "precision": "figure_annotations_and_text_around_14"},
+      "evidence_level": "market_example_figure_annotated_with_known_source_tension",
+      "coordinate_regression_eligible": false,
+      "known_source_tension": "The printed Perfect Bat specification simultaneously states B=0.50, C=0.50-0.618, D=0.886 XA, BC=2.0 and alternate 1.27 AB=CD. Under standard leg-length projection these ideal ratios do not all share one exact algebraic D. The ARA chart nevertheless shows three nearby measured prices. M2.27 records the tension and does not mutate projection formulas to force exact coincidence.",
+      "notes": "Use as source-family/market-example evidence only until reliable source pivot coordinates reconcile the figure."
+    },
+    {
+      "case_id": "v1-butterfly-cin-daily",
+      "pattern_id": "butterfly",
+      "volume": 1,
+      "printed_pages": [153, 154, 155],
+      "instrument": "Cinergy (CIN)",
+      "timeframe": "Daily",
+      "direction": "bullish",
+      "source_components": [
+        {"kind": "xa", "ratio": 1.27, "role": "defining", "reported_price": 25.25},
+        {"kind": "bc", "ratio": 1.618, "role": "complementary"},
+        {"kind": "abcd", "ratio": 1.27, "role": "complementary"}
+      ],
+      "reported_prz": {"low": 25.25, "high": 26.0, "precision": "lower_exact_upper_textual_under_26"},
+      "evidence_level": "market_example_partial_numeric_range",
+      "coordinate_regression_eligible": false,
+      "notes": "1.27 XA defines the lower range; alternate 1.27 AB=CD and 1.618 BC contribute to support just under 26."
+    },
+    {
+      "case_id": "v1-butterfly-clz3-60m",
+      "pattern_id": "butterfly",
+      "volume": 1,
+      "printed_pages": [156],
+      "instrument": "NYMEX Crude Dec 2003 (CL_Z3)",
+      "timeframe": "60-Minute",
+      "direction": "bullish",
+      "source_components": [
+        {"kind": "xa", "ratio": 1.27, "role": "defining", "reported_price": 29.52},
+        {"kind": "bc", "ratio": 1.618, "role": "complementary", "reported_price": 29.60},
+        {"kind": "abcd", "ratio": 1.0, "role": "minimum_completion", "reported_price": 29.60, "price_precision": "complemented_area"}
+      ],
+      "reported_prz": {"low": 29.52, "high": 29.60, "precision": "explicit_text"},
+      "evidence_level": "market_example_explicit_range",
+      "coordinate_regression_eligible": false,
+      "notes": "A compact non-perfect Butterfly example with equivalent AB=CD rather than forcing alternate 1.27 AB=CD."
+    },
+    {
+      "case_id": "v1-perfect-crab-hd-15m",
+      "pattern_id": "crab",
+      "volume": 1,
+      "printed_pages": [145, 146, 147],
+      "instrument": "Home Depot (HD)",
+      "timeframe": "15-Minute",
+      "direction": "bullish",
+      "source_components": [
+        {"kind": "xa", "ratio": 1.618, "role": "defining", "reported_price": 32.55},
+        {"kind": "bc", "ratio": 3.14, "role": "primary_complementary"},
+        {"kind": "abcd", "ratio": 1.618, "role": "secondary_complementary"}
+      ],
+      "reported_prz": {"low": 32.55, "high": 33.0, "precision": "lower_exact_upper_textual_under_33"},
+      "evidence_level": "market_example_partial_numeric_range",
+      "coordinate_regression_eligible": false,
+      "notes": "Supports XA+extreme-BC priority: 1.618 XA is the lowest PRZ point, with 1.618 AB=CD and 3.14 BC contributing."
+    },
+    {
+      "case_id": "v1-crab-nqz3-30m",
+      "pattern_id": "crab",
+      "volume": 1,
+      "printed_pages": [214, 215],
+      "instrument": "NASDAQ 100 Dec 2003 Mini (NQ_Z3)",
+      "timeframe": "30-Minute",
+      "direction": "bullish",
+      "source_components": [
+        {"kind": "xa", "ratio": 1.618, "role": "defining", "reported_price": 1360.40},
+        {"kind": "bc", "ratio": 3.618, "role": "primary_complementary", "reported_price": 1362.0}
+      ],
+      "reported_prz": {"low": 1360.0, "high": 1362.0, "precision": "textual_1360_area_plus_explicit_components"},
+      "evidence_level": "market_example_partial_component_set",
+      "coordinate_regression_eligible": false,
+      "notes": "Useful evidence for XA+BC principal-axis treatment even when the prose excerpt does not numerically state the AB=CD component."
+    },
+    {
+      "case_id": "v1-deep-crab-nqz3-15m",
+      "pattern_id": "deep_crab",
+      "volume": 1,
+      "printed_pages": [140, 141],
+      "instrument": "NASDAQ 100 Dec 2003 Mini (NQ_Z3)",
+      "timeframe": "15-Minute",
+      "direction": "bearish",
+      "source_components": [
+        {"kind": "xa", "ratio": 1.618, "role": "defining"},
+        {"kind": "bc", "ratio": 3.14, "role": "complementary"},
+        {"kind": "abcd", "ratio": 1.27, "role": "complementary"}
+      ],
+      "reported_prz": {"low": 1427.0, "high": null, "precision": "textual_just_above_1427"},
+      "evidence_level": "market_example_approximate_level",
+      "coordinate_regression_eligible": false,
+      "notes": "Text explicitly states all three measurements converged just above 1427."
+    }
+  ],
+  "known_open_items": [
+    "Extract reliable X/A/B/C coordinates for a subset of book market examples before calling selector behavior coordinate-figure-backed.",
+    "Reconcile the Perfect Bat ideal-ratio tension without changing Carney leg-length formulas by fiat.",
+    "Alternate Bat remains source-conflict and is excluded from executable Source PRZ.",
+    "Standalone AB=CD, Shark and 5-0 require their own Source PRZ Golden profiles."
+  ]
+}
