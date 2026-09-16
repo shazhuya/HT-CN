@@ -11,12 +11,7 @@ _PRICE_FLOOR = 1e-9
 
 @dataclass(frozen=True, slots=True)
 class PRZComponent:
-    """One auditable price component that contributes to a projected reversal area.
-
-    A component can be a single target or a bounded target interval. The originating
-    measurement and ratio bounds remain explicit so downstream layers can explain why a
-    zone exists instead of rendering an opaque rectangle.
-    """
+    """One auditable price component that contributes to a projected reversal area."""
 
     name: str
     price_low: float
@@ -42,22 +37,13 @@ class PRZComponent:
 class PotentialReversalZone:
     """Auditable harmonic measurements plus explicitly separated PRZ semantics.
 
-    Source-fidelity boundary:
+    ``component_envelope_*`` is the outer envelope of every stored measurement/variant and
+    is audit data only. ``ideal_core_*`` is HT-CN's narrow convergence selection. Neither
+    is automatically the source Raw PRZ.
 
-    ``component_envelope_*`` is the outer envelope of every stored measurement/variant.
-    It is useful for audit but MUST NOT automatically be called the Carney Raw PRZ because
-    some pattern registries intentionally retain alternate AB=CD variants for comparison.
-
-    ``ideal_core_*`` is the narrower HT-CN convergence selection used by the current UI and
-    geometry-quality layer. It MUST NOT be described as the entire source PRZ.
-
-    ``source_prz_low/high`` are deliberately optional. They may be populated only when a
-    pattern-specific source review/Book Golden Set has frozen which measurements actually
-    constitute the executable Carney PRZ. Downstream execution logic must fail closed when
-    these bounds are unknown instead of substituting the ideal core or component envelope.
-
-    ``price_low``/``price_high`` remain backward-compatible aliases for ``ideal_core_*``
-    until downstream payloads are migrated to explicit names.
+    ``source_prz_low/high`` may be populated only after pattern-specific textbook Golden
+    Cases freeze the executable Carney PRZ. Execution logic fails closed when these bounds
+    are unknown.
     """
 
     pattern_id: str
@@ -83,33 +69,30 @@ class PotentialReversalZone:
 
     @property
     def component_envelope_low(self) -> float:
-        """Outer audit envelope across every stored component/variant."""
         return min(component.price_low for component in self.components)
 
     @property
     def component_envelope_high(self) -> float:
-        """Outer audit envelope across every stored component/variant."""
         return max(component.price_high for component in self.components)
 
     @property
     def component_price_low(self) -> float:
-        """Backward-compatible alias for ``component_envelope_low``."""
         return self.component_envelope_low
 
     @property
     def component_price_high(self) -> float:
-        """Backward-compatible alias for ``component_envelope_high``."""
         return self.component_envelope_high
 
     @property
     def convergence_prices(self) -> tuple[float, ...]:
-        """Representative prices that form the current HT-CN ideal convergence core.
+        """Representative measurements that form the current HT-CN ideal core.
 
-        Standard XABCD structures anchor on the defining XA completion and select the
-        complementary BC / AB=CD measurements that converge most closely with it.
+        Standard XABCD structures anchor on the defining XA completion, then select the
+        single discrete BC projection and single AB=CD variant that converge most closely
+        with that anchor. This replaces the older behavior where a continuous BC min/max
+        interval could manufacture a mathematically convenient but non-harmonic midpoint.
 
-        Shark is structurally different: its ideal core is the overlap of the 0B
-        0.886-1.13 completion range and the 1.618-2.24 AB impulse range.
+        Shark retains its dedicated overlap semantics.
         """
         if self.pattern_id == "shark" and len(self.components) >= 2:
             overlap_low = max(component.price_low for component in self.components)
@@ -121,17 +104,26 @@ class PotentialReversalZone:
         anchor = xa[0].midpoint if xa else self.components[0].midpoint
         prices: list[float] = [anchor]
 
-        non_abcd = [
-            component
-            for component in self.components
-            if component.name != "XA completion" and not component.name.startswith("AB=CD")
+        bc_components = [
+            component for component in self.components if component.name.startswith("BC projection")
         ]
-        prices.extend(component.nearest_price(anchor) for component in non_abcd)
+        if bc_components:
+            best_bc = min(bc_components, key=lambda component: abs(component.midpoint - anchor))
+            prices.append(best_bc.midpoint)
 
         abcd = [component for component in self.components if component.name.startswith("AB=CD")]
         if abcd:
-            best = min(abcd, key=lambda component: abs(component.midpoint - anchor))
-            prices.append(best.midpoint)
+            best_abcd = min(abcd, key=lambda component: abs(component.midpoint - anchor))
+            prices.append(best_abcd.midpoint)
+
+        other = [
+            component
+            for component in self.components
+            if component.name != "XA completion"
+            and not component.name.startswith("BC projection")
+            and not component.name.startswith("AB=CD")
+        ]
+        prices.extend(component.nearest_price(anchor) for component in other)
 
         return tuple(prices)
 
@@ -159,7 +151,6 @@ class PotentialReversalZone:
 
     @property
     def width(self) -> float:
-        """Legacy alias for ``ideal_core_width``."""
         return self.ideal_core_width
 
 
@@ -227,18 +218,30 @@ def _component_from_constraint(
     )
 
 
+def _point_component(*, name: str, ratio: float, price: float) -> PRZComponent | None:
+    if price <= 0:
+        return None
+    return PRZComponent(
+        name=name,
+        price_low=float(price),
+        price_high=float(price),
+        ratio_low=float(ratio),
+        ratio_high=float(ratio),
+    )
+
+
 def build_xabcd_prz(
     rule: PatternRule,
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
 ) -> PotentialReversalZone:
     """Project auditable XABCD measurements from X/A/B/C.
 
-    The returned object deliberately exposes the full component envelope and narrower
-    HT-CN ideal convergence core. It intentionally leaves ``source_prz_*`` unresolved.
-    Those bounds will be populated per pattern only after textbook Golden Cases establish
-    which retained variants belong to the executable source zone.
+    Source-listed discrete BC ratios are projected as distinct measurements. The older
+    continuous band remains in ``PatternRule.constraints`` only as a structural envelope
+    and is not itself rendered as a continuum of equally harmonic completion prices.
 
-    Shark and 5-0 use different segment semantics and dedicated projectors.
+    ``source_prz_*`` remains unresolved until textbook Golden Cases freeze which of the
+    stored measurements/variants form the executable source PRZ for each pattern.
     """
 
     if rule.schema != "XABCD":
@@ -265,29 +268,37 @@ def build_xabcd_prz(
             )
         )
 
-    bc = rule.constraints.get("bc_projection")
-    if bc is not None:
-        components.append(
-            _component_from_constraint(
-                name="BC projection",
-                constraint=bc,
-                projector=lambda ratio: _project_bc_completion(b, c, ratio, direction),
+    bc_targets = rule.harmonic_targets.get("bc_projection", ())
+    if bc_targets:
+        for ratio in bc_targets:
+            component = _point_component(
+                name=f"BC projection x{ratio:g}",
+                ratio=ratio,
+                price=_project_bc_completion(b, c, ratio, direction),
             )
-        )
+            if component is not None:
+                components.append(component)
+    else:
+        # Fallback exists only for a rule whose source has not yet been encoded as a
+        # discrete family. Standard production XABCD rules should not use this branch.
+        bc = rule.constraints.get("bc_projection")
+        if bc is not None:
+            components.append(
+                _component_from_constraint(
+                    name="BC projection envelope",
+                    constraint=bc,
+                    projector=lambda ratio: _project_bc_completion(b, c, ratio, direction),
+                )
+            )
 
     for ratio in rule.abcd_types:
-        price = _project_abcd_completion(a, b, c, ratio, direction)
-        if price <= 0:
-            continue
-        components.append(
-            PRZComponent(
-                name=f"AB=CD x{ratio:g}",
-                price_low=price,
-                price_high=price,
-                ratio_low=ratio,
-                ratio_high=ratio,
-            )
+        component = _point_component(
+            name=f"AB=CD x{ratio:g}",
+            ratio=ratio,
+            price=_project_abcd_completion(a, b, c, ratio, direction),
         )
+        if component is not None:
+            components.append(component)
 
     if not components:
         raise ValueError(f"rule {rule.pattern_id!r} has no reachable XABCD PRZ components")
