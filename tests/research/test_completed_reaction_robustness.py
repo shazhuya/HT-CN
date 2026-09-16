@@ -119,6 +119,8 @@ def test_fast_confirmation_is_rejected_when_it_is_exact_scale_alias() -> None:
 
 def test_family_instability_blocks_geometry_candidate_even_if_aggregate_is_positive() -> None:
     records: list[dict] = []
+    # Aggregate geometry evidence is favorable, but SHARK moves the other way. This is the
+    # exact counterexample M2.16 must reject instead of promoting an aggregate-only result.
     for index in range(10):
         records.append(
             _row(
@@ -127,7 +129,7 @@ def test_family_instability_blocks_geometry_candidate_even_if_aggregate_is_posit
                 family="ABCD",
                 scale=3 if index % 2 == 0 else 8,
                 geometry=95.0 if index < 4 else 70.0,
-                hit_t1=True if index < 4 else index % 2 == 0,
+                hit_t1=index < 4,
             )
         )
     for index in range(10, 20):
@@ -138,7 +140,7 @@ def test_family_instability_blocks_geometry_candidate_even_if_aggregate_is_posit
                 family="SHARK",
                 scale=5 if index % 2 == 0 else 8,
                 geometry=95.0 if index < 14 else 70.0,
-                hit_t1=False if index < 14 else True,
+                hit_t1=index in {14, 16},
             )
         )
     for index in range(6):
@@ -149,7 +151,7 @@ def test_family_instability_blocks_geometry_candidate_even_if_aggregate_is_posit
                 family="ABCD",
                 scale=3 if index % 2 == 0 else 8,
                 geometry=95.0 if index < 2 else 70.0,
-                hit_t1=True if index < 2 else index % 3 == 0,
+                hit_t1=index < 2,
             )
         )
     for index in range(6, 12):
@@ -160,7 +162,7 @@ def test_family_instability_blocks_geometry_candidate_even_if_aggregate_is_posit
                 family="SHARK",
                 scale=5 if index % 2 == 0 else 8,
                 geometry=95.0 if index < 8 else 70.0,
-                hit_t1=True if index < 8 else index % 2 == 0,
+                hit_t1=index in {8, 10},
             )
         )
 
