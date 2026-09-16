@@ -15,6 +15,14 @@ class SourcePRZEvidence:
 
 
 SOURCE_PRZ_EVIDENCE: dict[str, SourcePRZEvidence] = {
+    "abcd": SourcePRZEvidence(
+        pattern_id="abcd",
+        evidence_level="source_specification_plus_market_examples",
+        source_membership_authority="carney_vol1_vol3",
+        selection_authority="carney_exact_abcd_plus_primary_reciprocal_bc",
+        market_case_ids=("v1-abcd-nqh4-10m", "v3-abcd-eurusd-15m"),
+        coordinate_regression_status="source_price_examples_recorded_pivots_pending",
+    ),
     "gartley": SourcePRZEvidence(
         pattern_id="gartley",
         evidence_level="source_specification_plus_market_examples",
