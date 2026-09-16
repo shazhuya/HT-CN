@@ -27,6 +27,8 @@ const basePattern = {
     price_low: 104.2,
     price_high: 104.4,
     width: 0.2,
+    source_prz_low: null,
+    source_prz_high: null,
     components: [
       { name: 'XA completion', price_low: 104.28, price_high: 104.28, ratio_low: 0.786, ratio_high: 0.786 },
     ],
@@ -44,6 +46,7 @@ function reactionAudit(overrides: Record<string, unknown> = {}) {
     bars_to_618: null,
     first_prz_exit_bar: 1,
     secondary_prz_retest_bar: null,
+    source_prz_available: false,
     full_prz_retest_bar: null,
     type_ii_terminal_bar: null,
     reversal_exit_after_retest_bar: null,
@@ -111,13 +114,13 @@ test('forming candidate stays explicitly uncompleted and waits for source-aligne
   await expect(page.getByTestId('type-i-target-t2')).toHaveCount(0)
 })
 
-test('retrospective T1 reached keeps T2 versus retest as the next fork and chart states agree', async ({ page }) => {
+test('retrospective T1 reached remains explicitly separate from source execution clock', async ({ page }) => {
   await openScenario(page, {
     ...basePattern,
     reaction_audit: reactionAudit({ bars_to_382: 2 }),
   })
   await expect(page.getByText('后验 Type-I · 已到 T1，T2 未到')).toBeVisible()
-  await expect(page.getByText(/后验 T2 与二次完整回测哪一个先发生/)).toBeVisible()
+  await expect(page.getByText(/Type-II 仍要求明确 source PRZ/)).toBeVisible()
   await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-state', 'reached')
   await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-state', 'pending')
   await expect(page.getByText(/后验T1 38\.2% · 110\.28 · 已到达/)).toBeVisible()
@@ -135,12 +138,28 @@ test('retrospective T2 reached is not mislabeled as source-aligned execution or 
   await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-state', 'reached')
 })
 
-test('partial secondary overlap is not promoted to Type-II Terminal Price Bar', async ({ page }) => {
+test('re-entry cannot become Type-II while source PRZ remains unresolved', async ({ page }) => {
   await openScenario(page, {
     ...basePattern,
     reaction_audit: reactionAudit({
       bars_to_382: 2,
       secondary_prz_retest_bar: 7,
+      source_prz_available: false,
+      type_ii_evidence_state: 'source_prz_unresolved',
+    }),
+  })
+  await expect(page.getByText('二次重入已见 · Source PRZ 未冻结')).toBeVisible()
+  await expect(page.getByText(/禁止把这次重入升级为 Type-II/)).toBeVisible()
+})
+
+test('partial secondary source PRZ overlap is not promoted to Type-II Terminal Price Bar', async ({ page }) => {
+  await openScenario(page, {
+    ...basePattern,
+    prz: { ...basePattern.prz, source_prz_low: 104.0, source_prz_high: 104.5 },
+    reaction_audit: reactionAudit({
+      bars_to_382: 2,
+      secondary_prz_retest_bar: 7,
+      source_prz_available: true,
       type_ii_evidence_state: 'partial_retest_only',
     }),
   })
@@ -148,13 +167,15 @@ test('partial secondary overlap is not promoted to Type-II Terminal Price Bar', 
   await expect(page.getByText(/不是 Type-II Terminal Price Bar/)).toBeVisible()
 })
 
-test('full retest with price and RSI evidence stays explicitly non-BAMM', async ({ page }) => {
+test('full source PRZ retest with price and RSI evidence stays explicitly non-BAMM', async ({ page }) => {
   await openScenario(page, {
     ...basePattern,
+    prz: { ...basePattern.prz, source_prz_low: 104.0, source_prz_high: 104.5 },
     reaction_audit: reactionAudit({
       bars_to_382: 2,
       bars_to_618: 5,
       secondary_prz_retest_bar: 7,
+      source_prz_available: true,
       full_prz_retest_bar: 8,
       type_ii_terminal_bar: 8,
       reversal_exit_after_retest_bar: 9,
