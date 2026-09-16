@@ -1,6 +1,7 @@
 import pytest
 
-from htcn.harmonic.evaluator import evaluate_xabcd, measure_xabcd
+import htcn.harmonic.evaluator as evaluator_module
+from htcn.harmonic.evaluator import evaluate_xabcd, match_xabcd, measure_xabcd
 from htcn.harmonic.models import HarmonicPoint, PatternDirection, PatternState
 from htcn.harmonic.prz import build_xabcd_prz
 from htcn.harmonic.rules import CARNEY_RULES
@@ -31,7 +32,7 @@ def _bullish_crab_with_nonideal_abcd() -> tuple[HarmonicPoint, ...]:
     # XA=20, B/XA=.50, C/AB=.88, D/XA=1.618, BC projection≈3.541.
     # CD/AB≈3.116 is deliberately far from the common 1.0/1.27/1.618 variants.
     # The source defines a minimum AB=CD plus the defining XA/BC geometry, so this
-    # should remain an identity match while receiving a softer geometry score later.
+    # remains an identity match while receiving a softer geometry score later.
     return (
         HarmonicPoint("X", 0, 100.0),
         HarmonicPoint("A", 10, 120.0),
@@ -61,6 +62,31 @@ def test_exact_bearish_gartley_completes() -> None:
     result = evaluate_xabcd(CARNEY_RULES["gartley"], _bearish_gartley())
     assert result.state is PatternState.COMPLETED
     assert result.direction is PatternDirection.BEARISH
+
+
+def test_match_xabcd_passed_path_is_identical_to_full_evaluator() -> None:
+    full = evaluate_xabcd(CARNEY_RULES["gartley"], _bullish_gartley())
+    matched = match_xabcd(CARNEY_RULES["gartley"], _bullish_gartley())
+    assert matched is not None
+    assert matched.pattern_id == full.pattern_id
+    assert matched.direction is full.direction
+    assert matched.state is full.state
+    assert matched.metrics == full.metrics
+    assert matched.checks == full.checks
+    assert matched.abcd_distance == full.abcd_distance
+    assert matched.reasons == full.reasons
+    assert matched.prz == full.prz
+
+
+def test_match_xabcd_rejection_never_builds_prz(monkeypatch: pytest.MonkeyPatch) -> None:
+    points = list(_bullish_gartley())
+    points[2] = HarmonicPoint("B", 20, 150.0)
+
+    def _unexpected_prz(*args: object, **kwargs: object) -> object:
+        raise AssertionError("rejected Scanner candidate must not construct a PRZ")
+
+    monkeypatch.setattr(evaluator_module, "build_xabcd_prz", _unexpected_prz)
+    assert match_xabcd(CARNEY_RULES["gartley"], tuple(points)) is None
 
 
 def test_wrong_b_point_rejects_gartley() -> None:
@@ -97,19 +123,35 @@ def test_gartley_below_minimum_abcd_rejects_even_when_other_ratios_fit() -> None
     assert any("below source minimum" in reason for reason in result.reasons)
 
 
-def test_forming_gartley_prz_uses_convergence_not_outer_union() -> None:
+def test_gartley_prz_separates_component_envelope_from_ideal_core() -> None:
     x, a, b, c, _ = _bullish_gartley()
     prz = build_xabcd_prz(CARNEY_RULES["gartley"], (x, a, b, c))
     xa_component = next(component for component in prz.components if component.name == "XA completion")
     assert xa_component.price_low == pytest.approx(121.4)
     assert xa_component.price_high == pytest.approx(121.4)
     assert prz.direction is PatternDirection.BULLISH
-    # Full component envelope still contains alternate BC/AB=CD possibilities for audit.
-    assert prz.component_price_low < prz.price_low
-    assert prz.component_price_high > prz.price_high
-    # But the actual display/quality PRZ is the tight convergent cluster.
-    assert prz.price_low == pytest.approx(121.4)
-    assert prz.price_high == pytest.approx(121.4)
+
+    # The component envelope contains every stored discrete harmonic measurement/variant.
+    # It is an audit envelope only and is intentionally not renamed to the source Raw PRZ.
+    assert prz.component_envelope_low == pytest.approx(prz.component_price_low)
+    assert prz.component_envelope_high == pytest.approx(prz.component_price_high)
+    assert prz.component_envelope_low < prz.ideal_core_low
+    assert prz.component_envelope_high > prz.ideal_core_high
+
+    # The HT-CN ideal core is a convergence selection, not an alias for the XA target.
+    # The defining XA completion must remain inside it, while multiple nearby discrete
+    # measurements are allowed to give the core a non-zero width.
+    assert prz.ideal_core_low <= xa_component.midpoint <= prz.ideal_core_high
+    assert prz.ideal_core_width >= 0.0
+    assert prz.price_low == pytest.approx(prz.ideal_core_low)
+    assert prz.price_high == pytest.approx(prz.ideal_core_high)
+    assert prz.width == pytest.approx(prz.ideal_core_width)
+
+    # Until a textbook Golden Set freezes the executable source zone, downstream
+    # Terminal/Type-II logic must fail closed instead of promoting this ideal core.
+    assert prz.has_source_prz is False
+    assert prz.source_prz_low is None
+    assert prz.source_prz_high is None
 
 
 def test_non_xabcd_rules_cannot_enter_xabcd_prz_path() -> None:

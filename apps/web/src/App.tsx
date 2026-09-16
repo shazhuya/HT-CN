@@ -51,6 +51,40 @@ function fmt(value: number | undefined) {
   return value == null ? '—' : value.toFixed(3)
 }
 
+function priceRange(low: number | null | undefined, high: number | null | undefined) {
+  if (low == null || high == null) return '未冻结 · fail closed'
+  return `${low.toFixed(2)} – ${high.toFixed(2)}`
+}
+
+function idealCoreLabel(pattern: Pattern) {
+  const layer = pattern.prz.ideal_core
+  return priceRange(layer?.price_low ?? pattern.prz.price_low, layer?.price_high ?? pattern.prz.price_high)
+}
+
+function componentEnvelopeLabel(pattern: Pattern) {
+  const layer = pattern.prz.component_envelope
+  return priceRange(
+    layer?.price_low ?? pattern.prz.component_price_low ?? pattern.prz.price_low,
+    layer?.price_high ?? pattern.prz.component_price_high ?? pattern.prz.price_high,
+  )
+}
+
+function sourcePrzLabel(pattern: Pattern) {
+  const source = pattern.prz.source_prz
+  if (source) {
+    if (!source.available) return '未冻结 · fail closed'
+    return priceRange(source.price_low, source.price_high)
+  }
+  return priceRange(pattern.prz.source_prz_low, pattern.prz.source_prz_high)
+}
+
+function sharkTargetBasisLabel(value: string | undefined) {
+  if (value === '50_percent') return '50% BC 回撤先到'
+  if (value === 'reciprocal_abcd') return 'Reciprocal AB=CD 先到'
+  if (value === '50_percent_and_reciprocal_abcd_tie') return '50% 与 Reciprocal AB=CD 同位'
+  return '—'
+}
+
 function primaryCount(patterns: Pattern[]) {
   return patterns.filter((pattern) => pattern.is_primary_identity !== false).length
 }
@@ -60,8 +94,11 @@ function hitLabel(value: number | null | undefined) {
 }
 
 function evidenceLabel(state: string) {
-  if (state === 'price_and_rsi_confirmed') return '价格 + RSI 证据'
-  if (state === 'price_confirmed_no_rsi') return '仅价格证据'
+  if (state === 'price_and_rsi_confirmed') return '后验价格 + Wilder RSI 辅助证据'
+  if (state === 'price_confirmed_no_rsi') return '后验仅价格证据'
+  if (state === 'full_retest_waiting_price') return 'Source PRZ 完整回测 · 等价格确认'
+  if (state === 'partial_retest_only') return '仅部分 Source PRZ 回测'
+  if (state === 'source_prz_unresolved') return 'Source PRZ 未冻结 · 禁止升级'
   if (state === 'retest_only') return '仅二次回测'
   return '非 Type-II 候选'
 }
@@ -239,7 +276,7 @@ export default function App() {
               <div className="panel-heading small">
                 <div>
                   <span className="kicker">候选列表</span>
-                  <h2>形态与 PRZ</h2>
+                  <h2>形态与价格区</h2>
                 </div>
               </div>
               <label className="toggle-line identity-toggle">
@@ -334,14 +371,23 @@ export default function App() {
                     </dl>
                   )}
 
-                  {isFiveZero(selectedPattern) && selectedPattern.completion_class && (
+                  {isFiveZero(selectedPattern) && (
                     <p className="identity-note">
-                      5-0 完成分类：{selectedPattern.completion_class === 'volume2_50' ? 'Volume Two 50% 核心完成' : 'Volume Three 61.8% 执行细化'}。50% 是原始定义完成位，61.8% 用作第三卷的执行/失效边界细化。
+                      5-0 当前是 Source Conflict 研究态，默认生产扫描不会发布。Volume Two 的结构完成语义与 Volume Three 的执行细化尚未完成图例级 reconciliation；这里保留比例只用于审计，禁止压成一个“已解决”的生产区间。
                     </p>
                   )}
 
-                  <h3>PRZ</h3>
-                  <p className="prz-price">{selectedPattern.prz.price_low.toFixed(2)} – {selectedPattern.prz.price_high.toFixed(2)}</p>
+                  <h3>价格区语义</h3>
+                  <dl>
+                    <div><dt>HT-CN收敛核心</dt><dd>{idealCoreLabel(selectedPattern)}</dd></div>
+                    <div><dt>组件审计包络</dt><dd>{componentEnvelopeLabel(selectedPattern)}</dd></div>
+                    <div><dt>Source PRZ</dt><dd>{sourcePrzLabel(selectedPattern)}</dd></div>
+                  </dl>
+                  <p className="identity-note">
+                    图中着色区与旧 price_low/high 均表示 HT-CN 收敛核心，不等于 Carney Source PRZ。Source PRZ 未经 Book Golden Set 冻结时，Terminal / PEZ / Type-II 一律 fail closed。
+                  </p>
+
+                  <h3>组件测量审计</h3>
                   <ul>
                     {selectedPattern.prz.components.map((component) => (
                       <li key={`${component.name}-${component.ratio_low}-${component.ratio_high}`}>
@@ -355,9 +401,16 @@ export default function App() {
                     <>
                       <h3>Shark 反应目标审计</h3>
                       <dl>
-                        <div><dt>50%目标</dt><dd>{selectedPattern.reaction_targets.target_50.toFixed(2)}</dd></div>
+                        {selectedPattern.reaction_targets.initial_target != null && (
+                          <>
+                            <div><dt>原书第一目标</dt><dd>{selectedPattern.reaction_targets.initial_target.toFixed(2)}</dd></div>
+                            <div><dt>第一目标依据</dt><dd>{sharkTargetBasisLabel(selectedPattern.reaction_targets.initial_target_basis)}</dd></div>
+                            <div><dt>到达第一目标</dt><dd>{hitLabel(selectedPattern.reaction_targets.bars_to_initial_target)}</dd></div>
+                          </>
+                        )}
+                        <div><dt>50% BC回撤</dt><dd>{selectedPattern.reaction_targets.target_50.toFixed(2)}</dd></div>
                         <div><dt>到达50%</dt><dd>{hitLabel(selectedPattern.reaction_targets.bars_to_50)}</dd></div>
-                        <div><dt>61.8%目标</dt><dd>{selectedPattern.reaction_targets.target_618.toFixed(2)}</dd></div>
+                        <div><dt>61.8% BC回撤</dt><dd>{selectedPattern.reaction_targets.target_618.toFixed(2)}</dd></div>
                         <div><dt>到达61.8%</dt><dd>{hitLabel(selectedPattern.reaction_targets.bars_to_618)}</dd></div>
                         <div><dt>Reciprocal AB=CD</dt><dd>{selectedPattern.reaction_targets.reciprocal_abcd.toFixed(2)}</dd></div>
                         <div><dt>到达Reciprocal</dt><dd>{hitLabel(selectedPattern.reaction_targets.bars_to_reciprocal_abcd)}</dd></div>
@@ -368,20 +421,32 @@ export default function App() {
 
                   {selectedPattern.state === 'completed' && selectedPattern.reaction_audit && (
                     <>
-                      <h3>Reaction vs. Reversal 审计</h3>
+                      <h3>后验 Reaction vs. Reversal 审计</h3>
                       <dl>
-                        <div><dt>38.2%目标</dt><dd>{selectedPattern.reaction_audit.target_382.toFixed(2)}</dd></div>
-                        <div><dt>61.8%目标</dt><dd>{selectedPattern.reaction_audit.target_618.toFixed(2)}</dd></div>
-                        <div><dt>到达T1</dt><dd>{hitLabel(selectedPattern.reaction_audit.bars_to_382)}</dd></div>
-                        <div><dt>到达T2</dt><dd>{hitLabel(selectedPattern.reaction_audit.bars_to_618)}</dd></div>
-                        <div><dt>PRZ二次回测</dt><dd>{selectedPattern.reaction_audit.secondary_prz_retest_bar == null ? '未观察到' : `D后第 ${selectedPattern.reaction_audit.secondary_prz_retest_bar} 根`}</dd></div>
-                        <div><dt>完整PRZ回测</dt><dd>{selectedPattern.reaction_audit.full_prz_retest_bar == null ? '未观察到' : `D后第 ${selectedPattern.reaction_audit.full_prz_retest_bar} 根`}</dd></div>
+                        <div><dt>后验38.2%目标</dt><dd>{selectedPattern.reaction_audit.target_382.toFixed(2)}</dd></div>
+                        <div><dt>后验61.8%目标</dt><dd>{selectedPattern.reaction_audit.target_618.toFixed(2)}</dd></div>
+                        <div><dt>后验到达T1</dt><dd>{hitLabel(selectedPattern.reaction_audit.bars_to_382)}</dd></div>
+                        <div><dt>后验到达T2</dt><dd>{hitLabel(selectedPattern.reaction_audit.bars_to_618)}</dd></div>
+                        <div>
+                          <dt>{selectedPattern.reaction_audit.source_prz_available ? 'Source PRZ二次回测' : '观察区二次重入'}</dt>
+                          <dd>{selectedPattern.reaction_audit.secondary_prz_retest_bar == null ? '未观察到' : `D后第 ${selectedPattern.reaction_audit.secondary_prz_retest_bar} 根`}</dd>
+                        </div>
+                        <div>
+                          <dt>Source PRZ完整回测</dt>
+                          <dd>
+                            {!selectedPattern.reaction_audit.source_prz_available
+                              ? '不可判定 · Source PRZ未冻结'
+                              : selectedPattern.reaction_audit.full_prz_retest_bar == null
+                                ? '未观察到'
+                                : `D后第 ${selectedPattern.reaction_audit.full_prz_retest_bar} 根`}
+                          </dd>
+                        </div>
                         <div><dt>回测后二次离开</dt><dd>{selectedPattern.reaction_audit.bars_to_reversal_exit_after_retest == null ? '未观察到' : `${selectedPattern.reaction_audit.bars_to_reversal_exit_after_retest} 根K线`}</dd></div>
                         <div><dt>第三次测试</dt><dd>{selectedPattern.reaction_audit.third_prz_test_bar == null ? '未观察到' : `D后第 ${selectedPattern.reaction_audit.third_prz_test_bar} 根`}</dd></div>
-                        <div><dt>RSI({selectedPattern.reaction_audit.rsi_period})确认</dt><dd>{selectedPattern.reaction_audit.rsi_confirmation ? '有' : '无'}</dd></div>
+                        <div><dt>Wilder RSI({selectedPattern.reaction_audit.rsi_period})辅助确认</dt><dd>{selectedPattern.reaction_audit.rsi_confirmation ? '有' : '无'}</dd></div>
                         <div><dt>Type-II证据</dt><dd>{evidenceLabel(selectedPattern.reaction_audit.type_ii_evidence_state)}</dd></div>
                       </dl>
-                      <p className="identity-note">Type-II 证据层与形态身份严格分离。RSI 使用 Wilder 标准 14 周期与 30/70 极值区；HSI 属于 Carney 专有指标，HT-CN 不会臆造公式。即便显示“价格 + RSI 证据”，也仍是研究审计状态，不自动转化为交易建议。</p>
+                      <p className="identity-note">Type-II 证据层与形态身份严格分离。当前 RSI 仅是 Wilder 30/70 极值区辅助证据，明确不是 RSI BAMM；后验 T1/T2、价格或 RSI 证据都不会自动转化为实时执行结论或交易建议。</p>
                     </>
                   )}
                 </div>

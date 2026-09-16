@@ -27,6 +27,8 @@ const basePattern = {
     price_low: 104.2,
     price_high: 104.4,
     width: 0.2,
+    source_prz_low: null,
+    source_prz_high: null,
     components: [
       { name: 'XA completion', price_low: 104.28, price_high: 104.28, ratio_low: 0.786, ratio_high: 0.786 },
     ],
@@ -44,7 +46,9 @@ function reactionAudit(overrides: Record<string, unknown> = {}) {
     bars_to_618: null,
     first_prz_exit_bar: 1,
     secondary_prz_retest_bar: null,
+    source_prz_available: false,
     full_prz_retest_bar: null,
+    type_ii_terminal_bar: null,
     reversal_exit_after_retest_bar: null,
     bars_to_reversal_exit_after_retest: null,
     third_prz_test_bar: null,
@@ -60,6 +64,8 @@ function reactionAudit(overrides: Record<string, unknown> = {}) {
     rsi_trigger_bar: null,
     rsi_trigger_value: null,
     rsi_confirmation: false,
+    indicator_evidence_kind: 'wilder_rsi_extreme_reversal',
+    indicator_evidence_is_rsi_bamm: false,
     type_ii_evidence_state: 'not_candidate',
     ...overrides,
   }
@@ -100,41 +106,88 @@ async function openScenario(page: import('@playwright/test').Page, pattern: Reco
   await expect(page.getByTestId('lifecycle-compass')).toBeVisible()
 }
 
-test('forming candidate stays explicitly uncompleted', async ({ page }) => {
+test('forming candidate stays explicitly uncompleted and waits for source-aligned T-Bar', async ({ page }) => {
   await openScenario(page, { ...basePattern, state: 'forming' })
-  await expect(page.getByText('形成中 · 尚未完成')).toBeVisible()
-  await expect(page.getByText(/Terminal Price Bar/)).toBeVisible()
+  const compass = page.getByTestId('lifecycle-compass')
+  await expect(compass.getByText('形成中 · 尚未完成')).toBeVisible()
+  await expect(
+    compass.getByText(
+      '先看价格是否在仍有效的 forming 投影下测试 source PRZ 的最终/极端测量，并形成 Terminal Price Bar。',
+      { exact: true },
+    ),
+  ).toBeVisible()
+  await expect(page.getByTestId('type-i-target-t1')).toHaveCount(0)
+  await expect(page.getByTestId('type-i-target-t2')).toHaveCount(0)
 })
 
-test('Type-I T1 reached keeps T2 versus retest as the next fork', async ({ page }) => {
+test('retrospective T1 reached remains explicitly separate from source execution clock', async ({ page }) => {
   await openScenario(page, {
     ...basePattern,
     reaction_audit: reactionAudit({ bars_to_382: 2 }),
   })
-  await expect(page.getByText('Type-I · 已到 T1，T2 未到')).toBeVisible()
-  await expect(page.getByText(/T2（61.8%）与二次 PRZ 回测哪一个先出现/)).toBeVisible()
+  await expect(page.getByText('后验 Type-I · 已到 T1，T2 未到')).toBeVisible()
+  await expect(page.getByText(/Type-II 仍要求明确 source PRZ/)).toBeVisible()
+  await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-state', 'reached')
+  await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-state', 'pending')
+  await expect(page.getByText(/后验T1 38\.2% · 110\.28 · 已到达/)).toBeVisible()
+  await expect(page.getByText(/后验T2 61\.8% · 114\.00 · 待到达/)).toBeVisible()
 })
 
-test('Type-I T2 reached does not get mislabeled as long-term reversal', async ({ page }) => {
+test('retrospective T2 reached is not mislabeled as source-aligned execution or long-term reversal', async ({ page }) => {
   await openScenario(page, {
     ...basePattern,
     reaction_audit: reactionAudit({ bars_to_382: 2, bars_to_618: 5 }),
   })
-  await expect(page.getByText('Type-I · 已到 T2（61.8%）')).toBeVisible()
-  await expect(page.getByText(/不自动等于长期反转/)).toBeVisible()
+  await expect(page.getByText('后验 Type-I · 已到 T2（61.8%）')).toBeVisible()
+  await expect(page.getByText(/不等于 source-aligned 实时执行完成/)).toBeVisible()
+  await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-state', 'reached')
+  await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-state', 'reached')
 })
 
-test('secondary PRZ retest with price and RSI evidence maps to Type-II evidence state', async ({ page }) => {
+test('re-entry cannot become Type-II while source PRZ remains unresolved', async ({ page }) => {
   await openScenario(page, {
     ...basePattern,
     reaction_audit: reactionAudit({
       bars_to_382: 2,
+      secondary_prz_retest_bar: 7,
+      source_prz_available: false,
+      type_ii_evidence_state: 'source_prz_unresolved',
+    }),
+  })
+  await expect(page.getByText('二次重入已见 · Source PRZ 未冻结')).toBeVisible()
+  await expect(page.getByText(/禁止把这次重入升级为 Type-II/)).toBeVisible()
+})
+
+test('partial secondary source PRZ overlap is not promoted to Type-II Terminal Price Bar', async ({ page }) => {
+  await openScenario(page, {
+    ...basePattern,
+    prz: { ...basePattern.prz, source_prz_low: 104.0, source_prz_high: 104.5 },
+    reaction_audit: reactionAudit({
+      bars_to_382: 2,
+      secondary_prz_retest_bar: 7,
+      source_prz_available: true,
+      type_ii_evidence_state: 'partial_retest_only',
+    }),
+  })
+  await expect(page.getByText('二次进入 · 尚未完整回测')).toBeVisible()
+  await expect(page.getByText(/不是 Type-II Terminal Price Bar/)).toBeVisible()
+})
+
+test('full source PRZ retest with price and RSI evidence stays explicitly non-BAMM', async ({ page }) => {
+  await openScenario(page, {
+    ...basePattern,
+    prz: { ...basePattern.prz, source_prz_low: 104.0, source_prz_high: 104.5 },
+    reaction_audit: reactionAudit({
+      bars_to_382: 2,
       bars_to_618: 5,
       secondary_prz_retest_bar: 7,
+      source_prz_available: true,
+      full_prz_retest_bar: 8,
+      type_ii_terminal_bar: 8,
       reversal_exit_after_retest_bar: 9,
-      bars_to_reversal_exit_after_retest: 2,
+      bars_to_reversal_exit_after_retest: 1,
       type_ii_candidate: true,
-      rsi_extreme_bar: 7,
+      rsi_extreme_bar: 8,
       rsi_extreme_value: 28,
       rsi_trigger_bar: 9,
       rsi_trigger_value: 36,
@@ -142,6 +195,9 @@ test('secondary PRZ retest with price and RSI evidence maps to Type-II evidence 
       type_ii_evidence_state: 'price_and_rsi_confirmed',
     }),
   })
-  await expect(page.getByText('Type-II · 价格 + RSI 证据')).toBeVisible()
-  await expect(page.getByText(/生命周期证据，不是新的谐波身份/)).toBeVisible()
+  await expect(page.getByText('后验 Type-II · 价格 + RSI 辅助证据')).toBeVisible()
+  const auditCard = page.locator('.audit-card')
+  await expect(auditCard.getByText(/明确不是 RSI BAMM/)).toBeVisible()
+  await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-state', 'reached')
+  await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-state', 'reached')
 })

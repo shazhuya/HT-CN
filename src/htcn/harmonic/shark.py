@@ -27,6 +27,8 @@ class SharkEvaluation:
     target_50: float
     target_618: float
     reciprocal_abcd_target: float
+    initial_target: float
+    initial_target_basis: str
     reasons: tuple[str, ...]
 
     @property
@@ -200,6 +202,15 @@ def _in_band(value: float, low: float, high: float) -> bool:
 def _reaction_targets(
     points: tuple[HarmonicPoint, ...], direction: PatternDirection
 ) -> tuple[float, float, float]:
+    """Return the three source-auditable Shark -> 5-0 reaction measurements.
+
+    Once Shark 0-X-A-B-C has completed, the prospective 5-0 D is measured from C back
+    toward B. Its defining measurements include the 50%/61.8% BC retracements and the
+    Reciprocal AB=CD, where the future CD counter-move is compared with the earlier AB
+    counter-move. Carney describes the Reciprocal AB=CD as an approximation that must
+    be complemented by the other harmonic measurements; the raw measurements therefore
+    remain separate rather than being collapsed into one synthetic target.
+    """
     _, _, a, b, c = points
     bc = leg_length(b.price, c.price)
     ab = leg_length(a.price, b.price)
@@ -209,6 +220,28 @@ def _reaction_targets(
         c.price + sign * 0.618 * bc,
         c.price + sign * ab,
     )
+
+
+def _initial_shark_target(
+    *,
+    c_price: float,
+    target_50: float,
+    reciprocal_abcd_target: float,
+) -> tuple[float, str]:
+    """Apply Volume Three Shark management: take whichever target is encountered first.
+
+    "Lesser" means the smaller reaction distance from C, not the numerically lower price;
+    that distinction matters for bearish structures. A tie is labelled explicitly rather than
+    arbitrarily preferring one source measurement.
+    """
+    distance_50 = abs(float(target_50) - float(c_price))
+    distance_reciprocal = abs(float(reciprocal_abcd_target) - float(c_price))
+    eps = 1e-12 * max(1.0, distance_50, distance_reciprocal)
+    if abs(distance_50 - distance_reciprocal) <= eps:
+        return float(target_50), "50_percent_and_reciprocal_abcd_tie"
+    if distance_50 < distance_reciprocal:
+        return float(target_50), "50_percent"
+    return float(reciprocal_abcd_target), "reciprocal_abcd"
 
 
 def evaluate_shark(
@@ -239,6 +272,11 @@ def evaluate_shark(
     convergence_error = abs(float(c.price) - anchor) / max(ob, 1e-12)
     geometry_score = round(max(0.0, 100.0 * (1.0 - min(1.0, 4.0 * convergence_error))), 2)
     target_50, target_618, reciprocal_target = _reaction_targets(points, direction)
+    initial_target, initial_target_basis = _initial_shark_target(
+        c_price=c.price,
+        target_50=target_50,
+        reciprocal_abcd_target=reciprocal_target,
+    )
 
     return SharkEvaluation(
         pattern_id="shark",
@@ -251,6 +289,8 @@ def evaluate_shark(
         target_50=target_50,
         target_618=target_618,
         reciprocal_abcd_target=reciprocal_target,
+        initial_target=initial_target,
+        initial_target_basis=initial_target_basis,
         reasons=tuple(reasons),
     )
 

@@ -12,17 +12,22 @@ from .prz import PotentialReversalZone
 
 @dataclass(frozen=True, slots=True)
 class ReactionAudit:
-    """Deterministic post-completion price/confirmation audit.
+    """Deterministic retrospective post-completion price/confirmation audit.
 
-    The identity of a harmonic pattern is already frozen before this module runs. The
-    audit therefore cannot create, delete or mutate pattern geometry. It records the
-    source-backed Type-I 38.2% / 61.8% reaction objectives, PRZ exit/retest behaviour,
-    and confirmation evidence around a possible Type-II secondary test.
+    Pattern identity is frozen before this module runs. This audit cannot create, delete,
+    or mutate harmonic geometry.
 
-    Volume Three requires PRICE and INDICATOR confirmation for a Type-II reversal. HT-CN
-    consequently keeps ``type_ii_candidate`` and ``type_ii_evidence_state`` separate:
-    a secondary PRZ retest is structural evidence, not an automatic declaration that a
-    larger reversal is valid.
+    Source-fidelity boundaries:
+    - a secondary overlap is only a retest observation;
+    - a Type-II candidate requires an explicitly frozen source PRZ and a full retest of
+      its terminal side;
+    - that full retest is recorded as the retrospective Type-II Terminal Price Bar;
+    - PRICE and indicator evidence are assessed only after that full retest;
+    - the Wilder RSI evidence here is a lightweight confirmation layer, NOT RSI BAMM.
+
+    The source-aligned no-lookahead execution clock remains the Terminal Price Bar pipeline
+    in ``htcn.research.terminal_bar``. This completed-pattern audit is retrospective and must
+    not be presented as proof that the D Pivot was observable in real time.
     """
 
     d_index: int
@@ -33,7 +38,9 @@ class ReactionAudit:
     bars_to_618: int | None
     first_prz_exit_bar: int | None
     secondary_prz_retest_bar: int | None
+    source_prz_available: bool
     full_prz_retest_bar: int | None
+    type_ii_terminal_bar: int | None
     reversal_exit_after_retest_bar: int | None
     bars_to_reversal_exit_after_retest: int | None
     third_prz_test_bar: int | None
@@ -49,6 +56,8 @@ class ReactionAudit:
     rsi_trigger_bar: int | None
     rsi_trigger_value: float | None
     rsi_confirmation: bool
+    indicator_evidence_kind: str
+    indicator_evidence_is_rsi_bamm: bool
     type_ii_evidence_state: str
 
     def as_payload(self) -> dict[str, object]:
@@ -71,21 +80,40 @@ def _target_prices(
     )
 
 
+def _observation_bounds(prz: PotentialReversalZone) -> tuple[float, float]:
+    """Bounds used only to notice a secondary re-entry.
+
+    When source PRZ bounds are frozen they take precedence. Otherwise we retain the legacy
+    ideal-core overlap solely as a descriptive observation; it can never promote Type-II.
+    """
+    if prz.has_source_prz:
+        assert prz.source_prz_low is not None and prz.source_prz_high is not None
+        return float(prz.source_prz_low), float(prz.source_prz_high)
+    return float(prz.ideal_core_low), float(prz.ideal_core_high)
+
+
 def _bar_overlaps_prz(low: float, high: float, prz: PotentialReversalZone) -> bool:
-    return high >= prz.price_low and low <= prz.price_high
+    zone_low, zone_high = _observation_bounds(prz)
+    return high >= zone_low and low <= zone_high
 
 
-def _tests_full_prz(
+def _tests_full_source_prz(
     low: float,
     high: float,
     direction: PatternDirection,
     prz: PotentialReversalZone,
 ) -> bool:
-    """Whether the retest reaches the far/terminal side of the original PRZ."""
+    """Whether a retest reaches the far/terminal side of an explicit source PRZ.
 
+    Missing source bounds deliberately fail closed. Neither the ideal core nor the broad
+    component envelope is allowed to substitute for a source-frozen Raw PRZ.
+    """
+    if not prz.has_source_prz:
+        return False
+    assert prz.source_prz_low is not None and prz.source_prz_high is not None
     if direction is PatternDirection.BULLISH:
-        return low <= prz.price_low
-    return high >= prz.price_high
+        return low <= float(prz.source_prz_low)
+    return high >= float(prz.source_prz_high)
 
 
 def _exited_in_reversal_direction(
@@ -94,9 +122,10 @@ def _exited_in_reversal_direction(
     direction: PatternDirection,
     prz: PotentialReversalZone,
 ) -> bool:
+    zone_low, zone_high = _observation_bounds(prz)
     if direction is PatternDirection.BULLISH:
-        return low > prz.price_high
-    return high < prz.price_low
+        return low > zone_high
+    return high < zone_low
 
 
 def _finite_or_none(value: float) -> float | None:
@@ -107,16 +136,16 @@ def _rsi_confirmation_evidence(
     frame: pd.DataFrame,
     *,
     d_index: int,
-    secondary_retest_bar: int | None,
+    type_ii_terminal_bar: int | None,
     direction: PatternDirection,
     period: int,
 ) -> tuple[float | None, int | None, float | None, int | None, float | None, bool]:
-    """Audit Wilder RSI 30/70 extreme reversal around a secondary-test sequence.
+    """Audit a simple Wilder RSI 30/70 reversal around the Type-II full retest.
 
-    Volume Three notes that indicator confirmation can lead price. For that reason the
-    search window starts at D and extends through the secondary retest, then looks for the
-    first reversal out of the conventional extreme zone after the last extreme reading.
-    Offsets are returned relative to D, matching the rest of ``ReactionAudit``.
+    This is deliberately NOT an RSI BAMM implementation. Volume Two RSI BAMM requires a
+    multi-step complex RSI structure, trigger bar, reaction, divergence, 1.13/1.618
+    confirmation and coordinated pattern completion. The lightweight evidence below only
+    records an extreme-zone reading and subsequent exit from that zone.
     """
 
     if "close" not in frame.columns:
@@ -124,10 +153,10 @@ def _rsi_confirmation_evidence(
 
     rsi = wilder_rsi(frame["close"], period=period)
     rsi_at_d = _finite_or_none(float(rsi.iloc[d_index])) if 0 <= d_index < len(rsi) else None
-    if secondary_retest_bar is None:
+    if type_ii_terminal_bar is None:
         return rsi_at_d, None, None, None, None, False
 
-    retest_index = d_index + secondary_retest_bar
+    retest_index = d_index + type_ii_terminal_bar
     if retest_index >= len(rsi):
         return rsi_at_d, None, None, None, None, False
 
@@ -190,13 +219,13 @@ def audit_completed_reaction(
     prz: PotentialReversalZone,
     rsi_period: int = 14,
 ) -> ReactionAudit:
-    """Audit the observable path after D without future-data leakage into identity.
+    """Retrospectively audit the path after a completed D point.
 
+    This function intentionally does not claim source-aligned real-time observability.
     ``frame`` must be the same indexed price window used to identify the pattern. Only bars
     strictly after D are examined for outcomes. Targets are measured from D back toward A
-    using the 38.2% and 61.8% reaction objectives described in Harmonic Trading Volume
-    Three. Both XABCD and standalone ABCD schemas have an explicit A/D anchor. Wilder RSI
-    is confirmation evidence only and never participates in identity.
+    using the 38.2% and 61.8% reaction objectives. Source-aligned live execution timing is
+    owned by the no-lookahead Terminal Price Bar pipeline.
     """
 
     required = {"high", "low"}
@@ -254,18 +283,20 @@ def audit_completed_reaction(
 
         if first_exit is not None and secondary_retest is None and overlap:
             secondary_retest = offset
-            if _tests_full_prz(low, high, direction, prz):
+            if _tests_full_source_prz(low, high, direction, prz):
                 full_retest = offset
             continue
 
         if secondary_retest is not None:
-            if full_retest is None and overlap and _tests_full_prz(low, high, direction, prz):
+            if full_retest is None and overlap and _tests_full_source_prz(low, high, direction, prz):
                 full_retest = offset
-            if not exited_after_secondary and reversal_exit:
+                continue
+
+            if full_retest is not None and not exited_after_secondary and reversal_exit:
                 exited_after_secondary = True
                 reversal_exit_after_retest = offset
                 continue
-            if exited_after_secondary and third_test is None and overlap:
+            if full_retest is not None and exited_after_secondary and third_test is None and overlap:
                 third_test = offset
 
     def no_retest_within(limit: int) -> bool | None:
@@ -295,16 +326,20 @@ def audit_completed_reaction(
     ) = _rsi_confirmation_evidence(
         frame,
         d_index=int(d.index),
-        secondary_retest_bar=secondary_retest,
+        type_ii_terminal_bar=full_retest,
         direction=direction,
         period=rsi_period,
     )
 
-    type_ii_candidate = bool(first_exit is not None and secondary_retest is not None)
-    if not type_ii_candidate:
+    type_ii_candidate = bool(first_exit is not None and prz.has_source_prz and full_retest is not None)
+    if secondary_retest is None:
         evidence_state = "not_candidate"
+    elif not prz.has_source_prz:
+        evidence_state = "source_prz_unresolved"
+    elif full_retest is None:
+        evidence_state = "partial_retest_only"
     elif reversal_exit_after_retest is None:
-        evidence_state = "retest_only"
+        evidence_state = "full_retest_waiting_price"
     elif rsi_confirmation:
         evidence_state = "price_and_rsi_confirmed"
     else:
@@ -312,8 +347,8 @@ def audit_completed_reaction(
 
     bars_to_reversal_exit_after_retest = (
         None
-        if secondary_retest is None or reversal_exit_after_retest is None
-        else reversal_exit_after_retest - secondary_retest
+        if full_retest is None or reversal_exit_after_retest is None
+        else reversal_exit_after_retest - full_retest
     )
 
     return ReactionAudit(
@@ -325,7 +360,9 @@ def audit_completed_reaction(
         bars_to_618=bars_to_618,
         first_prz_exit_bar=first_exit,
         secondary_prz_retest_bar=secondary_retest,
+        source_prz_available=prz.has_source_prz,
         full_prz_retest_bar=full_retest,
+        type_ii_terminal_bar=full_retest,
         reversal_exit_after_retest_bar=reversal_exit_after_retest,
         bars_to_reversal_exit_after_retest=bars_to_reversal_exit_after_retest,
         third_prz_test_bar=third_test,
@@ -341,5 +378,7 @@ def audit_completed_reaction(
         rsi_trigger_bar=rsi_trigger_bar,
         rsi_trigger_value=rsi_trigger_value,
         rsi_confirmation=rsi_confirmation,
+        indicator_evidence_kind="wilder_rsi_extreme_reversal",
+        indicator_evidence_is_rsi_bamm=False,
         type_ii_evidence_state=evidence_state,
     )

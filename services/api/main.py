@@ -6,7 +6,8 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from htcn.app.harmonic_service import DatasetNotFoundError, LocalHarmonicService
+from htcn.app.harmonic_service import DatasetNotFoundError
+from htcn.app.source_aligned_service import SourceAlignedHarmonicService
 from htcn.harmonic.rules import CARNEY_RULES
 from htcn.research.type_i_live_evidence import build_type_i_t5_events
 
@@ -14,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
 
 app = FastAPI(title="HT-CN API", version="0.2.0")
-service = LocalHarmonicService(DATA_ROOT)
+service = SourceAlignedHarmonicService(DATA_ROOT)
 
 app.add_middleware(
     CORSMiddleware,

@@ -24,6 +24,9 @@ def _prz(low=118.0, high=122.0, direction=PatternDirection.BULLISH):
         price_low=low,
         price_high=high,
     )
+    # This fixture deliberately leaves source_prz_* unresolved. It exercises the
+    # retrospective D-clock reaction audit without granting permission to promote a
+    # secondary overlap into a Volume-3 Type-II event.
     return PotentialReversalZone(
         pattern_id="test",
         direction=direction,
@@ -31,7 +34,7 @@ def _prz(low=118.0, high=122.0, direction=PatternDirection.BULLISH):
     )
 
 
-def test_bullish_reaction_hits_382_618_then_retests_prz() -> None:
+def test_bullish_reaction_hits_382_618_then_reenters_unresolved_zone() -> None:
     frame = pd.DataFrame(
         {
             "high": [101, 201, 141, 181, 121, 130, 153, 171, 150, 122],
@@ -52,7 +55,10 @@ def test_bullish_reaction_hits_382_618_then_retests_prz() -> None:
     assert audit.secondary_prz_retest_bar == 5
     assert audit.no_prz_retest_first_3_bars is True
     assert audit.no_prz_retest_first_5_bars is False
-    assert audit.type_ii_candidate is True
+    assert audit.source_prz_available is False
+    assert audit.full_prz_retest_bar is None
+    assert audit.type_ii_candidate is False
+    assert audit.type_ii_evidence_state == "source_prz_unresolved"
     assert audit.max_favorable_retracement > 0.61
 
 
