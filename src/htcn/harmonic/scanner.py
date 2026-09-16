@@ -18,6 +18,7 @@ class FormingPattern:
     c_ab: float
     prz: PotentialReversalZone
     source_tolerance_used: bool
+    harmonic_family_tolerance_used: bool = False
 
 
 def executable_xabcd_rules() -> tuple[PatternRule, ...]:
@@ -28,20 +29,29 @@ def executable_xabcd_rules() -> tuple[PatternRule, ...]:
     )
 
 
+def _nearest_relative_error(value: float, targets: tuple[float, ...]) -> float:
+    if not targets:
+        return 0.0
+    return min(abs(float(value) - float(target)) / float(target) for target in targets)
+
+
 def project_forming_xabcd(
     window: SwingWindow,
     *,
     include_source_tolerance: bool = True,
+    harmonic_family_relative_tolerance: float = 0.03,
 ) -> tuple[FormingPattern, ...]:
-    """Project D/PRZ only after XABC already satisfies source-backed B and C geometry.
+    """Project D/PRZ only after XABC satisfies source-backed geometry.
 
-    A forming pattern is not merely "B looks like a Bat/Gartley". C already exists and its
-    AB retracement is therefore known. Letting an invalid C through creates large numbers of
-    visually plausible but source-invalid projected PRZs, exactly the kind of candidate noise
-    that a live A-share chart must avoid.
+    C must lie inside the broad structural envelope AND near one of the finite harmonic
+    retracement ratios listed by the source. The operational matching tolerance is HT-CN
+    policy; it is not represented as a universal Carney constant.
     """
     if window.is_completed:
         raise ValueError("forming projection requires a 4-pivot XABC window")
+    if harmonic_family_relative_tolerance < 0:
+        raise ValueError("harmonic_family_relative_tolerance must be non-negative")
+
     x, a, b, c = window.harmonic_points()
     xa = leg_length(x.price, a.price)
     ab = leg_length(a.price, b.price)
@@ -52,7 +62,6 @@ def project_forming_xabcd(
     c_ab = bc / ab
     direction = PatternDirection.BULLISH if a.price > x.price else PatternDirection.BEARISH
 
-    # XABC must already alternate in the direction expected by a potential D reversal.
     if direction is PatternDirection.BULLISH and not (b.price < a.price and c.price > b.price):
         return ()
     if direction is PatternDirection.BEARISH and not (b.price > a.price and c.price < b.price):
@@ -68,11 +77,15 @@ def project_forming_xabcd(
             continue
         if not c_constraint.contains(c_ab, include_tolerance=include_source_tolerance):
             continue
+
+        c_family = rule.harmonic_targets.get("c_ab", ())
+        c_family_error = _nearest_relative_error(c_ab, c_family)
+        if c_family and c_family_error > harmonic_family_relative_tolerance:
+            continue
+
         try:
             prz = build_xabcd_prz(rule, (x, a, b, c))
         except ValueError:
-            # A mathematically projected price can become non-positive for a pathological
-            # candidate. That candidate is isolated here instead of crashing the scan.
             continue
         tolerance_used = include_source_tolerance and (
             not b_constraint.contains(b_xa, include_tolerance=False)
@@ -86,6 +99,7 @@ def project_forming_xabcd(
                 c_ab=c_ab,
                 prz=prz,
                 source_tolerance_used=tolerance_used,
+                harmonic_family_tolerance_used=bool(c_family and c_family_error > 1e-12),
             )
         )
     return tuple(projections)
@@ -96,6 +110,7 @@ def classify_completed_xabcd(
     *,
     include_source_tolerance: bool = True,
     abcd_relative_tolerance: float = 0.03,
+    harmonic_family_relative_tolerance: float = 0.03,
 ) -> tuple[PatternEvaluation, ...]:
     if not window.is_completed:
         raise ValueError("completed classification requires a 5-pivot XABCD window")
@@ -108,10 +123,9 @@ def classify_completed_xabcd(
                 points,
                 include_source_tolerance=include_source_tolerance,
                 abcd_relative_tolerance=abcd_relative_tolerance,
+                harmonic_family_relative_tolerance=harmonic_family_relative_tolerance,
             )
         except ValueError:
-            # Rule/candidate incompatibility must reject only this identity attempt; one
-            # malformed projected PRZ must never abort scanning other patterns/scales.
             continue
         if result.passed:
             evaluations.append(result)
