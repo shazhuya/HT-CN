@@ -17,8 +17,13 @@ from htcn.research.autonomous_calibration import (
 )
 from htcn.research.completed_reaction import (
     DEFAULT_COMPLETED_REACTION_HORIZON,
-    completed_reaction_summary,
     confirmed_completed_reaction_records,
+)
+from htcn.research.completed_reaction_calibration import (
+    attach_completed_reaction_observation_windows,
+    build_completed_reaction_calibration,
+    completed_reaction_inventory,
+    redact_completed_reaction_holdout,
 )
 from htcn.research.quality_layers import build_layered_quality_report
 from htcn.research.quality_robustness import build_quality_robustness_report
@@ -71,6 +76,16 @@ def main() -> int:
     )
     scales = tuple(int(value) for value in manifest.get("scales", [3, 5, 8, 13, 21]))
     minimum_symbols = int(manifest.get("minimum_successful_symbols", 6))
+    minimum_completed_actionable = int(
+        manifest.get("minimum_completed_reaction_actionable_records", 60)
+    )
+    minimum_completed_train = int(manifest.get("minimum_completed_reaction_train_records", 30))
+    minimum_completed_validation = int(
+        manifest.get("minimum_completed_reaction_validation_records", 10)
+    )
+    minimum_completed_holdout = int(
+        manifest.get("minimum_completed_reaction_holdout_records", 10)
+    )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -105,6 +120,7 @@ def main() -> int:
 
             snapshot_path = DATA_DIR / f"{instrument_id}.parquet"
             frame.to_parquet(snapshot_path, index=False)
+
             symbol_records = walk_forward_forming_signals(
                 frame,
                 scales=scales,
@@ -116,12 +132,19 @@ def main() -> int:
                 instrument_id=instrument_id,
                 horizon=horizon,
             )
+
             completed_reactions = confirmed_completed_reaction_records(
                 frame,
                 instrument_id=instrument_id,
                 scales=scales,
                 horizon=reaction_horizon,
             )
+            completed_reactions = attach_completed_reaction_observation_windows(
+                completed_reactions,
+                trade_dates=frame["trade_date"].tolist(),
+                horizon=reaction_horizon,
+            )
+
             all_records.extend(enriched)
             all_completed_reactions.extend(completed_reactions)
             datasets.append(
@@ -175,19 +198,39 @@ def main() -> int:
         horizon=horizon,
         min_mature_records=100,
     )
-    completed_reactions = completed_reaction_summary(all_completed_reactions)
-    completed_reaction_ok = completed_reactions["records"] > 0
-    research_status = (
-        "calibration_complete"
-        if coverage_ok
+
+    completed_inventory = completed_reaction_inventory(all_completed_reactions)
+    completed_calibration = build_completed_reaction_calibration(
+        all_completed_reactions,
+        horizon=reaction_horizon,
+        minimum_actionable_records=minimum_completed_actionable,
+        minimum_train_records=minimum_completed_train,
+        minimum_validation_records=minimum_completed_validation,
+        minimum_holdout_records=minimum_completed_holdout,
+    )
+    emitted_completed_reactions = redact_completed_reaction_holdout(
+        all_completed_reactions,
+        completed_calibration,
+    )
+
+    forming_ok = (
+        coverage_ok
         and calibration.get("status") == "research_quality_evidence_holdout_sealed"
         and robustness.get("status") == "research_robustness_holdout_sealed"
         and layered.get("status") == "research_layers_holdout_sealed"
-        and completed_reaction_ok
-        else "insufficient_provider_or_sample_coverage"
     )
+    completed_reaction_ready = (
+        completed_calibration.get("status") == "completed_reaction_calibration_holdout_sealed"
+    )
+    if forming_ok and completed_reaction_ready:
+        research_status = "calibration_complete"
+    elif forming_ok:
+        research_status = "forming_calibration_complete_completed_reaction_sample_insufficient"
+    else:
+        research_status = "insufficient_provider_or_sample_coverage"
+
     report = {
-        "schema_version": 4,
+        "schema_version": 5,
         "status": research_status,
         "dataset_id": manifest.get("dataset_id"),
         "snapshot_cutoff": manifest.get("snapshot_cutoff"),
@@ -202,16 +245,19 @@ def main() -> int:
         "calibration": calibration,
         "robustness": robustness,
         "layers": layered,
-        "completed_reactions": completed_reactions,
+        "completed_reaction_inventory": completed_inventory,
+        "completed_reaction_calibration": completed_calibration,
         "methodology": {
             "runtime": "GitHub Actions / CI-accessible; no user workstation data is required.",
             "source": "Provider QFQ is used only for research calibration snapshots, separate from production raw+factor storage.",
             "determinism": "Snapshot cutoff and universe are pinned; provider restatements are detectable through per-file SHA256.",
-            "holdout": "Forming-signal Holdout outcomes remain sealed during iterative calibration, robustness and semantic-layer research.",
+            "forming_holdout": "Forming-signal Holdout outcomes remain sealed during iterative calibration, robustness and semantic-layer research.",
+            "completed_holdout": "Completed-reaction Holdout outcomes are omitted from calibration summaries and redacted from the emitted reaction record artifact.",
             "identity": "Carney geometry/identity is frozen and never fitted to later outcomes.",
             "robustness": "Strong forming gates are stress-tested across symbols, leave-one-symbol-out and coarse time segments before any policy freeze.",
             "semantic_layers": "Structural quality, readiness and context are separated before generalization; distance-to-PRZ is readiness, not geometry quality.",
             "completed_reaction_clock": "Completed reaction evidence starts at terminal Pivot confirmation, not at historical D, so pre-confirmation price movement cannot be credited.",
+            "completed_reaction_purge": "Completed reactions use their own chronological split and forward-window purge; they do not reuse forming-signal labels.",
             "target_separation": "Forming PRZ-arrival evidence and post-completion Type-I reaction evidence are separate research targets and are never treated as the same success label.",
             "network": "Provider availability is reported as evidence; network failure is not silently converted into a research conclusion.",
         },
@@ -220,10 +266,11 @@ def main() -> int:
     COMPLETED_REACTION_PATH.write_text(
         json.dumps(
             {
-                "schema_version": 1,
-                "status": "research_completed_reaction_no_lookahead",
-                "summary": completed_reactions,
-                "records": all_completed_reactions,
+                "schema_version": 2,
+                "status": "research_completed_reaction_holdout_sealed",
+                "inventory": completed_inventory,
+                "calibration": completed_calibration,
+                "records": emitted_completed_reactions,
             },
             ensure_ascii=False,
             indent=2,
@@ -277,20 +324,42 @@ def main() -> int:
             "[HT-CN AUTONOMOUS] family_specific_quality_hypotheses="
             f"{compact or 'none'}"
         )
+
+    split_counts = completed_calibration["split_counts"]
+    train_reaction = completed_calibration["train"]
+    validation_reaction = completed_calibration["validation"]
     print(
-        "[HT-CN AUTONOMOUS] completed reaction: "
-        f"records={completed_reactions['records']}, "
-        f"actionable={completed_reactions['mature_actionable_records']}, "
-        f"late={completed_reactions['late_completion_signals']}, "
-        f"immature={completed_reactions['immature_records']}, "
-        f"T1={completed_reactions['t1_within_horizon']}, "
-        f"T2={completed_reactions['t2_within_horizon']}"
+        "[HT-CN AUTONOMOUS] completed reaction calibration: "
+        f"actionable={completed_calibration['actionable_mature_records']}, "
+        f"purged={completed_calibration['purged_records']}, "
+        f"train={split_counts['train']}, validation={split_counts['validation']}, "
+        f"holdout={split_counts['holdout']}, status={completed_calibration['status']}"
     )
+    if train_reaction["records"]:
+        print(
+            "[HT-CN AUTONOMOUS] completed reaction TRAIN: "
+            f"T1={train_reaction['t1_rate']:.4f}, T2={train_reaction['t2_rate']:.4f}"
+        )
+    if validation_reaction["records"]:
+        print(
+            "[HT-CN AUTONOMOUS] completed reaction VALIDATION: "
+            f"T1={validation_reaction['t1_rate']:.4f}, T2={validation_reaction['t2_rate']:.4f}"
+        )
+
     print("[HT-CN AUTONOMOUS] FORMING HOLDOUT SEALED")
+    print("[HT-CN AUTONOMOUS] COMPLETED-REACTION HOLDOUT SEALED")
     print(f"[HT-CN AUTONOMOUS] report={REPORT_PATH.relative_to(ROOT)}")
     print(
         f"[HT-CN AUTONOMOUS] completed_reactions={COMPLETED_REACTION_PATH.relative_to(ROOT)}"
     )
+
+    if not coverage_ok:
+        print(
+            f"[HT-CN AUTONOMOUS] FAIL: provider coverage {len(datasets)}/{len(instruments)} "
+            f"is below required minimum {minimum_symbols}."
+        )
+        return 2
+
     print("[HT-CN AUTONOMOUS] PASS: autonomous research pipeline completed.")
     return 0
 

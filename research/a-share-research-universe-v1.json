@@ -1,11 +1,16 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "dataset_id": "a-share-research-v1",
   "snapshot_cutoff": "2026-09-15",
   "start_date": "2016-01-01",
   "max_bars": 3000,
   "horizon_bars": 60,
+  "completed_reaction_horizon_bars": 20,
   "minimum_successful_symbols": 6,
+  "minimum_completed_reaction_actionable_records": 60,
+  "minimum_completed_reaction_train_records": 30,
+  "minimum_completed_reaction_validation_records": 10,
+  "minimum_completed_reaction_holdout_records": 10,
   "scales": [3, 5, 8, 13, 21],
   "instruments": [
     {"instrument_id": "SSE.600519", "name": "贵州茅台", "bucket": "消费/大市值"},
@@ -26,7 +31,9 @@
     "purpose": "CI-accessible research calibration only; not production market data.",
     "price_mode": "qfq",
     "identity_freeze": "Carney identity rules are never fitted to outcome statistics.",
-    "holdout": "Holdout outcomes stay sealed until a quality policy is explicitly frozen.",
+    "forming_holdout": "Forming-signal Holdout outcomes stay sealed until a quality policy is explicitly frozen.",
+    "completed_reaction_holdout": "Completed-reaction Holdout outcomes stay sealed; only identity metadata and counts may be emitted.",
+    "completed_reaction_sample_floor": "60 actionable completed reactions with 30/10/10 post-purge train/validation/holdout floors are an HT-CN research-governance policy, not a Carney rule or statistical guarantee.",
     "metadata_only": "name and bucket are descriptive metadata and are not model features."
   }
 }
