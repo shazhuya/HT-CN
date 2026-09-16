@@ -54,6 +54,8 @@ class PatternRule:
     # Carney frequently describes an "AB=CD minimum" rather than an exact CD/AB ratio.
     # When set, completed geometry must at least reach this CD/AB length ratio.
     abcd_minimum: float | None = None
+    # True means the generic standard XABCD evaluator can execute this registry row.
+    # Dedicated schemas can be fully executable in their own module while remaining False here.
     executable_identity: bool = True
     source_conflict: bool = False
     source_note: str = ""
@@ -169,27 +171,35 @@ CARNEY_RULES: dict[str, PatternRule] = {
         schema="0XABC",
         constraints={
             "a_0x": RatioConstraint(0.382, 0.618),
-            "extreme_impulse": RatioConstraint(1.618, 2.24),
-            "completion_0b": RatioConstraint(0.886, 1.13),
+            "b_xa": RatioConstraint(1.13, 1.618),
+            "c_ab": RatioConstraint(1.618, 2.24),
+            "c_0b": RatioConstraint(0.886, 1.13),
         },
         executable_identity=False,
-        source_note="Volume Three pp.116-129 advanced Shark specification.",
-        implementation_note="Requires dedicated 0XABC evaluator; do not force into XABCD code paths.",
+        source_note="Volume Three pp.116-129 advanced Shark specification and figure-level 0-X-A-B-C ratios.",
+        implementation_note=(
+            "Executed only by the dedicated Shark evaluator. A/0X=0.382-0.618, "
+            "B/XA=1.13-1.618, C/AB=1.618-2.24 and C/0B=0.886-1.13 must converge. "
+            "Do not force Shark into standard XABCD semantics."
+        ),
     ),
     "five_zero": PatternRule(
         pattern_id="five_zero",
-        schema="0XABCD",
+        schema="FIVE_ZERO",
         constraints={
-            "extreme_impulse": RatioConstraint(1.618, 2.24),
-            "completion_zone": RatioConstraint(0.50, 0.618),
+            "b_xa": RatioConstraint(1.13, 1.618),
+            "c_ab": RatioConstraint(1.618, 2.24),
+            "d_bc": RatioConstraint(0.50, 0.618),
         },
         executable_identity=False,
         source_conflict=True,
-        source_note="Volume Two 5-0 chapter plus Volume Three pp.129-136 refinement.",
+        source_note="Volume Two 5-0 chapter pp.83-110 plus Volume Three pp.129-136 refinement.",
         implementation_note=(
-            "Figure-level reconciliation is required before executable identity: Volume Two "
-            "describes 50% BC retracement + Reciprocal AB=CD, while Volume Three uses 50%/61.8% "
-            "completion and stop language with differing segment wording."
+            "Executed only by the dedicated 5-0 evaluator. Volume Two defines the core X-A-B-C-D "
+            "geometry, mandatory B/XA=1.13-1.618 and C/AB=1.618-2.24, with D at the 50% BC "
+            "retracement plus Reciprocal AB=CD. Volume Three retains that structure but expands "
+            "execution/make-or-break handling toward 61.8%; HT-CN therefore records the 50%-61.8% "
+            "execution band while preserving 50% as the original defining completion."
         ),
     ),
 }
