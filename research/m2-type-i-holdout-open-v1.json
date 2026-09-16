@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "authorization_id": "m2-type-i-holdout-open-v1",
   "preregistration_id": "m2-type-i-holdout-v1",
   "frozen_preregistration_commit": "286eead8b3fa1afa1e716161366b8edcf2c555b2",
@@ -8,8 +8,21 @@
     "dataset_id": "a-share-research-v2-45",
     "snapshot_cutoff": "2026-09-15"
   },
-  "authorized": true,
-  "one_time_holdout_open": true,
+  "authorized": false,
+  "one_time_holdout_open": false,
+  "evaluated_once": true,
   "scope": "Evaluate exactly the single primary contrast registered in research/m2-type-i-holdout-prereg-v1.json. No alternate threshold, endpoint or subgroup can become a replacement primary test.",
-  "after_evaluation": "Commit the exact result to repository history and close this authorization in the next commit."
+  "evaluation": {
+    "workflow_run_id": 35080355533,
+    "job_id": 104742827778,
+    "evaluated_commit": "5ed9ed50aae2e64a5d80e74fbdaf0ff71ab65736",
+    "artifact_id": 10439548729,
+    "artifact_sha256": "36d8e3dc2f5bb12814c0132940c205e2240b365c7ba532d9e3708b598bbc2d99",
+    "source_evaluation_report_sha256": "836f54af3c68db796b43dc9e2c5d9e1f9324fb04923b16ca5b62e48b941f5c04",
+    "frozen_result_path": "research/m2-type-i-holdout-result-v1.json",
+    "frozen_result_sha256": "71ca5cc3795bf9401dd8e0ebdb754a0af83af112a775ade0c04bf9c3cf5c7d0c",
+    "primary_result": "confirmed"
+  },
+  "closeout": "The one-time Holdout has been consumed. Future CI may verify the frozen result but must not recompute or reopen this Holdout for iterative tuning.",
+  "reopen_policy": "Do not reopen this dataset's Type-I Holdout. Any new confirmatory test requires a separately frozen dataset or a prospectively advanced snapshot and a new preregistration."
 }

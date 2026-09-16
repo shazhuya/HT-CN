@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "result_id": "m2-type-i-holdout-result-v1",
+  "preregistration_id": "m2-type-i-holdout-v1",
+  "frozen_preregistration_commit": "286eead8b3fa1afa1e716161366b8edcf2c555b2",
+  "evaluation_commit": "5ed9ed50aae2e64a5d80e74fbdaf0ff71ab65736",
+  "dataset": {
+    "dataset_id": "a-share-research-v2-45",
+    "snapshot_cutoff": "2026-09-15"
+  },
+  "source": {
+    "workflow_run_id": 35080355533,
+    "job_id": 104742827778,
+    "artifact_id": 10439548729,
+    "artifact_name": "m2-autonomous-research-5ed9ed50aae2e64a5d80e74fbdaf0ff71ab65736",
+    "artifact_sha256": "36d8e3dc2f5bb12814c0132940c205e2240b365c7ba532d9e3708b598bbc2d99",
+    "evaluation_report_path_in_artifact": "m2-type-i-holdout-evaluation.json",
+    "evaluation_report_sha256": "836f54af3c68db796b43dc9e2c5d9e1f9324fb04923b16ca5b62e48b941f5c04"
+  },
+  "status": "type_i_holdout_evaluated_once",
+  "holdout_opened": true,
+  "holdout_total_m2_17_records": 355,
+  "holdout_pending_t2_at_t5": 313,
+  "purged_records": 26,
+  "primary_contrast": {
+    "exposure_name": "full_prz_exit_by_t5",
+    "comparator_name": "no_full_exit_by_t5",
+    "exposure": {
+      "records": 115,
+      "endpoint_hits": 40,
+      "endpoint_rate": 0.34782608695652173
+    },
+    "comparator": {
+      "records": 198,
+      "endpoint_hits": 39,
+      "endpoint_rate": 0.19696969696969696
+    },
+    "absolute_rate_difference": 0.15085638998682477,
+    "newcombe_95_ci": {
+      "lower": 0.049612411917687296,
+      "upper": 0.2541290679331789
+    },
+    "minimum_records_per_group": 20,
+    "sample_floor_ok": true,
+    "result": "confirmed"
+  },
+  "multiplicity": {
+    "primary_tests_run": 1,
+    "alternate_thresholds_searched": false,
+    "alternate_endpoints_searched": false
+  },
+  "secondary_diagnostics": {
+    "role": "descriptive_only_cannot_rescue_primary_test",
+    "persistence": "Full descriptive subgroup diagnostics remain anchored by the source artifact and exact evaluation-report SHA256; they are not used to redefine the primary result."
+  },
+  "holdout_consumed": true,
+  "policy_frozen": false,
+  "interpretation": "Historical one-time confirmatory evidence on the frozen 45-symbol research Holdout. It confirms the preregistered association between full PRZ exit by T+5 and later T2 progression among cases still pending T2 at T+5; it is not a return forecast, trading recommendation, or Carney identity rule."
+}
