@@ -11,11 +11,11 @@ _PRICE_FLOOR = 1e-9
 
 @dataclass(frozen=True, slots=True)
 class PRZComponent:
-    """One auditable price component that contributes to a PRZ.
+    """One auditable price component that contributes to a projected reversal area.
 
-    A component can be a single target or a bounded target interval. We keep the
-    originating measurement and ratio bounds so the UI can explain *why* a zone exists
-    instead of rendering an opaque rectangle.
+    A component can be a single target or a bounded target interval. The originating
+    measurement and ratio bounds remain explicit so downstream layers can explain why a
+    zone exists instead of rendering an opaque rectangle.
     """
 
     name: str
@@ -40,6 +40,21 @@ class PRZComponent:
 
 @dataclass(frozen=True, slots=True)
 class PotentialReversalZone:
+    """Auditable harmonic measurements plus an HT-CN ideal convergence core.
+
+    Source-fidelity boundary:
+
+    ``component_envelope_*`` is the outer envelope of every stored measurement/variant.
+    It is useful for audit but MUST NOT automatically be called the Carney Raw PRZ because
+    some pattern registries intentionally retain alternate AB=CD variants for comparison.
+
+    ``ideal_core_*`` is the narrower HT-CN convergence selection used by the current UI and
+    geometry-quality layer. It MUST NOT be described as the entire source PRZ.
+
+    ``price_low``/``price_high`` remain backward-compatible aliases for ``ideal_core_*``
+    until downstream payloads are migrated to explicit names.
+    """
+
     pattern_id: str
     direction: PatternDirection
     components: tuple[PRZComponent, ...]
@@ -49,26 +64,34 @@ class PotentialReversalZone:
             raise ValueError("PRZ must contain at least one component")
 
     @property
-    def component_price_low(self) -> float:
-        """Outer audit envelope across every physically reachable component/variant."""
+    def component_envelope_low(self) -> float:
+        """Outer audit envelope across every stored component/variant."""
         return min(component.price_low for component in self.components)
 
     @property
-    def component_price_high(self) -> float:
-        """Outer audit envelope across every physically reachable component/variant."""
+    def component_envelope_high(self) -> float:
+        """Outer audit envelope across every stored component/variant."""
         return max(component.price_high for component in self.components)
 
     @property
-    def convergence_prices(self) -> tuple[float, ...]:
-        """Representative prices that actually form the projected reversal cluster.
+    def component_price_low(self) -> float:
+        """Backward-compatible alias for ``component_envelope_low``."""
+        return self.component_envelope_low
 
-        Standard XABCD patterns anchor on the defining XA completion and select the
+    @property
+    def component_price_high(self) -> float:
+        """Backward-compatible alias for ``component_envelope_high``."""
+        return self.component_envelope_high
+
+    @property
+    def convergence_prices(self) -> tuple[float, ...]:
+        """Representative prices that form the current HT-CN ideal convergence core.
+
+        Standard XABCD structures anchor on the defining XA completion and select the
         complementary BC / AB=CD measurements that converge most closely with it.
 
-        Shark is structurally different: its PRZ is the *overlap* of the 0B 0.886-1.13
-        completion range and the 1.618-2.24 AB impulse range. Returning that intersection
-        explicitly prevents the dedicated Shark schema from being collapsed to an opaque
-        midpoint by the standard M/W convergence heuristic.
+        Shark is structurally different: its ideal core is the overlap of the 0B
+        0.886-1.13 completion range and the 1.618-2.24 AB impulse range.
         """
         if self.pattern_id == "shark" and len(self.components) >= 2:
             overlap_low = max(component.price_low for component in self.components)
@@ -95,16 +118,31 @@ class PotentialReversalZone:
         return tuple(prices)
 
     @property
-    def price_low(self) -> float:
+    def ideal_core_low(self) -> float:
         return min(self.convergence_prices)
 
     @property
-    def price_high(self) -> float:
+    def ideal_core_high(self) -> float:
         return max(self.convergence_prices)
 
     @property
+    def ideal_core_width(self) -> float:
+        return self.ideal_core_high - self.ideal_core_low
+
+    @property
+    def price_low(self) -> float:
+        """Legacy alias for ``ideal_core_low``; not the full/raw source PRZ."""
+        return self.ideal_core_low
+
+    @property
+    def price_high(self) -> float:
+        """Legacy alias for ``ideal_core_high``; not the full/raw source PRZ."""
+        return self.ideal_core_high
+
+    @property
     def width(self) -> float:
-        return self.price_high - self.price_low
+        """Legacy alias for ``ideal_core_width``."""
+        return self.ideal_core_width
 
 
 def _direction_from_xa(x: HarmonicPoint, a: HarmonicPoint) -> PatternDirection:
@@ -175,10 +213,14 @@ def build_xabcd_prz(
     rule: PatternRule,
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
 ) -> PotentialReversalZone:
-    """Project an auditable forming PRZ from X/A/B/C.
+    """Project auditable XABCD measurements from X/A/B/C.
 
-    This function intentionally supports only executable standard XABCD rules. Shark and
-    5-0 use different segment semantics and have dedicated projectors.
+    The returned object deliberately exposes both the full component envelope and the
+    narrower HT-CN ideal convergence core. Source-level Raw PRZ selection will be frozen
+    per pattern only after textbook Golden Cases establish which retained variants belong
+    to the executable source zone.
+
+    Shark and 5-0 use different segment semantics and dedicated projectors.
     """
 
     if rule.schema != "XABCD":
