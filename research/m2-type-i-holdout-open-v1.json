@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "authorization_id": "m2-type-i-holdout-open-v1",
+  "preregistration_id": "m2-type-i-holdout-v1",
+  "frozen_preregistration_commit": "286eead8b3fa1afa1e716161366b8edcf2c555b2",
+  "frozen_evidence_commit": "bc90af32963498d174aa2470852ec40330be7853",
+  "dataset": {
+    "dataset_id": "a-share-research-v2-45",
+    "snapshot_cutoff": "2026-09-15"
+  },
+  "authorized": true,
+  "one_time_holdout_open": true,
+  "scope": "Evaluate exactly the single primary contrast registered in research/m2-type-i-holdout-prereg-v1.json. No alternate threshold, endpoint or subgroup can become a replacement primary test.",
+  "after_evaluation": "Commit the exact result to repository history and close this authorization in the next commit."
+}

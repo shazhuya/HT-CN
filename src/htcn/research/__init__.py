@@ -60,6 +60,12 @@ from .type_i_exit_timing import (
     DEFAULT_MIN_EXCLUSIVE_VALIDATION,
     build_type_i_exit_timing_report,
 )
+from .type_i_holdout_eval import (
+    DEFAULT_REACTION_HORIZON,
+    evaluate_preregistered_type_i_holdout,
+    newcombe_difference_interval,
+    wilson_interval,
+)
 from .type_i_holdout_prereg import (
     DEFAULT_HOLDOUT_MIN_GROUP,
     NEWCOMBE_Z_95,
@@ -89,6 +95,7 @@ __all__ = [
     "DEFAULT_MIN_TRAIN_PENDING",
     "DEFAULT_MIN_VALIDATION_PENDING",
     "DEFAULT_OBSERVATION_HORIZON",
+    "DEFAULT_REACTION_HORIZON",
     "DEFAULT_TERMINAL_REACTION_HORIZON",
     "DEFAULT_TYPE_I_LANDMARK_BAR",
     "DEFAULT_WALK_FORWARD_SCALES",
@@ -118,15 +125,18 @@ __all__ = [
     "dedupe_case_records",
     "derive_boundaries",
     "evaluate_gate_library",
+    "evaluate_preregistered_type_i_holdout",
     "gate_generalization_diagnostics",
     "gate_matches",
     "grouped_summary",
     "learn_numeric_thresholds",
     "mature_forward_records",
+    "newcombe_difference_interval",
     "outcome_summary",
     "pattern_family",
     "redact_terminal_bar_holdout",
     "signal_features",
     "split_manifest",
     "walk_forward_forming_signals",
+    "wilson_interval",
 ]
