@@ -11,6 +11,13 @@ from .case_calibration import (
     canonical_case_key,
     dedupe_case_records,
 )
+from .quality_gate import (
+    GateClause,
+    GateSpec,
+    build_gate_library,
+    evaluate_gate_library,
+    gate_matches,
+)
 from .time_split import (
     NumericThresholds,
     SplitBoundaries,
@@ -33,13 +40,18 @@ __all__ = [
     "DEFAULT_FORWARD_HORIZON",
     "DEFAULT_OBSERVATION_HORIZON",
     "DEFAULT_WALK_FORWARD_SCALES",
+    "GateClause",
+    "GateSpec",
     "NumericThresholds",
     "SplitBoundaries",
     "assign_purged_split",
     "build_completed_case_record",
+    "build_gate_library",
     "canonical_case_key",
     "dedupe_case_records",
     "derive_boundaries",
+    "evaluate_gate_library",
+    "gate_matches",
     "grouped_summary",
     "learn_numeric_thresholds",
     "mature_forward_records",
