@@ -8,7 +8,10 @@ from pathlib import Path
 
 from htcn.harmonic.engine import scan_frame
 from htcn.harmonic.rsi_bamm import RSIBammDirection, scan_rsi_bamm_frame
-from htcn.harmonic.rsi_bamm_confluence import confirm_rsi_bamm_with_match
+from htcn.harmonic.rsi_bamm_confluence import (
+    confirm_rsi_bamm_with_source_execution,
+    observe_source_execution_for_match,
+)
 from htcn.research.snapshot_cache import load_research_snapshot
 
 
@@ -53,14 +56,17 @@ def main() -> int:
     pattern_counts: Counter[str] = Counter()
     confirmed_pattern_counts: Counter[str] = Counter()
     blocked_status_counts: Counter[str] = Counter()
+    source_execution_state_counts: Counter[str] = Counter()
     symbols: list[dict] = []
     failures: list[dict] = []
 
     total_sequences = 0
     total_completed_matches = 0
+    source_clock_observable_matches = 0
+    source_terminal_observed_matches = 0
     total_source_confirmed = 0
-    confirmed_at_terminal = 0
-    confirmed_after_terminal = 0
+    confirmed_at_source_terminal = 0
+    confirmed_after_source_terminal = 0
 
     for item in instruments:
         instrument_id = str(item["instrument_id"])
@@ -105,12 +111,25 @@ def main() -> int:
 
         symbol_confirmed = 0
         symbol_late = 0
+        symbol_source_clock = 0
+        symbol_source_terminal = 0
         for match in matches:
             pattern_counts[str(match.pattern_id)] += 1
             direction_sequences = sequences_by_direction[match.direction.value]
+            audit = observe_source_execution_for_match(frame, match)
+            if audit is None:
+                source_execution_state_counts["unavailable"] += 1
+            else:
+                source_clock_observable_matches += 1
+                symbol_source_clock += 1
+                source_execution_state_counts[audit.state] += 1
+                if audit.terminal_bar is not None:
+                    source_terminal_observed_matches += 1
+                    symbol_source_terminal += 1
+
             match_confirmed = []
             for sequence in direction_sequences:
-                confluence = confirm_rsi_bamm_with_match(sequence, match)
+                confluence = confirm_rsi_bamm_with_source_execution(sequence, match, audit)
                 if confluence.source_confirmed:
                     match_confirmed.append(confluence)
                 elif confluence.temporal_alignment:
@@ -122,13 +141,14 @@ def main() -> int:
             confirmed_pattern_counts[str(match.pattern_id)] += 1
             total_source_confirmed += len(match_confirmed)
             symbol_confirmed += len(match_confirmed)
-            terminal_bar = int(match.points[-1].index)
             for confluence in match_confirmed:
+                assert confluence.terminal_bar is not None
+                terminal_bar = int(confluence.terminal_bar)
                 available_from = max(terminal_bar, int(confluence.sequence.completion_bar))
                 if available_from <= terminal_bar:
-                    confirmed_at_terminal += 1
+                    confirmed_at_source_terminal += 1
                 else:
-                    confirmed_after_terminal += 1
+                    confirmed_after_source_terminal += 1
                     symbol_late += 1
 
         symbols.append(
@@ -139,13 +159,15 @@ def main() -> int:
                 "bars": len(frame),
                 "rsi_bamm_sequences": sequence_count,
                 "completed_source_scannable_matches": len(matches),
+                "source_clock_observable_matches": symbol_source_clock,
+                "source_terminal_observed_matches": symbol_source_terminal,
                 "source_confirmed_confluences": symbol_confirmed,
-                "source_confirmed_after_pattern_terminal": symbol_late,
+                "source_confirmed_after_source_terminal": symbol_late,
             }
         )
 
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "report_id": "m2-rsi-bamm-observability-v1",
         "purpose": (
             "Observability only. Counts source-defined RSI BAMM sequences and their temporal "
@@ -156,7 +178,13 @@ def main() -> int:
             "quality_threshold_fitting": False,
             "identity_mutation": False,
             "source_raw_prz_mutation": False,
-            "lookahead_policy": "BAMM evidence is timestamped no earlier than sequence completion.",
+            "lookahead_policy": (
+                "Completed-match confluence is reconstructed from the pre-terminal observable "
+                "projection and Source Terminal Price Bar; BAMM evidence is timestamped no "
+                "earlier than sequence completion."
+            ),
+            "geometry_terminal_is_execution_terminal": False,
+            "pez_overspill_allowed": True,
             "five_zero": "production quarantine; excluded from source-confirmed observability",
         },
         "dataset_id": manifest.get("dataset_id"),
@@ -168,11 +196,14 @@ def main() -> int:
         "profile_counts": dict(sorted(profile_counts.items())),
         "relation_counts": dict(sorted(relation_counts.items())),
         "total_completed_source_scannable_matches": total_completed_matches,
+        "source_clock_observable_matches": source_clock_observable_matches,
+        "source_terminal_observed_matches": source_terminal_observed_matches,
+        "source_execution_state_counts": dict(sorted(source_execution_state_counts.items())),
         "pattern_counts": dict(sorted(pattern_counts.items())),
         "source_confirmed_confluences": total_source_confirmed,
         "confirmed_pattern_counts": dict(sorted(confirmed_pattern_counts.items())),
-        "source_confirmed_available_at_pattern_terminal": confirmed_at_terminal,
-        "source_confirmed_after_pattern_terminal": confirmed_after_terminal,
+        "source_confirmed_available_at_source_terminal": confirmed_at_source_terminal,
+        "source_confirmed_after_source_terminal": confirmed_after_source_terminal,
         "temporally_aligned_blocked_statuses": dict(sorted(blocked_status_counts.items())),
         "symbols": symbols,
         "failures": failures,
@@ -182,8 +213,9 @@ def main() -> int:
     print(
         "[HT-CN M2.31 BAMM] "
         f"symbols={len(symbols)}/{len(instruments)} sequences={total_sequences} "
-        f"matches={total_completed_matches} source_confirmed={total_source_confirmed} "
-        f"at_terminal={confirmed_at_terminal} after_terminal={confirmed_after_terminal}"
+        f"matches={total_completed_matches} source_clock={source_clock_observable_matches} "
+        f"terminal={source_terminal_observed_matches} source_confirmed={total_source_confirmed} "
+        f"at_terminal={confirmed_at_source_terminal} after_terminal={confirmed_after_source_terminal}"
     )
     print(f"[HT-CN M2.31 BAMM] report={REPORT_PATH.relative_to(ROOT)}")
 
