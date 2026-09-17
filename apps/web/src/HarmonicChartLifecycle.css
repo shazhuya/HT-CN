@@ -29,3 +29,74 @@
 .lifecycle-target.reached .lifecycle-target-label {
   fill: #dce8ff;
 }
+
+.lifecycle-target.retrospective-target {
+  opacity: .58;
+}
+
+.source-prz-zone {
+  fill: rgba(68, 132, 255, .10);
+  stroke: rgba(105, 159, 255, .72);
+  stroke-width: 1.2;
+  stroke-dasharray: 5 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.source-pez-zone {
+  fill: rgba(255, 179, 71, .10);
+  stroke: rgba(255, 187, 84, .82);
+  stroke-width: 1.35;
+  vector-effect: non-scaling-stroke;
+}
+
+.source-zone-label,
+.source-event-label {
+  fill: #d5e2f2;
+  font-size: 9px;
+  font-weight: 650;
+  paint-order: stroke;
+  stroke: #0b1017;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.source-zone-label.pez-label {
+  fill: #ffd79d;
+}
+
+.source-event-line {
+  stroke: #71839b;
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  opacity: .7;
+  vector-effect: non-scaling-stroke;
+}
+
+.source-event-node {
+  fill: #0e151e;
+  stroke: #9cb1c8;
+  stroke-width: 1.7;
+  vector-effect: non-scaling-stroke;
+}
+
+.source-event.major .source-event-line {
+  stroke: #ffbb54;
+  opacity: .88;
+  stroke-dasharray: 6 4;
+}
+
+.source-event.major .source-event-node {
+  stroke: #ffca79;
+  stroke-width: 2.2;
+}
+
+.source-event.confirm .source-event-line {
+  stroke: #82a7ff;
+  opacity: .86;
+  stroke-dasharray: none;
+}
+
+.source-event.confirm .source-event-node {
+  stroke: #9db9ff;
+  stroke-width: 2;
+}
