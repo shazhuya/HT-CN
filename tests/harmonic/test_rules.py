@@ -79,13 +79,16 @@ def test_shark_source_ratios_are_explicit() -> None:
     assert (shark.constraints["c_0b"].minimum, shark.constraints["c_0b"].maximum) == (0.886, 1.13)
 
 
-def test_five_zero_source_conflict_remains_explicit_and_research_only() -> None:
+def test_five_zero_structural_source_is_resolved_but_v3_label_conflict_stays_quarantined() -> None:
     five_zero = CARNEY_RULES["five_zero"]
     assert (five_zero.constraints["b_xa"].minimum, five_zero.constraints["b_xa"].maximum) == (1.13, 1.618)
     assert (five_zero.constraints["c_ab"].minimum, five_zero.constraints["c_ab"].maximum) == (1.618, 2.24)
-    assert (five_zero.constraints["d_bc"].minimum, five_zero.constraints["d_bc"].maximum) == (0.50, 0.618)
+    assert "d_bc" not in five_zero.constraints
     assert five_zero.source_conflict is True
     assert five_zero.executable_identity is False
-    assert "Research-only" in five_zero.implementation_note
-    assert "pending figure-level reconciliation" in five_zero.implementation_note
-    assert "must not be collapsed into a generic production band" in five_zero.implementation_note
+    assert "structural 5-0 Raw PRZ as 50% BC retracement + Reciprocal AB=CD" in five_zero.source_note
+    assert "Research-only production quarantine" in five_zero.implementation_note
+    assert "structural Source Raw PRZ is resolved" in five_zero.implementation_note
+    assert "must never be collapsed into a generic 50%-61.8% band" in five_zero.implementation_note
+    assert "raw_prz_membership=false" in five_zero.implementation_note
+    assert "Volume Three's inconsistent leg labels" in five_zero.implementation_note
