@@ -86,7 +86,7 @@ def _five_zero_record() -> dict:
             {"label": "B", "index": 2, "price": 90.0},
             {"label": "C", "index": 3, "price": 156.0},
         ],
-        # Deliberately wrong legacy zone. v5 must reconstruct 123..126 from X/A/B/C.
+        # Deliberately wrong legacy zone. v6 must reconstruct 123..126 from X/A/B/C.
         "prz": {"price_low": 10.0, "price_high": 20.0, "width": 10.0},
         "outcome": {
             "pre_signal_prz_touch_bar": None,
@@ -109,16 +109,47 @@ def _five_zero_frame() -> pd.DataFrame:
     )
 
 
-def test_v5_terminal_audit_rebuilds_xabcd_source_raw_prz_instead_of_legacy_alias() -> None:
-    audit = audit_source_prz_terminal_price_bar(
-        _gartley_record(),
-        frame=_frame(),
-        forming_horizon=4,
-        reaction_horizon=2,
+def _shark_record() -> dict:
+    return {
+        "pattern_id": "shark",
+        "schema": "0XABC",
+        "direction": "bullish",
+        "signal_bar": 4,
+        "prefix_points": [
+            {"label": "0", "index": 0, "price": 100.0},
+            {"label": "X", "index": 1, "price": 120.0},
+            {"label": "A", "index": 2, "price": 110.0},
+            {"label": "B", "index": 3, "price": 125.0},
+        ],
+        # Deliberately wrong legacy zone. v6 must reconstruct the source overlap from 0/X/A/B.
+        "prz": {"price_low": 10.0, "price_high": 20.0, "width": 10.0},
+        "outcome": {
+            "pre_signal_prz_touch_bar": None,
+            "frontier_retired_at_bar": None,
+            "completion_terminal_bar": None,
+            "completion_confirmed_at_bar": None,
+        },
+    }
+
+
+def _shark_frame() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "trade_date": pd.date_range("2026-04-01", periods=10, freq="D"),
+            "open": [100, 120, 110, 125, 110, 100, 98, 103, 110, 115],
+            "high": [102, 122, 112, 127, 112, 101, 99, 105, 112, 117],
+            "low": [98, 118, 108, 123, 108, 98, 96.5, 101, 108, 113],
+            "close": [101, 121, 111, 126, 111, 99, 98, 104, 111, 116],
+        }
     )
 
+
+def test_v6_terminal_audit_rebuilds_xabcd_source_raw_prz_instead_of_legacy_alias() -> None:
+    audit = audit_source_prz_terminal_price_bar(
+        _gartley_record(), frame=_frame(), forming_horizon=4, reaction_horizon=2
+    )
     assert audit["research_definition"] == SOURCE_TERMINAL_RESEARCH_DEFINITION
-    assert SOURCE_TERMINAL_RESEARCH_DEFINITION == "m2-source-prz-v5"
+    assert SOURCE_TERMINAL_RESEARCH_DEFINITION == "m2-source-prz-v6"
     assert audit["prz_basis"] == "source_raw_prz"
     assert audit["status"] == "terminal_price_bar_observed"
     assert audit["first_prz_entry_bar"] == 5
@@ -135,12 +166,9 @@ def test_v5_terminal_audit_rebuilds_xabcd_source_raw_prz_instead_of_legacy_alias
     assert audit["prz"]["price_low"] != pytest.approx(50.0)
 
 
-def test_v5_terminal_audit_rebuilds_standalone_abcd_source_raw_prz() -> None:
+def test_v6_terminal_audit_rebuilds_standalone_abcd_source_raw_prz() -> None:
     audit = audit_source_prz_terminal_price_bar(
-        _abcd_record(),
-        frame=_abcd_frame(),
-        forming_horizon=5,
-        reaction_horizon=2,
+        _abcd_record(), frame=_abcd_frame(), forming_horizon=5, reaction_horizon=2
     )
     assert audit["research_definition"] == SOURCE_TERMINAL_RESEARCH_DEFINITION
     assert audit["prz_basis"] == "source_raw_prz"
@@ -153,14 +181,11 @@ def test_v5_terminal_audit_rebuilds_standalone_abcd_source_raw_prz() -> None:
     assert audit["prz"]["price_low"] != pytest.approx(10.0)
 
 
-def test_v5_terminal_audit_rebuilds_five_zero_volume2_raw_prz_and_excludes_61_8() -> None:
+def test_v6_terminal_audit_rebuilds_five_zero_volume2_raw_prz_and_excludes_61_8() -> None:
     audit = audit_source_prz_terminal_price_bar(
-        _five_zero_record(),
-        frame=_five_zero_frame(),
-        forming_horizon=4,
-        reaction_horizon=2,
+        _five_zero_record(), frame=_five_zero_frame(), forming_horizon=4, reaction_horizon=2
     )
-    assert audit["research_definition"] == "m2-source-prz-v5"
+    assert audit["research_definition"] == SOURCE_TERMINAL_RESEARCH_DEFINITION
     assert audit["prz_basis"] == "source_raw_prz"
     assert audit["status"] == "terminal_price_bar_observed"
     assert audit["first_prz_entry_bar"] == 6
@@ -176,8 +201,6 @@ def test_v5_terminal_audit_rebuilds_five_zero_volume2_raw_prz_and_excludes_61_8(
     assert audit["source_prz_defining_component"] == "BC 50% structural completion"
     assert audit["source_prz_selection_method"] == "volume2_50_bc_plus_reciprocal_abcd"
     assert audit["prz"]["price_low"] != pytest.approx(10.0)
-
-    # 5-0 Type-I targets must use the C->Terminal completion leg, not standard XABCD A->Terminal.
     assert audit["automatic_target_basis"] == "five_zero_c_to_terminal"
     assert audit["automatic_target_anchor_price"] == pytest.approx(156.0)
     assert audit["t1_price"] == pytest.approx(122.0 + 0.382 * 34.0)
@@ -188,7 +211,39 @@ def test_v5_terminal_audit_rebuilds_five_zero_volume2_raw_prz_and_excludes_61_8(
     assert "C-to-Terminal" in audit["source_semantics"]["targets"]
 
 
-def test_v5_terminal_audit_fails_closed_for_alternate_bat_source_conflict() -> None:
+def test_v6_terminal_audit_rebuilds_shark_source_overlap_and_first_5_0_target() -> None:
+    audit = audit_source_prz_terminal_price_bar(
+        _shark_record(), frame=_shark_frame(), forming_horizon=4, reaction_horizon=3
+    )
+    assert audit["research_definition"] == SOURCE_TERMINAL_RESEARCH_DEFINITION
+    assert audit["prz_basis"] == "source_raw_prz"
+    assert audit["status"] == "terminal_price_bar_observed"
+    assert audit["first_prz_entry_bar"] == 5
+    assert audit["terminal_bar"] == 6
+    assert audit["terminal_price"] == pytest.approx(96.5)
+    assert audit["prz"]["price_low"] == pytest.approx(96.75)
+    assert audit["prz"]["price_high"] == pytest.approx(100.73)
+    assert audit["source_prz_component_names"] == [
+        "0B 0.886-1.13 completion corridor",
+        "AB impulse 1.618-2.24 completion corridor",
+    ]
+    assert audit["source_prz_defining_component"] == "0B 0.886-1.13 completion corridor"
+    assert audit["source_prz_selection_method"] == (
+        "volume3_shark_overlap_0b_886_113_with_ab_impulse_1618_224"
+    )
+    assert audit["automatic_target_basis"] == "shark_first_5_0_measurement"
+    assert audit["t1_name"] == "50%"
+    assert audit["t1_price"] == pytest.approx(110.75)
+    assert audit["t2_name"] == "61.8%"
+    assert audit["t2_price"] == pytest.approx(114.113)
+    assert audit["bars_from_terminal_to_t1"] == 2
+    assert audit["bars_from_terminal_to_t2"] == 3
+    assert audit["t1_within_horizon"] is True
+    assert audit["t2_within_horizon"] is True
+    assert "first" in audit["source_semantics"]["targets"].lower()
+
+
+def test_v6_terminal_audit_fails_closed_for_alternate_bat_source_conflict() -> None:
     record = _gartley_record()
     record["pattern_id"] = "alternate_bat"
     record["prefix_points"] = [
@@ -197,11 +252,7 @@ def test_v5_terminal_audit_fails_closed_for_alternate_bat_source_conflict() -> N
         {"label": "B", "index": 2, "price": 170.0},
         {"label": "C", "index": 3, "price": 188.54},
     ]
-    audit = audit_source_prz_terminal_price_bar(
-        record,
-        frame=_frame(),
-        forming_horizon=4,
-    )
+    audit = audit_source_prz_terminal_price_bar(record, frame=_frame(), forming_horizon=4)
     assert audit["status"] == "source_prz_unresolved"
     assert audit["prz_basis"] == "none_fail_closed"
     assert audit["reason"] == "source_conflict"
