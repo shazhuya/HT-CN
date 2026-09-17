@@ -6,6 +6,7 @@ import pandas as pd
 
 from htcn.app.a_share_execution_context import (
     build_a_share_execution_context,
+    load_daily_trading_metadata,
     load_security_metadata,
 )
 from htcn.app.source_aligned_service import SourceAlignedHarmonicService
@@ -137,18 +138,28 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
 
         frame = pd.DataFrame(analysis.get("bars") or [])
         instrument_id = str(analysis["instrument_id"])
-        metadata = load_security_metadata(self.data_root / "catalog.duckdb", instrument_id)
+        catalog_path = self.data_root / "catalog.duckdb"
+        metadata = load_security_metadata(catalog_path, instrument_id)
+
+        as_of = None
+        if not frame.empty and "trade_date" in frame.columns:
+            stamp = pd.to_datetime(frame["trade_date"].iloc[-1], errors="coerce")
+            if not pd.isna(stamp):
+                as_of = stamp.date()
+        daily_event = load_daily_trading_metadata(catalog_path, instrument_id, as_of)
+
         execution_context = build_a_share_execution_context(
             frame,
             instrument_id=instrument_id,
             metadata=metadata,
+            daily_event=daily_event,
         ).as_payload()
         analysis["a_share_execution_context"] = execution_context
         for pattern in [*(analysis.get("completed") or []), *(analysis.get("forming") or [])]:
             pattern["a_share_execution_context"] = execution_context
 
         analysis["source_lifecycle_contract"] = {
-            "version": 2,
+            "version": 3,
             "canonical_clock": "source_terminal_price_bar",
             "current_state_field": "*.source_lifecycle.state",
             "retrospective_reaction_audit_role": "diagnostic_compatibility_only",
@@ -159,6 +170,8 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             "bamm_role": "evidence_only",
             "a_share_execution_context_field": "a_share_execution_context",
             "a_share_execution_context_role": "tradability_and_volatility_context_only",
+            "daily_event_metadata_table": "security_daily_event",
+            "daily_event_complete_required_to_resolve_special_exceptions": True,
             "execution_context_may_change_harmonic_identity": False,
             "execution_context_may_change_source_raw_prz": False,
             "mutates_harmonic_identity": False,
@@ -171,5 +184,7 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             "reaction_audit 仅保留后验诊断兼容，不得覆盖 source_lifecycle。"
             " M3 Phase 3：A股 T+1、涨跌幅制度、ATR/振幅/量比进入独立 execution context；"
             "该上下文只能解释可交易性与波动风险，禁止改写 harmonic identity 或 Source Raw PRZ。"
+            " M3 Phase 3.1：当日停复牌/无涨跌幅/特殊限制只接受显式 daily-event metadata；"
+            "缺失或不完整时继续 fail-safe，禁止把板块规则冒充当日精确制度。"
         ).strip()
         return analysis

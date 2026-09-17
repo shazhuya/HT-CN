@@ -23,13 +23,26 @@ class SecurityMetadata:
 
 
 @dataclass(frozen=True, slots=True)
-class AShareExecutionContext:
-    """A-share tradability/volatility context kept outside harmonic identity.
+class DailyTradingMetadata:
+    """Optional per-session exchange/event metadata for execution-rule resolution.
 
-    This layer may explain whether an already-observed source lifecycle event is practical
-    to act on, but it must never create, repair, rank as valid, or invalidate a harmonic
-    identity or Source Raw PRZ.
+    ``resolution_complete`` means the upstream event feed explicitly certifies that the
+    session-level trading/price-limit exception state is complete for this instrument/date.
+    A missing/incomplete record must never be interpreted as "no exception".
     """
+
+    trade_date: date
+    trading_status: str
+    no_price_limit: bool | None
+    price_limit_pct_override: float | None
+    resolution_complete: bool
+    source: str | None = None
+    reason: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class AShareExecutionContext:
+    """A-share tradability/volatility context kept outside harmonic identity."""
 
     instrument_id: str
     symbol: str
@@ -39,6 +52,14 @@ class AShareExecutionContext:
     metadata_source: str | None
     list_date: str | None
     is_st: bool | None
+    daily_event_available: bool
+    daily_trading_status: str | None
+    tradable_on_as_of_date: bool | None
+    daily_no_price_limit: bool | None
+    daily_price_limit_override_pct: float | None
+    daily_event_resolution_complete: bool
+    daily_event_source: str | None
+    daily_event_reason: str | None
     t_plus_one: bool
     same_day_sell_after_buy: bool
     earliest_sell_offset_sessions_after_buy: int
@@ -65,13 +86,6 @@ def load_security_metadata(
     catalog_path: str | Path,
     instrument_id: str,
 ) -> SecurityMetadata | None:
-    """Load security metadata when the M1 catalog is available; otherwise fail softly.
-
-    DuckDB is imported lazily so pure lifecycle/execution-context tests do not depend on a
-    local market database. Missing catalog/table/row is treated as metadata unavailable,
-    never as permission to guess ST/IPO exceptions.
-    """
-
     path = Path(catalog_path)
     if not path.exists():
         return None
@@ -111,6 +125,60 @@ def load_security_metadata(
         list_date=resolved_list_date,
         is_st=bool(is_st_raw),
         source=None if source_raw is None else str(source_raw),
+    )
+
+
+def load_daily_trading_metadata(
+    catalog_path: str | Path,
+    instrument_id: str,
+    trade_date: date | None,
+) -> DailyTradingMetadata | None:
+    """Read optional session-level event metadata without mutating the M1 catalog.
+
+    The table is intentionally optional during the migration. Missing table/row fails soft
+    and leaves special-event resolution unresolved. Expected schema is documented and can
+    be created by ``htcn.data.trading_events.ensure_security_daily_event_schema``.
+    """
+
+    if trade_date is None:
+        return None
+    path = Path(catalog_path)
+    if not path.exists():
+        return None
+    try:
+        import duckdb
+
+        with duckdb.connect(str(path), read_only=True) as con:
+            row = con.execute(
+                """
+                SELECT trading_status,
+                       no_price_limit,
+                       price_limit_pct_override,
+                       resolution_complete,
+                       source,
+                       reason
+                FROM security_daily_event
+                WHERE instrument_id = ? AND trade_date = ?
+                """,
+                [instrument_id, trade_date],
+            ).fetchone()
+    except Exception:
+        return None
+    if row is None:
+        return None
+
+    status, no_limit, override, complete, source, reason = row
+    override_value = None if override is None else float(override)
+    if override_value is not None and (not math.isfinite(override_value) or override_value <= 0):
+        override_value = None
+    return DailyTradingMetadata(
+        trade_date=trade_date,
+        trading_status=str(status or "unknown").strip().lower(),
+        no_price_limit=None if no_limit is None else bool(no_limit),
+        price_limit_pct_override=override_value,
+        resolution_complete=bool(complete),
+        source=None if source is None else str(source),
+        reason=None if reason is None else str(reason),
     )
 
 
@@ -185,27 +253,52 @@ def _resolve_price_limit(
     as_of: date | None,
     metadata: SecurityMetadata | None,
     ipo_first_five: bool | None,
+    daily_event: DailyTradingMetadata | None,
 ) -> tuple[float | None, float | None, str, bool]:
     nominal = _nominal_price_limit_pct(board)
     if board is Board.BSE:
         return None, None, "bse_deferred", True
 
+    if daily_event is not None:
+        status = daily_event.trading_status
+        if status == "suspended":
+            return nominal, None, "daily_event_trading_suspended", not daily_event.resolution_complete
+        if daily_event.resolution_complete:
+            if daily_event.no_price_limit is True:
+                return nominal, None, "daily_event_no_price_limit", False
+            if daily_event.price_limit_pct_override is not None:
+                return (
+                    nominal,
+                    float(daily_event.price_limit_pct_override),
+                    "daily_event_price_limit_override",
+                    False,
+                )
+
     if metadata is None:
         return nominal, None, "nominal_only_security_metadata_unavailable", True
 
     if ipo_first_five is True and board in {Board.MAIN, Board.STAR, Board.CHINEXT}:
-        return nominal, None, "ipo_first_five_sessions_no_price_limit", True
+        unresolved = daily_event is None or not daily_event.resolution_complete
+        return nominal, None, "ipo_first_five_sessions_no_price_limit", unresolved
 
     if as_of is None:
         return nominal, None, "metadata_known_trade_date_unavailable", True
 
     if metadata.is_st and board is Board.MAIN and as_of < MAIN_RISK_WARNING_10_PCT_EFFECTIVE:
-        return nominal, 5.0, "historical_main_risk_warning_5pct_before_2026_07_06", True
+        unresolved = daily_event is None or not daily_event.resolution_complete
+        return nominal, 5.0, "historical_main_risk_warning_5pct_before_2026_07_06", unresolved
 
-    # This resolves the board/risk-warning/listing-age rule profile, not every exchange
-    # exception for the exact day. Suspension/resumption and special security states still
-    # require richer event metadata, hence the explicit unresolved-exceptions flag.
-    return nominal, nominal, "board_rule_profile_resolved_special_events_unresolved", True
+    unresolved = daily_event is None or not daily_event.resolution_complete
+    return (
+        nominal,
+        nominal,
+        (
+            "board_rule_profile_resolved_daily_event_complete"
+            if not unresolved
+            else "board_rule_profile_resolved_special_events_unresolved"
+        ),
+        unresolved,
+    )
 
 
 def build_a_share_execution_context(
@@ -213,6 +306,7 @@ def build_a_share_execution_context(
     *,
     instrument_id: str,
     metadata: SecurityMetadata | None = None,
+    daily_event: DailyTradingMetadata | None = None,
     atr_period: int = 14,
 ) -> AShareExecutionContext:
     required = {"high", "low", "close", "volume"}
@@ -232,6 +326,9 @@ def build_a_share_execution_context(
         if not pd.isna(latest_stamp):
             as_of = latest_stamp.date()
 
+    if daily_event is not None and as_of is not None and daily_event.trade_date != as_of:
+        daily_event = None
+
     ipo_first_five = _ipo_first_five_sessions(
         frame,
         list_date=None if metadata is None else metadata.list_date,
@@ -241,22 +338,16 @@ def build_a_share_execution_context(
         as_of=as_of,
         metadata=metadata,
         ipo_first_five=ipo_first_five,
+        daily_event=daily_event,
     )
 
     atr = _wilder_atr(frame, period=atr_period)
     latest_close = _finite(frame["close"].iloc[-1])
-    atr_pct = (
-        None
-        if atr is None or latest_close is None or latest_close <= 0
-        else 100.0 * atr / latest_close
-    )
+    atr_pct = None if atr is None or latest_close is None or latest_close <= 0 else 100.0 * atr / latest_close
 
     latest_high = _finite(frame["high"].iloc[-1])
     latest_low = _finite(frame["low"].iloc[-1])
-    if len(frame) >= 2:
-        range_denominator = _finite(frame["close"].iloc[-2])
-    else:
-        range_denominator = latest_close
+    range_denominator = _finite(frame["close"].iloc[-2]) if len(frame) >= 2 else latest_close
     latest_range_pct = (
         None
         if latest_high is None
@@ -277,6 +368,14 @@ def build_a_share_execution_context(
         else latest_volume / avg_volume_20
     )
 
+    daily_status = None if daily_event is None else daily_event.trading_status
+    if daily_status == "suspended":
+        tradable = False
+    elif daily_event is not None and daily_event.resolution_complete and daily_status in {"normal", "resumed", "special"}:
+        tradable = True
+    else:
+        tradable = None
+
     return AShareExecutionContext(
         instrument_id=instrument_id,
         symbol=symbol,
@@ -284,10 +383,16 @@ def build_a_share_execution_context(
         as_of_trade_date=None if as_of is None else as_of.isoformat(),
         metadata_available=metadata is not None,
         metadata_source=None if metadata is None else metadata.source,
-        list_date=(
-            None if metadata is None or metadata.list_date is None else metadata.list_date.isoformat()
-        ),
+        list_date=None if metadata is None or metadata.list_date is None else metadata.list_date.isoformat(),
         is_st=None if metadata is None else bool(metadata.is_st),
+        daily_event_available=daily_event is not None,
+        daily_trading_status=daily_status,
+        tradable_on_as_of_date=tradable,
+        daily_no_price_limit=None if daily_event is None else daily_event.no_price_limit,
+        daily_price_limit_override_pct=None if daily_event is None else daily_event.price_limit_pct_override,
+        daily_event_resolution_complete=False if daily_event is None else daily_event.resolution_complete,
+        daily_event_source=None if daily_event is None else daily_event.source,
+        daily_event_reason=None if daily_event is None else daily_event.reason,
         t_plus_one=True,
         same_day_sell_after_buy=False,
         earliest_sell_offset_sessions_after_buy=1,

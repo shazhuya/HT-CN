@@ -9,6 +9,14 @@ export type AShareExecutionContextPayload = {
   metadata_source: string | null
   list_date: string | null
   is_st: boolean | null
+  daily_event_available: boolean
+  daily_trading_status: string | null
+  tradable_on_as_of_date: boolean | null
+  daily_no_price_limit: boolean | null
+  daily_price_limit_override_pct: number | null
+  daily_event_resolution_complete: boolean
+  daily_event_source: string | null
+  daily_event_reason: string | null
   t_plus_one: boolean
   same_day_sell_after_buy: boolean
   earliest_sell_offset_sessions_after_buy: number
@@ -50,11 +58,22 @@ function boardLabel(value: string) {
 
 function limitStatus(context: AShareExecutionContextPayload) {
   if (context.bse_deferred) return '北交所规则暂不进入默认执行层'
+  if (context.price_limit_status === 'daily_event_trading_suspended') return '当日事件元数据：停牌，不生成可交易涨跌幅规则'
+  if (context.price_limit_status === 'daily_event_no_price_limit') return '当日事件元数据：明确无日涨跌幅限制'
+  if (context.price_limit_status === 'daily_event_price_limit_override') return '当日事件元数据：使用显式特殊涨跌幅覆盖'
+  if (context.price_limit_status === 'board_rule_profile_resolved_daily_event_complete') return '板块/风险警示规则已解析，且当日特殊事件元数据完整'
   if (context.price_limit_status === 'ipo_first_five_sessions_no_price_limit') return '上市前5个交易日：不套用日常涨跌幅限制'
   if (context.price_limit_status === 'historical_main_risk_warning_5pct_before_2026_07_06') return '历史风险警示主板规则：5%（2026-07-06前）'
   if (context.price_limit_status === 'nominal_only_security_metadata_unavailable') return '只有板块名义规则；证券元数据不足，禁止推断精确适用规则'
   if (context.price_limit_status === 'board_rule_profile_resolved_special_events_unresolved') return '板块/风险警示/上市年龄规则已解析；特殊事件例外仍需元数据'
   return context.price_limit_status
+}
+
+function tradingStatus(context: AShareExecutionContextPayload) {
+  if (context.tradable_on_as_of_date === false) return '不可交易 · 停牌'
+  if (context.tradable_on_as_of_date === true) return '当日可交易'
+  if (context.daily_event_available) return '事件记录存在 · 完整性不足'
+  return '当日事件元数据未接入'
 }
 
 export default function AShareExecutionContext({ context }: Props) {
@@ -71,6 +90,14 @@ export default function AShareExecutionContext({ context }: Props) {
       </div>
 
       <div className="execution-context-grid">
+        <article data-testid="daily-trading-status">
+          <span>当日交易状态</span>
+          <strong>{tradingStatus(context)}</strong>
+          <p>
+            {context.daily_trading_status ? `状态 ${context.daily_trading_status}` : '状态未知'}
+            {' · '}{context.daily_event_resolution_complete ? '事件元数据完整' : '事件元数据未完整'}
+          </p>
+        </article>
         <article>
           <span>T+1</span>
           <strong>{context.t_plus_one ? '买入后最早下一交易日卖出' : '未启用'}</strong>
@@ -101,11 +128,16 @@ export default function AShareExecutionContext({ context }: Props) {
           <strong>{context.metadata_available ? '已接入' : '不足 · Fail Safe'}</strong>
           <p>{context.list_date ? `上市 ${context.list_date}` : '上市日未知'} · ST状态 {context.is_st == null ? '未知' : context.is_st ? '是' : '否'}</p>
         </article>
+        <article>
+          <span>当日事件来源</span>
+          <strong>{context.daily_event_source ?? '未接入'}</strong>
+          <p>{context.daily_event_reason ?? '无可用停复牌/特殊涨跌幅事件说明'}</p>
+        </article>
       </div>
 
       <p className="execution-context-note">
         此层只解释“当前 source lifecycle 事件能否以及如何被 A 股制度/波动环境约束”。
-        {context.special_event_exceptions_unresolved ? ' 停复牌等特殊事件例外尚未完整接入，因此不把规则值冒充当天精确涨跌停价。' : ''}
+        {context.special_event_exceptions_unresolved ? ' 当日特殊事件例外尚未完整解析，因此不把板块规则冒充当天精确涨跌停制度。' : ' 当日特殊事件元数据已明确完成解析。'}
         {' '}它不会创建、修复或否定谐波身份，也不会修改 Source Raw PRZ。
       </p>
     </section>
