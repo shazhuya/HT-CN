@@ -2,6 +2,93 @@
 
 本文件只记录每个开发 Session 最后停在哪里。详细技术事实仍以源码、测试、`PROJECT_CONTEXT.md`、`DECISIONS.md`、`specs/` 为准。
 
+## 2026-09-17 — M2.31 RSI BAMM Source-Terminal Phase 4 收口
+
+### 基线
+
+- 起始 main：`0537d0222db5ed4a0ea3f69369dfcb31ee0dbca1`（M2.30 formal release）
+- 最终研究验收检查点：`0c7799391bc92af46a2b249892dc24e06a6143a0`
+- 分支：`m2/rsi-bamm-source-state-machine`
+- PR：#11 `M2.31: RSI BAMM source state machine and lifecycle evidence`
+- 最终全链 CI：run #643 / `35209013814`，deterministic + Web + Playwright + 45-symbol frozen research **success**
+
+### 完成
+
+- 建立独立 RSI BAMM no-lookahead 状态机；
+- 冻结 Volume Two Trigger / midpoint / X-A Confirmation Point / 1.13 vs 1.618 source selection；
+- 冻结 Volume Three Simple/Complex × Confirmation/Divergence 四类 profile；
+- complex W/M classifier 明确标记为 HT-CN engineering operationalization；
+- BAMM 明确为 confirmation/execution evidence only，不得修改 harmonic identity / Source Raw PRZ；
+- Phase 3 geometry-terminal adapter 保留兼容/golden-test；
+- Phase 4 新增 `observe_source_execution_for_match()` + `confirm_rsi_bamm_with_source_execution()`，正式绑定 Source Terminal Price Bar；
+- 修复 historical D/C 被误当 Source T-Bar 的生命周期语义问题；
+- 支持合法 PEZ overspill，同时保持 static Source Raw PRZ 不变；
+- BAMM completion 晚于 Source T-Bar 时禁止 backdate；
+- lifecycle 增加独立 BAMM evidence channel；
+- 新增 machine-readable Source Truth `research/source-fidelity-status-v1.json`；
+- `m2-book-golden-ledger.md` 升级到 M2.31，修复 M2.26 之后的状态漂移；
+- Type-II 文档明确：full Source Raw PRZ retest 是 HT-CN strict production policy，不等于 Carney 排斥 nominal retest；
+- 5-0 quarantine 与 Alternate Bat fail-closed 保持；
+- CI 调整为 ordinary deterministic/browser + `[research]` closeout 才运行 45 股重研究；旧中间研究可取消。
+
+### 45 股 frozen observability
+
+数据集：`a-share-research-v2-45`，snapshot cutoff `2026-09-15`。
+
+- successful symbols：45 / 45；
+- RSI BAMM sequences：686；
+- completed source-scannable harmonic matches：174；
+- source-clock observable matches：128；
+- observed Source Terminal Price Bars：23；
+- strict source-confirmed BAMM/harmonic confluences：2；
+- 两个 strict confluence 均为 standalone AB=CD；
+- 一个在 Source T-Bar 时已经可用；另一个 BAMM 后完成，因此 evidence timestamp 延后；
+- `confirmatory_inference_allowed = false`；此报告不支持命中率/alpha/当前个股概率推断。
+
+### 关键发现
+
+最初 geometry-terminal observability 得到 `source_confirmed=0`。核查发现 Phase 3 adapter 仍以 `match.points[-1]` 的历史 D/C 作为 terminal。修复为 Source Terminal Price Bar 之后，正式结果为 2 个 strict confluence。
+
+这个过程证明：历史 completed geometry 与 live execution observability 不是同一件事。174 个 historical completed matches 中只有 128 个能从 pre-terminal observable state 重建 source clock，因此 M3 必须迁离 retrospective D-clock。
+
+### 关键决定
+
+- D-018：completed BAMM confluence 必须绑定 Source Terminal Price Bar；
+- D-019：45 股重研究只由明确 closeout 触发，分支只保留最新 closeout；
+- D-020：M3 live/current lifecycle 必须由 source execution clock 驱动。
+
+### 未解决
+
+- M3 旧 retrospective lifecycle overlay 还没完成 source-clock migration；
+- 5-0 V2/V3 label conflict 继续 production quarantine；
+- standard XABCD per-pattern AB=CD hard-gate refinement 尚可继续，但低于 M3 migration 优先级；
+- optional BAMM Acceleration Trigger 延后；
+- 尚无稳定 alpha 证明。
+
+### 下一步唯一主任务
+
+**M3 Source-Clock Lifecycle Migration — canonical state contract + Workbench adapter。**
+
+第一批：
+
+1. 建 unified source-clock lifecycle state enum/payload；
+2. current state 只由 observable execution_clock 派生；
+3. Workbench 中文显示“现在在哪 / 先看哪 / 下一关键价位 / 失效条件 / 当前动作”；
+4. BAMM 只作为 evidence badge；
+5. old retrospective D/C field 标记 diagnostic/compatibility；
+6. 加 deterministic + Playwright transition/no-backdating regression。
+
+### 新会话特别注意
+
+- M2.31 已完成，不得再把 RSI BAMM 写成“尚未建立”；
+- `confirm_rsi_bamm_with_match()` 不是 production lifecycle canonical clock；
+- production confluence 使用 Source Terminal Price Bar；
+- PEZ overspill 合法但不能反写 Raw PRZ；
+- 45 股 2 个 strict confluence 是 observability，不是胜率/收益结论；
+- M3 不要继续堆新形态，先完成 source-clock lifecycle 产品迁移。
+
+---
+
 ## 2026-09-17 — M2.30 Shark Source Raw PRZ / v6 收口
 
 ### 基线
@@ -21,7 +108,7 @@
 - research definition 升至 `m2-source-prz-v6`；
 - 新增 v6 sealed research guard；
 - 修复旧 `specs/m2-shark-five-zero.md` 的 5-0 50–61.8 universal-band 漂移；
-- CI 修复 Actions artifact 权限、snapshot bootstrap、即时 cache、长研究 concurrency、90 分钟安全 timeout、实时无缓冲进度输出。
+- CI 修复 Actions artifact 权限、snapshot bootstrap、即时 cache、90 分钟安全 timeout、实时无缓冲进度输出。
 
 ### 真实研究验收
 
@@ -39,25 +126,11 @@
 ### 关键决定
 
 - D-015：Shark Source Raw PRZ = published source corridors geometric overlap；
-- D-016：真实 A 股长研究必须 snapshot-first、resumable、observable，不能被普通小提交反复浪费。
+- D-016：真实 A 股长研究必须 snapshot-first、resumable、observable。
 
-### 未解决
+### 下一步
 
-- RSI BAMM 独立多步骤状态机；
-- 5-0 V3 label conflict，production quarantine 继续；
-- standard XABCD per-pattern AB=CD hard-gate refinement；
-- M3 live execution-clock overlay migration。
-
-### 下一步唯一主任务
-
-**M2.31 — RSI BAMM Dedicated Source State Machine。**
-
-### 新会话特别注意
-
-- 不得把 Wilder RSI 极值反转称为 RSI BAMM；
-- 不得把 v6 visible robustness 写成确认性交易结论；
-- 5-0 默认生产隔离继续；
-- M3 旧 retrospective D-based overlay 不得恢复为 live execution semantics。
+后续已由 M2.31 继续推进。
 
 ---
 
@@ -77,22 +150,13 @@
 - Volume Three BC layering 固定为 execution-only，不进入 identity / Raw PRZ；
 - SourceAligned API 升至 semantics v3 / source profile v2；
 - 新增 AB=CD Book Source ledger / Golden regression；
-- research definition 升至 `m2-source-prz-v4`；
+- research definition升至 `m2-source-prz-v4`；
 - 新增 v4 sealed research boundary guard；
 - 历史 v1/v3/Holdout/external replication 均保持不可变。
 
-### 真实研究验收
-
-- forming signals：8085；
-- mature Source-Raw-PRZ Terminal events：1233；
-- Train / Validation / sealed Holdout：730 / 222 / 258；purged 23；
-- `source_prz_unresolved`：6547（v3）-> 1724（v4）；
-- mature T-Bar：166（v3）-> 1233（v4）；
-- standalone AB=CD：Train 627 / Validation 198 / sealed Holdout 226。
-
 ### 下一步
 
-后续已由 M2.29 / M2.30 继续推进。
+后续已由 M2.29 / M2.30 / M2.31 继续推进。
 
 ---
 
