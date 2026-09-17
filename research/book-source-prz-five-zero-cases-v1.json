@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "ledger_id": "book-source-prz-five-zero-cases-v1",
+  "authority": "Scott M. Carney, Harmonic Trading Volumes Two and Three",
+  "scope": "5-0 structural Source Raw PRZ membership plus separately recorded Volume Three execution refinement. The ledger preserves source-label conflicts rather than normalizing them away.",
+  "source_contract": {
+    "structural_authority": "Volume Two Chapter 3",
+    "raw_prz_members": [
+      "50% BC retracement",
+      "Reciprocal AB=CD"
+    ],
+    "defining_measurement": "50% BC retracement",
+    "complementary_measurement": "Reciprocal AB=CD",
+    "xabc_identity": {
+      "b_xa": [1.13, 1.618],
+      "c_ab": [1.618, 2.24]
+    },
+    "volume3_61_8_role": "execution_refinement_and_stop_reference_only",
+    "volume3_61_8_raw_prz_membership": false,
+    "volume3_61_8_identity_membership": false
+  },
+  "source_label_reconciliation": {
+    "status": "conflict_recorded_not_silently_resolved",
+    "volume2": "Repeated prose and diagrams define D from the B-C pullback: 50% BC + Reciprocal AB=CD.",
+    "volume3_text": "One passage calls the 50%/61.8 measures XA retracements.",
+    "volume3_prz_figures": "Other PRZ figures alternate AB and XA labels.",
+    "volume3_structural_figures_and_cases": "Bullish/Bearish 5-0 drawings and AUD/GLD cases visually retain the B-C pullback geometry into D.",
+    "htcn_policy": "Structural Raw PRZ follows Volume Two. 61.8 is projected on the B-C axis only as an explicit HT-CN execution interpretation while the source-label conflict remains visible."
+  },
+  "cases": [
+    {
+      "case_id": "v2-five-zero-eur-a0-fx-5m",
+      "source_ref": "Volume Two Ch.3, printed p.8",
+      "instrument": "Eurodollar (EUR_A0-FX)",
+      "timeframe": "5-minute",
+      "direction": "bullish",
+      "published_facts": {
+        "c_ab_projection": 1.618,
+        "raw_prz_components": ["50% BC retracement", "Reciprocal AB=CD"],
+        "reported_convergence_price": 1.3910
+      },
+      "coordinate_regression_eligible": false
+    },
+    {
+      "case_id": "v2-five-zero-xoi-5m",
+      "source_ref": "Volume Two Ch.3, printed pp.16-17",
+      "instrument": "AMEX Oil Index ($XOI)",
+      "timeframe": "5-minute",
+      "direction": "bearish",
+      "published_facts": {
+        "raw_prz_components": ["50% BC retracement", "Reciprocal AB=CD"],
+        "reported_area": "tight range just above 1100"
+      },
+      "coordinate_regression_eligible": false
+    },
+    {
+      "case_id": "v2-five-zero-adobe-daily",
+      "source_ref": "Volume Two Ch.3, printed p.15 / translated extract p.97",
+      "instrument": "Adobe",
+      "timeframe": "Daily",
+      "direction": "bearish",
+      "published_facts": {
+        "initial_failed_extension": 1.13,
+        "c_ab_projection": 2.0,
+        "raw_prz_components": ["50% BC retracement", "Reciprocal AB=CD"],
+        "reported_area": "just under $38"
+      },
+      "coordinate_regression_eligible": false
+    },
+    {
+      "case_id": "v3-five-zero-aud-a0-fx-60m",
+      "source_ref": "Volume Three pp.133-134",
+      "instrument": "Australian Dollar (AUD_A0-FX)",
+      "timeframe": "60-minute",
+      "direction": "bullish",
+      "published_facts": {
+        "b_xa": 1.27,
+        "c_ab": 2.24,
+        "structural_figure_d_measure": 0.50,
+        "figure_geometry": "0.50 shown on the B-C pullback into D"
+      },
+      "coordinate_regression_eligible": false
+    },
+    {
+      "case_id": "v3-five-zero-gld-15m",
+      "source_ref": "Volume Three pp.137-138",
+      "instrument": "Gold ETF (GLD)",
+      "timeframe": "15-minute",
+      "direction": "bearish",
+      "published_facts": {
+        "c_ab": 2.24,
+        "execution_relationship": "Reciprocal AB=CD slightly below the 50% level defined the PRZ",
+        "structural_figure_d_measure": 0.50
+      },
+      "coordinate_regression_eligible": false
+    }
+  ],
+  "volume3_execution_rules": {
+    "bullish": {
+      "reciprocal_before_50": "execute immediately at Reciprocal AB=CD",
+      "reciprocal_beyond_50": "include 61.8 as optimal entry",
+      "stop_reference": "beyond 61.8"
+    },
+    "bearish": {
+      "reciprocal_near_50_or_lower": "Reciprocal defines execution near 50",
+      "reciprocal_above_50": "execution defaults toward 61.8",
+      "stop_reference": "61.8 is the upper make-or-break boundary"
+    }
+  },
+  "known_open_items": [
+    "Volume Three leg labels around 50%/61.8 remain internally inconsistent (XA vs AB) and are not silently normalized into a source claim.",
+    "The HT-CN 61.8 B-C-axis projection is an explicit execution interpretation, not Raw PRZ membership.",
+    "Production 5-0 remains quarantined until deterministic regression, API provenance and workbench semantics pass the M2.29 gate."
+  ]
+}
