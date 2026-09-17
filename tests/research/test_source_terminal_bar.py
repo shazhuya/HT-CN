@@ -177,6 +177,16 @@ def test_v5_terminal_audit_rebuilds_five_zero_volume2_raw_prz_and_excludes_61_8(
     assert audit["source_prz_selection_method"] == "volume2_50_bc_plus_reciprocal_abcd"
     assert audit["prz"]["price_low"] != pytest.approx(10.0)
 
+    # 5-0 Type-I targets must use the C->Terminal completion leg, not standard XABCD A->Terminal.
+    assert audit["automatic_target_basis"] == "five_zero_c_to_terminal"
+    assert audit["automatic_target_anchor_price"] == pytest.approx(156.0)
+    assert audit["t1_price"] == pytest.approx(122.0 + 0.382 * 34.0)
+    assert audit["t2_price"] == pytest.approx(122.0 + 0.618 * 34.0)
+    assert audit["bars_from_terminal_to_t1"] == 3
+    assert audit["t1_within_horizon"] is False
+    assert audit["outcome_class"] == "no_t1_within_horizon"
+    assert "C-to-Terminal" in audit["source_semantics"]["targets"]
+
 
 def test_v5_terminal_audit_fails_closed_for_alternate_bat_source_conflict() -> None:
     record = _gartley_record()
