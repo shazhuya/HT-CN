@@ -1,3 +1,4 @@
+import AShareExecutionContext, { type AShareExecutionContextPayload } from './AShareExecutionContext'
 import LifecycleCompass from './LifecycleCompass'
 import './HarmonicChartLifecycle.css'
 
@@ -150,6 +151,7 @@ export type Pattern = {
   execution_clock_policy?: string
   source_lifecycle?: SourceLifecycle
   rsi_bamm_evidence?: Record<string, unknown>
+  a_share_execution_context?: AShareExecutionContextPayload
   prz: {
     price_low: number
     price_high: number
@@ -331,6 +333,7 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
 
   return (
     <>
+      <AShareExecutionContext context={pattern?.a_share_execution_context} />
       <LifecycleCompass pattern={pattern} bars={bars} />
       <div className="chart-wrap" aria-label="harmonic-chart">
         <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="A股K线与谐波形态">
