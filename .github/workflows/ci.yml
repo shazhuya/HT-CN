@@ -7,12 +7,15 @@ on:
       - 'm*/**'
   pull_request:
 
-concurrency:
-  group: htcn-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+permissions:
+  contents: read
+  actions: read
 
 jobs:
   deterministic-tests:
+    concurrency:
+      group: htcn-deterministic-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -73,8 +76,11 @@ jobs:
     name: autonomous-real-a-share-research
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/m2/')
     needs: deterministic-tests
+    concurrency:
+      group: htcn-research-${{ github.ref }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -89,6 +95,7 @@ jobs:
             m2-research-qfq-${{ runner.os }}-
 
       - name: Bootstrap frozen A-share snapshots on cache miss
+        id: research-bootstrap
         if: steps.research-cache.outputs.cache-hit != 'true'
         continue-on-error: true
         uses: actions/download-artifact@v4
@@ -98,6 +105,13 @@ jobs:
           run-id: 35114589602
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: artifacts/ci-research
+
+      - name: Persist bootstrapped frozen snapshots immediately
+        if: steps.research-cache.outputs.cache-hit != 'true' && steps.research-bootstrap.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: artifacts/ci-research/data
+          key: m2-research-qfq-${{ runner.os }}-${{ hashFiles('research/a-share-research-universe-v1.json') }}
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
@@ -111,10 +125,10 @@ jobs:
           python -m pip install -e '.[dev]'
 
       - name: Run autonomous real A-share calibration
-        run: python scripts/m2_ci_autonomous_research.py
+        run: python -u scripts/m2_ci_autonomous_research.py
 
-      - name: Save pinned A-share research snapshots after calibration
-        if: steps.research-cache.outputs.cache-hit != 'true'
+      - name: Save fetched A-share research snapshots after calibration
+        if: steps.research-cache.outputs.cache-hit != 'true' && steps.research-bootstrap.outcome != 'success'
         uses: actions/cache/save@v4
         with:
           path: artifacts/ci-research/data
