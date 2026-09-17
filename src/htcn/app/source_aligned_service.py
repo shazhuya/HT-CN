@@ -11,7 +11,10 @@ from htcn.harmonic.execution import observe_source_execution
 from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
 from htcn.harmonic.rsi_bamm import RSIBammDirection, scan_rsi_bamm_frame
-from htcn.harmonic.rsi_bamm_confluence import confirm_rsi_bamm_with_match
+from htcn.harmonic.rsi_bamm_confluence import (
+    confirm_rsi_bamm_with_source_execution,
+    observe_source_execution_for_match,
+)
 from htcn.harmonic.rsi_bamm_lifecycle import audit_rsi_bamm_at_source_clock
 from htcn.harmonic.source_prz_evidence import source_prz_evidence
 
@@ -97,11 +100,11 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
 
     @staticmethod
     def _rsi_bamm_confluence_payload(item: Any, frame: pd.DataFrame) -> dict[str, Any]:
-        """Expose source-confirmed BAMM as evidence without mutating harmonic identity.
+        """Expose source-clock-confirmed BAMM without mutating harmonic identity.
 
-        The scan may observe bars after the harmonic terminal point, but evidence is timestamped
-        at the BAMM sequence completion bar and is never backdated to the harmonic terminal bar.
-        Canonical confirmation still flows only through ``confirm_rsi_bamm_with_match``.
+        Phase 4 reconstructs the observable Source Terminal Price Bar from the pre-terminal
+        projection and binds BAMM to that clock. Historical D/C remains diagnostic geometry only.
+        Evidence is timestamped no earlier than both the T-Bar and BAMM sequence completion.
         """
         required = {"close", "low", "high"}
         if not required.issubset(frame.columns):
@@ -110,15 +113,21 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
                 "sequence_count": 0,
                 "source_confirmed_count": 0,
                 "available_from_bar": None,
-                "available_at_pattern_terminal": False,
+                "available_at_source_terminal": False,
                 "mutates_harmonic_identity": False,
             }
 
         direction = RSIBammDirection(str(item.direction.value))
         sequences = scan_rsi_bamm_frame(frame, direction=direction)
-        confluences = [confirm_rsi_bamm_with_match(sequence, item) for sequence in sequences]
+        audit = observe_source_execution_for_match(frame, item)
+        confluences = [
+            confirm_rsi_bamm_with_source_execution(sequence, item, audit)
+            for sequence in sequences
+        ]
         confirmed = [row for row in confluences if row.source_confirmed]
-        terminal_bar = int(item.points[-1].index)
+        geometry_terminal_bar = int(item.points[-1].index)
+        source_terminal_bar = None if audit is None else audit.terminal_bar
+        source_terminal_price = None if audit is None else audit.terminal_price
 
         if not confirmed:
             return {
@@ -126,21 +135,33 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
                 "sequence_count": len(sequences),
                 "source_confirmed_count": 0,
                 "available_from_bar": None,
-                "available_at_pattern_terminal": False,
+                "available_at_source_terminal": False,
+                "geometry_terminal_bar": geometry_terminal_bar,
+                "source_terminal_bar": source_terminal_bar,
+                "source_terminal_price": source_terminal_price,
+                "source_execution_state": None if audit is None else audit.state,
                 "candidate_statuses": sorted({row.status for row in confluences}),
+                "terminal_source": "source_terminal_price_bar",
                 "mutates_harmonic_identity": False,
             }
 
         latest = max(confirmed, key=lambda row: int(row.sequence.completion_bar))
         sequence = latest.sequence
+        assert latest.terminal_bar is not None
+        terminal_bar = int(latest.terminal_bar)
         available_from = max(terminal_bar, int(sequence.completion_bar))
+        available_at_source_terminal = available_from <= terminal_bar
         return {
             "status": latest.status,
             "sequence_count": len(sequences),
             "source_confirmed_count": len(confirmed),
             "available_from_bar": available_from,
-            "available_at_pattern_terminal": available_from <= terminal_bar,
-            "pattern_terminal_bar": terminal_bar,
+            "available_at_source_terminal": available_at_source_terminal,
+            # Compatibility alias. Its semantic source is now explicitly the observable T-Bar.
+            "available_at_pattern_terminal": available_at_source_terminal,
+            "geometry_terminal_bar": geometry_terminal_bar,
+            "source_terminal_bar": terminal_bar,
+            "source_terminal_price": latest.terminal_price,
             "bamm_completion_bar": int(sequence.completion_bar),
             "profile": sequence.profile.value,
             "relation": sequence.relation.value,
@@ -150,6 +171,9 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             "pattern_precedence_used": bool(
                 latest.confirmation is not None and latest.confirmation.pattern_precedence_used
             ),
+            "terminal_source": latest.terminal_source,
+            "terminal_tests_source_prz": latest.terminal_tests_source_prz,
+            "terminal_in_source_prz": latest.terminal_in_source_prz,
             "mutates_harmonic_identity": False,
         }
 
@@ -387,11 +411,14 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             "source_selection_authority": "HT-CN operational convergence only where Carney leaves multiple source-valid complements",
         }
         analysis["rsi_bamm_contract"] = {
-            "version": 1,
+            "version": 2,
             "role": "confirmation_execution_evidence_only",
             "completed_match_channel": "completed[].rsi_bamm_evidence",
+            "completed_match_clock": "source_terminal_price_bar_reconstructed_from_pre_terminal_projection",
             "source_clock_channel": "forming[].execution_clock.rsi_bamm_evidence",
+            "geometry_terminal_is_execution_terminal": False,
             "no_backdating": True,
+            "pez_overspill_allowed": True,
             "mutates_harmonic_identity": False,
             "mutates_source_raw_prz": False,
         }
@@ -403,6 +430,7 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             "Volume Three 61.8 仅作为 execution refinement/stop reference，并显式保留 XA/AB 标签冲突。"
             "5-0 仍处于 production quarantine；Alternate Bat 仍 source-conflict fail closed。"
             " M2.31 将 RSI BAMM 作为独立 confirmation/execution evidence channel 接入；"
+            "completed confluence 绑定 Source Terminal Price Bar，不再把历史 D/C 冒充 T-Bar；"
             "任何 BAMM 证据不得改写 harmonic identity 或 Source Raw PRZ，且完成时间不得回填。"
         ).strip()
         return analysis
