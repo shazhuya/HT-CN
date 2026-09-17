@@ -36,18 +36,18 @@ def test_shark_book_ledger_keeps_reaction_targets_outside_identity() -> None:
     assert contract["a_0x"] == [0.382, 0.618]
     assert contract["b_xa"] == [1.13, 1.618]
     assert contract["ab_extreme_impulse"] == [1.618, 2.24]
-    assert contract["zero_b_completion"] == [0.886, 1.13]
-    assert contract["zero_b_typical_focus"] == 1.0
-    assert contract["zero_b_maximum_limit"] == 1.13
-    assert contract["raw_prz_selection"] == (
-        "overlap/alignment of the 0B 0.886-1.13 completion corridor "
-        "and the AB 1.618-2.24 impulse corridor"
+    assert contract["ob_completion"] == [0.886, 1.13]
+    assert contract["ob_typical_focus"] == 1.0
+    assert contract["ob_maximum_limit"] == 1.13
+    assert contract["source_raw_prz_selection"] == (
+        "overlap/alignment of the published 0B completion corridor and AB Extreme Harmonic Impulse corridor"
     )
+    assert contract["reaction_targets_are_identity_members"] is False
     management = ledger["reaction_management"]
     assert management["initial_target"] == (
-        "lesser / first encountered of 50% BC retracement or Reciprocal AB=CD"
+        "lesser/first encountered of 50% BC retracement or Reciprocal AB=CD"
     )
-    assert management["identity_membership"] is False
+    assert management["raw_prz_membership"] is False
 
 
 def test_shark_source_contract_uses_published_corridor_overlap() -> None:
