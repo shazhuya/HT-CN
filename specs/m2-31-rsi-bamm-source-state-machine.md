@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phase 4 closeout candidate.** Phase 3 indicator sequencing is frozen. Phase 4 now binds BAMM evidence to the observable Source Terminal Price Bar, exposes separate lifecycle evidence channels, and runs a frozen 45-symbol A-share observability report. Final freeze requires this closeout commit to pass deterministic, browser, and autonomous research acceptance.
+**Phase 4 frozen.** Phase 3 indicator sequencing and Phase 4 Source Terminal Price Bar lifecycle integration are accepted. GitHub Actions run #643 / `35209013814` passed deterministic Python tests, Web build, Playwright smoke/lifecycle acceptance, the frozen 45-symbol A-share source-PRZ v6 research chain, RSI BAMM observability, and the existing Type-I holdout/external-replication guards.
 
 ## Why this Gate exists
 
@@ -57,7 +57,7 @@ A is frozen before the secondary extreme begins. If X-A has no valid directional
 
 ## Phase 4 Source Terminal Price Bar confluence
 
-Phase 3 `confirm_rsi_bamm_with_match()` is retained as a geometry-terminal compatibility/golden-test adapter. It is **not** the production lifecycle clock.
+Phase 3 `confirm_rsi_bamm_with_match()` remains a geometry-terminal compatibility/golden-test adapter. It is **not** the production lifecycle clock.
 
 Phase 4 production/lifecycle confirmation uses:
 
@@ -124,18 +124,25 @@ Carney describes complex W/M structures qualitatively but does not publish a det
 
 Both channels are evidence only. Neither may mutate harmonic identity or Source Raw PRZ.
 
-## Real A-share observability
+## Frozen 45-symbol A-share observability
 
-`m2-rsi-bamm-observability-v1` runs on the frozen `a-share-research-v2-45` snapshots and reports:
+Dataset: `a-share-research-v2-45`, snapshot cutoff `2026-09-15`.
 
-- BAMM sequence/profile/relation counts;
-- source-clock-observable harmonic matches;
-- actually observed Source Terminal Price Bars;
-- source-confirmed BAMM/harmonic confluences;
-- whether evidence was available at the T-Bar or only after BAMM sequence completion;
-- blocked source-clock statuses.
+Run #643 / `35209013814` on validated commit `0c7799391bc92af46a2b249892dc24e06a6143a0`:
 
-This report is observability only: no outcome fitting, threshold fitting, identity tuning, or Source Raw PRZ tuning.
+- successful symbols: 45 / 45; failures: 0;
+- RSI BAMM sequences: 686;
+- profile counts: Complex Confirmation 151, Complex Divergence 100, Simple Confirmation 253, Simple Divergence 182;
+- relation counts: Confirmation 404, Divergence 282;
+- completed source-scannable harmonic matches: 174;
+- source-clock observable matches: 128;
+- source terminal observed matches: 23;
+- source execution states: awaiting PRZ entry 26, PRZ entered waiting terminal 79, terminal observed 23, unavailable 46;
+- strict source-confirmed BAMM/harmonic confluences: 2, both standalone AB=CD;
+- evidence available at Source T-Bar: 1;
+- evidence available only after BAMM completion: 1.
+
+These numbers are **observability only**. They do not estimate hit rate, profitability, alpha, expectancy, or current-stock probabilities and cannot be used to tune identity, Source Raw PRZ, or thresholds.
 
 ## Acceptance status
 
@@ -145,16 +152,19 @@ This report is observability only: no outcome fitting, threshold fitting, identi
 - [x] prefix/no-lookahead regression;
 - [x] 1.13 vs 1.618 ratio-selection regression;
 - [x] X-A projection math and unresolved-projection fail-closed regression;
-- [x] Phase-3 real-match confluence compatibility regressions;
+- [x] Phase-3 geometry-terminal compatibility regressions;
 - [x] standalone AB=CD / Shark / 5-0 quarantine regressions;
 - [x] source execution clock reconstruction regression;
 - [x] Source T-Bar distinct from historical D/C regression;
 - [x] valid PEZ overspill regression;
 - [x] lifecycle evidence no-backdating regression;
 - [x] Source Truth drift guard;
-- [ ] final closeout deterministic/browser CI on this commit;
-- [ ] final frozen 45-symbol source-clock BAMM observability on this commit.
+- [x] final deterministic/browser CI;
+- [x] frozen 45-symbol source-clock BAMM observability;
+- [x] existing Type-I holdout/external-replication guards unchanged and green.
 
-## After closeout
+## Next mainline gate
 
-If all final gates are green, M2.31 freezes and the next mainline gate becomes **M3 Source-Clock Lifecycle Migration**: migrate the workbench from retrospective D-clock overlays to the observable Source Terminal Bar / PEZ / T+1 / Type-I / Type-II state model. The optional BAMM Acceleration Trigger stays deferred until after that migration.
+**M3 Source-Clock Lifecycle Migration.**
+
+The workbench must migrate from retrospective D-clock overlays to the observable Source Terminal Price Bar / PEZ / T+1 / Type-I / Type-II state model. BAMM appears as a separate evidence channel and must not become a pattern-identity switch. The optional BAMM Acceleration Trigger remains deferred until after this migration is frozen.
