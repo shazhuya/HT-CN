@@ -84,6 +84,23 @@ SOURCE_PRZ_EVIDENCE: dict[str, SourcePRZEvidence] = {
         ),
         coordinate_regression_status="pending_reliable_source_pivots",
     ),
+    "shark": SourcePRZEvidence(
+        pattern_id="shark",
+        evidence_level="source_specification_plus_market_examples",
+        source_membership_authority="carney_vol3_shark_prz",
+        selection_authority="carney_alignment_of_0b_886_113_and_ab_impulse_1618_224",
+        market_case_ids=(
+            "v3-shark-eurusd-15m-bullish",
+            "v3-shark-usdcad-daily-bearish",
+        ),
+        known_tensions=(
+            "Shark completion is an alignment of two published source corridors rather than one "
+            "single fixed price: 0B must test at least 0.886 and may extend toward 1.13, while "
+            "the AB Extreme Harmonic Impulse spans 1.618-2.24. HT-CN freezes their overlap as "
+            "the Source Raw PRZ and keeps post-Shark 5-0 targets outside identity.",
+        ),
+        coordinate_regression_status="membership_frozen_market_coordinates_not_reliable_enough",
+    ),
     "five_zero": SourcePRZEvidence(
         pattern_id="five_zero",
         evidence_level="structural_source_frozen_plus_market_examples_with_v3_execution_label_conflict",

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "ledger_id": "book-source-prz-shark-cases-v1",
+  "authority": "Scott M. Carney, Harmonic Trading Volume Three",
+  "scope": "Shark Source Raw PRZ membership, source limits, and reaction management. This ledger separates source completion from the subsequent 5-0 target layer.",
+  "source_contract": {
+    "schema": "0-X-A-B-C",
+    "a_0x": [0.382, 0.618],
+    "b_xa": [1.13, 1.618],
+    "ab_extreme_impulse": [1.618, 2.24],
+    "ob_completion": [0.886, 1.13],
+    "ob_typical_focus": 1.0,
+    "ob_minimum": 0.886,
+    "ob_maximum_limit": 1.13,
+    "source_raw_prz_selection": "overlap/alignment of the published 0B completion corridor and AB Extreme Harmonic Impulse corridor",
+    "stop_policy": "just beyond the 1.13 0B extension",
+    "reaction_targets_are_identity_members": false
+  },
+  "cases": [
+    {
+      "case_id": "v3-shark-eurusd-15m-bullish",
+      "source_ref": "Volume Three pp.121-123",
+      "instrument": "EUR/USD",
+      "timeframe": "15-minute",
+      "direction": "bullish",
+      "published_facts": {
+        "ab_impulse": 2.24,
+        "ab_impulse_completed_before_ob_886": true,
+        "completion_focus": "0.886 0B",
+        "initial_5_0_target": "50% retracement"
+      },
+      "coordinate_regression_eligible": false
+    },
+    {
+      "case_id": "v3-shark-usdcad-daily-bearish",
+      "source_ref": "Volume Three pp.126-128",
+      "instrument": "USD/CAD",
+      "timeframe": "Daily",
+      "direction": "bearish",
+      "published_facts": {
+        "ab_impulse_sequence": "1.618 minimum preceded the 0.886 retest; chart labels 2.0 near completion",
+        "preferred_completion_area": "1.06-1.07",
+        "preferred_area_basis": "alignment of minimum measures near the initial 1.0 point",
+        "price_exceeded_minimum_measures_before_reversal": true,
+        "initial_5_0_target": "minimum 50% level"
+      },
+      "coordinate_regression_eligible": false
+    }
+  ],
+  "source_limits": {
+    "minimum_ob_test": 0.886,
+    "maximum_ob_extension": 1.13,
+    "minimum_ab_extreme_impulse": 1.618,
+    "maximum_ab_extreme_impulse": 2.24,
+    "source_text_policy": "If the minimum 1.618 impulse completes before the 0.886 retest, 2.0 or 2.24 can complement the harmonic support; the completion area remains an alignment problem rather than a single universal point."
+  },
+  "reaction_management": {
+    "role": "post-Shark management toward the prospective 5-0",
+    "initial_target": "lesser/first encountered of 50% BC retracement or Reciprocal AB=CD",
+    "minimum_target_emphasis": "50% level",
+    "raw_prz_membership": false
+  },
+  "known_open_items": [
+    "HSI remains proprietary and is not inferred by HT-CN.",
+    "Book examples do not expose sufficiently reliable raw pivots for coordinate-level regression; tests freeze source membership and synthetic geometry instead.",
+    "A future empirical research version may add real A-share Shark Source-T-Bar outcomes, but it must not rewrite this source membership."
+  ]
+}
