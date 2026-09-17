@@ -1,8 +1,8 @@
-# M3 Phase 1 — Source-Clock Lifecycle Migration
+# M3 — Source-Clock Lifecycle Migration
 
 ## Status
 
-**Implementation candidate.** M2.31 Source Fidelity is frozen on `main`. M3 Phase 1 migrates the product-facing current lifecycle away from retrospective D/C geometry and onto the observable Source Terminal Price Bar execution clock.
+**Phase 1 implemented; Phase 2 chart migration in progress.** M2.31 Source Fidelity is frozen on `main`. M3 migrates the product-facing lifecycle away from retrospective D/C geometry and onto the observable Source Terminal Price Bar execution clock, then makes that clock visually explicit on the chart.
 
 ## Why this migration exists
 
@@ -30,20 +30,13 @@ Phase 1 freezes the following product state vocabulary:
 12. `type_ii_retest_forming`
 13. `type_ii_terminal`
 14. `reversal_evidence`
-15. `invalidated` — vocabulary reserved; Phase 1 does not invent a new source invalidation rule merely to emit it.
+15. `invalidated` — vocabulary reserved; current M3 work does not invent a new source invalidation rule merely to emit it.
 
 ## Clock ownership
 
 ### Geometry clock
 
-Historical/right-confirmed D/C points remain useful for:
-
-- geometry audit;
-- pattern drawing;
-- retrospective quality research;
-- compatibility reports.
-
-They do **not** own the live/current lifecycle.
+Historical/right-confirmed D/C points remain useful for geometry audit, pattern drawing, retrospective quality research and compatibility reports. They do **not** own the live/current lifecycle.
 
 ### Source execution clock
 
@@ -79,14 +72,7 @@ This is the HT-CN strict production operationalization of Carney's ideal full-re
 
 ## Evidence channels do not own lifecycle
 
-The following may be displayed next to lifecycle state but cannot set or repair that state:
-
-- RSI BAMM;
-- ordinary Wilder RSI evidence;
-- geometry score;
-- A-share index/sector context;
-- ATR / liquidity / T+1 tradability;
-- research statistics.
+The following may be displayed next to lifecycle state but cannot set or repair that state: RSI BAMM, ordinary Wilder RSI evidence, geometry score, A-share index/sector context, ATR/liquidity/T+1 tradability and research statistics.
 
 RSI BAMM remains M2.31 evidence-only. A `source_confirmed` BAMM badge can strengthen interpretation, but the lifecycle state still comes from Source T-Bar and subsequent price path.
 
@@ -104,17 +90,7 @@ Every canonical state should answer, in Chinese-first language:
 
 M3 adds `source_lifecycle` on individual pattern payloads and top-level `source_lifecycle_contract`.
 
-Canonical fields include:
-
-- current `state` and `state_reason`;
-- source signal / entry / Terminal / T+1 timestamps;
-- bars since Terminal;
-- T1/T2 observation bars;
-- first reversal-direction Source PRZ exit;
-- Type-II re-entry / terminal / post-terminal exit bars;
-- Source PRZ / PEZ / T1 / T2 prices;
-- next key price and semantic role;
-- `retrospective_geometry_clock_used=false`.
+Canonical fields include current `state` and `state_reason`, source signal/entry/Terminal/T+1 timestamps, bars since Terminal, T1/T2 observation bars, first reversal-direction Source PRZ exit, Type-II re-entry/terminal/post-terminal exit bars, Source PRZ/PEZ/T1/T2 prices, next key price and semantic role, and `retrospective_geometry_clock_used=false`.
 
 The service adapter is intentionally layered on top of the frozen M2.31 source-aligned service so M3 product migration cannot silently rewrite M2 identity/PRZ code.
 
@@ -133,6 +109,8 @@ Additional guards require:
 - front-end canonical state overrides contradictory retrospective audit;
 - BAMM renders as a separate evidence channel.
 
+A targeted independent prefix validation of the canonical transition chain has also been run outside GitHub Actions while the hosted runner is unavailable; the expected sequence passed through all states without future-state backfill. This targeted check supplements but does not replace the repository CI gate.
+
 ## Phase 1 acceptance checklist
 
 - [x] canonical source lifecycle enum/payload implemented;
@@ -144,11 +122,50 @@ Additional guards require:
 - [x] separate BAMM evidence channel in workbench;
 - [x] deterministic no-lookahead regressions added;
 - [x] Playwright contradictory-clock and BAMM-channel regressions added;
-- [ ] CI Python tests pass on M3 branch;
-- [ ] Web build passes on M3 branch;
-- [ ] Playwright lifecycle/smoke pass on M3 branch;
+- [x] targeted independent prefix transition validation passed;
+- [ ] GitHub-hosted CI Python tests observed running and green;
+- [ ] GitHub-hosted Web build observed running and green;
+- [ ] GitHub-hosted Playwright observed running and green.
 
-## Not in Phase 1
+The remaining unchecked items are currently blocked by a repository/GitHub-hosted runner scheduling failure in which jobs terminate before runner allocation (`runner_id=0`, zero steps, no log blob). M3 development must not wait idle on this infrastructure condition.
+
+## Phase 2 — Source lifecycle chart migration
+
+Phase 2 makes the source clock visible on the K-line chart instead of leaving it only in text cards.
+
+### Visual layers
+
+When `source_lifecycle` is available, the chart now treats the following as canonical execution overlays:
+
+- **Source Raw PRZ** — drawn from the observable source signal forward;
+- **PEZ** — drawn only after Source Terminal Price Bar exists; valid terminal overspill is visually preserved rather than forcing the T-Bar back inside static Raw PRZ;
+- **Source T-Bar** — vertical event line + price node;
+- **T-Bar+1** — explicit execution-start event;
+- **Source Type-I 38.2 / 61.8 targets** — sourced from the source execution clock, not retrospective D targets;
+- **Type-II re-entry** — first secondary Source PRZ re-entry after reversal-direction exit;
+- **Type-II Terminal** — strict full/terminal-side retest event;
+- **Type-II post-terminal reversal-direction exit** — explicit price confirmation event.
+
+Historical HT-CN ideal-core/legacy PRZ and retrospective targets remain diagnostic fallback only. When source lifecycle exists, the target overlay is tagged `data-clock="source"`; retrospective target overlays are visually de-emphasized.
+
+### Browser protection
+
+Phase 2 adds browser acceptance asserting that a source lifecycle scenario visibly contains Source PRZ, PEZ, Source T-Bar, T+1 and Source Type-I event/target layers. This protects against a future UI regression that accidentally restores D-clock overlays as the primary chart narrative.
+
+### Phase 2 acceptance checklist
+
+- [x] Source Raw PRZ overlay implemented;
+- [x] PEZ overlay implemented;
+- [x] Source T-Bar and T+1 event markers implemented;
+- [x] Source Type-I 38.2/61.8 target overlays implemented;
+- [x] Type-II re-entry / Terminal / post-terminal exit marker support implemented;
+- [x] source-vs-retrospective target provenance exposed in DOM;
+- [x] local TypeScript syntax/type shape check for HarmonicChart passed;
+- [x] Playwright source-overlay regression added;
+- [ ] full Web build observed green in repository CI;
+- [ ] Playwright screenshot/browser artifact observed green in repository CI.
+
+## Not in the current migration batch
 
 - no new pattern family;
 - no relaxation of Alternate Bat fail-closed;
@@ -159,6 +176,6 @@ Additional guards require:
 - no claim of stable alpha;
 - no invented source invalidation rule merely to populate `invalidated`.
 
-## Next after Phase 1
+## Next gate
 
-After deterministic/browser acceptance, Phase 2 will migrate chart overlays and detailed workbench price markers from retrospective T1/T2 labels toward Source PRZ / PEZ / Source T-Bar / T+1 / live Type-I/II markers, while retaining historical geometry as a visually distinct diagnostic layer.
+After Phase 2 code review, the next implementation gate is **M3 Phase 3 — executable/tradability context without contaminating harmonic identity**. It will add A-share T+1, price-limit status, liquidity/ATR and market-context observability as a separate layer around source lifecycle. Those fields may alter whether a lifecycle event is practically tradable, but may never create, repair or invalidate Carney identity/Source Raw PRZ.
