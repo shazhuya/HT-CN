@@ -1,28 +1,30 @@
-# M2.26 — Three-Volume Book Golden Ledger
+# M2.31 — Three-Volume Book Golden Ledger
 
 ## Purpose
 
-This ledger is the source-review gate between Scott M. Carney's three selected volumes and
-HT-CN executable semantics. It is not a trading guide and it does not replace machine tests.
+This is the human-readable source-fidelity ledger between Scott M. Carney's selected three
+volumes and HT-CN executable semantics. Current machine-readable status lives in
+`research/source-fidelity-status-v1.json`.
 
-Each row distinguishes:
+Historical M2.26 wording that marked later-frozen Source Raw PRZ families as unresolved is no
+longer authoritative. Pattern-specific closeout specs remain useful audit history, but current
+status must agree with this ledger, the machine-readable status file, executable tests, and the
+current branch code.
 
-- **source-cleared identity** — enough agreement exists to keep geometry detection active;
-- **source PRZ unresolved** — identity can be recognized, but the exact executable Raw PRZ
-  component set has not yet been frozen into `source_prz_low/high`;
-- **source conflict** — two selected volumes use materially different descriptions and the
-  disagreement must remain visible;
-- **HT-CN approximation** — useful engineering/research logic that must never be attributed
-  to Carney as an original rule.
+The permanent distinction is:
 
-Until a pattern's Raw PRZ row is promoted to `frozen`, Type-II and source-aligned execution
-must fail closed for that pattern.
+- **source-cleared identity** — geometry can be recognized under Carney source rules;
+- **Source Raw PRZ frozen** — exact execution-clock harmonic bounds are source-audited;
+- **source conflict** — selected volumes materially disagree and the disagreement stays visible;
+- **HT-CN operationalization** — deterministic engineering logic that must never be attributed to
+  Carney as a verbatim rule.
 
-## Baseline measurement rules
+No A-share execution rule, score, outcome statistic, UI preference, ATR rule, or market context is
+allowed to repair invalid harmonic identity or mutate a Source Raw PRZ.
 
-### AB=CD reciprocal table — source-cleared
+## Baseline AB=CD reciprocal table — frozen
 
-Volume One reciprocal mapping currently agrees with `ratios.RECIPROCAL_ABCD`:
+Volume One reciprocal mapping remains the source-cleared identity table:
 
 | C/AB retracement | Complementary BC projection |
 | --- | --- |
@@ -33,221 +35,201 @@ Volume One reciprocal mapping currently agrees with `ratios.RECIPROCAL_ABCD`:
 | 0.786 | 1.27/1.272 |
 | 0.886 | 1.13 |
 
-Source anchor: Volume One, AB=CD chapter, pp.45-46.
-
-**Status:** identity table frozen. The exact Raw PRZ selection remains pattern/context specific.
+Equivalent AB=CD and the appropriate reciprocal BC measurement must be treated as coordinated
+harmonic measurements, not as a generic wide tolerance band.
 
 ## Standard XABCD families
 
-### Gartley
+### Gartley — source-cleared / Source Raw PRZ frozen M2.27
 
-Source anchors:
+Core source structure remains B = 0.618 XA and D = 0.786 XA with AB=CD and complementary BC
+convergence in the PRZ. M2.27 froze the executable Source Raw PRZ golden profile. Production is
+enabled.
 
-- Volume One: B = 0.618 XA; D = 0.786 XA; C = 0.382-0.886 AB; BC must not exceed 1.618;
-  distinct AB=CD + 0.786 XA define the core PRZ with complementary BC convergence.
-- Volume Three specification: B = 0.618 with tolerance classification; D = 0.786.
+### Bat — source-cleared / Source Raw PRZ frozen M2.27
 
-Current HT-CN identity is materially aligned.
+B is the shallow retracement family and 0.886 XA remains the defining completion measurement,
+with AB=CD and complementary BC measurements participating in the PRZ. M2.27 froze the executable
+Source Raw PRZ golden profile. Production is enabled.
 
-**Identity:** source-cleared.
+### Alternate Bat — source conflict / fail closed
 
-**Raw PRZ:** unresolved. Book examples emphasize AB=CD + 0.786 XA + complementary BC
-convergence, but HT-CN currently stores multiple AB=CD variants in one component collection.
-The executable component subset must be frozen through textbook cases rather than inferred from
-the broad component envelope.
+The shared shallow-B / extension structure is source-recognizable, but Volume Two and Volume Three
+do not describe AB=CD membership/role identically. HT-CN keeps this disagreement explicit.
 
-### Bat
+**Production rule:** Source Raw PRZ remains unresolved and source-aligned execution fails closed.
+Any AB=CD diagnostic retained for research cannot silently become a hard identity or Raw PRZ gate.
 
-Source anchors:
+### Butterfly — source-cleared / Source Raw PRZ frozen M2.27
 
-- Volume One: B normally 0.382-0.50 XA; 0.886 XA is the defining completion; BC commonly
-  1.618-2.618; minimum AB=CD with alternate variants used as complementary measurements.
-- Volume Three refines B-point tolerance and retains the 0.886 completion framework.
+The later canonical profile retains B near 0.786 XA and 1.27 XA as the defining completion family,
+with AB=CD and BC convergence. M2.27 froze the production Source Raw PRZ profile. Earlier wider
+complementary occurrences from Volume One are not silently merged into the canonical production
+rule.
 
-**Identity:** source-cleared.
+### Crab — source-cleared Volume Three canonical / Source Raw PRZ frozen M2.27
 
-**Raw PRZ:** unresolved pending textbook figure regression.
+HT-CN production uses the later canonical Crab family centered on the 1.618 XA completion and the
+corresponding extreme BC family. Volume One's occasional broader BC occurrences remain historical
+source notes, not silent production widening.
 
-### Alternate Bat
+### Deep Crab — source-cleared / Source Raw PRZ frozen M2.27
 
-Source anchors:
-
-- Volume Two: shallow B (0.382 or less), 1.13 XA defining extension/minimum execution family,
-  extreme BC; text states AB=CD is not included in the setup.
-- Volume Three p.101: B <=0.382; XA 0.886-1.13; BC 2.0-3.618; explicitly lists 1.618 AB=CD.
-
-**Identity:** source-cleared only for the shared B/XA/BC structure.
-
-**Source conflict:** AB=CD membership in the PRZ. HT-CN may keep 1.618 AB=CD as auditable
-quality/reference evidence, but it must not use that disputed component as a hard identity gate
-or silently declare the Raw PRZ resolved.
-
-**Raw PRZ:** unresolved.
-
-### Butterfly
-
-Source anchors:
-
-- Volume One: exact/near 0.786 B; 1.27 XA is defining; BC usually 1.618/2.0/2.24; equivalent
-  AB=CD is minimum and alternate 1.27 AB=CD is common.
-- Volume Three p.113: B 0.786 (+/-3%); AB=CD to 1.27 AB=CD; BC 1.618-2.24; XA 1.27.
-
-Current HT-CN canonical identity uses Volume Three's 1.618-2.24 BC band. A Volume One
-2.618 complementary occurrence is not silently admitted to the canonical rule.
-
-**Identity:** source-cleared.
-
-**Raw PRZ:** unresolved pending textbook figure regression.
-
-### Crab
-
-Source anchors:
-
-- Volume One: B 0.618 or less; 1.618 XA defining; extreme BC usually 2.618/3.14/3.618,
-  but text acknowledges occasional 2.0 or 2.24 BC structures; minimum AB=CD with alternate
-  1.27/1.618 common.
-- Volume Three p.104 canonical specification: B 0.382-0.618; AB=CD through 1.618 AB=CD;
-  BC 2.618-3.618; XA 1.618.
-
-Current HT-CN follows the later Volume Three canonical BC band.
-
-**Identity:** source-cleared for the Volume Three canonical Crab.
-
-**Source-tier note:** Volume One's occasional 2.0/2.24 BC cases must not be silently merged into
-the canonical rule. If retained later, expose them as a documented legacy/special variant with
-separate regression evidence.
-
-**Raw PRZ:** unresolved.
-
-### Deep Crab
-
-Source anchors:
-
-- Volume One: B at 0.886 minimum; XA 1.618 defining; BC minimum 2.0 through as much as 3.618;
-  equivalent/alternate AB=CD is comparatively important.
-- Volume Three p.107: B 0.886 (+5%); AB=CD through 1.618 AB=CD; BC 2.0-3.618; XA 1.618.
-
-**Identity:** source-cleared.
-
-**Raw PRZ:** unresolved pending textbook figure regression.
+The 0.886 B family with 1.618 XA completion and deep BC projections is source-cleared and its
+Source Raw PRZ profile was frozen in M2.27.
 
 ## Dedicated schemas
 
-### Standalone AB=CD
+### Standalone AB=CD — Source Raw PRZ frozen M2.28
 
-Volume One pp.45-46 establishes the reciprocal C/AB -> BC mapping and requires close convergence
-with the AB=CD completion. The current reciprocal table is source-cleared.
+M2.28 resolved the prior M2.26 gap. Production Source Raw PRZ is built from the source-defined
+AB=CD completion together with its reciprocal BC measurement. The Volume Three BC layering helper
+is execution tolerance/audit evidence only; it cannot alter identity or Raw PRZ membership.
 
-**Identity:** source-cleared at the reciprocal-table level.
+### Shark — Source Raw PRZ and reaction management frozen M2.30
 
-**Raw PRZ:** unresolved until exact component-selection semantics are frozen for equivalent and
-alternate AB=CD variants.
+Shark is a distinct `0-X-A-B-C` reaction structure, not a normal M/W XABCD pattern. M2.30 freezes
+the Source Raw PRZ as the geometric overlap of the published completion corridors:
 
-### Shark
+- `0B 0.886–1.13` completion corridor;
+- `AB 1.618–2.24` Extreme Harmonic Impulse corridor.
 
-Volume Three advanced specification treats Shark as a distinct 0-X-A-B-C reaction structure,
-not a normal M/W XABCD identity. The extreme harmonic impulse is 1.618-2.24, the 0B completion
-family is 0.886 minimum through 1.13 maximum, and Shark is explicitly a short-lived reactive
-opportunity/precursor to 5-0.
+If the source corridors do not overlap, execution fails closed. The 1.13 0B level remains an outer
+completion / stop-limit reference, not a reaction target.
 
-**Identity:** source-cleared.
+Post-completion management is also separate from identity: the first Shark objective is whichever
+is reached first from the observed Terminal/C extreme — 50% BC or Reciprocal AB=CD. The 61.8% BC
+measurement is a later 5-0/management reference and must not be relabeled as the Shark first target.
 
-**Raw PRZ:** requires a dedicated source freeze; the current overlap logic is an HT-CN explicit
-representation but must be checked against textbook examples before being promoted to
-`source_prz_*`.
+### 5-0 — structural Source Raw PRZ frozen / production quarantine retained
 
-**Management gap:** Volume Three says the initial Shark objective is the lesser/first of the
-50% level and Reciprocal AB=CD. Current payload exposes the measurements but has not yet frozen
-that source priority as a first-objective field.
+Volume Two defines the structural 5-0 PRZ with two core measurements:
 
-### 5-0
+- 50% BC retracement;
+- Reciprocal AB=CD.
 
-Volume Two defines an exceptionally precise 5-0 and states that the PRZ possesses only two core
-measurements: the 50% retracement of the relevant completion leg and Reciprocal AB=CD.
+M2.29 freezes that structural Source Raw PRZ. Volume Three's 61.8 discussion is retained as a
+separate execution/management refinement rather than being blended into a generic 50–61.8 Raw PRZ
+band.
 
-Volume Three retains the 5-0 structure but adds execution/make-or-break discussion involving the
-50% level, Reciprocal AB=CD location and 61.8% consideration. The selected volumes also use leg
-labels/descriptions that require figure-level reconciliation before code can safely collapse them
-into one numeric band.
+However, selected Volume Two/Three figure labeling and execution wording still require source
+reconciliation. Therefore 5-0 remains **production quarantined** and is excluded from the default
+Scanner/Workbench. An evaluator existing in code is not permission to promote it.
 
-The previous HT-CN implementation compressed this into a generic 50%-61.8% execution band and
-required Reciprocal AB=CD to lie inside it. That rule is **not source-cleared**.
+## Execution lifecycle — frozen source concepts
 
-**Identity/execution status:** quarantined from default engine/Scanner/workbench.
+### Geometry clock vs execution clock
 
-**Research status:** dedicated evaluator retained behind
-`include_source_conflict_patterns=True` only.
-
-**Promotion gate:** reconcile Volume Two and Three figures, leg labels, exact structural PRZ,
-conditional 61.8 execution behavior and negative cases.
-
-## Execution lifecycle
+The historical/right-confirmed geometry pivot clock is permanently distinct from the observable
+execution clock. A historical D/C pivot is not automatically a Terminal Price Bar.
 
 ### Terminal Price Bar
 
-Volume Three defines the official T-Bar as the price bar that tests the final/extreme measurement
-of the PRZ; execution assessment begins immediately afterward at T-Bar+1. Merely entering part of
-the zone is not sufficient.
+Volume Three's official Terminal Price Bar is the bar that tests the final/terminal side of the
+entire Source Raw PRZ. Merely overlapping part of the PRZ is entry into the zone, not completion.
+Execution assessment begins after the Terminal Price Bar at T-Bar+1.
 
-**Source rule:** frozen.
+### PEZ
 
-**Runtime implementation:** `htcn.harmonic.execution.observe_source_execution` now models this
-clock independently from a right-confirmed historical D Pivot and refuses to run without explicit
-source PRZ bounds.
-
-### Permissible Execution Zone (PEZ)
-
-Volume Three: source PRZ integrated with the actual T-Bar extreme forms the permissible execution
-range, including limited overspill beyond the ideal measured zone.
-
-**Source rule:** frozen at the conceptual level.
-
-**Runtime implementation:** source-aligned execution contract now emits PEZ bounds after an
-observed T-Bar. Pattern-specific source PRZ components remain the blocking dependency.
+The Permissible Execution Zone is a dynamic execution layer that integrates the frozen Source Raw
+PRZ with the observed Terminal Bar extreme. PEZ is not harmonic identity and is not Source Raw PRZ.
 
 ### Type-I
 
-Volume Three expects immediate/demonstrative countertrend behavior after T-Bar, with important
-3-5 bar evidence and automatic 38.2% / 61.8% reaction objectives.
+Type-I is the first PRZ test / initial reaction process. HT-CN preserves the Volume Three emphasis
+on immediate counter-trend character and the important T+3/T+5 evidence window. 38.2% and 61.8%
+reaction objectives belong to post-completion management, not pattern identity.
 
-**Source rule:** frozen.
+### Type-II — strict production operationalization
 
-**Current status:** retrospective D-clock T1/T2 remains available for structural research but is
-explicitly labelled retrospective. Source-aligned targets exist in the new execution contract and
-will replace workbench overlays only after source PRZs are frozen.
+Carney emphasizes the secondary retest of the original PRZ and describes the ideal Type-II case as
+an entire/full retest of the primary PRZ measurements before a new Type-II Terminal Price Bar.
+He also notes that real markets can produce nominal retests with other confirmation evidence.
 
-### Type-II
+HT-CN production deliberately uses the **strict full-Source-Raw-PRZ terminal-side retest** as a
+conservative fail-closed operational definition. This is an HT-CN production policy built from the
+ideal source case; it must not be described as proof that Carney rejects every nominal-retest case.
+A future nominal-retest variant, if studied, requires a separate research tier and may not silently
+relax production Type-II.
 
-Volume Three requires a secondary retest of the original PRZ, a full retest of all relevant
-measurements / Type-II Terminal Price Bar, and subsequent PRICE + INDICATOR confirmation.
+## RSI confirmation vs RSI BAMM — M2.31
 
-**Source rule:** frozen conservatively.
+The legacy lifecycle Wilder RSI 30/70 reversal audit remains a lightweight HT-CN indicator layer
+and is explicitly **not RSI BAMM**.
 
-**Current status:** Type-II now fails closed unless explicit `source_prz_*` exists. A mere overlap
-is descriptive re-entry only.
+M2.31 adds a dedicated no-lookahead RSI BAMM state machine based on Volume Two sequencing and the
+four Volume Three profiles:
 
-### RSI confirmation versus RSI BAMM
+- Simple Confirmation;
+- Complex Confirmation;
+- Simple Divergence;
+- Complex Divergence.
 
-Current lifecycle Wilder RSI 30/70 reversal evidence is an HT-CN lightweight indicator layer.
-It is explicitly **not** Volume Two RSI BAMM.
+Frozen source requirements include:
 
-Volume Two RSI BAMM requires the full staged process: initial extreme, complex M/W RSI structure,
-trigger bar, reaction, divergence, 1.13/1.618 confirmation and coordinated harmonic completion.
+- Wilder RSI(14);
+- bullish extreme below 30 / bearish extreme above 70;
+- two distinct extreme tests;
+- mandatory intervening reaction to RSI 50;
+- impulsive secondary retest;
+- Trigger Bar based 1.13 versus 1.618 Confirmation Point logic;
+- X-A price projection;
+- distinct harmonic-pattern coordination through `confirm_rsi_bamm_with_match`.
 
-**Current BAMM status:** not implemented in the new Python runtime; future dedicated module only.
+RSI BAMM is **confirmation/execution evidence only**. It cannot create or repair harmonic geometry
+and cannot mutate Source Raw PRZ.
 
-## Golden-case promotion checklist
+### Deterministic engineering boundary
 
-For each pattern, promotion of `source_prz_low/high` requires at least:
+Carney describes complex W/M indicator structures qualitatively but does not publish a complete
+bar-by-bar RSI pivot classifier. HT-CN therefore uses a conservative deterministic classifier and
+labels it an engineering operationalization. It must remain outside harmonic identity semantics.
 
-1. one textbook bullish figure/case;
-2. one textbook bearish figure/case where available;
-3. exact source measurements identified;
-4. expected source PRZ components enumerated;
-5. a negative/imposter case showing what must be rejected;
-6. machine regression proving component construction, T-Bar side and lifecycle behavior;
-7. explicit note for any Volume One/Two/Three disagreement;
-8. no A-share rule allowed to alter identity or source PRZ.
+### Lifecycle / no-backdating boundary
 
-Only after this checklist can M3 replace retrospective D-clock overlays with source-aligned
-Terminal-Bar targets for that pattern.
+M2.31 Phase 4 exposes two separate channels:
+
+1. source-clock visibility on `forming[].execution_clock.rsi_bamm_evidence`;
+2. true harmonic confluence on `completed[].rsi_bamm_evidence`, which can become
+   `source_confirmed` only through the canonical match adapter.
+
+If BAMM completes after the harmonic Terminal Bar, the evidence becomes available only at the BAMM
+completion bar. It is never backdated to the earlier Terminal Bar.
+
+The optional RSI BAMM Acceleration Trigger remains deferred until the core lifecycle integration is
+frozen; it is secondary confirmation, not a prerequisite for core BAMM identity.
+
+## Research boundary
+
+Current A-share source research remains `m2-source-prz-v6` on the frozen
+`a-share-research-v2-45` universe. `confirmatory_inference_allowed` remains false.
+
+M2.31 adds `m2-rsi-bamm-observability-v1`, which is deliberately **observability only**:
+
+- count BAMM sequences and four profile types;
+- count temporal/source-cleared harmonic confluences;
+- record whether evidence is available at or after the pattern terminal point;
+- no outcome fitting;
+- no threshold fitting;
+- no identity tuning;
+- no Source Raw PRZ tuning.
+
+## Promotion / regression policy
+
+A source-fidelity promotion requires source anchors, positive textbook/golden cases where available,
+negative/imposter cases, deterministic regression, no-lookahead protection when timing is involved,
+and explicit documentation of source disagreements.
+
+No source promotion is permitted solely because an A-share backtest, geometry score, or UI example
+looks favorable.
+
+## Current gate after M2.31
+
+Before unrestricted M3 expansion, HT-CN must:
+
+1. complete M2.31 lifecycle integration and real-A-share observability acceptance;
+2. keep 5-0 production quarantine and Alternate Bat fail-closed status;
+3. keep Source Truth documents and `research/source-fidelity-status-v1.json` synchronized;
+4. migrate M3 overlays from retrospective D-clock semantics toward the source execution clock;
+5. only then consider further standard-XABCD AB=CD hard-gate refinement or additional confirmation
+   layers.

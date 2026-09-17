@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "closeout_id": "m2-31-source-clock-bamm-closeout-v1",
+  "milestone": "M2.31",
+  "purpose": "Final frozen-snapshot acceptance after Source Terminal Price Bar BAMM binding replaced geometry-terminal lifecycle binding.",
+  "required_gates": [
+    "python deterministic tests",
+    "web build",
+    "Playwright smoke/lifecycle acceptance",
+    "45-symbol frozen A-share source-PRZ v6 research guard",
+    "45-symbol source-clock RSI BAMM observability",
+    "Type-I holdout and external replication guards"
+  ],
+  "semantic_assertions": {
+    "geometry_terminal_is_source_terminal": false,
+    "completed_bamm_confluence_clock": "source_terminal_price_bar",
+    "pez_overspill_allowed": true,
+    "no_backdating": true,
+    "bamm_mutates_harmonic_identity": false,
+    "bamm_mutates_source_raw_prz": false,
+    "five_zero_production_quarantine": true,
+    "alternate_bat_fail_closed": true
+  },
+  "acceptance": {
+    "github_actions_run_number": 643,
+    "github_actions_run_id": 35209013814,
+    "validated_commit": "0c7799391bc92af46a2b249892dc24e06a6143a0",
+    "dataset_id": "a-share-research-v2-45",
+    "snapshot_cutoff": "2026-09-15",
+    "requested_symbols": 45,
+    "successful_symbols": 45,
+    "failed_symbols": 0,
+    "total_rsi_bamm_sequences": 686,
+    "profile_counts": {
+      "complex_confirmation": 151,
+      "complex_divergence": 100,
+      "simple_confirmation": 253,
+      "simple_divergence": 182
+    },
+    "relation_counts": {
+      "confirmation": 404,
+      "divergence": 282
+    },
+    "completed_source_scannable_matches": 174,
+    "source_clock_observable_matches": 128,
+    "source_terminal_observed_matches": 23,
+    "source_execution_state_counts": {
+      "awaiting_prz_entry": 26,
+      "prz_entered_waiting_terminal": 79,
+      "terminal_observed": 23,
+      "unavailable": 46
+    },
+    "source_confirmed_confluences": 2,
+    "confirmed_pattern_counts": {
+      "abcd": 2
+    },
+    "source_confirmed_available_at_source_terminal": 1,
+    "source_confirmed_after_source_terminal": 1,
+    "interpretation_boundary": "Observability only. These counts do not estimate hit rate, profitability, alpha, or trade expectancy."
+  },
+  "status": "accepted_frozen"
+}

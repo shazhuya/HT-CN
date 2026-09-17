@@ -1,6 +1,9 @@
+from types import SimpleNamespace
+
 import pandas as pd
 import pytest
 
+import htcn.app.source_aligned_service as source_service
 from htcn.app.source_aligned_service import SourceAlignedHarmonicService
 from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
@@ -54,8 +57,6 @@ def test_frozen_source_prz_is_explicit_and_not_inferred_from_ideal_core() -> Non
     assert source["price_high"] == pytest.approx(100.0)
     assert source["width"] == pytest.approx(10.0)
     assert source["status"] == "frozen"
-    # Explicit source bounds constructed by older compatibility callers remain valid even
-    # without pattern provenance. M2.28 keeps that compatibility while versioning the contract.
     assert source["component_names"] == []
     assert source["defining_component"] is None
     assert source["selection_method"] is None
@@ -84,13 +85,17 @@ def _forming_payload(prz: PotentialReversalZone) -> dict:
     }
 
 
-def test_forming_execution_clock_starts_after_confirmed_frontier_and_fails_closed_without_source_prz() -> None:
-    frame = pd.DataFrame(
+def _clock_frame() -> pd.DataFrame:
+    return pd.DataFrame(
         {
+            "close": [80, 120, 95, 110, 107, 99, 94, 106],
             "high": [82, 122, 97, 112, 111, 105, 101, 108],
             "low": [78, 118, 93, 108, 104, 95, 89, 102],
         }
     )
+
+
+def test_forming_execution_clock_starts_after_confirmed_frontier_and_fails_closed_without_source_prz() -> None:
     unresolved = PotentialReversalZone(
         pattern_id="gartley",
         direction=PatternDirection.BULLISH,
@@ -98,25 +103,20 @@ def test_forming_execution_clock_starts_after_confirmed_frontier_and_fails_close
     )
     clock = SourceAlignedHarmonicService._execution_clock_from_forming_payload(
         _forming_payload(unresolved),
-        frame,
+        _clock_frame(),
     )
 
     assert clock is not None
-    # C pivot index=3 with S1 is observable only at bar 4; observation starts after bar 4.
     assert clock["signal_bar"] == 4
     assert clock["signal_clock_basis"] == "last_frontier_pivot_confirmed_at=index+scale"
     assert clock["retrospective_d_clock_used"] is False
     assert clock["state"] == "source_prz_unresolved"
     assert clock["pez"]["available"] is False
+    assert clock["rsi_bamm_evidence"]["status"] == "waiting_for_source_terminal_bar"
+    assert clock["rsi_bamm_evidence"]["source_confirmed"] is False
 
 
-def test_terminal_bar_creates_dynamic_pez_only_after_source_prz_is_frozen() -> None:
-    frame = pd.DataFrame(
-        {
-            "high": [82, 122, 97, 112, 111, 105, 101, 108],
-            "low": [78, 118, 93, 108, 104, 95, 89, 102],
-        }
-    )
+def test_terminal_bar_creates_dynamic_pez_and_timestamped_bamm_channel() -> None:
     frozen = PotentialReversalZone(
         pattern_id="gartley",
         direction=PatternDirection.BULLISH,
@@ -126,7 +126,7 @@ def test_terminal_bar_creates_dynamic_pez_only_after_source_prz_is_frozen() -> N
     )
     clock = SourceAlignedHarmonicService._execution_clock_from_forming_payload(
         _forming_payload(frozen),
-        frame,
+        _clock_frame(),
     )
 
     assert clock is not None
@@ -143,3 +143,76 @@ def test_terminal_bar_creates_dynamic_pez_only_after_source_prz_is_frozen() -> N
     }
     assert clock["target_382"] > 89.0
     assert clock["target_618"] > clock["target_382"]
+    assert clock["rsi_bamm_evidence"]["status"] == "no_completed_rsi_bamm_observed"
+    assert clock["rsi_bamm_evidence"]["source_confirmed"] is False
+    assert clock["rsi_bamm_evidence"]["mutates_harmonic_identity"] is False
+
+
+def test_source_confirmed_bamm_is_never_backdated_before_sequence_completion(monkeypatch) -> None:
+    sequence = SimpleNamespace(
+        completion_bar=8,
+        profile=SimpleNamespace(value="simple_divergence"),
+        relation=SimpleNamespace(value="divergence"),
+        confirmation_extension_ratio=1.13,
+        confirmation_projection_price=88.7,
+        price_projection_tested=True,
+    )
+    confirmation = SimpleNamespace(pattern_precedence_used=False)
+    confluence = SimpleNamespace(
+        source_confirmed=True,
+        sequence=sequence,
+        status="source_confirmed",
+        confirmation=confirmation,
+        terminal_bar=6,
+        terminal_price=89.0,
+        terminal_source="source_terminal_price_bar",
+        terminal_tests_source_prz=True,
+        terminal_in_source_prz=False,
+    )
+    audit = SimpleNamespace(
+        terminal_bar=6,
+        terminal_price=89.0,
+        state="terminal_observed",
+    )
+    item = SimpleNamespace(
+        direction=PatternDirection.BULLISH,
+        points=[SimpleNamespace(index=7)],
+    )
+    monkeypatch.setattr(
+        source_service,
+        "scan_rsi_bamm_frame",
+        lambda frame, *, direction: [sequence],
+    )
+    monkeypatch.setattr(
+        source_service,
+        "observe_source_execution_for_match",
+        lambda frame, item_arg: audit,
+    )
+    monkeypatch.setattr(
+        source_service,
+        "confirm_rsi_bamm_with_source_execution",
+        lambda sequence_arg, item_arg, audit_arg: confluence,
+    )
+
+    payload = SourceAlignedHarmonicService._rsi_bamm_confluence_payload(
+        item,
+        pd.DataFrame(
+            {
+                "close": [100.0] * 12,
+                "low": [99.0] * 12,
+                "high": [101.0] * 12,
+            }
+        ),
+    )
+
+    assert payload["status"] == "source_confirmed"
+    assert payload["source_confirmed_count"] == 1
+    assert payload["geometry_terminal_bar"] == 7
+    assert payload["source_terminal_bar"] == 6
+    assert payload["bamm_completion_bar"] == 8
+    assert payload["available_from_bar"] == 8
+    assert payload["available_at_source_terminal"] is False
+    assert payload["available_at_pattern_terminal"] is False
+    assert payload["terminal_source"] == "source_terminal_price_bar"
+    assert payload["terminal_tests_source_prz"] is True
+    assert payload["mutates_harmonic_identity"] is False

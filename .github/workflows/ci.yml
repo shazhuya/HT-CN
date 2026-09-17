@@ -6,6 +6,7 @@ on:
       - main
       - 'm*/**'
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -51,18 +52,18 @@ jobs:
         working-directory: apps/web
         run: npm run build
 
-      - name: Install Playwright Chromium for M3
-        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-')
+      - name: Install Playwright Chromium for M3/M2 source gates
+        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-') || startsWith(github.ref, 'refs/heads/m2/rsi-') || startsWith(github.head_ref, 'm2/rsi-')
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
-      - name: Run M3 deterministic browser acceptance
-        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-')
+      - name: Run deterministic browser acceptance
+        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-') || startsWith(github.ref, 'refs/heads/m2/rsi-') || startsWith(github.head_ref, 'm2/rsi-')
         working-directory: apps/web
         run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts
 
-      - name: Upload M3 browser evidence
-        if: always() && (startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-'))
+      - name: Upload browser evidence
+        if: always() && (startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-') || startsWith(github.ref, 'refs/heads/m2/rsi-') || startsWith(github.head_ref, 'm2/rsi-'))
         uses: actions/upload-artifact@v4
         with:
           name: m3-browser-evidence-${{ github.sha }}
@@ -74,11 +75,13 @@ jobs:
 
   autonomous-research:
     name: autonomous-real-a-share-research
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/m2/')
+    if: >-
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/m2/') && contains(github.event.head_commit.message, '[research]'))
+      || github.event_name == 'workflow_dispatch'
     needs: deterministic-tests
     concurrency:
       group: htcn-research-${{ github.ref }}
-      cancel-in-progress: false
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -148,6 +151,9 @@ jobs:
 
       - name: Verify source-PRZ v6 sealed research boundary
         run: python scripts/m2_source_prz_v6_research_guard.py
+
+      - name: Observe RSI BAMM on frozen real A-share snapshots
+        run: python scripts/m2_rsi_bamm_observability.py
 
       - name: Verify frozen Type-I Holdout pre-registration v1
         run: python scripts/m2_type_i_holdout_prereg_report.py

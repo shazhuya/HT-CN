@@ -114,7 +114,7 @@ M2.30 起，Shark Source Raw PRZ 明确定义为以下两条 Carney published co
 
 ## D-016 — 长耗时真实 A 股研究必须可恢复、可观察、不可被普通小提交浪费
 
-**状态：Frozen engineering policy**
+**状态：Frozen engineering policy; concurrency clause superseded by D-019**
 
 M2.30 起，GitHub CI 的真实 A 股研究采用以下工程约束：
 
@@ -122,11 +122,88 @@ M2.30 起，GitHub CI 的真实 A 股研究采用以下工程约束：
 - research snapshot cache miss 时优先恢复冻结 45 股 artifact；
 - artifact 恢复成功后立即持久化到 cache，不等待整轮研究结束；
 - deterministic short tests 可 `cancel-in-progress`；
-- long research 使用独立 concurrency 且不自动取消旧 run；
 - calibration 使用无缓冲输出，逐股打印真实进度；
 - timeout 是防失控保险，不得拿增加 timeout 代替性能诊断。
 
-原因：真实研究结果依赖冻结数据边界。重复联网抓取既浪费时间，也会把 provider availability 与 harmonic 逻辑错误混在一起。run #603 证明恢复 45 股快照后完整校准约 85 秒，因此此前 40 分钟超时主要是缓存恢复链路失效，而非 Shark 计算本身不可接受。
+M2.30 最初采用 long research `cancel-in-progress: false`。M2.31 closeout 发现普通开发提交会堆积无价值中间研究，因此该并发条款由 D-019 取代；其余 snapshot-first / resumable / observable 原则继续冻结。
+
+原因：真实研究结果依赖冻结数据边界。重复联网抓取既浪费时间，也会把 provider availability 与 harmonic 逻辑错误混在一起。
+
+## D-017 — RSI BAMM 是独立 source-confirmation evidence，不是 Wilder RSI 别名
+
+**状态：Frozen**
+
+M2.31 起，RSI BAMM 必须由独立 no-lookahead 状态机产生，并保持以下边界：
+
+- 14-period Wilder RSI；两次 30/70 extreme test；中间至少一次 RSI 50 midpoint reaction；
+- Volume Three Simple/Complex × Confirmation/Divergence 四类结构独立保留；
+- Volume Two X-A Confirmation Point 使用 1.13/1.618 source selection，X-A 锚点在第二次 extreme 前冻结；
+- standalone AB=CD 使用 M2.28 source resolver；Shark 使用 M2.30 source contract；5-0 在 production quarantine 解除前不得确认 BAMM；
+- 1.13 retracement-pattern precedence 只允许原书明确支持的 source-cleared Gartley/Bat，不扩展到 Shark/AB=CD/5-0；
+- 不发明 ATR、百分比、tick 或 PRZ-distance 容差来“凑”BAMM 与 harmonic confluence；不满足 source contract 时 fail closed；
+- BAMM 只能增加 confirmation/execution evidence，永远不能创建、修改或救活 harmonic identity / Source Raw PRZ。
+
+原因：普通 RSI 极值、RSI divergence 与完整 RSI BAMM 是不同层级的证据；若允许 caller boolean 或工程容差直接制造 `source_confirmed`，会重新破坏 Source Fidelity Gate。
+
+## D-018 — Completed BAMM confluence 必须绑定 Source Terminal Price Bar，而不是历史 D/C
+
+**状态：Frozen**
+
+M2.31 Phase 4 正式区分两个适配器：
+
+- `confirm_rsi_bamm_with_match()`：只保留 geometry-terminal compatibility / golden-test 用途；
+- `confirm_rsi_bamm_with_source_execution()`：production lifecycle 的 canonical confluence adapter。
+
+Completed historical match 必须先通过 `observe_source_execution_for_match()`，从 pre-terminal pivot 的可观察时点重建：
+
+`Source Raw PRZ entry -> Source Terminal Price Bar -> PEZ -> T+1`
+
+然后才能把 BAMM 绑定到 execution lifecycle。
+
+进一步冻结：
+
+- historical D/C pivot 不自动等于 Source Terminal Price Bar；
+- Source T-Bar 必须在 historical terminal pivot 之前或当根已可观察，禁止后来的 unrelated PRZ touch 回填；
+- Source T-Bar 可以形成合法 PEZ overspill；static Raw PRZ interval 仍保持不变；
+- BAMM 可用时间 = `max(Source T-Bar, BAMM completion)`；任何晚完成 evidence 禁止 backdate。
+
+原因：Volume Three 的执行语义依赖真正 PRZ terminal-side test。把事后 right-confirmed D/C 当 T-Bar 会制造不可实盘复现的证据时钟。
+
+验证方式：Source T-Bar distinct-from-D/C regression、PEZ overspill regression、no-backdating regression、45-symbol frozen observability、run #643。
+
+## D-019 — 45 股重研究只由明确 closeout 触发，并只保留最新分支 closeout
+
+**状态：Frozen engineering policy**
+
+M2.31 起：
+
+- 普通 push/PR 运行 deterministic + Web build + Playwright；
+- 45 股 autonomous research 只在明确 `[research]` closeout 提交运行；
+- 同一开发分支的旧中间 research run 允许被更新 closeout 取消；
+- latest closeout 使用冻结 snapshot / sealed research guards；
+- 已冻结 Holdout / external replication / closed result 仍不可改写。
+
+该决定只优化 CI 资源使用，不改变 research definition、样本边界或 source semantics。
+
+## D-020 — M3 产品 lifecycle 必须由 source execution clock 驱动
+
+**状态：Frozen migration contract**
+
+M3 Workbench 的 live/current state 不得再由 historical D/C pivot 直接派生。统一目标状态链：
+
+`forming -> approaching_source_prz -> entered_source_prz -> waiting_terminal -> source_terminal_complete -> t_plus_1 -> type_i_early_reaction -> type_i_confirmed / type_i_failed / reaction_only -> type_ii_retest_forming -> type_ii_terminal -> reversal_evidence / invalidated`
+
+产品必须优先回答：
+
+- 现在在哪个状态；
+- 先看什么证据；
+- 下一个关键价格/状态；
+- 什么使当前判断失效；
+- 当前应该等待、观察还是进入下一层执行评估。
+
+RSI BAMM、普通 RSI、A 股市场环境、ATR、流动性等都只能作为 evidence/context channel；它们不能拥有 lifecycle，也不能修改 Carney identity / Source Raw PRZ。
+
+原因：M2.31 的 45 股 observability 显示 174 个 historical completed match 里只有 128 个能从当时信息重建 source clock，说明 retrospective completed geometry 与 live execution observability 并不等价。
 
 ## 后续新增格式
 
