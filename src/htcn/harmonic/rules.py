@@ -244,14 +244,19 @@ CARNEY_RULES: dict[str, PatternRule] = {
         constraints={
             "b_xa": RatioConstraint(1.13, 1.618),
             "c_ab": RatioConstraint(1.618, 2.24),
-            "d_bc": RatioConstraint(0.50, 0.618),
         },
         executable_identity=False,
         source_conflict=True,
-        source_note="Volume Two 5-0 chapter plus Volume Three pp.129-136 refinement.",
+        source_note=(
+            "Volume Two Ch.3 freezes the structural 5-0 Raw PRZ as 50% BC retracement + "
+            "Reciprocal AB=CD. Volume Three pp.129-138 adds 61.8 execution/stop refinement "
+            "but alternates XA/AB labels while its structural figures/cases preserve B-C geometry."
+        ),
         implementation_note=(
-            "Research-only pending figure-level reconciliation. Volume Two structural PRZ and Volume Three "
-            "execution/make-or-break refinements must not be collapsed into a generic production band."
+            "Research-only production quarantine. The structural Source Raw PRZ is resolved and "
+            "must never be collapsed into a generic 50%-61.8% band. The 61.8 measure is execution-only, "
+            "raw_prz_membership=false and identity_membership=false; the remaining source_conflict flag "
+            "records Volume Three's inconsistent leg labels rather than an unresolved Volume Two structure."
         ),
     ),
 }

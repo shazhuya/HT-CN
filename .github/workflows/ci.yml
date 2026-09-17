@@ -49,17 +49,17 @@ jobs:
         run: npm run build
 
       - name: Install Playwright Chromium for M3
-        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-')
+        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-')
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
       - name: Run M3 deterministic browser acceptance
-        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-')
+        if: startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-')
         working-directory: apps/web
         run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts
 
       - name: Upload M3 browser evidence
-        if: always() && (startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-'))
+        if: always() && (startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-'))
         uses: actions/upload-artifact@v4
         with:
           name: m3-browser-evidence-${{ github.sha }}
@@ -120,20 +120,20 @@ jobs:
           path: artifacts/ci-research/data
           key: m2-research-qfq-${{ runner.os }}-${{ hashFiles('research/a-share-research-universe-v1.json') }}
 
-      - name: Report source-Raw-PRZ Terminal Price Bar calibration v4
+      - name: Report source-Raw-PRZ Terminal Price Bar calibration v5
         run: python scripts/m2_terminal_bar_report.py
 
-      - name: Report source-backed Type-I early-path evidence v4
+      - name: Report source-backed Type-I early-path evidence v5
         run: python scripts/m2_type_i_confirmation_report.py
 
-      - name: Stress-test Type-I early-path evidence v4
+      - name: Stress-test Type-I early-path evidence v5
         run: python scripts/m2_type_i_robustness_report.py
 
-      - name: Resolve nested T+3/T+5 Type-I exit timing v4
+      - name: Resolve nested T+3/T+5 Type-I exit timing v5
         run: python scripts/m2_type_i_exit_timing_report.py
 
-      - name: Verify source-PRZ v4 sealed research boundary
-        run: python scripts/m2_source_prz_v4_research_guard.py
+      - name: Verify source-PRZ v5 sealed research boundary
+        run: python scripts/m2_source_prz_v5_research_guard.py
 
       - name: Verify frozen Type-I Holdout pre-registration v1
         run: python scripts/m2_type_i_holdout_prereg_report.py

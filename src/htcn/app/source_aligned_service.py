@@ -149,6 +149,33 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
         )
         return payload
 
+    def _five_zero_payload(self, *args, **kwargs) -> dict[str, Any]:
+        payload = super()._five_zero_payload(*args, **kwargs)
+        item = args[0] if args else kwargs["item"]
+        evaluation = item.evaluation
+        contract = evaluation.source_contract
+        payload["prz"] = self._prz_payload(evaluation.prz)
+        payload["source_contract"] = {
+            "status": "structural_source_prz_frozen_execution_label_conflict_quarantined",
+            "price_50_bc": float(contract.price_50_bc),
+            "reciprocal_abcd_price": float(contract.reciprocal_abcd_price),
+            "reciprocal_relation": contract.reciprocal_relation,
+            "source_prz_low": float(contract.source_prz_low),
+            "source_prz_high": float(contract.source_prz_high),
+            "raw_prz_members": list(evaluation.prz.source_prz_component_names),
+            "source_raw_prz_test": bool(evaluation.source_raw_prz_test),
+            "completion_class": evaluation.completion_class,
+        }
+        payload["v3_execution_refinement"] = asdict(contract.execution_refinement)
+        payload["compatibility_diagnostics"] = {
+            "legacy_reciprocal_inside_50_618_band": bool(
+                evaluation.reciprocal_inside_execution_band
+            ),
+            "identity_gate": False,
+            "note": "该旧 band 指标仅保留兼容审计，M2.29 起不得参与 5-0 pass/fail。",
+        }
+        return payload
+
     @staticmethod
     def _rebuild_prz_from_payload(pattern: dict[str, Any]) -> PotentialReversalZone:
         raw = pattern["prz"]
@@ -245,13 +272,18 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             elif pattern.get("schema") == "0XABC":
                 pattern["execution_clock_policy"] = "shark_uses_pattern_specific_5_0_target_contract"
             elif pattern.get("schema") == "FIVE_ZERO":
-                pattern["execution_clock_policy"] = "source_conflict_research_only"
+                pattern["execution_clock_policy"] = (
+                    "structural_source_prz_frozen_v3_execution_label_conflict_quarantined"
+                )
         analysis["price_zone_contract"] = {
             "version": 3,
             "source_prz_profile_version": 2,
             "static_layers": ["ideal_core", "component_envelope", "source_prz"],
             "dynamic_layer": "execution_clock.pez",
-            "execution_only_layers": ["ABCD.execution_tolerance"],
+            "execution_only_layers": [
+                "ABCD.execution_tolerance",
+                "FIVE_ZERO.v3_execution_refinement",
+            ],
             "fail_closed_without_source_prz": True,
             "legacy_price_low_high_mean": "ideal_core",
             "source_membership_authority": "Carney source families per pattern",
@@ -261,6 +293,8 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             str(analysis.get("engine_note") or "")
             + " M2.28 已把 standalone AB=CD 的等距完成价 + reciprocal BC 解冻为 Source Raw PRZ；"
             "Volume Three BC layering 单列为 execution tolerance，绝不进入 identity 或 Raw PRZ。"
-            "标准 XABCD 继续沿用 M2.27 Golden Profile；Alternate Bat/5-0 等冲突项继续 fail closed。"
+            " M2.29 已冻结 5-0 的 Volume Two Structural Raw PRZ=50% BC + Reciprocal AB=CD；"
+            "Volume Three 61.8 仅作为 execution refinement/stop reference，并显式保留 XA/AB 标签冲突。"
+            "5-0 仍处于 production quarantine；Alternate Bat 仍 source-conflict fail closed。"
         ).strip()
         return analysis

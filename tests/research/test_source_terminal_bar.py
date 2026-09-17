@@ -74,7 +74,42 @@ def _abcd_frame() -> pd.DataFrame:
     )
 
 
-def test_v4_terminal_audit_rebuilds_xabcd_source_raw_prz_instead_of_legacy_alias() -> None:
+def _five_zero_record() -> dict:
+    return {
+        "pattern_id": "five_zero",
+        "schema": "FIVE_ZERO",
+        "direction": "bullish",
+        "signal_bar": 4,
+        "prefix_points": [
+            {"label": "X", "index": 0, "price": 100.0},
+            {"label": "A", "index": 1, "price": 120.0},
+            {"label": "B", "index": 2, "price": 90.0},
+            {"label": "C", "index": 3, "price": 156.0},
+        ],
+        # Deliberately wrong legacy zone. v5 must reconstruct 123..126 from X/A/B/C.
+        "prz": {"price_low": 10.0, "price_high": 20.0, "width": 10.0},
+        "outcome": {
+            "pre_signal_prz_touch_bar": None,
+            "frontier_retired_at_bar": None,
+            "completion_terminal_bar": None,
+            "completion_confirmed_at_bar": None,
+        },
+    }
+
+
+def _five_zero_frame() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "trade_date": pd.date_range("2026-03-01", periods=10, freq="D"),
+            "open": [100, 120, 90, 156, 140, 128, 124, 126, 130, 134],
+            "high": [102, 122, 92, 158, 142, 130, 127, 129, 133, 136],
+            "low": [98, 118, 88, 154, 138, 127, 122, 124, 128, 132],
+            "close": [101, 121, 91, 155, 140, 128, 126, 128, 132, 135],
+        }
+    )
+
+
+def test_v5_terminal_audit_rebuilds_xabcd_source_raw_prz_instead_of_legacy_alias() -> None:
     audit = audit_source_prz_terminal_price_bar(
         _gartley_record(),
         frame=_frame(),
@@ -83,6 +118,7 @@ def test_v4_terminal_audit_rebuilds_xabcd_source_raw_prz_instead_of_legacy_alias
     )
 
     assert audit["research_definition"] == SOURCE_TERMINAL_RESEARCH_DEFINITION
+    assert SOURCE_TERMINAL_RESEARCH_DEFINITION == "m2-source-prz-v5"
     assert audit["prz_basis"] == "source_raw_prz"
     assert audit["status"] == "terminal_price_bar_observed"
     assert audit["first_prz_entry_bar"] == 5
@@ -99,7 +135,7 @@ def test_v4_terminal_audit_rebuilds_xabcd_source_raw_prz_instead_of_legacy_alias
     assert audit["prz"]["price_low"] != pytest.approx(50.0)
 
 
-def test_v4_terminal_audit_rebuilds_standalone_abcd_source_raw_prz() -> None:
+def test_v5_terminal_audit_rebuilds_standalone_abcd_source_raw_prz() -> None:
     audit = audit_source_prz_terminal_price_bar(
         _abcd_record(),
         frame=_abcd_frame(),
@@ -117,7 +153,42 @@ def test_v4_terminal_audit_rebuilds_standalone_abcd_source_raw_prz() -> None:
     assert audit["prz"]["price_low"] != pytest.approx(10.0)
 
 
-def test_v4_terminal_audit_fails_closed_for_alternate_bat_source_conflict() -> None:
+def test_v5_terminal_audit_rebuilds_five_zero_volume2_raw_prz_and_excludes_61_8() -> None:
+    audit = audit_source_prz_terminal_price_bar(
+        _five_zero_record(),
+        frame=_five_zero_frame(),
+        forming_horizon=4,
+        reaction_horizon=2,
+    )
+    assert audit["research_definition"] == "m2-source-prz-v5"
+    assert audit["prz_basis"] == "source_raw_prz"
+    assert audit["status"] == "terminal_price_bar_observed"
+    assert audit["first_prz_entry_bar"] == 6
+    assert audit["terminal_bar"] == 6
+    assert audit["terminal_price"] == pytest.approx(122.0)
+    assert audit["prz"]["price_low"] == pytest.approx(123.0)
+    assert audit["prz"]["price_high"] == pytest.approx(126.0)
+    assert audit["source_prz_component_names"] == [
+        "BC 50% structural completion",
+        "Reciprocal AB=CD x1",
+    ]
+    assert "61.8" not in " ".join(audit["source_prz_component_names"])
+    assert audit["source_prz_defining_component"] == "BC 50% structural completion"
+    assert audit["source_prz_selection_method"] == "volume2_50_bc_plus_reciprocal_abcd"
+    assert audit["prz"]["price_low"] != pytest.approx(10.0)
+
+    # 5-0 Type-I targets must use the C->Terminal completion leg, not standard XABCD A->Terminal.
+    assert audit["automatic_target_basis"] == "five_zero_c_to_terminal"
+    assert audit["automatic_target_anchor_price"] == pytest.approx(156.0)
+    assert audit["t1_price"] == pytest.approx(122.0 + 0.382 * 34.0)
+    assert audit["t2_price"] == pytest.approx(122.0 + 0.618 * 34.0)
+    assert audit["bars_from_terminal_to_t1"] == 3
+    assert audit["t1_within_horizon"] is False
+    assert audit["outcome_class"] == "no_t1_within_horizon"
+    assert "C-to-Terminal" in audit["source_semantics"]["targets"]
+
+
+def test_v5_terminal_audit_fails_closed_for_alternate_bat_source_conflict() -> None:
     record = _gartley_record()
     record["pattern_id"] = "alternate_bat"
     record["prefix_points"] = [
