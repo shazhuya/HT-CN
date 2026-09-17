@@ -264,7 +264,13 @@ def test_standalone_abcd_uses_m228_source_prz_resolver() -> None:
 
     assert result.source_confirmed is True
     assert result.match_kind == "abcd"
-    assert result.source_prz_low == result.source_prz_high == 61.8
+    assert result.source_prz_low is not None
+    assert result.source_prz_high is not None
+    assert abs(result.source_prz_low - 61.8) < 1e-9
+    # M2.28 Raw PRZ deliberately preserves both equivalent AB=CD and reciprocal-BC
+    # measurements. They can form a narrow interval instead of an artificial single point.
+    assert abs(result.source_prz_high - 61.8076) < 1e-9
+    assert result.source_prz_high >= result.source_prz_low
 
 
 def test_shark_source_completion_can_confirm_bamm_but_not_113_precedence() -> None:
