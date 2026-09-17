@@ -1,117 +1,138 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `07fde2b1d69664e421b1cb86e3af45a6e26b1093`
-context_checkpoint_title: `M2.28: standalone AB=CD Source Raw PRZ v4`
+context_checkpoint: `e0f5d9334544944d00b232752ea0e8cdbf5c5bc8`
+context_checkpoint_title: `M2.30: Shark Source Raw PRZ v6 + resilient real-A-share research CI`
 context_snapshot_date: `2026-09-17`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
 
-> 本文件用于恢复“项目现在到底做到哪里”。它不是历史聊天摘要，也不是替代源码/测试。若本文件与当前 HEAD 冲突，必须先检查 `context_checkpoint..HEAD` 的提交，再更新本文件。
+> 本文件用于恢复“项目现在到底做到哪里”。若本文件与当前 HEAD 冲突，必须先检查 `context_checkpoint..HEAD`，再继续开发。
 
 ## 当前阶段
 
-当前有效开发主线仍处于 **M2 Source Fidelity Repair / Source PRZ Golden Set 收口阶段**。
+当前主线仍处于 **M2 Source Fidelity Repair / Source PRZ Golden Set 收口阶段**。M3 Phase 1 产品资产保留，但 execution overlay 正常扩张继续受 Source Fidelity Gate 约束。
 
-最近已完成并通过真实 A 股 CI 的检查点为 **M2.28**：
+截至 M2.30，已完成：
 
-- 标准 XABCD 的 M2.27 Source Raw PRZ 保持不变；
-- standalone AB=CD 新增 source-backed Raw PRZ：equivalent `AB=CD x1` defining measurement + reciprocal BC complementary measurement；
-- Volume Three BC layering 被固定为 execution-only，不属于 identity / Raw PRZ；
-- API price-zone contract 升至 semantics v3 / source profile v2；
-- research definition 升至 `m2-source-prz-v4`；
-- 45-symbol real A-share v4 全链 CI success；
-- 历史 Holdout / external replication / v3 结果均保持冻结，不回写、不重算。
+- M2.27：标准 XABCD Source Raw PRZ Golden Profiles；
+- M2.28：standalone AB=CD Source Raw PRZ；
+- M2.29：5-0 Volume Two structural PRZ 与 Volume Three execution refinement 分层；
+- M2.30：Shark Source Raw PRZ / Terminal Price Bar / reaction management source freeze，并建立 `m2-source-prz-v6` 研究边界。
 
-M3 Phase 1 的已有产品化成果继续保留，但 **M3 execution overlay 正常扩张仍受 Source Fidelity Gate 约束**。旧 retrospective D-based overlay 不得继续被解释成 live execution semantics。
+## M2.30 冻结结论
 
-## M2.28 真实研究检查点
+### Shark Source Raw PRZ
+
+Shark `0-X-A-B-C` 的 Source Raw PRZ 不使用 synthetic midpoint，也不使用 generic XABCD PRZ。冻结为两条原书 published completion corridors 的几何重叠：
+
+- `0B 0.886–1.13 completion corridor`；
+- `AB 1.618–2.24 Extreme Harmonic Impulse corridor`。
+
+若两者不重叠，则 source-aligned execution **fail closed**。`1.13 0B` 保持 outer completion / stop-limit reference，不属于 reaction target。
+
+### Shark reaction management
+
+- source-aligned Terminal Price Bar extreme 作为 observable C completion price；
+- initial target = 从 Terminal/C 出发先遇到的 `50% BC` 或 `Reciprocal AB=CD`；
+- 若 50% 先到，61.8% BC 作为更宽的 prospective 5-0 management level；
+- reaction targets 永久属于 post-completion management，不属于 Shark identity / Source Raw PRZ。
+
+### 5-0 状态
+
+M2.29 的 structural contract 保持：
+
+- Source Raw PRZ = `50% BC retracement + Reciprocal AB=CD`；
+- Volume Three 61.8 只属于 execution refinement / stop reference；
+- Volume Three 图文标签冲突仍显式保留；
+- **production quarantine 继续有效**，不得因 evaluator 已存在而恢复默认 Scanner / Workbench 输出。
+
+## M2.30 真实 A 股 v6 验收
 
 数据集：`a-share-research-v2-45`；snapshot cutoff `2026-09-15`。
 
-- forming signals：8085；
-- mature Source-Raw-PRZ Terminal events：**1233**；
-- Train / Validation / sealed Holdout：**730 / 222 / 258**；purged 23；
-- `source_prz_unresolved`：M2.27 v3 的 6547 -> M2.28 v4 的 **1724**；
-- mature T-Bar：v3 的 166 -> v4 的 **1233**；
-- 样本扩张主要来自 standalone AB=CD：Train 627、Validation 198、sealed Holdout 226；
-- Type-I robustness：当前 visible evidence 中只有 `full_prz_exit_by_t5` robust；Train lift +6.33 pct，Validation lift +10.84 pct；
-- nested T+3/T+5 timing 仍 `not_ready`，selected hypothesis = none；
-- v4 `confirmatory_inference_allowed = false`，不能把上述结果写成当前个股概率或机械交易规则。
+GitHub Actions run #603 / `35186542998`：**success**。
 
-详细冻结见 `specs/m2-28-source-prz-abcd-closeout.md`。
+- frozen snapshot cache：45 hit / 0 miss；
+- real-A-share calibration：约 85 秒；
+- forming signals：8244；
+- mature Source-Raw-PRZ Terminal events：1499；
+- Train / Validation / sealed Holdout：871 / 265 / 328；purged 35；
+- Shark terminal events：Train 76 / Validation 26 / sealed Holdout 40；
+- terminal statuses：terminal observed 1509；source_prz_unresolved 189；
+- Type-I visible robustness：`full_prz_exit_by_t3` 与 `full_prz_exit_by_t5` 通过当前 robustness gate；
+- completed-reaction robustness：0 个 robust candidate；
+- v6 `confirmatory_inference_allowed = false`；不得把 visible research 写成当前个股概率、机械交易规则或 source rule。
+
+历史 v1/v3/v4/v5、冻结 Holdout 与 external replication 均未重算、未改写、未 relabel。
+
+## CI / 研究韧性状态
+
+M2.30 同时修复真实 A 股研究反复“卡死”的工程根因：
+
+- workflow 增加 `actions: read`，可恢复历史冻结 research artifact；
+- cache miss 时成功下载完整 45 股快照后立即写入 GitHub cache；
+- 长研究 job 使用独立 concurrency，`cancel-in-progress: false`；
+- research timeout 由 40 分钟提升到 90 分钟，仅作为安全余量；
+- calibration 使用 `python -u` 实时输出逐股进度；
+- deterministic-tests 仍允许取消旧 run，不拖慢短反馈链。
+
+run #603 证明主要性能问题来自快照恢复失败，而非 Shark 核心扫描爆炸：恢复快照后 45 股完整校准约 85 秒。
 
 ## 当前 Gate
 
-### Gate 名称
-
 `Source Fidelity before M3 expansion`
 
-### Gate 的根因
+原则：**宁可 unresolved / fail closed，也不允许工程近似伪装成 Carney 原书规则。**
 
-三卷 Carney 原始方法复核发现，历史实现中存在把以下概念混用的风险：
+### 已冻结约束
 
-- 后验 D Pivot 与 source-aligned Terminal Price Bar；
-- ideal convergence core 与完整 source Raw PRZ；
-- 简化 Wilder RSI 反转与 RSI BAMM；
-- 5-0 的 Volume Two 结构 PRZ 与 Volume Three 执行细化；
-- Shark 与通用 XABCD T1/T2 管理。
+1. Carney Volume One / Two / Three 是 harmonic identity、source measurement、Reaction vs. Reversal 的理论基准。
+2. retrospective geometry/D 时钟与 execution/Terminal Price Bar 时钟永久分离。
+3. component envelope、Ideal Core、Source Raw PRZ、Terminal extreme、PEZ 永久分层。
+4. Type-II 必须完整 retest 原 Raw PRZ terminal side 后再进入确认。
+5. 当前 Wilder RSI evidence 不是 RSI BAMM。
+6. 5-0 production quarantine 继续有效。
+7. Shark 使用 M2.30 专属 Source Raw PRZ 与 first-target contract。
+8. identity 不能被 geometry score、统计、A 股上下文或 UI 偏好“救活”。
+9. 已消费/冻结 Holdout、external replication、历史 closed results 不得回写。
+10. A 股 T+1、涨跌停、ATR、流动性、指数/板块环境只进入 execution / tradability 层，不改写 Carney identity。
+11. 中文优先；内部枚举/API 标识保持稳定。
+12. 默认市场范围 SSE/SZSE；BSE 暂不处理。
+13. HT-CN 是研究与辅助决策系统，不执行交易。
 
-原则：**宁可 unresolved / fail closed，也不允许工程近似伪装成原书规则。**
+## 当前仍未完全解决
 
-## 已冻结的重要事实与约束
+- **RSI BAMM**：尚未建立独立、完整、多步骤、no-lookahead 状态机；
+- **5-0**：Volume Three 61.8 图文标签冲突尚未达到 production source-certification 标准，因此继续 quarantine；
+- standard XABCD per-pattern AB=CD family hard gate 仍需 source-backed refinement，不能长期只靠宽松通用条件；
+- M3 retrospective lifecycle overlay 尚未迁移为 source-aligned live execution-clock semantics；
+- M1 全市场覆盖度与核心 harmonic 正确性继续分开管理。
 
-1. **方法论权威**：Scott M. Carney《Harmonic Trading》Volume One / Two / Three 是 harmonic identity、source measurement、Reaction vs. Reversal 执行概念的理论基准。
-2. **双时钟**：几何/回溯 D 时钟与执行/Terminal Price Bar 时钟永久分离。
-3. **PRZ 分层**：component envelope、Ideal Core、Source Raw PRZ、Terminal extreme、PEZ 不得混称。
-4. **standalone AB=CD**：Source Raw PRZ = equivalent AB=CD defining completion + reciprocal BC；V3 BC layering 仅 execution tolerance，不得进入 identity/Raw PRZ。
-5. **Type-II**：必须经过完整原 Raw PRZ terminal-side retest 后才进入 Type-II T-Bar 与 price / indicator confirmation。
-6. **RSI**：当前 Wilder RSI evidence 只是辅助确认，不是 RSI BAMM。
-7. **5-0**：默认从 Engine / Scanner / Workbench 隔离；未完成 V2/V3 figure-level reconciliation 前不得恢复默认生产输出。
-8. **Shark**：使用自身 first-target contract；initial target 为从 C 出发先遇到的 50% BC 或 Reciprocal AB=CD，不机械套通用 XABCD T1/T2。
-9. **Identity 优先**：geometry score、历史统计、A 股上下文、UI 偏好不能挽救一个不满足 source-backed identity 的候选。
-10. **研究边界**：冻结的历史 Holdout / external replication / 已消费结果不得回头篡改；规则变化必须开新 research version。
-11. **A 股增强分层**：T+1、涨跌停、流动性、ATR、指数/板块环境等只进入执行/可交易性层，不改写 Carney identity / Source PRZ。
-12. **中文优先**：界面、状态、审计提示尽量中文化；内部技术标识保持稳定英文。
-13. **市场范围**：当前默认 SSE/SZSE；BSE 暂不处理。
-14. **交易边界**：HT-CN 是研究与辅助决策系统，不执行交易。
+## 下一步唯一主任务
+
+**M2.31 — RSI BAMM Dedicated Source State Machine。**
+
+执行顺序：
+
+1. 重新逐段核对 Carney 三卷中 RSI BAMM 的 source sequence、阈值、触发顺序与失效条件；
+2. 明确区分普通 Wilder RSI oversold/overbought evidence 与 RSI BAMM；
+3. 建立独立 no-lookahead 状态机，不允许一次 RSI 穿越被命名为 BAMM；
+4. 建 Book Golden / negative / temporal-order regression；
+5. BAMM 只作为 confirmation / execution evidence，除非原书明确，否则不得改写 harmonic identity / Source Raw PRZ；
+6. 完成 deterministic + 真实 A 股可观测性验收后，再决定 Source Fidelity Gate 是否进入 standard-XABCD AB=CD hard-gate refinement 或 M3 live execution overlay migration。
 
 ## 已完成里程碑
 
 - M0 ✅ 工程骨架、本地启动、测试基础设施。
 - M1 ✅ A 股数据层、日线、QFQ/HFQ、智能增量、健康检查。
-- M2 ✅ Pivot / Fibonacci / 标准 Pattern / AB=CD / Shark / Reaction vs. Reversal / T-Bar 研究资产与历史研究基础。
-- M2.26 ✅ 双时钟、PRZ 分层、严格 Type-II、5-0 quarantine、Shark target contract、API v2 等 Source Fidelity Repair 主体。
-- M2.27 ✅ 标准 XABCD Source PRZ Golden Profiles、Book Case、source/engineering provenance、v3 research boundary。
-- M2.28 ✅ standalone AB=CD Source Raw PRZ、AB=CD Book Gate、BC-layering execution-only、v4 research boundary、真实 45 股 v4 全链验收。
-- M3 Phase 1 ✅ 中文 lifecycle navigator / workbench / 浏览器自动验收资产；后续产品扩张仍受当前 Gate 限制。
-
-## 当前仍未完全解决
-
-以下项目不得靠猜测补齐：
-
-- **5-0**：Volume Two structural PRZ 与 Volume Three conditional execution refinement 尚需 figure-level reconciliation；
-- Shark source PRZ terminal-side / 5-0 transition 的最终 source freeze；
-- RSI BAMM 尚未实现完整独立多步骤状态机；
-- standard XABCD per-pattern AB=CD family hard gate 仍需进一步 source-backed refinement，不能只靠宽松 `>=1.0` 永久存在；
-- M3 retrospective lifecycle overlay 需要迁移为 source-aligned live execution-clock semantics；
-- CI snapshot cache miss 时的历史 artifact bootstrap 当前可能因 GitHub integration 权限失败，属于工程韧性问题；
-- M1 全市场覆盖度与核心算法正确性仍分开管理。
-
-## 下一步唯一主任务
-
-**M2.29 — 5-0 Volume Two / Volume Three Source Reconciliation。**
-
-执行顺序：
-
-1. 保持 production quarantine，不因已有 evaluator 存在就恢复默认扫描；
-2. 逐图例核对 V2 structural PRZ：50% BC + Reciprocal AB=CD；
-3. 独立建模 V3 conditional execution refinement / 61.8 make-or-break；
-4. 禁止再次压缩成 universal 50%-61.8 identity band；
-5. 建立 Book Golden regression 与 negative cases；
-6. 只有 source conflict 真正关闭后，才决定是否恢复 source-certified 5-0 identity/execution output。
-
-之后再收 Shark terminal-side source freeze、RSI BAMM dedicated module；Source Fidelity Gate 关闭后，再恢复 M3 live execution overlays。
+- M2 ✅ Pivot / Fibonacci / Pattern / AB=CD / Shark / Reaction vs. Reversal / T-Bar 研究基础。
+- M2.26 ✅ Source Fidelity Repair 主体。
+- M2.27 ✅ 标准 XABCD Source Raw PRZ Golden Profiles。
+- M2.28 ✅ standalone AB=CD Source Raw PRZ / v4。
+- M2.29 ✅ 5-0 V2 structural PRZ / V3 execution layering / v5，production quarantine 保持。
+- M2.30 ✅ Shark Source Raw PRZ + source-aligned management / v6 + CI research resilience。
+- M3 Phase 1 ✅ 中文 lifecycle navigator / workbench / 浏览器自动验收资产；后续扩张受当前 Gate 限制。
 
 ## 当前验收入口
 
@@ -121,11 +142,9 @@ M3 Phase 1 的已有产品化成果继续保留，但 **M3 execution overlay 正
 
 ## 新会话恢复必须核对
 
-新会话继续开发前必须核对：
-
 - 当前 HEAD 与 `context_checkpoint` 的差异；
 - 最近 CI 是否 success；
-- 相关 `specs/` 是否更新；
+- `specs/m2-30-shark-source-freeze-closeout.md`、`specs/m2-shark-five-zero.md` 与当前源码是否一致；
 - 是否出现新的 research version boundary；
 - 是否有旧聊天结论被当前源码/测试推翻。
 

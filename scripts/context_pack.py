@@ -22,6 +22,8 @@ CORE_FILES = [
 ACTIVE_SPECS = [
     "specs/m2-source-fidelity-repair.md",
     "specs/m2-book-golden-ledger.md",
+    "specs/m2-shark-five-zero.md",
+    "specs/m2-30-shark-source-freeze-closeout.md",
     "specs/m3-workbench.md",
 ]
 
@@ -66,45 +68,30 @@ def git_is_ancestor(base: str, head: str) -> bool:
 def validate() -> tuple[bool, list[str], dict[str, str]]:
     messages: list[str] = []
     ok = True
-
     for rel in CORE_FILES:
         if not (ROOT / rel).exists():
             ok = False
             messages.append(f"FATAL: missing {rel}")
-
     try:
         head = run_git("rev-parse", "HEAD")
         branch = run_git("branch", "--show-current") or "(detached)"
         checkpoint = read_checkpoint()
         run_git("cat-file", "-e", f"{checkpoint}^{{commit}}")
-    except Exception as exc:  # noqa: BLE001 - CLI should show a single diagnostic block
+    except Exception as exc:
         return False, [f"FATAL: {exc}"], {}
-
     ancestor = git_is_ancestor(checkpoint, head)
     if not ancestor:
         ok = False
         messages.append("FATAL: context_checkpoint is not an ancestor of current HEAD")
-
     status = run_git("status", "--short", allow_failure=True)
     delta_count = run_git("rev-list", "--count", f"{checkpoint}..{head}", allow_failure=True) or "0"
-
     if status:
         messages.append("WARN: working tree is dirty; generated pack will record the uncommitted paths")
     if delta_count != "0":
-        messages.append(
-            f"INFO: context_checkpoint is behind HEAD by {delta_count} commit(s); "
-            "Bootstrap must inspect the delta before coding"
-        )
+        messages.append(f"INFO: context_checkpoint is behind HEAD by {delta_count} commit(s); Bootstrap must inspect the delta before coding")
     else:
         messages.append("OK: context_checkpoint equals current HEAD")
-
-    meta = {
-        "head": head,
-        "branch": branch,
-        "checkpoint": checkpoint,
-        "delta_count": delta_count,
-        "status": status,
-    }
+    meta = {"head": head, "branch": branch, "checkpoint": checkpoint, "delta_count": delta_count, "status": status}
     return ok, messages, meta
 
 
@@ -125,23 +112,14 @@ def build_pack(meta: dict[str, str]) -> str:
     generated = datetime.now().astimezone().isoformat(timespec="seconds")
     head = meta["head"]
     checkpoint = meta["checkpoint"]
-
     recent_log = run_git("log", "-15", "--date=short", "--pretty=format:%h %ad %s", allow_failure=True)
-    delta_log = run_git(
-        "log",
-        "--date=short",
-        "--pretty=format:%h %ad %s",
-        f"{checkpoint}..{head}",
-        allow_failure=True,
-    )
+    delta_log = run_git("log", "--date=short", "--pretty=format:%h %ad %s", f"{checkpoint}..{head}", allow_failure=True)
     changed = run_git("diff", "--name-status", f"{checkpoint}..{head}", allow_failure=True)
     diff_stat = run_git("diff", "--stat", f"{checkpoint}..{head}", allow_failure=True)
     status = meta.get("status", "")
-
     parts: list[str] = [
         "# HT-CN Context Pack — 新对话续接包\n",
-        "> 用法：新对话先完整读取本文件，再读取/核对仓库当前 HEAD。"
-        "项目事实以仓库当前状态为准，旧聊天只作历史参考。\n",
+        "> 用法：新对话先完整读取本文件，再读取/核对仓库当前 HEAD。项目事实以仓库当前状态为准，旧聊天只作历史参考。\n",
         "## Bootstrap Metadata\n",
         f"- generated_at: `{generated}`\n",
         f"- branch: `{meta['branch']}`\n",
@@ -160,19 +138,14 @@ def build_pack(meta: dict[str, str]) -> str:
         "### Diff stat after context checkpoint\n",
         code_block(diff_stat or "(none)"),
         "## 恢复要求\n",
-        "在继续实现前，Agent 必须能够说明：当前阶段、当前 Gate、冻结决策、未解决问题、"
-        "下一步唯一主任务、checkpoint 之后发生了什么、最新测试/CI 状态。若 checkpoint 后有"
-        "功能提交，应先重新核对相关 specs，再决定是否更新 PROJECT_CONTEXT.md。\n",
+        "在继续实现前，Agent 必须能够说明：当前阶段、当前 Gate、冻结决策、未解决问题、下一步唯一主任务、checkpoint 之后发生了什么、最新测试/CI 状态。若 checkpoint 后有功能提交，应先重新核对相关 specs，再决定是否更新 PROJECT_CONTEXT.md。\n",
     ]
-
     parts.append("\n# Core Context Files\n")
     for rel in CORE_FILES:
         append_file(parts, rel)
-
     parts.append("\n# Active Specifications\n")
     for rel in ACTIVE_SPECS:
         append_file(parts, rel)
-
     return "\n".join(parts).rstrip() + "\n"
 
 
@@ -181,19 +154,15 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="validate continuity metadata only")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="output markdown path")
     args = parser.parse_args()
-
     ok, messages, meta = validate()
     print("[HT-CN CONTEXT] continuity check")
     for message in messages:
         print(f"[HT-CN CONTEXT] {message}")
-
     if not ok:
         return 1
-
     if args.check:
         print("[HT-CN CONTEXT] CHECK PASSED")
         return 0
-
     output = args.output
     if not output.is_absolute():
         output = ROOT / output

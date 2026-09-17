@@ -1,6 +1,65 @@
 # HT-CN Session Log — 会话交接记录
 
-本文件只记录“每个开发 Session 最后停在哪里”，避免把长聊天当项目数据库。详细技术事实仍以源码、测试、`PROJECT_CONTEXT.md`、`DECISIONS.md`、`specs/` 为准。
+本文件只记录每个开发 Session 最后停在哪里。详细技术事实仍以源码、测试、`PROJECT_CONTEXT.md`、`DECISIONS.md`、`specs/` 为准。
+
+## 2026-09-17 — M2.30 Shark Source Raw PRZ / v6 收口
+
+### 基线
+
+- 起始 main：`6d36dfe4c9e2b597df80596ad1bb1c08d286e9f0`（M2.29 merge）
+- 结束功能/研究检查点：`e0f5d9334544944d00b232752ea0e8cdbf5c5bc8`
+- 分支：`m2/shark-terminal-source-freeze`
+- CI：run #603 / `35186542998`，deterministic + Playwright + 45-symbol real-A-share v6 全链 **success**
+
+### 完成
+
+- Shark Source Raw PRZ 冻结为 `0B 0.886–1.13` corridor 与 `AB 1.618–2.24` corridor 的几何 overlap；
+- 新增 Shark source contract / Book Golden evidence / negative regression；
+- source-aligned Terminal Price Bar 支持 Shark；
+- Shark reaction management 使用 first encountered of `50% BC` / `Reciprocal AB=CD`；61.8% BC 保持 wider prospective 5-0 level；
+- 5-0 M2.29 structural semantics 保持，production quarantine 未解除；
+- research definition 升至 `m2-source-prz-v6`；
+- 新增 v6 sealed research guard；
+- 修复旧 `specs/m2-shark-five-zero.md` 的 5-0 50–61.8 universal-band 漂移；
+- CI 修复 Actions artifact 权限、snapshot bootstrap、即时 cache、长研究 concurrency、90 分钟安全 timeout、实时无缓冲进度输出。
+
+### 真实研究验收
+
+- cache：45 hit / 0 miss；
+- 45 股 calibration：约 85 秒；
+- forming signals：8244；
+- mature Source-Raw-PRZ Terminal events：1499；
+- Train / Validation / sealed Holdout：871 / 265 / 328；purged 35；
+- Shark Terminal events：76 / 26 / 40；
+- Type-I visible robustness：`full_prz_exit_by_t3`、`full_prz_exit_by_t5`；
+- completed-reaction robustness：none；
+- v6 confirmatory inference：false；
+- historical v1/v3/v4/v5 / Holdout / external replication 未重算、未 relabel。
+
+### 关键决定
+
+- D-015：Shark Source Raw PRZ = published source corridors geometric overlap；
+- D-016：真实 A 股长研究必须 snapshot-first、resumable、observable，不能被普通小提交反复浪费。
+
+### 未解决
+
+- RSI BAMM 独立多步骤状态机；
+- 5-0 V3 label conflict，production quarantine 继续；
+- standard XABCD per-pattern AB=CD hard-gate refinement；
+- M3 live execution-clock overlay migration。
+
+### 下一步唯一主任务
+
+**M2.31 — RSI BAMM Dedicated Source State Machine。**
+
+### 新会话特别注意
+
+- 不得把 Wilder RSI 极值反转称为 RSI BAMM；
+- 不得把 v6 visible robustness 写成确认性交易结论；
+- 5-0 默认生产隔离继续；
+- M3 旧 retrospective D-based overlay 不得恢复为 live execution semantics。
+
+---
 
 ## 2026-09-17 — M2.28 Standalone AB=CD Source Raw PRZ 收口
 
@@ -20,8 +79,7 @@
 - 新增 AB=CD Book Source ledger / Golden regression；
 - research definition 升至 `m2-source-prz-v4`；
 - 新增 v4 sealed research boundary guard；
-- 历史 v1/v3/Holdout/external replication 均保持不可变；
-- main 在本 Session 中新增的 9 个“跨对话续接协议”提交已安全以双父 merge 合入当前分支，无文件冲突、无 force-push。
+- 历史 v1/v3/Holdout/external replication 均保持不可变。
 
 ### 真实研究验收
 
@@ -30,40 +88,11 @@
 - Train / Validation / sealed Holdout：730 / 222 / 258；purged 23；
 - `source_prz_unresolved`：6547（v3）-> 1724（v4）；
 - mature T-Bar：166（v3）-> 1233（v4）；
-- standalone AB=CD：Train 627 / Validation 198 / sealed Holdout 226；
-- v4 visible robustness：仅 `full_prz_exit_by_t5` robust，Train lift +6.33 pct、Validation lift +10.84 pct；
-- nested T+3/T+5 timing：not ready，selected hypothesis none；
-- v4 confirmatory inference：false；不得解释为当前个股概率/机械规则。
+- standalone AB=CD：Train 627 / Validation 198 / sealed Holdout 226。
 
-详细见 `specs/m2-28-source-prz-abcd-closeout.md`。
+### 下一步
 
-### 工程观察
-
-- run #555 snapshot cache miss，历史 artifact bootstrap 因 GitHub integration 权限不可访问，导致 45 股重新从 BaoStock 拉取；本轮结束后新 cache 已成功保存；
-- source-resolved events 大幅增加后，per-record frame sort / linear target scan 的成本更明显；未来如优化，必须保证结果完全等价并与 source definition change 分开提交。
-
-### 关键决定
-
-- 新增 D-014：Standalone AB=CD Source Raw PRZ 与 V3 BC Layering 永久分层。
-
-### 未解决
-
-- 5-0 V2 structural PRZ vs V3 execution refinement；
-- Shark terminal-side Source PRZ / 5-0 transition final source freeze；
-- RSI BAMM 独立状态机；
-- standard XABCD per-pattern AB=CD family hard gate refinement；
-- M3 retrospective D-based overlays 尚未迁移到 live execution clock。
-
-### 下一步唯一主任务
-
-**M2.29 — 5-0 Volume Two / Volume Three Source Reconciliation。**
-
-### 新会话特别注意
-
-- 不得把 v4 visible `full_prz_exit_by_t5` robustness 写成确认性结论或当前标的概率；
-- 不得恢复旧 M3 D-based Type-I overlay；
-- 5-0 在 source conflict 关闭前继续 production quarantine；
-- 新会话先核对 `PROJECT_CONTEXT.md` 的 checkpoint 与当前 HEAD/CI。
+后续已由 M2.29 / M2.30 继续推进。
 
 ---
 
@@ -74,27 +103,16 @@
 - 仓库：`shazhuya/HT-CN`
 - 默认分支：`main`
 - 功能/研究检查点：`612c0dc01ecbbadfe763bbe9a78c9acd9cee5014`
-- 检查点标题：`M2.27: freeze source PRZ golden profiles`
-- 该检查点 GitHub CI：success
 
 ### 本 Session 完成
 
-- 新增 `AGENTS.md`：定义新会话 Bootstrap 与 Session Closeout 强制协议；
-- 新增 `PROJECT_CONTEXT.md`：保存当前阶段、Gate、冻结约束、未解决问题、唯一主任务和验收入口；
-- 新增 `DECISIONS.md`：把关键架构/方法论决定从聊天中迁移为可追溯账本；
-- 新增本 `SESSION_LOG.md`；
-- 新增一键续接包生成器与 Windows 入口（见同批提交）；
+- 新增 `AGENTS.md`、`PROJECT_CONTEXT.md`、`DECISIONS.md`、本 `SESSION_LOG.md`；
+- 新增 context pack 与 Windows 一键检查/生成入口；
 - 后续任何新会话必须检查 `context_checkpoint..HEAD`，禁止仅依赖旧聊天记忆。
-
-### 当前下一步
-
-继续关闭 Source Fidelity Gate：围绕 Book Golden Set、剩余 Source PRZ / Shark / 5-0 source conflict 与 source-aligned execution-clock 语义收口；Gate 关闭后再恢复 M3 正常扩张。
 
 ---
 
 ## Closeout 模板
-
-复制下面模板追加到文件顶部（最新 Session 放最上面）：
 
 ```text
 ## YYYY-MM-DD — Session 标题
