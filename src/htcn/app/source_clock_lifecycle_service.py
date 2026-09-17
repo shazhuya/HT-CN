@@ -4,6 +4,10 @@ from typing import Any
 
 import pandas as pd
 
+from htcn.app.a_share_execution_context import (
+    build_a_share_execution_context,
+    load_security_metadata,
+)
 from htcn.app.source_aligned_service import SourceAlignedHarmonicService
 from htcn.harmonic.execution import SourceExecutionAudit
 from htcn.harmonic.models import PatternDirection
@@ -14,9 +18,9 @@ from htcn.harmonic.source_lifecycle import derive_source_lifecycle, unavailable_
 class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
     """M3 product adapter that promotes the observable source clock to canonical lifecycle.
 
-    M2.31 source-fidelity objects stay unchanged. This adapter only adds a product-facing
-    ``source_lifecycle`` payload. Historical ``reaction_audit`` remains available as a
-    diagnostic compatibility layer and never drives the canonical current state.
+    M2.31 source-fidelity objects stay unchanged. This adapter adds product-facing
+    ``source_lifecycle`` and A-share execution-context payloads. Historical
+    ``reaction_audit`` remains diagnostic compatibility only and never drives current state.
     """
 
     @staticmethod
@@ -131,8 +135,17 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
                     reason="five_zero_production_quarantine",
                 ).as_payload()
 
+        frame = pd.DataFrame(analysis.get("bars") or [])
+        instrument_id = str(analysis["instrument_id"])
+        metadata = load_security_metadata(self.data_root / "catalog.duckdb", instrument_id)
+        analysis["a_share_execution_context"] = build_a_share_execution_context(
+            frame,
+            instrument_id=instrument_id,
+            metadata=metadata,
+        ).as_payload()
+
         analysis["source_lifecycle_contract"] = {
-            "version": 1,
+            "version": 2,
             "canonical_clock": "source_terminal_price_bar",
             "current_state_field": "*.source_lifecycle.state",
             "retrospective_reaction_audit_role": "diagnostic_compatibility_only",
@@ -141,6 +154,10 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             "type_i_early_window_bars": 5,
             "type_i_early_confirmation_objective": "38.2_percent_reaction_target",
             "bamm_role": "evidence_only",
+            "a_share_execution_context_field": "a_share_execution_context",
+            "a_share_execution_context_role": "tradability_and_volatility_context_only",
+            "execution_context_may_change_harmonic_identity": False,
+            "execution_context_may_change_source_raw_prz": False,
             "mutates_harmonic_identity": False,
             "mutates_source_raw_prz": False,
             "no_backdating": True,
@@ -149,5 +166,7 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             str(analysis.get("engine_note") or "")
             + " M3 Phase 1：工作台 current lifecycle 已升级为 Source Terminal Price Bar 时钟；"
             "reaction_audit 仅保留后验诊断兼容，不得覆盖 source_lifecycle。"
+            " M3 Phase 3：A股 T+1、涨跌幅制度、ATR/振幅/量比进入独立 execution context；"
+            "该上下文只能解释可交易性与波动风险，禁止改写 harmonic identity 或 Source Raw PRZ。"
         ).strip()
         return analysis
