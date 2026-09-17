@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,6 +10,21 @@ REPORT = ROOT / "artifacts" / "ci-research" / "m2-autonomous-research-report.jso
 HISTORICAL_PREREG = ROOT / "research" / "m2-type-i-holdout-prereg-v1.json"
 OUTPUT = ROOT / "artifacts" / "ci-research" / "m2-source-prz-v6-boundary.json"
 EXPECTED_DEFINITION = "m2-source-prz-v6"
+
+
+def _pattern_count(by_pattern: dict[str, Any], pattern_id: str) -> int:
+    value = by_pattern.get(pattern_id)
+    if isinstance(value, dict):
+        for key in ("records", "count", "n"):
+            if key in value:
+                return int(value.get(key) or 0)
+        return 0
+    if value is None:
+        return 0
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
 
 
 def main() -> int:
@@ -26,7 +42,6 @@ def main() -> int:
         if not condition:
             failures.append(message)
 
-    # Frozen historical confirmatory evidence cannot be rewritten by a new source definition.
     require(historical.get("preregistration_id") == "m2-type-i-holdout-v1", "historical preregistration id changed")
     require(
         historical.get("frozen_from_evidence_commit") == "bc90af32963498d174aa2470852ec40330be7853",
@@ -35,7 +50,6 @@ def main() -> int:
     require(historical_holdout.get("sealed") is True, "historical v1 holdout must remain sealed")
     require(int(historical_holdout.get("records") or 0) == 355, "historical v1 holdout size changed")
 
-    # M2.30 v6 extends source-aligned research to Shark Source Raw PRZ and source management.
     require(calibration.get("research_definition") == EXPECTED_DEFINITION, "current calibration is not tagged v6")
     require(terminal.get("research_definition") == EXPECTED_DEFINITION, "Terminal-Bar calibration is not tagged v6")
     require(
@@ -69,15 +83,9 @@ def main() -> int:
     validation_by_pattern = (terminal.get("validation") or {}).get("by_pattern") or {}
     holdout_by_pattern = terminal_holdout.get("by_pattern") or {}
     shark_events = {
-        "train": int((train_by_pattern.get("shark") or {}).get("records") or train_by_pattern.get("shark") or 0)
-        if not isinstance(train_by_pattern.get("shark"), dict)
-        else int((train_by_pattern.get("shark") or {}).get("records") or 0),
-        "validation": int((validation_by_pattern.get("shark") or {}).get("records") or validation_by_pattern.get("shark") or 0)
-        if not isinstance(validation_by_pattern.get("shark"), dict)
-        else int((validation_by_pattern.get("shark") or {}).get("records") or 0),
-        "holdout": int((holdout_by_pattern.get("shark") or {}).get("records") or holdout_by_pattern.get("shark") or 0)
-        if not isinstance(holdout_by_pattern.get("shark"), dict)
-        else int((holdout_by_pattern.get("shark") or {}).get("records") or 0),
+        "train": _pattern_count(train_by_pattern, "shark"),
+        "validation": _pattern_count(validation_by_pattern, "shark"),
+        "holdout": _pattern_count(holdout_by_pattern, "shark"),
     }
 
     artifact = {
