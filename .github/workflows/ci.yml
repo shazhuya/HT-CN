@@ -6,6 +6,7 @@ on:
       - main
       - 'm*/**'
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -74,7 +75,9 @@ jobs:
 
   autonomous-research:
     name: autonomous-real-a-share-research
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/m2/')
+    if: >-
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/m2/') && contains(github.event.head_commit.message, '[research]'))
+      || github.event_name == 'workflow_dispatch'
     needs: deterministic-tests
     concurrency:
       group: htcn-research-${{ github.ref }}
