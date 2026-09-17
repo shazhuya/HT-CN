@@ -274,3 +274,36 @@ test('BAMM is rendered as a separate evidence channel and cannot own lifecycle s
   await expect(evidence.getByText(/RSI BAMM · Source confirmed/)).toBeVisible()
   await expect(evidence.getByText(/不改变 lifecycle、identity 或 Source PRZ/)).toBeVisible()
 })
+
+test('source lifecycle chart renders Source PRZ PEZ T-Bar T+1 and source Type-I targets', async ({ page }) => {
+  await openScenario(page, {
+    ...basePattern,
+    reaction_audit: reactionAudit({ bars_to_382: 2, bars_to_618: 5 }),
+    source_lifecycle: sourceLifecycle({
+      state: 'type_i_confirmed',
+      state_reason: '38.2 reached inside five bars.',
+      source_terminal_bar: 4,
+      execution_start_bar: 5,
+      bars_since_terminal: 1,
+      type_i_t1_bar: 5,
+      source_prz_low: 103.9,
+      source_prz_high: 104.5,
+      pez_low: 103.8,
+      pez_high: 104.5,
+      target_382: 107.0,
+      target_618: 109.2,
+      next_key_price: 109.2,
+      next_key_price_role: 'type_i_61_8_target',
+    }),
+  })
+
+  await expect(page.getByTestId('source-prz-zone')).toBeVisible()
+  await expect(page.getByTestId('source-pez-zone')).toBeVisible()
+  await expect(page.getByTestId('source-event-tbar')).toBeVisible()
+  await expect(page.getByTestId('source-event-tplus1')).toBeVisible()
+  await expect(page.getByTestId('source-event-type-i-t1')).toBeVisible()
+  await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-clock', 'source')
+  await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-clock', 'source')
+  await expect(page.getByText(/Source T1 38\.2% · 107\.00 · 已到达/)).toBeVisible()
+  await expect(page.getByText(/Source T2 61\.8% · 109\.20 · 待到达/)).toBeVisible()
+})
