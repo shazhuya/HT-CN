@@ -128,6 +128,25 @@ M2.30 起，GitHub CI 的真实 A 股研究采用以下工程约束：
 
 原因：真实研究结果依赖冻结数据边界。重复联网抓取既浪费时间，也会把 provider availability 与 harmonic 逻辑错误混在一起。run #603 证明恢复 45 股快照后完整校准约 85 秒，因此此前 40 分钟超时主要是缓存恢复链路失效，而非 Shark 计算本身不可接受。
 
+## D-017 — RSI BAMM 是独立 source-confirmation evidence，不是 Wilder RSI 别名
+
+**状态：Frozen**
+
+M2.31 起，RSI BAMM 必须由独立 no-lookahead 状态机产生，并保持以下边界：
+
+- 14-period Wilder RSI；两次 30/70 extreme test；中间至少一次 RSI 50 midpoint reaction；
+- Volume Three Simple/Complex × Confirmation/Divergence 四类结构独立保留；
+- Volume Two X-A Confirmation Point 使用 1.13/1.618 source selection，X-A 锚点在第二次 extreme 前冻结；
+- canonical source confirmation 必须绑定真实 `COMPLETED` harmonic match，方向一致、Source Raw PRZ 已冻结、terminal 落在 Source Raw PRZ 且时间位于 secondary impulsive RSI retest；
+- standalone AB=CD 使用 M2.28 source resolver；Shark 使用 M2.30 source contract；5-0 在 production quarantine 解除前不得确认 BAMM；
+- 1.13 retracement-pattern precedence 只允许原书明确支持的 source-cleared Gartley/Bat，不扩展到 Shark/AB=CD/5-0；
+- 不发明 ATR、百分比、tick 或 PRZ-distance 容差来“凑”BAMM 与 harmonic confluence；不满足 source contract 时 fail closed；
+- BAMM 只能增加 confirmation/execution evidence，永远不能创建、修改或救活 harmonic identity / Source Raw PRZ。
+
+原因：普通 RSI 极值、RSI divergence 与完整 RSI BAMM 是不同层级的证据；若允许 caller boolean 或工程容差直接制造 `source_confirmed`，会重新破坏 Source Fidelity Gate。
+
+验证方式：Book Golden/negative/no-lookahead tests + real harmonic confluence adapter tests + deterministic CI + 后续真实 A 股 observability（只观察，不做 outcome fitting）。
+
 ## 后续新增格式
 
 ```text
