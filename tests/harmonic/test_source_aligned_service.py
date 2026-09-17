@@ -57,8 +57,6 @@ def test_frozen_source_prz_is_explicit_and_not_inferred_from_ideal_core() -> Non
     assert source["price_high"] == pytest.approx(100.0)
     assert source["width"] == pytest.approx(10.0)
     assert source["status"] == "frozen"
-    # Explicit source bounds constructed by older compatibility callers remain valid even
-    # without pattern provenance. M2.28 keeps that compatibility while versioning the contract.
     assert source["component_names"] == []
     assert source["defining_component"] is None
     assert source["selection_method"] is None
@@ -109,7 +107,6 @@ def test_forming_execution_clock_starts_after_confirmed_frontier_and_fails_close
     )
 
     assert clock is not None
-    # C pivot index=3 with S1 is observable only at bar 4; observation starts after bar 4.
     assert clock["signal_bar"] == 4
     assert clock["signal_clock_basis"] == "last_frontier_pivot_confirmed_at=index+scale"
     assert clock["retrospective_d_clock_used"] is False
@@ -146,14 +143,12 @@ def test_terminal_bar_creates_dynamic_pez_and_timestamped_bamm_channel() -> None
     }
     assert clock["target_382"] > 89.0
     assert clock["target_618"] > clock["target_382"]
-    # Eight bars are insufficient for Wilder RSI(14), therefore BAMM is visible as an
-    # independent empty evidence channel rather than being manufactured from price geometry.
     assert clock["rsi_bamm_evidence"]["status"] == "no_completed_rsi_bamm_observed"
     assert clock["rsi_bamm_evidence"]["source_confirmed"] is False
     assert clock["rsi_bamm_evidence"]["mutates_harmonic_identity"] is False
 
 
-def test_source_confirmed_bamm_is_never_backdated_to_pattern_terminal(monkeypatch) -> None:
+def test_source_confirmed_bamm_is_never_backdated_before_sequence_completion(monkeypatch) -> None:
     sequence = SimpleNamespace(
         completion_bar=8,
         profile=SimpleNamespace(value="simple_divergence"),
@@ -168,10 +163,20 @@ def test_source_confirmed_bamm_is_never_backdated_to_pattern_terminal(monkeypatc
         sequence=sequence,
         status="source_confirmed",
         confirmation=confirmation,
+        terminal_bar=6,
+        terminal_price=89.0,
+        terminal_source="source_terminal_price_bar",
+        terminal_tests_source_prz=True,
+        terminal_in_source_prz=False,
+    )
+    audit = SimpleNamespace(
+        terminal_bar=6,
+        terminal_price=89.0,
+        state="terminal_observed",
     )
     item = SimpleNamespace(
         direction=PatternDirection.BULLISH,
-        points=[SimpleNamespace(index=6)],
+        points=[SimpleNamespace(index=7)],
     )
     monkeypatch.setattr(
         source_service,
@@ -180,8 +185,13 @@ def test_source_confirmed_bamm_is_never_backdated_to_pattern_terminal(monkeypatc
     )
     monkeypatch.setattr(
         source_service,
-        "confirm_rsi_bamm_with_match",
-        lambda sequence_arg, item_arg: confluence,
+        "observe_source_execution_for_match",
+        lambda frame, item_arg: audit,
+    )
+    monkeypatch.setattr(
+        source_service,
+        "confirm_rsi_bamm_with_source_execution",
+        lambda sequence_arg, item_arg, audit_arg: confluence,
     )
 
     payload = SourceAlignedHarmonicService._rsi_bamm_confluence_payload(
@@ -197,8 +207,12 @@ def test_source_confirmed_bamm_is_never_backdated_to_pattern_terminal(monkeypatc
 
     assert payload["status"] == "source_confirmed"
     assert payload["source_confirmed_count"] == 1
-    assert payload["pattern_terminal_bar"] == 6
+    assert payload["geometry_terminal_bar"] == 7
+    assert payload["source_terminal_bar"] == 6
     assert payload["bamm_completion_bar"] == 8
     assert payload["available_from_bar"] == 8
+    assert payload["available_at_source_terminal"] is False
     assert payload["available_at_pattern_terminal"] is False
+    assert payload["terminal_source"] == "source_terminal_price_bar"
+    assert payload["terminal_tests_source_prz"] is True
     assert payload["mutates_harmonic_identity"] is False
