@@ -84,6 +84,27 @@ SOURCE_PRZ_EVIDENCE: dict[str, SourcePRZEvidence] = {
         ),
         coordinate_regression_status="pending_reliable_source_pivots",
     ),
+    "five_zero": SourcePRZEvidence(
+        pattern_id="five_zero",
+        evidence_level="structural_source_frozen_plus_market_examples_with_v3_execution_label_conflict",
+        source_membership_authority="carney_vol2_structural_prz",
+        selection_authority="carney_50_bc_plus_reciprocal_abcd",
+        market_case_ids=(
+            "v2-five-zero-eur-a0-fx-5m",
+            "v2-five-zero-xoi-5m",
+            "v2-five-zero-adobe-daily",
+            "v3-five-zero-aud-a0-fx-60m",
+            "v3-five-zero-gld-15m",
+        ),
+        known_tensions=(
+            "Volume Two repeatedly defines the structural 5-0 PRZ as 50% BC retracement + Reciprocal AB=CD. "
+            "Volume Three pp.129-138 adds a 61.8 execution/stop refinement but internally alternates XA and AB "
+            "labels around 50%/61.8 while its structural figures and market cases preserve the B-C pullback geometry. "
+            "M2.29 therefore freezes Volume Two Raw PRZ membership and keeps 61.8 execution-only under an explicit "
+            "HT-CN BC-axis interpretation; it does not rewrite the conflicting Volume Three labels.",
+        ),
+        coordinate_regression_status="structural_membership_frozen_execution_label_conflict_recorded",
+    ),
 }
 
 
