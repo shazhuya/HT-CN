@@ -232,9 +232,9 @@ def test_v6_terminal_audit_rebuilds_shark_source_overlap_and_first_5_0_target() 
         "volume3_shark_overlap_0b_886_113_with_ab_impulse_1618_224"
     )
     assert audit["automatic_target_basis"] == "shark_first_5_0_measurement"
-    assert audit["t1_name"] == "50%"
+    assert audit["t1_name"] == "Shark first 5-0 measurement"
     assert audit["t1_price"] == pytest.approx(110.75)
-    assert audit["t2_name"] == "61.8%"
+    assert audit["t2_name"] == "61.8% BC"
     assert audit["t2_price"] == pytest.approx(114.113)
     assert audit["bars_from_terminal_to_t1"] == 2
     assert audit["bars_from_terminal_to_t2"] == 3
