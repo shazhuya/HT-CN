@@ -7,6 +7,7 @@ import pandas as pd
 
 from htcn.harmonic.abcd import project_forming_abcd
 from htcn.harmonic.abcd_source import with_abcd_source_prz
+from htcn.harmonic.five_zero_source import build_five_zero_source_contract
 from htcn.harmonic.models import HarmonicPoint
 from htcn.harmonic.prz import build_xabcd_prz
 from htcn.harmonic.rules import CARNEY_RULES
@@ -17,7 +18,7 @@ from .terminal_bar import (
 )
 
 
-SOURCE_TERMINAL_RESEARCH_DEFINITION = "m2-source-prz-v4"
+SOURCE_TERMINAL_RESEARCH_DEFINITION = "m2-source-prz-v5"
 
 
 def _source_payload(prz) -> dict[str, Any] | None:
@@ -36,13 +37,27 @@ def _source_payload(prz) -> dict[str, Any] | None:
     }
 
 
+def _points_from_prefix(
+    by_label: dict[str, dict[str, Any]],
+    labels: tuple[str, ...],
+) -> tuple[HarmonicPoint, ...]:
+    return tuple(
+        HarmonicPoint(
+            label=label,
+            index=int(by_label[label]["index"]),
+            price=float(by_label[label]["price"]),
+        )
+        for label in labels
+    )
+
+
 def _source_prz_projection(record: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
     """Rebuild Source Raw PRZ from signal-time geometry only.
 
-    M2.28 extends the v3 contract to standalone AB=CD. Standard XABCD still uses the
-    pattern-specific frozen SourcePRZProfile. Standalone AB=CD uses the exact/equivalent
-    AB=CD completion plus the reciprocal BC projection. Legacy Ideal Core bounds are never
-    accepted as a substitute.
+    M2.29 v5 preserves all v4 source contracts and additionally admits 5-0 only through its
+    reconciled Volume Two structural Raw PRZ: 50% BC retracement + Reciprocal AB=CD.
+    The Volume Three 61.8 execution refinement is deliberately excluded from this Terminal-Bar
+    Raw PRZ. Legacy Ideal Core bounds are never accepted as a substitute.
     """
 
     schema = str(record.get("schema"))
@@ -56,14 +71,7 @@ def _source_prz_projection(record: dict[str, Any]) -> tuple[dict[str, Any] | Non
             return None, "source_prz_profile_missing"
         if any(label not in by_label for label in ("X", "A", "B", "C")):
             return None, "xabc_prefix_missing"
-        points = tuple(
-            HarmonicPoint(
-                label=label,
-                index=int(by_label[label]["index"]),
-                price=float(by_label[label]["price"]),
-            )
-            for label in ("X", "A", "B", "C")
-        )
+        points = _points_from_prefix(by_label, ("X", "A", "B", "C"))
         try:
             prz = build_xabcd_prz(rule, points)  # type: ignore[arg-type]
         except (TypeError, ValueError):
@@ -76,14 +84,7 @@ def _source_prz_projection(record: dict[str, Any]) -> tuple[dict[str, Any] | Non
     if schema == "ABCD":
         if any(label not in by_label for label in ("A", "B", "C")):
             return None, "abc_prefix_missing"
-        points = tuple(
-            HarmonicPoint(
-                label=label,
-                index=int(by_label[label]["index"]),
-                price=float(by_label[label]["price"]),
-            )
-            for label in ("A", "B", "C")
-        )
+        points = _points_from_prefix(by_label, ("A", "B", "C"))
         try:
             projection = project_forming_abcd(points)  # type: ignore[arg-type]
         except (TypeError, ValueError):
@@ -94,6 +95,19 @@ def _source_prz_projection(record: dict[str, Any]) -> tuple[dict[str, Any] | Non
         payload = _source_payload(prz)
         if payload is None:
             return None, "abcd_source_prz_unresolved"
+        return payload, None
+
+    if schema == "FIVE_ZERO":
+        if any(label not in by_label for label in ("X", "A", "B", "C")):
+            return None, "five_zero_xabc_prefix_missing"
+        points = _points_from_prefix(by_label, ("X", "A", "B", "C"))
+        try:
+            contract = build_five_zero_source_contract(points)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return None, "five_zero_source_prz_rebuild_failed"
+        payload = _source_payload(contract.prz)
+        if payload is None:  # defensive; reconciled 5-0 contract always freezes structural bounds
+            return None, "five_zero_source_prz_unresolved"
         return payload, None
 
     return None, "source_prz_not_frozen_for_schema"
