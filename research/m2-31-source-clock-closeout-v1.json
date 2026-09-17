@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "closeout_id": "m2-31-source-clock-bamm-closeout-v1",
+  "milestone": "M2.31",
+  "purpose": "Trigger and record the final frozen-snapshot acceptance after Source Terminal Price Bar BAMM binding replaced geometry-terminal lifecycle binding.",
+  "required_gates": [
+    "python deterministic tests",
+    "web build",
+    "Playwright smoke/lifecycle acceptance",
+    "45-symbol frozen A-share source-PRZ v6 research guard",
+    "45-symbol source-clock RSI BAMM observability",
+    "Type-I holdout and external replication guards"
+  ],
+  "semantic_assertions": {
+    "geometry_terminal_is_source_terminal": false,
+    "completed_bamm_confluence_clock": "source_terminal_price_bar",
+    "pez_overspill_allowed": true,
+    "no_backdating": true,
+    "bamm_mutates_harmonic_identity": false,
+    "bamm_mutates_source_raw_prz": false,
+    "five_zero_production_quarantine": true,
+    "alternate_bat_fail_closed": true
+  },
+  "status": "acceptance_pending"
+}
