@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "status_id": "htcn-source-fidelity-status-v1",
+  "authority": [
+    "Scott M. Carney, Harmonic Trading Volume One",
+    "Scott M. Carney, Harmonic Trading Volume Two",
+    "Scott M. Carney, Harmonic Trading Volume Three: Reaction vs. Reversal"
+  ],
+  "as_of_milestone": "M2.31",
+  "development_branch": "m2/rsi-bamm-source-state-machine",
+  "default_branch_release": "M2.30",
+  "global_contracts": {
+    "geometry_clock_separate_from_execution_clock": "frozen",
+    "source_raw_prz_separate_from_ideal_core_and_component_envelope": "frozen",
+    "terminal_price_bar_requires_terminal_side_test": "frozen",
+    "type_ii_production_policy": "strict_full_source_prz_retest",
+    "type_ii_policy_note": "HT-CN conservative operationalization of Carney's ideal full-retest case; nominal-retest variants require a separate research tier.",
+    "a_share_rules_may_mutate_harmonic_identity": false,
+    "a_share_rules_may_mutate_source_raw_prz": false,
+    "five_zero_default_scanner_enabled": false
+  },
+  "patterns": {
+    "gartley": {
+      "identity": "source_cleared",
+      "source_raw_prz": "frozen_m2_27",
+      "production": "enabled"
+    },
+    "bat": {
+      "identity": "source_cleared",
+      "source_raw_prz": "frozen_m2_27",
+      "production": "enabled"
+    },
+    "alternate_bat": {
+      "identity": "shared_structure_source_cleared",
+      "source_raw_prz": "source_conflict_unresolved",
+      "production": "fail_closed",
+      "conflict": "Volume Two and Volume Three disagree on AB=CD membership/role."
+    },
+    "butterfly": {
+      "identity": "source_cleared",
+      "source_raw_prz": "frozen_m2_27",
+      "production": "enabled"
+    },
+    "crab": {
+      "identity": "source_cleared_volume_three_canonical",
+      "source_raw_prz": "frozen_m2_27",
+      "production": "enabled"
+    },
+    "deep_crab": {
+      "identity": "source_cleared",
+      "source_raw_prz": "frozen_m2_27",
+      "production": "enabled"
+    },
+    "abcd": {
+      "identity": "source_cleared_reciprocal_table",
+      "source_raw_prz": "frozen_m2_28",
+      "production": "enabled"
+    },
+    "five_zero": {
+      "identity": "source_conflict_under_reconciliation",
+      "source_raw_prz": "volume_two_structural_prz_frozen_m2_29",
+      "execution_refinement": "volume_three_61_8_separate",
+      "production": "quarantined"
+    },
+    "shark": {
+      "identity": "source_cleared",
+      "source_raw_prz": "frozen_m2_30",
+      "reaction_management": "frozen_m2_30",
+      "production": "enabled"
+    }
+  },
+  "rsi_bamm": {
+    "role": "confirmation_execution_evidence_only",
+    "identity_rule": false,
+    "source_raw_prz_rule": false,
+    "state_machine": "phase_3_frozen",
+    "lifecycle_integration": "phase_4_in_validation",
+    "profiles": [
+      "simple_confirmation",
+      "complex_confirmation",
+      "simple_divergence",
+      "complex_divergence"
+    ],
+    "midpoint_reaction_required": true,
+    "source_confirmation_adapter": "confirm_rsi_bamm_with_match",
+    "no_backdating": true,
+    "acceleration_trigger": "deferred_optional_enhancement"
+  },
+  "research": {
+    "current_source_prz_version": "m2-source-prz-v6",
+    "dataset_id": "a-share-research-v2-45",
+    "confirmatory_inference_allowed": false,
+    "rsi_bamm_observability": "m2-rsi-bamm-observability-v1_no_outcome_fitting"
+  }
+}
