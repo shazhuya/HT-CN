@@ -138,11 +138,14 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
         frame = pd.DataFrame(analysis.get("bars") or [])
         instrument_id = str(analysis["instrument_id"])
         metadata = load_security_metadata(self.data_root / "catalog.duckdb", instrument_id)
-        analysis["a_share_execution_context"] = build_a_share_execution_context(
+        execution_context = build_a_share_execution_context(
             frame,
             instrument_id=instrument_id,
             metadata=metadata,
         ).as_payload()
+        analysis["a_share_execution_context"] = execution_context
+        for pattern in [*(analysis.get("completed") or []), *(analysis.get("forming") or [])]:
+            pattern["a_share_execution_context"] = execution_context
 
         analysis["source_lifecycle_contract"] = {
             "version": 2,
