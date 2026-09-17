@@ -1,6 +1,9 @@
+from types import SimpleNamespace
+
 import pandas as pd
 import pytest
 
+import htcn.app.source_aligned_service as source_service
 from htcn.app.source_aligned_service import SourceAlignedHarmonicService
 from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
@@ -84,13 +87,17 @@ def _forming_payload(prz: PotentialReversalZone) -> dict:
     }
 
 
-def test_forming_execution_clock_starts_after_confirmed_frontier_and_fails_closed_without_source_prz() -> None:
-    frame = pd.DataFrame(
+def _clock_frame() -> pd.DataFrame:
+    return pd.DataFrame(
         {
+            "close": [80, 120, 95, 110, 107, 99, 94, 106],
             "high": [82, 122, 97, 112, 111, 105, 101, 108],
             "low": [78, 118, 93, 108, 104, 95, 89, 102],
         }
     )
+
+
+def test_forming_execution_clock_starts_after_confirmed_frontier_and_fails_closed_without_source_prz() -> None:
     unresolved = PotentialReversalZone(
         pattern_id="gartley",
         direction=PatternDirection.BULLISH,
@@ -98,7 +105,7 @@ def test_forming_execution_clock_starts_after_confirmed_frontier_and_fails_close
     )
     clock = SourceAlignedHarmonicService._execution_clock_from_forming_payload(
         _forming_payload(unresolved),
-        frame,
+        _clock_frame(),
     )
 
     assert clock is not None
@@ -108,15 +115,11 @@ def test_forming_execution_clock_starts_after_confirmed_frontier_and_fails_close
     assert clock["retrospective_d_clock_used"] is False
     assert clock["state"] == "source_prz_unresolved"
     assert clock["pez"]["available"] is False
+    assert clock["rsi_bamm_evidence"]["status"] == "waiting_for_source_terminal_bar"
+    assert clock["rsi_bamm_evidence"]["source_confirmed"] is False
 
 
-def test_terminal_bar_creates_dynamic_pez_only_after_source_prz_is_frozen() -> None:
-    frame = pd.DataFrame(
-        {
-            "high": [82, 122, 97, 112, 111, 105, 101, 108],
-            "low": [78, 118, 93, 108, 104, 95, 89, 102],
-        }
-    )
+def test_terminal_bar_creates_dynamic_pez_and_timestamped_bamm_channel() -> None:
     frozen = PotentialReversalZone(
         pattern_id="gartley",
         direction=PatternDirection.BULLISH,
@@ -126,7 +129,7 @@ def test_terminal_bar_creates_dynamic_pez_only_after_source_prz_is_frozen() -> N
     )
     clock = SourceAlignedHarmonicService._execution_clock_from_forming_payload(
         _forming_payload(frozen),
-        frame,
+        _clock_frame(),
     )
 
     assert clock is not None
@@ -143,3 +146,59 @@ def test_terminal_bar_creates_dynamic_pez_only_after_source_prz_is_frozen() -> N
     }
     assert clock["target_382"] > 89.0
     assert clock["target_618"] > clock["target_382"]
+    # Eight bars are insufficient for Wilder RSI(14), therefore BAMM is visible as an
+    # independent empty evidence channel rather than being manufactured from price geometry.
+    assert clock["rsi_bamm_evidence"]["status"] == "no_completed_rsi_bamm_observed"
+    assert clock["rsi_bamm_evidence"]["source_confirmed"] is False
+    assert clock["rsi_bamm_evidence"]["mutates_harmonic_identity"] is False
+
+
+def test_source_confirmed_bamm_is_never_backdated_to_pattern_terminal(monkeypatch) -> None:
+    sequence = SimpleNamespace(
+        completion_bar=8,
+        profile=SimpleNamespace(value="simple_divergence"),
+        relation=SimpleNamespace(value="divergence"),
+        confirmation_extension_ratio=1.13,
+        confirmation_projection_price=88.7,
+        price_projection_tested=True,
+    )
+    confirmation = SimpleNamespace(pattern_precedence_used=False)
+    confluence = SimpleNamespace(
+        source_confirmed=True,
+        sequence=sequence,
+        status="source_confirmed",
+        confirmation=confirmation,
+    )
+    item = SimpleNamespace(
+        direction=PatternDirection.BULLISH,
+        points=[SimpleNamespace(index=6)],
+    )
+    monkeypatch.setattr(
+        source_service,
+        "scan_rsi_bamm_frame",
+        lambda frame, *, direction: [sequence],
+    )
+    monkeypatch.setattr(
+        source_service,
+        "confirm_rsi_bamm_with_match",
+        lambda sequence_arg, item_arg: confluence,
+    )
+
+    payload = SourceAlignedHarmonicService._rsi_bamm_confluence_payload(
+        item,
+        pd.DataFrame(
+            {
+                "close": [100.0] * 12,
+                "low": [99.0] * 12,
+                "high": [101.0] * 12,
+            }
+        ),
+    )
+
+    assert payload["status"] == "source_confirmed"
+    assert payload["source_confirmed_count"] == 1
+    assert payload["pattern_terminal_bar"] == 6
+    assert payload["bamm_completion_bar"] == 8
+    assert payload["available_from_bar"] == 8
+    assert payload["available_at_pattern_terminal"] is False
+    assert payload["mutates_harmonic_identity"] is False
