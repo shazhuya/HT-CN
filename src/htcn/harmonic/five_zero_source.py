@@ -146,7 +146,7 @@ def build_five_zero_source_contract(
     execution/stop refinement and never becomes a Raw PRZ or identity member.
     """
 
-    x, a, b, c = points
+    _, a, b, c = points
     direction = _direction(points)
     ab = leg_length(a.price, b.price)
     bc = leg_length(b.price, c.price)
@@ -160,7 +160,8 @@ def build_five_zero_source_contract(
 
     source_low, source_high = sorted((price_50, reciprocal))
     if relation == "beyond_50_toward_618":
-        execution_low, execution_high = sorted((source_low, source_high, price_618))
+        execution_prices = sorted((source_low, source_high, price_618))
+        execution_low, execution_high = execution_prices[0], execution_prices[-1]
         preferred_price = price_618
         preferred_basis = "v3_61_8_optimal_entry_after_reciprocal_beyond_50"
     elif relation == "before_50":
