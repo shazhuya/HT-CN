@@ -13,6 +13,8 @@
     "geometry_clock_separate_from_execution_clock": "frozen",
     "source_raw_prz_separate_from_ideal_core_and_component_envelope": "frozen",
     "terminal_price_bar_requires_terminal_side_test": "frozen",
+    "completed_lifecycle_clock": "source_terminal_price_bar",
+    "pez_overspill_allowed_without_mutating_source_raw_prz": true,
     "type_ii_production_policy": "strict_full_source_prz_retest",
     "type_ii_policy_note": "HT-CN conservative operationalization of Carney's ideal full-retest case; nominal-retest variants require a separate research tier.",
     "a_share_rules_may_mutate_harmonic_identity": false,
@@ -74,7 +76,9 @@
     "identity_rule": false,
     "source_raw_prz_rule": false,
     "state_machine": "phase_3_frozen",
-    "lifecycle_integration": "phase_4_in_validation",
+    "lifecycle_integration": "phase_4_frozen",
+    "completed_confluence_clock": "source_terminal_price_bar",
+    "geometry_terminal_adapter": "compatibility_and_golden_tests_only",
     "profiles": [
       "simple_confirmation",
       "complex_confirmation",
@@ -82,14 +86,24 @@
       "complex_divergence"
     ],
     "midpoint_reaction_required": true,
-    "source_confirmation_adapter": "confirm_rsi_bamm_with_match",
+    "source_confirmation_adapter": "confirm_rsi_bamm_with_source_execution",
+    "source_execution_reconstruction": "observe_source_execution_for_match",
     "no_backdating": true,
+    "pez_overspill_allowed": true,
     "acceleration_trigger": "deferred_optional_enhancement"
   },
   "research": {
     "current_source_prz_version": "m2-source-prz-v6",
     "dataset_id": "a-share-research-v2-45",
     "confirmatory_inference_allowed": false,
-    "rsi_bamm_observability": "m2-rsi-bamm-observability-v1_no_outcome_fitting"
+    "rsi_bamm_observability": "m2-rsi-bamm-observability-v1_no_outcome_fitting",
+    "m2_31_closeout_run_id": 35209013814,
+    "m2_31_validated_commit": "0c7799391bc92af46a2b249892dc24e06a6143a0",
+    "rsi_bamm_sequences": 686,
+    "completed_source_scannable_matches": 174,
+    "source_clock_observable_matches": 128,
+    "source_terminal_observed_matches": 23,
+    "source_confirmed_confluences": 2,
+    "observability_is_performance_inference": false
   }
 }
