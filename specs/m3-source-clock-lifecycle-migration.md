@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phase 1 implemented; Phase 2 chart migration in progress.** M2.31 Source Fidelity is frozen on `main`. M3 migrates the product-facing lifecycle away from retrospective D/C geometry and onto the observable Source Terminal Price Bar execution clock, then makes that clock visually explicit on the chart.
+**Phase 1 lifecycle implemented; Phase 2 chart migration implemented; Phase 3 A-share execution context implemented and under acceptance.** M2.31 Source Fidelity is frozen on `main`. M3 migrates the product-facing lifecycle away from retrospective D/C geometry and onto the observable Source Terminal Price Bar execution clock, makes that clock visually explicit, then surrounds it with a separate A-share tradability/volatility layer.
 
 ## Why this migration exists
 
@@ -165,6 +165,56 @@ Phase 2 adds browser acceptance asserting that a source lifecycle scenario visib
 - [ ] full Web build observed green in repository CI;
 - [ ] Playwright screenshot/browser artifact observed green in repository CI.
 
+## Phase 3 — A-share execution/tradability context
+
+Phase 3 surrounds the canonical source lifecycle with A-share execution constraints without allowing those constraints to own or mutate harmonic semantics.
+
+### Backend contract
+
+`a_share_execution_context` is emitted at analysis level and copied onto pattern payloads for workbench rendering. It contains auditable raw fields rather than a composite score:
+
+- board / security metadata availability / listing date / ST status;
+- `t_plus_one=true` and same-day sell-after-buy disabled for ordinary A shares;
+- board nominal price-limit percentage;
+- `rule_based_price_limit_pct` only when board / risk-warning / listing-age metadata is sufficient;
+- explicit `price_limit_status` and `special_event_exceptions_unresolved`;
+- IPO first-five-trading-session state;
+- Wilder ATR(14), ATR%, latest high-low range normalized by prior close;
+- prior-20-session average volume and current volume ratio;
+- BSE deferred;
+- hard `mutates_harmonic_identity=false` and `mutates_source_raw_prz=false`.
+
+### Price-limit truth boundary
+
+The code intentionally does **not** expose an `exact_price_limit_pct` field. Even when board/listing/ST metadata resolves the normal rule profile, suspension/resumption and special-security events require richer event metadata. Therefore:
+
+- `nominal_price_limit_pct` = ordinary board rule;
+- `rule_based_price_limit_pct` = rule profile after known listing-age/ST/date adjustments;
+- `special_event_exceptions_unresolved=true` = do not present that value as the exact daily limit price.
+
+Current date-aware contract includes the 2026-07-06 main-board risk-warning transition and the first-five-listing-session no-daily-limit exception. Missing metadata fails safe rather than guessing.
+
+### UI contract
+
+The Workbench renders a separate **A 股执行约束与波动背景** card before the lifecycle navigator. It shows T+1, rule-based price-limit context, ATR%, current range, 20-session volume context and metadata completeness. The note explicitly states that the card cannot create, repair or reject harmonic identity or Source Raw PRZ.
+
+### Phase 3 acceptance checklist
+
+- [x] standalone `a_share_execution_context` backend module implemented;
+- [x] security metadata loader is lazy and fail-safe;
+- [x] M3 service attaches execution context without changing M2.31 objects;
+- [x] date-gated main-board risk-warning 2026-07-06 regression added;
+- [x] STAR/ChiNext 20% board-rule regression added;
+- [x] IPO first-five-session no-daily-limit regression added;
+- [x] missing-metadata fail-safe regression added;
+- [x] ATR / ATR% / range / volume-ratio fields implemented;
+- [x] black-box composite execution score deliberately omitted;
+- [x] execution-context Workbench card implemented;
+- [x] targeted TypeScript check for the execution-context card passed outside GitHub Actions;
+- [ ] real local catalog metadata read smoke-tested on a populated M1 database;
+- [ ] full Python suite observed green after Phase 3 changes;
+- [ ] full Web build / Playwright observed green after Phase 3 changes.
+
 ## Not in the current migration batch
 
 - no new pattern family;
@@ -174,8 +224,16 @@ Phase 2 adds browser acceptance asserting that a source lifecycle scenario visib
 - no nominal Type-II production tier;
 - no A-share execution scoring/ranking;
 - no claim of stable alpha;
-- no invented source invalidation rule merely to populate `invalidated`.
+- no invented source invalidation rule merely to populate `invalidated`;
+- no claim that `rule_based_price_limit_pct` equals the exact daily limit under unresolved special events.
 
 ## Next gate
 
-After Phase 2 code review, the next implementation gate is **M3 Phase 3 — executable/tradability context without contaminating harmonic identity**. It will add A-share T+1, price-limit status, liquidity/ATR and market-context observability as a separate layer around source lifecycle. Those fields may alter whether a lifecycle event is practically tradable, but may never create, repair or invalidate Carney identity/Source Raw PRZ.
+The next gate is **M3 Phase 3.1 — real metadata/tradability hardening**:
+
+1. smoke-test `security_master` integration on a populated M1 catalog;
+2. add event metadata needed to resolve suspension/resumption and other price-limit exceptions instead of guessing;
+3. add browser regression for the execution-context card;
+4. once GitHub-hosted runners recover, run the full Python/Web/Playwright gate without changing semantics merely to make CI green.
+
+Only after those checks should M3 move toward market/sector context, ranking or user-facing decision prioritization.
