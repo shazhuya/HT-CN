@@ -2,7 +2,7 @@
 
 ## Status
 
-**Phase 2 active.** Indicator sequencing and X-A Confirmation Point projection are now implemented. Direct integration with harmonic pattern objects/workbench remains gated until adapter tests are added.
+**Phase 3 frozen.** Indicator sequencing, X-A Confirmation Point projection, and binding to real source-cleared harmonic matches are implemented. The next phase is lifecycle/Terminal Price Bar evidence-channel integration plus real A-share observability; it must not rewrite identity or Source Raw PRZ.
 
 ## Why this Gate exists
 
@@ -64,17 +64,29 @@ No-lookahead: A is frozen before the secondary extreme begins; later bars cannot
 
 If X-A has no valid directional span, projection remains unresolved and final source confirmation fails closed.
 
-## Harmonic-pattern coordination and 1.13 exception
+## Real harmonic confluence adapter freeze
 
-Normal source confirmation requires:
+Canonical source confirmation now uses `confirm_rsi_bamm_with_match(sequence, match)`. Callers cannot obtain a source-confirmed claim by passing `harmonic_pattern_completed=True` directly through the canonical integration path.
 
-- complete BAMM indicator sequence;
-- X-A Confirmation Point tested;
-- distinct harmonic pattern completed in coordination with the final RSI retest.
+The adapter hard-gates, in order:
 
-Volume Two also documents a 1.13-side retracement-pattern exception: a distinct retracement harmonic pattern may complete before the minimum 1.13 extension and take precedence. HT-CN exposes this only as an explicit adapter flag and only when the selected BAMM ratio is 1.13. It is not a generic bypass.
+1. 5-0 is rejected while its production quarantine remains active;
+2. the match and its evaluation must both be `COMPLETED`;
+3. BAMM direction and harmonic direction must agree;
+4. the harmonic object must expose a frozen Source Raw PRZ;
+5. its terminal price must lie inside that Source Raw PRZ;
+6. its terminal bar must fall inside the secondary impulsive RSI extreme-test window;
+7. only then may the lower-level BAMM combiner receive a completed-harmonic assertion.
 
-The next phase must bind this flag to actual source-cleared harmonic pattern objects rather than caller assertion.
+Standalone AB=CD uses the M2.28 source resolver. Its Raw PRZ deliberately preserves equivalent AB=CD and reciprocal-BC measurements, so a narrow interval is valid and must not be collapsed into an artificial point.
+
+Shark uses the M2.30 Source Raw PRZ contract. Shark is not eligible for the Volume Two 1.13 retracement-pattern precedence exception.
+
+### 1.13 retracement-pattern precedence
+
+Volume Two explicitly documents a retracement-pattern completion that can precede the minimum 1.13 BAMM projection. HT-CN restricts this exception to source-cleared XABCD `gartley` and `bat` matches, selected 1.13 BAMM projection only, and a terminal price that genuinely precedes the projection in the correct directional sense.
+
+No generic percentage, ATR, tick or PRZ-distance tolerance is invented. If the source relationship is not demonstrated by the frozen objects, confirmation fails closed.
 
 ## Engineering classifier boundary
 
@@ -93,7 +105,8 @@ This classifier is engineering logic and cannot alter harmonic pattern identity,
 - a retest before midpoint cannot be rescued by later data;
 - X-A reaction anchor is frozen before secondary extreme entry;
 - sequence emitted only on secondary extreme exit;
-- future bars cannot change completion timestamp or projection anchors.
+- future bars cannot change completion timestamp or projection anchors;
+- harmonic confluence uses an already-completed source-cleared match and never backdates the BAMM sequence.
 
 ## Acceptance status
 
@@ -107,12 +120,18 @@ This classifier is engineering logic and cannot alter harmonic pattern identity,
 - [x] 1.13 vs 1.618 ratio-selection regression;
 - [x] bullish and bearish X-A projection math regression;
 - [x] unresolved projection fail-closed regression;
-- [x] 1.13 retracement-pattern precedence regression;
+- [x] real completed XABCD confluence regression;
+- [x] direction-mismatch and temporal-window negative regressions;
+- [x] unresolved Source Raw PRZ negative regression;
+- [x] standalone AB=CD M2.28 Source Raw PRZ regression;
+- [x] Shark source completion regression;
+- [x] 5-0 production-quarantine regression;
+- [x] 1.13 Gartley/Bat precedence is object-bound rather than caller-asserted;
 - [x] existing lifecycle Wilder RSI evidence remains explicitly non-BAMM.
 
 ## Next Phase
 
-1. bind `harmonic_pattern_completed` and the 1.13 retracement exception to real source-cleared HT-CN harmonic match objects;
-2. expose BAMM as a separate evidence channel on the source-aligned Terminal Price Bar / lifecycle layer without rewriting identity;
-3. add real A-share BAMM observability report with no outcome fitting;
-4. evaluate optional Acceleration Trigger only after core BAMM adapter is frozen.
+1. expose source-confirmed BAMM as a separate evidence channel on source-aligned Terminal Price Bar / lifecycle objects without rewriting identity;
+2. add real A-share BAMM observability report with no outcome fitting and no new research-version relabel;
+3. add lifecycle temporal/no-lookahead regressions for that evidence channel;
+4. evaluate optional Acceleration Trigger only after the core lifecycle integration is frozen.
