@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .five_zero_source import FiveZeroSourceContract, build_five_zero_source_contract
 from .models import HarmonicPoint, PatternDirection, PatternState, Pivot, RatioMeasurement
-from .prz import PRZComponent, PotentialReversalZone
+from .prz import PotentialReversalZone
 from .ratios import leg_length
 
 
@@ -23,9 +24,12 @@ class FiveZeroEvaluation:
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint]
     metrics: FiveZeroMetrics
     prz: PotentialReversalZone
+    source_contract: FiveZeroSourceContract
     geometry_score: float
     reciprocal_abcd_price: float
     reciprocal_inside_execution_band: bool
+    source_raw_prz_test: bool
+    within_v3_execution_envelope: bool
     completion_class: str
     reasons: tuple[str, ...]
 
@@ -42,6 +46,7 @@ class FiveZeroProjection:
     b_xa: float
     c_ab: float
     prz: PotentialReversalZone
+    source_contract: FiveZeroSourceContract
     reciprocal_abcd_price: float
 
 
@@ -85,56 +90,6 @@ def _direction(points: tuple[HarmonicPoint, ...]) -> PatternDirection:
     if a.price == x.price:
         raise ValueError("X and A cannot have the same price")
     return PatternDirection.BULLISH if a.price > x.price else PatternDirection.BEARISH
-
-
-def _project_from_c(
-    *,
-    c_price: float,
-    length: float,
-    ratio: float,
-    direction: PatternDirection,
-) -> float:
-    return c_price - ratio * length if direction is PatternDirection.BULLISH else c_price + ratio * length
-
-
-def _point_component(name: str, price: float, ratio: float) -> PRZComponent:
-    if price <= 0:
-        raise ValueError(f"{name} projects outside the positive-price domain")
-    return PRZComponent(
-        name=name,
-        price_low=float(price),
-        price_high=float(price),
-        ratio_low=float(ratio),
-        ratio_high=float(ratio),
-    )
-
-
-def _build_prz(
-    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
-) -> tuple[PotentialReversalZone, float, bool]:
-    x, a, b, c = points
-    direction = _direction(points)
-    bc = leg_length(b.price, c.price)
-    ab = leg_length(a.price, b.price)
-    if bc <= 0 or ab <= 0:
-        raise ValueError("5-0 AB and BC spans must be positive")
-
-    price_50 = _project_from_c(c_price=c.price, length=bc, ratio=0.50, direction=direction)
-    price_618 = _project_from_c(c_price=c.price, length=bc, ratio=0.618, direction=direction)
-    reciprocal = _project_from_c(c_price=c.price, length=ab, ratio=1.0, direction=direction)
-    band_low, band_high = sorted((price_50, price_618))
-    reciprocal_inside = band_low <= reciprocal <= band_high
-
-    prz = PotentialReversalZone(
-        pattern_id="five_zero",
-        direction=direction,
-        components=(
-            _point_component("BC 50% completion", price_50, 0.50),
-            _point_component("BC 61.8% make-or-break", price_618, 0.618),
-            _point_component("Reciprocal AB=CD x1", reciprocal, 1.0),
-        ),
-    )
-    return prz, reciprocal, reciprocal_inside
 
 
 def measure_five_zero(
@@ -192,26 +147,25 @@ def evaluate_five_zero(
         reasons.append(f"B/XA={metrics.b_xa.value:.6f} outside 1.13-1.618")
     if not _in_band(metrics.c_ab.value, 1.618, 2.24):
         reasons.append(f"C/AB={metrics.c_ab.value:.6f} outside 1.618-2.24")
-    if not _in_band(metrics.d_bc.value, 0.50, 0.618):
-        reasons.append(f"D/BC={metrics.d_bc.value:.6f} outside 0.50-0.618")
 
-    prz, reciprocal, reciprocal_inside = _build_prz(points[:4])
-    if not reciprocal_inside:
-        reasons.append("Reciprocal AB=CD does not converge inside the 50%-61.8% BC execution band")
-
+    contract = build_five_zero_source_contract(points[:4])
     d = points[4]
-    bc = leg_length(points[2].price, points[3].price)
-    nearest_source = min(
-        abs(metrics.d_bc.value - 0.50) / 0.50,
-        abs(float(d.price) - reciprocal) / max(bc, 1e-12),
-        abs(metrics.d_bc.value - 0.618) / 0.618,
-    )
-    completion_class = (
-        "volume2_50"
-        if abs(metrics.d_bc.value - 0.50) <= abs(metrics.d_bc.value - 0.618)
-        else "volume3_618_refinement"
-    )
-    geometry_score = round(max(0.0, 100.0 * (1.0 - min(1.0, 3.0 * nearest_source))), 2)
+    completion_class = contract.classify_completion(float(d.price))
+    if completion_class == "outside_reconciled_completion_zone":
+        reasons.append(
+            "D does not test the Volume Two Source Raw PRZ or the reconciled Volume Three 61.8 execution envelope"
+        )
+
+    # Compatibility diagnostic only.  M2.29 explicitly removes this old 50%-61.8-band test
+    # from identity: a Reciprocal AB=CD can complete before 50% and still be source-valid.
+    reciprocal_inside_legacy_band = contract.legacy_reciprocal_inside_50_618_band
+    source_raw_prz_test = contract.contains_raw_prz(float(d.price))
+    within_execution_envelope = contract.contains_execution_envelope(float(d.price))
+
+    bc = max(leg_length(points[2].price, points[3].price), 1e-12)
+    preferred = contract.execution_refinement.preferred_execution_price
+    preferred_distance = abs(float(d.price) - preferred) / bc
+    geometry_score = round(max(0.0, 100.0 * (1.0 - min(1.0, 3.0 * preferred_distance))), 2)
 
     return FiveZeroEvaluation(
         pattern_id="five_zero",
@@ -219,10 +173,13 @@ def evaluate_five_zero(
         state=PatternState.COMPLETED if not reasons else PatternState.REJECTED,
         points=points,
         metrics=metrics,
-        prz=prz,
+        prz=contract.prz,
+        source_contract=contract,
         geometry_score=geometry_score,
-        reciprocal_abcd_price=reciprocal,
-        reciprocal_inside_execution_band=reciprocal_inside,
+        reciprocal_abcd_price=contract.reciprocal_abcd_price,
+        reciprocal_inside_execution_band=reciprocal_inside_legacy_band,
+        source_raw_prz_test=source_raw_prz_test,
+        within_v3_execution_envelope=within_execution_envelope,
         completion_class=completion_class,
         reasons=tuple(reasons),
     )
@@ -250,17 +207,18 @@ def project_forming_five_zero(
     if not _in_band(b_xa, 1.13, 1.618) or not _in_band(c_ab, 1.618, 2.24):
         return None
 
-    prz, reciprocal, reciprocal_inside = _build_prz(points)
-    if not reciprocal_inside:
-        return None
+    # Volume Two structural eligibility is fully knowable from X/A/B/C.  Do not reject a
+    # source-valid forming 5-0 merely because Reciprocal AB=CD lies before the 50% level.
+    contract = build_five_zero_source_contract(points)
     return FiveZeroProjection(
         pattern_id="five_zero",
         direction=direction,
         points=points,
         b_xa=b_xa,
         c_ab=c_ab,
-        prz=prz,
-        reciprocal_abcd_price=reciprocal,
+        prz=contract.prz,
+        source_contract=contract,
+        reciprocal_abcd_price=contract.reciprocal_abcd_price,
     )
 
 
@@ -315,7 +273,7 @@ def scan_five_zero_pivots(
                     projection = None
                 if projection is not None:
                     bc = max(leg_length(points[2].price, points[3].price), 1e-12)
-                    width_penalty = min(1.0, projection.prz.width / bc)
+                    width_penalty = min(1.0, projection.source_contract.source_prz_width / bc)
                     forming.append(
                         FiveZeroFormingMatch(
                             pattern_id="five_zero",
