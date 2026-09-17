@@ -1,5 +1,6 @@
 from dataclasses import replace
 
+import math
 import pandas as pd
 
 from htcn.harmonic.rsi_bamm import (
@@ -38,7 +39,7 @@ def test_bullish_simple_confirmation_requires_two_impulses_and_midpoint() -> Non
     assert row.midpoint_rsi == 51
     assert row.completion_bar == 9
     assert row.confirmation_extension_ratio == 1.13
-    assert row.price_projection_resolved is False
+    assert row.price_projection_resolved is True
     assert row.mutates_harmonic_identity is False
 
 
@@ -160,25 +161,85 @@ def test_no_lookahead_sequence_appears_only_when_second_impulse_exits_extreme() 
     assert at_exit[0].completion_bar == len(rsi) - 1
 
 
-def test_trigger_bar_at_prior_price_extreme_selects_1618_without_inventing_target() -> None:
+def test_bullish_113_xa_projection_uses_initial_reaction_and_is_tested() -> None:
     rsi = [55, 29, 25, 31, 42, 51, 44, 29, 27, 31]
-    lows = [110, 100, 92, 90, 95, 97, 98, 99, 95, 96]
-    rows = scan_rsi_bamm_values(
+    lows = [110, 100, 90, 92, 95, 97, 98, 93, 87, 89]
+    highs = [111, 101, 91, 93, 100, 110, 105, 94, 88, 90]
+    row = scan_rsi_bamm_values(
         rsi,
         lows=lows,
-        highs=_highs_from_lows(lows),
+        highs=highs,
         direction=RSIBammDirection.BULLISH,
-    )
+    )[0]
 
-    assert len(rows) == 1
-    assert rows[0].trigger_bar == 3
-    assert rows[0].first_structure.price_extreme_bar == 3
-    assert rows[0].confirmation_extension_ratio == 1.618
-    assert rows[0].confirmation_extension_basis == "trigger_bar_is_prior_price_extreme"
-    assert rows[0].price_projection_resolved is False
+    assert row.confirmation_extension_ratio == 1.13
+    assert row.first_structure.price_extreme_value == 90
+    assert row.reaction_anchor_bar == 5
+    assert row.reaction_anchor_price == 110
+    assert math.isclose(float(row.confirmation_projection_price), 87.4)
+    assert row.price_projection_resolved is True
+    assert row.price_projection_tested is True
 
 
-def test_final_confirmation_fails_closed_while_xa_projection_is_unresolved() -> None:
+def test_bearish_113_xa_projection_is_mirror_image() -> None:
+    rsi = [45, 71, 80, 69, 58, 49, 60, 71, 76, 69]
+    highs = [90, 110, 120, 118, 116, 114, 113, 121, 125, 124]
+    lows = [89, 109, 119, 117, 108, 100, 105, 120, 124, 123]
+    row = scan_rsi_bamm_values(
+        rsi,
+        lows=lows,
+        highs=highs,
+        direction=RSIBammDirection.BEARISH,
+    )[0]
+
+    assert row.confirmation_extension_ratio == 1.13
+    assert row.first_structure.price_extreme_value == 120
+    assert row.reaction_anchor_bar == 5
+    assert row.reaction_anchor_price == 100
+    assert math.isclose(float(row.confirmation_projection_price), 122.6)
+    assert row.price_projection_tested is True
+
+
+def test_trigger_bar_at_prior_price_extreme_selects_1618_and_projects_xa() -> None:
+    rsi = [55, 29, 25, 31, 42, 51, 44, 29, 27, 31]
+    lows = [110, 100, 92, 90, 95, 97, 98, 90, 77, 79]
+    highs = [111, 101, 93, 91, 100, 110, 105, 91, 78, 80]
+    row = scan_rsi_bamm_values(
+        rsi,
+        lows=lows,
+        highs=highs,
+        direction=RSIBammDirection.BULLISH,
+    )[0]
+
+    assert row.trigger_bar == 3
+    assert row.first_structure.price_extreme_bar == 3
+    assert row.confirmation_extension_ratio == 1.618
+    assert row.confirmation_extension_basis == "trigger_bar_is_prior_price_extreme"
+    assert math.isclose(float(row.confirmation_projection_price), 77.64)
+    assert row.price_projection_tested is True
+
+
+def test_final_confirmation_requires_price_projection_and_harmonic_pattern() -> None:
+    rsi = [55, 29, 25, 31, 42, 51, 44, 29, 27, 31]
+    lows = [110, 100, 90, 92, 95, 97, 98, 93, 87, 89]
+    highs = [111, 101, 91, 93, 100, 110, 105, 94, 88, 90]
+    sequence = scan_rsi_bamm_values(
+        rsi,
+        lows=lows,
+        highs=highs,
+        direction=RSIBammDirection.BULLISH,
+    )[0]
+
+    no_pattern = confirm_rsi_bamm(sequence, harmonic_pattern_completed=False)
+    assert no_pattern.source_confirmed is False
+    assert no_pattern.status == "price_confirmation_without_harmonic_pattern"
+
+    confirmed = confirm_rsi_bamm(sequence, harmonic_pattern_completed=True)
+    assert confirmed.source_confirmed is True
+    assert confirmed.status == "source_confirmed"
+
+
+def test_final_confirmation_fails_closed_if_projection_geometry_is_unresolved() -> None:
     rsi = [55, 29, 25, 31, 42, 51, 44, 29, 27, 31]
     lows = [110, 100, 90, 92, 95, 97, 98, 99, 95, 96]
     sequence = scan_rsi_bamm_values(
@@ -187,22 +248,44 @@ def test_final_confirmation_fails_closed_while_xa_projection_is_unresolved() -> 
         highs=_highs_from_lows(lows),
         direction=RSIBammDirection.BULLISH,
     )[0]
-
-    blocked = confirm_rsi_bamm(
+    unresolved = replace(
         sequence,
-        price_confirmation_tested=True,
-        harmonic_pattern_completed=True,
+        reaction_anchor_bar=None,
+        reaction_anchor_price=None,
+        confirmation_projection_price=None,
+        price_projection_resolved=False,
+        price_projection_tested=False,
     )
+
+    blocked = confirm_rsi_bamm(unresolved, harmonic_pattern_completed=True)
     assert blocked.source_confirmed is False
     assert blocked.status == "source_confirmation_blocked_projection_unresolved"
 
-    source_resolved = replace(sequence, price_projection_resolved=True)
-    confirmed = confirm_rsi_bamm(
-        source_resolved,
-        price_confirmation_tested=True,
+
+def test_113_retracement_pattern_may_take_precedence_before_extension() -> None:
+    rsi = [55, 29, 25, 31, 42, 51, 44, 29, 27, 31]
+    lows = [110, 100, 90, 92, 95, 97, 98, 93, 88, 89]
+    highs = [111, 101, 91, 93, 100, 110, 105, 94, 89, 90]
+    sequence = scan_rsi_bamm_values(
+        rsi,
+        lows=lows,
+        highs=highs,
+        direction=RSIBammDirection.BULLISH,
+    )[0]
+    assert sequence.confirmation_extension_ratio == 1.13
+    assert sequence.price_projection_tested is False
+
+    no_exception = confirm_rsi_bamm(sequence, harmonic_pattern_completed=True)
+    assert no_exception.source_confirmed is False
+
+    exception = confirm_rsi_bamm(
+        sequence,
         harmonic_pattern_completed=True,
+        harmonic_pattern_precedes_projection=True,
     )
-    assert confirmed.source_confirmed is True
+    assert exception.source_confirmed is True
+    assert exception.pattern_precedence_used is True
+    assert exception.status == "source_confirmed_retracement_pattern_precedence"
 
 
 def test_frame_wrapper_rejects_missing_ohlc_and_keeps_period_contract() -> None:

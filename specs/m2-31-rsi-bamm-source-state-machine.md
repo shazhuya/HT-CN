@@ -2,13 +2,13 @@
 
 ## Status
 
-**Phase 1 active.** This spec freezes the indicator-sequence contract first. Exact X-A price projection coordinates remain fail-closed until a separate figure-level source audit resolves them.
+**Phase 2 active.** Indicator sequencing and X-A Confirmation Point projection are now implemented. Direct integration with harmonic pattern objects/workbench remains gated until adapter tests are added.
 
 ## Why this Gate exists
 
-The existing HT-CN lifecycle code contains only a lightweight Wilder RSI 30/70 reversal audit and explicitly labels it `indicator_evidence_is_rsi_bamm=False`. That separation is correct and must remain.
+The existing HT-CN lifecycle code contains only a lightweight Wilder RSI 30/70 reversal audit and explicitly labels it `indicator_evidence_is_rsi_bamm=False`. That separation remains correct.
 
-Carney RSI BAMM is not a synonym for oversold/overbought. Volume Two describes a multi-stage process; Volume Three further distinguishes four structural types. Therefore M2.31 creates a dedicated state machine rather than renaming the existing RSI evidence.
+Carney RSI BAMM is not a synonym for oversold/overbought. Volume Two defines a multi-stage process; Volume Three distinguishes four structural types. M2.31 therefore owns a dedicated no-lookahead state machine.
 
 ## Source contract
 
@@ -18,11 +18,9 @@ Carney RSI BAMM is not a synonym for oversold/overbought. Volume Two describes a
 - Bullish extreme zone: below 30.
 - Bearish extreme zone: above 70.
 - Two distinct extreme tests are required.
-- The tests must be separated by a minimum reaction to the RSI 50 midpoint.
+- The tests must be separated by a minimum reaction to RSI 50.
 - The secondary test is impulsive.
-- BAMM remains confirmation/execution evidence; it does not mutate harmonic identity or Source Raw PRZ.
-
-Volume Three makes the 50 midpoint reaction an absolute structural separator across all four BAMM types.
+- BAMM is confirmation/execution evidence; it does not mutate harmonic identity or Source Raw PRZ.
 
 ### Four Volume Three profiles
 
@@ -31,81 +29,90 @@ Volume Three makes the 50 midpoint reaction an absolute structural separator acr
 3. **Simple Divergence** — two impulses separated by midpoint reaction; price makes a nominal new trend extreme while RSI fails to confirm it.
 4. **Complex Divergence** — initial complex W/M + midpoint reaction + secondary impulse; price makes a nominal new trend extreme while RSI diverges.
 
-Bullish relation:
+Bullish: confirmation = price higher / RSI higher; divergence = price lower / RSI higher.
 
-- confirmation: second price low higher AND second RSI low higher;
-- divergence: second price low lower AND second RSI low higher.
-
-Bearish relation:
-
-- confirmation: second price high lower AND second RSI high lower;
-- divergence: second price high higher AND second RSI high lower.
+Bearish: confirmation = price lower / RSI lower; divergence = price higher / RSI lower.
 
 ## Volume Two seven-step complex workflow
-
-The strict complex workflow remains explicit:
 
 1. initial extreme test;
 2. complete W-type bullish / M-type bearish complex RSI structure inside the extreme zone;
 3. Trigger Bar = bar that completes the complex structure by exiting 30/70;
 4. RSI/price reaction;
-5. final divergence only after the mandatory RSI 50 midpoint reaction;
-6. Confirmation Point selects 1.13 or 1.618 based on Trigger Bar location relative to the prior price extreme;
-7. coordinate the Confirmation Point with distinct harmonic-pattern completion.
+5. final divergence only after mandatory RSI 50 midpoint reaction;
+6. Confirmation Point uses 1.13 or 1.618 based on Trigger Bar location relative to prior price extreme;
+7. coordinate Confirmation Point with distinct harmonic-pattern completion.
 
-Ratio selection frozen in Phase 1:
+Ratio selection:
 
-- Trigger Bar is the prior price extreme => 1.618;
-- Trigger Bar is not the prior price extreme => 1.13 (the primary examples commonly show a few-bar offset).
+- Trigger Bar at prior price extreme => 1.618;
+- Trigger Bar away from prior price extreme => 1.13.
 
-## Explicit unresolved item
+## X-A price projection freeze
 
-The books clearly show and discuss X-A / prior-initial-reaction extensions, but Phase 1 does **not** yet encode an exact target-price formula because the figure anchors must be reconciled across bullish, bearish, simple/complex, and retracement-pattern exceptions.
+Volume Two explicitly describes the bearish final spillover as a 1.13/1.618 extension of the initial breakdown `X-A`; bullish figures use the mirrored initial reaction.
 
-Therefore:
+HT-CN v2 freezes:
 
-- the state machine emits `confirmation_extension_ratio`;
-- it does **not** emit an invented target price;
-- `price_projection_resolved=False`;
-- final `source_confirmed` status is blocked even if a caller passes `price_confirmation_tested=True` and `harmonic_pattern_completed=True`.
+- `X` = prior price extreme associated with first RSI structure;
+- `A` = most favorable price extreme of the initial reaction after Trigger Bar and before secondary extreme test starts;
+- target = `A + ratio * (X - A)`.
 
-This is intentional fail-closed source governance.
+This is the standard external extension from A back through X. It produces the book's intended nominal new low/high rather than incorrectly projecting another full leg outward from X.
+
+No-lookahead: A is frozen before the secondary extreme begins; later bars cannot move X or A for an already-emitted sequence.
+
+If X-A has no valid directional span, projection remains unresolved and final source confirmation fails closed.
+
+## Harmonic-pattern coordination and 1.13 exception
+
+Normal source confirmation requires:
+
+- complete BAMM indicator sequence;
+- X-A Confirmation Point tested;
+- distinct harmonic pattern completed in coordination with the final RSI retest.
+
+Volume Two also documents a 1.13-side retracement-pattern exception: a distinct retracement harmonic pattern may complete before the minimum 1.13 extension and take precedence. HT-CN exposes this only as an explicit adapter flag and only when the selected BAMM ratio is 1.13. It is not a generic bypass.
+
+The next phase must bind this flag to actual source-cleared harmonic pattern objects rather than caller assertion.
 
 ## Engineering classifier boundary
 
-Carney describes complex W/M structures qualitatively but does not publish a deterministic bar-by-bar RSI pivot algorithm. HT-CN v1 operationalizes a complex extreme structure conservatively:
+Carney describes complex W/M structures qualitatively but does not publish a deterministic bar-by-bar RSI pivot algorithm. HT-CN operationalizes a complex extreme structure conservatively:
 
-- every observation remains inside the relevant extreme zone until the exit bar;
+- all constituent RSI observations remain in the extreme zone until exit;
 - bullish requires an internal recovery followed by a second decline before exiting above 30;
 - bearish requires an internal pullback followed by a second rise before exiting below 70.
 
-This classifier is tagged as engineering operationalization. It cannot alter Carney pattern identity, PRZ or research labels outside BAMM itself.
+This classifier is engineering logic and cannot alter harmonic pattern identity, PRZ or historical frozen research.
 
 ## No-lookahead contract
 
-- an extreme structure is not classified until its 30/70 exit bar is observed;
-- midpoint evidence is recorded only when RSI actually reaches 50 after the first structure;
-- the second test cannot pair with the first if it occurs before midpoint evidence;
-- the sequence is emitted only on the second extreme-zone exit bar;
-- future bars cannot retroactively create an earlier BAMM completion timestamp.
+- extreme structure classified only at 30/70 exit;
+- midpoint recorded only when RSI actually reaches 50 after first structure;
+- a retest before midpoint cannot be rescued by later data;
+- X-A reaction anchor is frozen before secondary extreme entry;
+- sequence emitted only on secondary extreme exit;
+- future bars cannot change completion timestamp or projection anchors.
 
-## Phase 1 acceptance
+## Acceptance status
 
-- [ ] bullish Simple Confirmation Book Golden synthetic regression;
-- [ ] bullish Simple Divergence regression;
-- [ ] bullish Complex Divergence regression;
-- [ ] bearish mirrored Confirmation and Divergence regressions;
-- [ ] missing-midpoint negative regression;
-- [ ] complex-secondary negative regression;
-- [ ] prefix/no-lookahead regression;
-- [ ] 1.13 vs 1.618 ratio-selection regression;
-- [ ] final confirmation fail-closed regression while projection coordinates remain unresolved;
-- [ ] existing lifecycle Wilder RSI evidence remains explicitly non-BAMM.
+- [x] bullish Simple Confirmation regression;
+- [x] bullish Simple Divergence regression;
+- [x] bullish Complex Divergence regression;
+- [x] bearish mirrored Confirmation and Divergence regressions;
+- [x] missing-midpoint negative regression;
+- [x] complex-secondary negative regression;
+- [x] prefix/no-lookahead regression;
+- [x] 1.13 vs 1.618 ratio-selection regression;
+- [x] bullish and bearish X-A projection math regression;
+- [x] unresolved projection fail-closed regression;
+- [x] 1.13 retracement-pattern precedence regression;
+- [x] existing lifecycle Wilder RSI evidence remains explicitly non-BAMM.
 
-## Next Phase after Phase 1 green
+## Next Phase
 
-1. reconcile X-A price-projection coordinates from Volume Two figures/text and Volume Three examples;
-2. freeze target-price formula and pattern-completion exception semantics;
-3. add exact Confirmation Point tests and harmonic-confluence adapter;
-4. only then expose BAMM to source-aligned lifecycle/workbench as a distinct evidence channel;
-5. optional Acceleration Trigger remains a separate enhancement, not a shortcut around the core sequence.
+1. bind `harmonic_pattern_completed` and the 1.13 retracement exception to real source-cleared HT-CN harmonic match objects;
+2. expose BAMM as a separate evidence channel on the source-aligned Terminal Price Bar / lifecycle layer without rewriting identity;
+3. add real A-share BAMM observability report with no outcome fitting;
+4. evaluate optional Acceleration Trigger only after core BAMM adapter is frozen.

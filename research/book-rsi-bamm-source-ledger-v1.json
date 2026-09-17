@@ -1,11 +1,11 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "ledger_id": "book-rsi-bamm-source-ledger-v1",
   "authority": [
     "Scott M. Carney, Harmonic Trading Volume Two, Chapter 6 RSI BAMM",
     "Scott M. Carney, Harmonic Trading Volume Three, RSI BAMM Types"
   ],
-  "scope": "Source requirements for RSI BAMM indicator sequencing and the boundary between indicator structure, price Confirmation Point, and harmonic-pattern confluence.",
+  "scope": "Source requirements for RSI BAMM sequencing, X-A Confirmation Point projection, and harmonic-pattern confluence.",
   "common_contract": {
     "rsi_period": 14,
     "bullish_extreme": "RSI < 30",
@@ -17,24 +17,30 @@
     "mutates_harmonic_identity": false
   },
   "volume_two_complex_sequence": {
-    "source_ref": "Volume Two, Chapter 6, bullish printed pp.10-27; bearish printed pp.60-80",
+    "source_ref": "Volume Two, Chapter 6, bullish printed pp.10-57; bearish printed pp.60-88",
     "steps": [
       "initial extreme RSI test",
       "complete W-type bullish or M-type bearish complex structure entirely in the extreme zone",
       "define Trigger Bar at the 30/70 extreme-zone exit",
       "observe reaction of RSI and price",
       "require RSI reaction to at least the 50 midpoint before the final retest",
-      "complete final price/RSI divergence and select 1.13 versus 1.618 Confirmation Point",
+      "complete final price/RSI divergence and project 1.13 or 1.618 X-A Confirmation Point",
       "coordinate the Confirmation Point with a distinct harmonic-pattern completion"
     ],
     "bullish_divergence": "price makes a nominal lower low while the second oversold RSI impulse reverses above the prior RSI low",
     "bearish_divergence": "price makes a nominal higher high while the second overbought RSI impulse reverses below the prior RSI high",
     "extension_selection": {
       "trigger_bar_at_prior_price_extreme": 1.618,
-      "trigger_bar_not_at_prior_price_extreme": 1.13,
-      "typical_non_extreme_offset_bars": "2-4 in the primary examples; the book also discusses later offsets with retracement-pattern exceptions"
+      "trigger_bar_not_at_prior_price_extreme": 1.13
     },
-    "price_projection_coordinate_status": "unresolved_pending_figure_anchor_freeze"
+    "projection": {
+      "x": "prior price extreme associated with the initial RSI structure",
+      "a": "most favorable price extreme of the initial reaction after the Trigger Bar and before the secondary extreme test begins",
+      "formula": "A + ratio * (X - A)",
+      "bearish_source_text": "Volume Two explicitly calls the final spillover a 1.13/1.618 extension of the initial breakdown X-A",
+      "bullish_basis": "mirror image of the same X-A reaction shown throughout the bullish figures"
+    },
+    "retracement_pattern_exception": "On the 1.13 side, a distinct retracement harmonic pattern may complete before the minimum 1.13 extension and take precedence if coordinated with the successful impulsive RSI retest."
   },
   "volume_three_types": {
     "source_ref": "Volume Three, printed pp.240-256",
@@ -51,16 +57,16 @@
     "divergence_relation": "RSI improves/weakens while price makes a nominal new trend extreme (bullish RSI higher with price lower; bearish RSI lower with price higher)"
   },
   "engineering_operationalization": {
-    "complex_classifier": "A W/M source description has no published bar-by-bar pivot algorithm. v1 conservatively requires an internal turn entirely inside the extreme zone before the 30/70 exit.",
-    "status": "engineering_classifier_not_carney_identity_rule",
-    "no_lookahead": "A structure is classified only on its observable 30/70 exit bar; a BAMM sequence is emitted only when the secondary impulsive test exits its extreme zone.",
-    "final_confirmation": "Fails closed until exact X-A projection coordinates are source-frozen; caller booleans cannot bypass this unresolved source item."
+    "complex_classifier": "A W/M source description has no published bar-by-bar pivot algorithm. v2 conservatively requires an internal turn entirely inside the extreme zone before the 30/70 exit.",
+    "status": "engineering_classifier_not_carney_harmonic_identity_rule",
+    "no_lookahead": "Structure classification waits for the 30/70 exit; X-A reaction anchor A is frozen before the secondary extreme begins; the sequence is emitted only on the secondary extreme exit.",
+    "projection_fail_closed": "If a directionally valid X-A reaction cannot be built, indicator sequence remains visible but source confirmation is blocked."
   },
   "source_limits": [
     "A single oversold/overbought reading is not RSI BAMM.",
     "A second extreme test without an intervening RSI 50 midpoint reaction is not RSI BAMM.",
     "A complex second extreme test does not satisfy the Volume Three type contract.",
     "RSI BAMM is confirmation/execution evidence and cannot create or repair harmonic geometry or Source Raw PRZ.",
-    "The optional Acceleration Trigger is not part of v1 core-state completion and must be added as a separate later enhancement if implemented."
+    "The optional Acceleration Trigger is outside the core completion state and must remain a separate later enhancement."
   ]
 }

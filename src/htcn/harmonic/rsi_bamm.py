@@ -10,7 +10,7 @@ import pandas as pd
 from .indicators import wilder_rsi
 
 
-RSI_BAMM_SOURCE_DEFINITION = "rsi-bamm-source-v1"
+RSI_BAMM_SOURCE_DEFINITION = "rsi-bamm-source-v2"
 RSI_BAMM_PERIOD = 14
 RSI_OVERSOLD = 30.0
 RSI_OVERBOUGHT = 70.0
@@ -70,9 +70,13 @@ class RSIBammSequence:
     trigger_to_prior_price_extreme_bars: int
     confirmation_extension_ratio: float
     confirmation_extension_basis: str
+    reaction_anchor_bar: int | None
+    reaction_anchor_price: float | None
+    confirmation_projection_price: float | None
+    price_projection_resolved: bool
+    price_projection_tested: bool
     source_definition: str = RSI_BAMM_SOURCE_DEFINITION
     indicator_sequence_complete: bool = True
-    price_projection_resolved: bool = False
     harmonic_confluence_required: bool = True
     mutates_harmonic_identity: bool = False
 
@@ -84,13 +88,17 @@ class RSIBammSequence:
 @dataclass(frozen=True, slots=True)
 class RSIBammConfirmation:
     sequence: RSIBammSequence
-    price_confirmation_tested: bool
     harmonic_pattern_completed: bool
+    harmonic_pattern_precedes_projection: bool
+    pattern_precedence_used: bool
     status: str
 
     @property
     def source_confirmed(self) -> bool:
-        return self.status == "source_confirmed"
+        return self.status in {
+            "source_confirmed",
+            "source_confirmed_retracement_pattern_precedence",
+        }
 
 
 def _finite_series(values: Iterable[float] | pd.Series, *, name: str) -> pd.Series:
@@ -234,18 +242,12 @@ def _profile(
     )
 
 
-def _extension_contract(
+def _extension_ratio_contract(
     first: RSIBammStructure,
     lows: pd.Series,
     highs: pd.Series,
 ) -> tuple[int, float, int, float, str]:
-    """Freeze the source-resolved 1.13-vs-1.618 ratio-selection rule only.
-
-    Volume Two ties 1.618 to a Trigger Bar at the prior price extreme and 1.13 to a
-    Trigger Bar that is not that extreme (commonly a few bars later). The exact X-A
-    projection coordinate construction is deliberately not invented in this phase; the
-    selected ratio is returned without a target price until figure-level anchors are frozen.
-    """
+    """Freeze the Volume Two 1.13-vs-1.618 Trigger-Bar selection rule."""
     trigger_bar = int(first.exit_bar)
     trigger_reference = (
         float(lows.iloc[trigger_bar])
@@ -270,6 +272,57 @@ def _extension_contract(
     )
 
 
+def _price_projection_contract(
+    *,
+    first: RSIBammStructure,
+    second: RSIBammStructure,
+    ratio: float,
+    lows: pd.Series,
+    highs: pd.Series,
+) -> tuple[int | None, float | None, float | None, bool, bool]:
+    """Project the final Confirmation Point from the initial X-A price reaction.
+
+    Volume Two explicitly describes the bearish spillover as a 1.13/1.618 extension of
+    the initial X-A breakdown; the bullish diagrams use the mirrored X-A reaction. HT-CN
+    freezes X as the prior price extreme associated with the first structure and A as the
+    most favorable reaction extreme observed after the Trigger Bar and before the second
+    extreme test begins. The standard external extension is projected from A back through
+    X: ``A + ratio * (X - A)``.
+
+    If a directionally valid X-A reaction is absent, projection fails closed while the
+    indicator sequence remains observable.
+    """
+    start = int(first.exit_bar)
+    end = int(second.enter_bar)
+    if start >= end:
+        return None, None, None, False, False
+
+    x_price = float(first.price_extreme_value)
+    if first.direction is RSIBammDirection.BULLISH:
+        reaction = highs.iloc[start:end]
+        if reaction.empty:
+            return None, None, None, False, False
+        a_bar = int(reaction.idxmax())
+        a_price = float(highs.loc[a_bar])
+        if a_price <= x_price:
+            return a_bar, a_price, None, False, False
+    else:
+        reaction = lows.iloc[start:end]
+        if reaction.empty:
+            return None, None, None, False, False
+        a_bar = int(reaction.idxmin())
+        a_price = float(lows.loc[a_bar])
+        if a_price >= x_price:
+            return a_bar, a_price, None, False, False
+
+    target = float(a_price + float(ratio) * (x_price - a_price))
+    if first.direction is RSIBammDirection.BULLISH:
+        tested = float(second.price_extreme_value) <= target
+    else:
+        tested = float(second.price_extreme_value) >= target
+    return a_bar, a_price, target, True, bool(tested)
+
+
 def _build_sequence(
     *,
     first: RSIBammStructure,
@@ -288,10 +341,17 @@ def _build_sequence(
     if relation is None:
         return None
 
-    trigger_bar, trigger_reference, offset, ratio, basis = _extension_contract(
+    trigger_bar, trigger_reference, offset, ratio, basis = _extension_ratio_contract(
         first,
         lows,
         highs,
+    )
+    a_bar, a_price, target, projection_resolved, projection_tested = _price_projection_contract(
+        first=first,
+        second=second,
+        ratio=ratio,
+        lows=lows,
+        highs=highs,
     )
     return RSIBammSequence(
         direction=first.direction,
@@ -306,6 +366,11 @@ def _build_sequence(
         trigger_to_prior_price_extreme_bars=offset,
         confirmation_extension_ratio=ratio,
         confirmation_extension_basis=basis,
+        reaction_anchor_bar=a_bar,
+        reaction_anchor_price=a_price,
+        confirmation_projection_price=target,
+        price_projection_resolved=projection_resolved,
+        price_projection_tested=projection_tested,
     )
 
 
@@ -316,18 +381,7 @@ def scan_rsi_bamm_values(
     highs: Iterable[float] | pd.Series,
     direction: RSIBammDirection,
 ) -> list[RSIBammSequence]:
-    """Scan completed RSI BAMM indicator sequences without look-ahead.
-
-    A sequence is emitted only when the second extreme structure exits its 30/70 zone.
-    At that bar all structural evidence is observable: first extreme structure, mandatory
-    50-midpoint reaction, secondary impulsive retest and price/RSI confirmation or
-    divergence relationship.
-
-    The result is an indicator sequence, not a trade-ready Harmonic Trading setup. Volume
-    Two coordinates the Confirmation Point with a harmonic pattern and a 1.13/1.618 price
-    projection. Until that price projection is fully source-frozen, the result remains
-    ``price_projection_resolved=False`` and fails closed at the final confirmation layer.
-    """
+    """Scan completed RSI BAMM sequences with chronological/no-lookahead state."""
     rsi = _finite_series(rsi_values, name="rsi")
     low_series = _finite_series(lows, name="lows")
     high_series = _finite_series(highs, name="highs")
@@ -370,8 +424,6 @@ def scan_rsi_bamm_values(
                 continue
 
             if midpoint_bar is None:
-                # An extreme retest before the mandatory 50 reaction invalidates the older
-                # pairing. Promote the new structure instead of rescuing it with future data.
                 first = structure
                 midpoint_bar = bar if _midpoint_reached(value, direction) else None
                 midpoint_rsi = value if midpoint_bar is not None else None
@@ -388,8 +440,6 @@ def scan_rsi_bamm_values(
             if sequence is not None:
                 sequences.append(sequence)
 
-            # The completed secondary extreme may seed a later sequence, but only after a
-            # fresh midpoint reaction. This keeps chained detections chronological.
             first = structure
             midpoint_bar = bar if _midpoint_reached(value, direction) else None
             midpoint_rsi = value if midpoint_bar is not None else None
@@ -459,9 +509,15 @@ def scan_rsi_bamm_frame(
                 trigger_to_prior_price_extreme_bars=row.trigger_to_prior_price_extreme_bars,
                 confirmation_extension_ratio=row.confirmation_extension_ratio,
                 confirmation_extension_basis=row.confirmation_extension_basis,
+                reaction_anchor_bar=None
+                if row.reaction_anchor_bar is None
+                else row.reaction_anchor_bar + start,
+                reaction_anchor_price=row.reaction_anchor_price,
+                confirmation_projection_price=row.confirmation_projection_price,
+                price_projection_resolved=row.price_projection_resolved,
+                price_projection_tested=row.price_projection_tested,
                 source_definition=row.source_definition,
                 indicator_sequence_complete=row.indicator_sequence_complete,
-                price_projection_resolved=row.price_projection_resolved,
                 harmonic_confluence_required=row.harmonic_confluence_required,
                 mutates_harmonic_identity=row.mutates_harmonic_identity,
             )
@@ -472,29 +528,41 @@ def scan_rsi_bamm_frame(
 def confirm_rsi_bamm(
     sequence: RSIBammSequence,
     *,
-    price_confirmation_tested: bool,
     harmonic_pattern_completed: bool,
+    harmonic_pattern_precedes_projection: bool = False,
 ) -> RSIBammConfirmation:
-    """Combine BAMM indicator evidence with the still-separate price/pattern layer.
+    """Combine the BAMM sequence/projection with distinct harmonic-pattern confluence.
 
-    M2.31 Phase 1 intentionally fails closed because the exact X-A price projection
-    coordinates have not yet been frozen from the book figures. Supplying booleans cannot
-    bypass that source gap.
+    Volume Two normally requires the RSI BAMM extension and harmonic pattern to coordinate.
+    It also documents a 1.13-side retracement-pattern exception where a distinct harmonic
+    pattern may complete before the minimum 1.13 extension and take precedence. The exception
+    is allowed only for a 1.13 setup and must be explicitly supplied by a later pattern adapter.
     """
     if not sequence.price_projection_resolved:
         status = "source_confirmation_blocked_projection_unresolved"
-    elif price_confirmation_tested and harmonic_pattern_completed:
-        status = "source_confirmed"
-    elif price_confirmation_tested:
-        status = "price_confirmation_without_harmonic_pattern"
-    elif harmonic_pattern_completed:
-        status = "harmonic_pattern_without_price_confirmation"
+        precedence_used = False
     else:
-        status = "indicator_sequence_only"
+        precedence_used = bool(
+            harmonic_pattern_completed
+            and harmonic_pattern_precedes_projection
+            and math.isclose(sequence.confirmation_extension_ratio, 1.13)
+            and not sequence.price_projection_tested
+        )
+        if harmonic_pattern_completed and sequence.price_projection_tested:
+            status = "source_confirmed"
+        elif precedence_used:
+            status = "source_confirmed_retracement_pattern_precedence"
+        elif sequence.price_projection_tested:
+            status = "price_confirmation_without_harmonic_pattern"
+        elif harmonic_pattern_completed:
+            status = "harmonic_pattern_without_price_confirmation"
+        else:
+            status = "indicator_sequence_only"
 
     return RSIBammConfirmation(
         sequence=sequence,
-        price_confirmation_tested=bool(price_confirmation_tested),
         harmonic_pattern_completed=bool(harmonic_pattern_completed),
+        harmonic_pattern_precedes_projection=bool(harmonic_pattern_precedes_projection),
+        pattern_precedence_used=precedence_used,
         status=status,
     )
