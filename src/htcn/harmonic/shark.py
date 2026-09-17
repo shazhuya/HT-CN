@@ -3,8 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .models import HarmonicPoint, PatternDirection, PatternState, Pivot, RatioMeasurement
-from .prz import PRZComponent, PotentialReversalZone
+from .prz import PotentialReversalZone
 from .ratios import leg_length
+from .shark_source import SharkSourceContract, build_shark_source_contract
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +24,7 @@ class SharkEvaluation:
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint]
     metrics: SharkMetrics
     prz: PotentialReversalZone
+    source_contract: SharkSourceContract
     geometry_score: float
     target_50: float
     target_618: float
@@ -44,6 +46,7 @@ class SharkProjection:
     a_0x: float
     b_xa: float
     prz: PotentialReversalZone
+    source_contract: SharkSourceContract
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,81 +91,6 @@ def _direction(points: tuple[HarmonicPoint, ...]) -> PatternDirection:
     return PatternDirection.BULLISH if x.price > zero.price else PatternDirection.BEARISH
 
 
-def _project_from_b(
-    *,
-    b_price: float,
-    length: float,
-    ratio: float,
-    direction: PatternDirection,
-) -> float:
-    return b_price - ratio * length if direction is PatternDirection.BULLISH else b_price + ratio * length
-
-
-def _component_range(
-    *,
-    name: str,
-    b_price: float,
-    length: float,
-    low_ratio: float,
-    high_ratio: float,
-    direction: PatternDirection,
-) -> PRZComponent:
-    p1 = _project_from_b(b_price=b_price, length=length, ratio=low_ratio, direction=direction)
-    p2 = _project_from_b(b_price=b_price, length=length, ratio=high_ratio, direction=direction)
-    low, high = sorted((p1, p2))
-    if low <= 0:
-        raise ValueError(f"{name} projects outside the positive-price domain")
-    return PRZComponent(
-        name=name,
-        price_low=low,
-        price_high=high,
-        ratio_low=low_ratio,
-        ratio_high=high_ratio,
-    )
-
-
-def _build_prz(
-    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
-) -> PotentialReversalZone:
-    zero, x, a, b = points
-    direction = _direction(points)
-    ab = leg_length(a.price, b.price)
-    ob = leg_length(zero.price, b.price)
-    if ab <= 0 or ob <= 0:
-        raise ValueError("Shark AB and 0B spans must be positive")
-
-    return PotentialReversalZone(
-        pattern_id="shark",
-        direction=direction,
-        components=(
-            _component_range(
-                name="0B completion",
-                b_price=b.price,
-                length=ob,
-                low_ratio=0.886,
-                high_ratio=1.13,
-                direction=direction,
-            ),
-            _component_range(
-                name="AB impulse completion",
-                b_price=b.price,
-                length=ab,
-                low_ratio=1.618,
-                high_ratio=2.24,
-                direction=direction,
-            ),
-        ),
-    )
-
-
-def _ranges_overlap(prz: PotentialReversalZone) -> bool:
-    if len(prz.components) < 2:
-        return False
-    low = max(component.price_low for component in prz.components)
-    high = min(component.price_high for component in prz.components)
-    return low <= high
-
-
 def measure_shark(
     points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
 ) -> SharkMetrics:
@@ -202,14 +130,10 @@ def _in_band(value: float, low: float, high: float) -> bool:
 def _reaction_targets(
     points: tuple[HarmonicPoint, ...], direction: PatternDirection
 ) -> tuple[float, float, float]:
-    """Return the three source-auditable Shark -> 5-0 reaction measurements.
+    """Return Shark -> 5-0 post-completion reaction measurements.
 
-    Once Shark 0-X-A-B-C has completed, the prospective 5-0 D is measured from C back
-    toward B. Its defining measurements include the 50%/61.8% BC retracements and the
-    Reciprocal AB=CD, where the future CD counter-move is compared with the earlier AB
-    counter-move. Carney describes the Reciprocal AB=CD as an approximation that must
-    be complemented by the other harmonic measurements; the raw measurements therefore
-    remain separate rather than being collapsed into one synthetic target.
+    These are management measurements only. They do not contribute to Shark identity or
+    Shark Source Raw PRZ membership.
     """
     _, _, a, b, c = points
     bc = leg_length(b.price, c.price)
@@ -228,12 +152,7 @@ def _initial_shark_target(
     target_50: float,
     reciprocal_abcd_target: float,
 ) -> tuple[float, str]:
-    """Apply Volume Three Shark management: take whichever target is encountered first.
-
-    "Lesser" means the smaller reaction distance from C, not the numerically lower price;
-    that distinction matters for bearish structures. A tie is labelled explicitly rather than
-    arbitrarily preferring one source measurement.
-    """
+    """Volume Three management: first encountered of 50% BC and Reciprocal AB=CD."""
     distance_50 = abs(float(target_50) - float(c_price))
     distance_reciprocal = abs(float(reciprocal_abcd_target) - float(c_price))
     eps = 1e-12 * max(1.0, distance_50, distance_reciprocal)
@@ -262,15 +181,22 @@ def evaluate_shark(
     if not _in_band(metrics.c_0b.value, 0.886, 1.13):
         reasons.append(f"C/0B={metrics.c_0b.value:.6f} outside 0.886-1.13")
 
-    prz = _build_prz(points[:4])
-    if not _ranges_overlap(prz):
-        reasons.append("Shark 0B and AB completion ranges do not converge")
+    source_contract = build_shark_source_contract(points[:4])
+    prz = source_contract.prz
+    if not source_contract.has_source_prz:
+        reasons.append("Shark 0B and AB source completion corridors do not converge")
+    elif not source_contract.contains_source_prz(float(points[4].price)):
+        reasons.append("C does not test the frozen Shark Source Raw PRZ")
 
     c = points[4]
-    anchor = (prz.price_low + prz.price_high) / 2.0
+    if source_contract.has_source_prz:
+        anchor = (float(source_contract.source_prz_low) + float(source_contract.source_prz_high)) / 2.0
+    else:
+        anchor = (prz.ideal_core_low + prz.ideal_core_high) / 2.0
     ob = leg_length(points[0].price, points[3].price)
     convergence_error = abs(float(c.price) - anchor) / max(ob, 1e-12)
     geometry_score = round(max(0.0, 100.0 * (1.0 - min(1.0, 4.0 * convergence_error))), 2)
+
     target_50, target_618, reciprocal_target = _reaction_targets(points, direction)
     initial_target, initial_target_basis = _initial_shark_target(
         c_price=c.price,
@@ -285,6 +211,7 @@ def evaluate_shark(
         points=points,
         metrics=metrics,
         prz=prz,
+        source_contract=source_contract,
         geometry_score=geometry_score,
         target_50=target_50,
         target_618=target_618,
@@ -308,7 +235,7 @@ def project_forming_shark(
     ox = leg_length(zero.price, x.price)
     xa = leg_length(x.price, a.price)
     ab = leg_length(a.price, b.price)
-    if min(ox, xa) <= 0:
+    if min(ox, xa, ab) <= 0:
         return None
     a_0x = xa / ox
     b_xa = ab / xa
@@ -319,8 +246,8 @@ def project_forming_shark(
     if direction is PatternDirection.BEARISH and not (zero.price > a.price > x.price > b.price):
         return None
 
-    prz = _build_prz(points)
-    if not _ranges_overlap(prz):
+    source_contract = build_shark_source_contract(points)
+    if not source_contract.has_source_prz:
         return None
     return SharkProjection(
         pattern_id="shark",
@@ -328,7 +255,8 @@ def project_forming_shark(
         points=points,
         a_0x=a_0x,
         b_xa=b_xa,
-        prz=prz,
+        prz=source_contract.prz,
+        source_contract=source_contract,
     )
 
 
