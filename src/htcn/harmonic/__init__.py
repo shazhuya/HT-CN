@@ -77,6 +77,11 @@ from .rsi_bamm import (
     scan_rsi_bamm_frame,
     scan_rsi_bamm_values,
 )
+from .rsi_bamm_confluence import (
+    RSI_BAMM_113_RETRACEMENT_PRECEDENCE,
+    RSIBammHarmonicConfluence,
+    confirm_rsi_bamm_with_match,
+)
 from .rules import CARNEY_RULES, PatternRule, RatioConstraint
 from .scanner import (
     FormingPattern,
@@ -124,10 +129,12 @@ __all__ = [
     "Pivot",
     "PivotKind",
     "PotentialReversalZone",
+    "RSI_BAMM_113_RETRACEMENT_PRECEDENCE",
     "RSI_BAMM_PERIOD",
     "RSI_BAMM_SOURCE_DEFINITION",
     "RSIBammConfirmation",
     "RSIBammDirection",
+    "RSIBammHarmonicConfluence",
     "RSIBammProfile",
     "RSIBammRelation",
     "RSIBammSequence",
@@ -149,6 +156,7 @@ __all__ = [
     "classify_completed_xabcd",
     "collapse_same_kind_pivots",
     "confirm_rsi_bamm",
+    "confirm_rsi_bamm_with_match",
     "detect_confirmed_pivots",
     "detect_multi_scale_pivots",
     "evaluate_abcd",
