@@ -43,7 +43,7 @@ class AShareExecutionContext:
     same_day_sell_after_buy: bool
     earliest_sell_offset_sessions_after_buy: int
     nominal_price_limit_pct: float | None
-    exact_price_limit_pct: float | None
+    rule_based_price_limit_pct: float | None
     price_limit_status: str
     ipo_first_five_sessions: bool | None
     special_event_exceptions_unresolved: bool
@@ -99,7 +99,7 @@ def load_security_metadata(
         board = Board.UNKNOWN
 
     resolved_list_date: date | None
-    if list_date_raw is None:
+    if list_date_raw is None or pd.isna(list_date_raw):
         resolved_list_date = None
     elif isinstance(list_date_raw, date):
         resolved_list_date = list_date_raw
@@ -164,12 +164,13 @@ def _ipo_first_five_sessions(
 ) -> bool | None:
     if list_date is None or "trade_date" not in frame.columns or frame.empty:
         return None
-    trade_dates = pd.to_datetime(frame["trade_date"], errors="coerce").dt.date
-    listed_sessions = sorted({item for item in trade_dates if item is not None and item >= list_date})
-    if not listed_sessions:
+    raw_dates = pd.to_datetime(frame["trade_date"], errors="coerce")
+    trade_dates = [stamp.date() for stamp in raw_dates if not pd.isna(stamp)]
+    if not trade_dates:
         return None
-    current = trade_dates.iloc[-1]
-    if current is None or current < list_date:
+    listed_sessions = sorted({item for item in trade_dates if item >= list_date})
+    current = trade_dates[-1]
+    if not listed_sessions or current < list_date:
         return None
     try:
         ordinal = listed_sessions.index(current) + 1
@@ -201,11 +202,10 @@ def _resolve_price_limit(
     if metadata.is_st and board is Board.MAIN and as_of < MAIN_RISK_WARNING_10_PCT_EFFECTIVE:
         return nominal, 5.0, "historical_main_risk_warning_5pct_before_2026_07_06", True
 
-    # From 2026-07-06, SSE/SZSE main-board risk-warning stocks use the same 10% band;
-    # STAR/ChiNext use their board-level 20% band. We still keep special-event exceptions
-    # unresolved because suspension/resumption and other security-specific rules require
-    # richer exchange metadata than this daily catalog currently stores.
-    return nominal, nominal, "exact_current_board_profile_with_known_listing_metadata", True
+    # This resolves the board/risk-warning/listing-age rule profile, not every exchange
+    # exception for the exact day. Suspension/resumption and special security states still
+    # require richer event metadata, hence the explicit unresolved-exceptions flag.
+    return nominal, nominal, "board_rule_profile_resolved_special_events_unresolved", True
 
 
 def build_a_share_execution_context(
@@ -236,7 +236,7 @@ def build_a_share_execution_context(
         frame,
         list_date=None if metadata is None else metadata.list_date,
     )
-    nominal_limit, exact_limit, price_limit_status, exceptions_unresolved = _resolve_price_limit(
+    nominal_limit, rule_based_limit, price_limit_status, exceptions_unresolved = _resolve_price_limit(
         board=board,
         as_of=as_of,
         metadata=metadata,
@@ -292,7 +292,7 @@ def build_a_share_execution_context(
         same_day_sell_after_buy=False,
         earliest_sell_offset_sessions_after_buy=1,
         nominal_price_limit_pct=nominal_limit,
-        exact_price_limit_pct=exact_limit,
+        rule_based_price_limit_pct=rule_based_limit,
         price_limit_status=price_limit_status,
         ipo_first_five_sessions=ipo_first_five,
         special_event_exceptions_unresolved=exceptions_unresolved,
