@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from .capture_transaction import (
+    frozen_legacy_baseline_present,
     frozen_legacy_baseline_through_date,
     read_committed_captures,
     read_frozen_legacy_baseline,
@@ -127,7 +128,7 @@ def build_evidence_chain_health(
             else "ready"
         ),
         "authoritative_evidence_source": "frozen_baseline_plus_committed_transactions",
-        "frozen_legacy_baseline_present": bool(baseline_rows or baseline_through),
+        "frozen_legacy_baseline_present": baseline_present,
         "frozen_legacy_baseline_row_count": len(baseline_rows),
         "frozen_legacy_baseline_through_trade_date": baseline_through,
         "committed_capture_count": len(committed),
