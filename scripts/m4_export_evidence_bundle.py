@@ -10,6 +10,7 @@ import zipfile
 
 from htcn.app.evidence_identity import read_code_identity
 from htcn.research.capture_transaction import read_committed_captures
+from htcn.research.evidence_bundle import verify_evidence_bundle
 from htcn.research.evidence_health import build_evidence_chain_health
 from htcn.research.methodology_identity import build_methodology_identity
 
@@ -191,11 +192,19 @@ def build_bundle(
 
     tmp.replace(output)
 
+    verification = verify_evidence_bundle(output)
+    if verification.status != "valid":
+        raise RuntimeError(
+            "M4 evidence transport bundle failed integrity verification: "
+            + "; ".join(verification.errors)
+        )
+
     return {
         **manifest,
         "output": str(output),
         "bundle_size_bytes": output.stat().st_size,
         "bundle_sha256": _sha256(output),
+        "transport_verification": verification.as_payload(),
     }
 
 
