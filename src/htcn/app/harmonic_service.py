@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -38,16 +39,46 @@ class LocalHarmonicService:
             raise DatasetNotFoundError(instrument_id)
         return frame.sort_values("trade_date").reset_index(drop=True)
 
-    def _continuous_view(self, instrument_id: str, raw: pd.DataFrame) -> tuple[pd.DataFrame, str, str | None]:
+    @staticmethod
+    def _qfq_basis_id(factors: pd.DataFrame) -> str:
+        ordered = factors.sort_values("trade_date").reset_index(drop=True)
+        change_points: list[str] = []
+        previous: float | None = None
+        for row in ordered.itertuples(index=False):
+            factor = float(row.price_factor)
+            if previous is None or abs(factor - previous) > 1e-12:
+                stamp = pd.Timestamp(row.trade_date).date().isoformat()
+                change_points.append(f"{stamp}:{factor:.16g}")
+                previous = factor
+        if not change_points:
+            raise ValueError("QFQ basis requires at least one factor change point")
+        material = "\n".join(change_points)
+        return "qfq:" + sha256(material.encode("utf-8")).hexdigest()
+
+    def _continuous_view(
+        self,
+        instrument_id: str,
+        raw: pd.DataFrame,
+    ) -> tuple[pd.DataFrame, str, str | None, str]:
         factors = self.factors.read(instrument_id)
         if factors.empty:
-            return raw, "raw", "QFQ 因子尚未建立，本次仅展示原始价格；该结果不用于正式谐波结论。"
+            return (
+                raw,
+                "raw",
+                "QFQ 因子尚未建立，本次仅展示原始价格；该结果不用于正式谐波结论。",
+                "raw",
+            )
 
         factor_dates = set(pd.to_datetime(factors["trade_date"]).dt.normalize())
         raw_dates = pd.to_datetime(raw["trade_date"]).dt.normalize()
         missing = [stamp for stamp in raw_dates if stamp not in factor_dates]
         if not missing:
-            return apply_price_factors(raw, factors), "qfq", None
+            return (
+                apply_price_factors(raw, factors),
+                "qfq",
+                None,
+                self._qfq_basis_id(factors),
+            )
 
         latest_factor_date = pd.Timestamp(factors["trade_date"].max()).normalize()
         if all(stamp > latest_factor_date for stamp in missing):
@@ -69,9 +100,15 @@ class LocalHarmonicService:
                 apply_price_factors(raw, extended),
                 "qfq_carry_forward",
                 f"QFQ 因子最新至 {latest_factor_date.date().isoformat()}，之后 {len(missing)} 个交易日沿用最近因子。",
+                self._qfq_basis_id(extended),
             )
 
-        return raw, "raw", "QFQ 因子存在历史缺口，本次退回原始价格并禁止把识别结果视为正式结论。"
+        return (
+            raw,
+            "raw",
+            "QFQ 因子存在历史缺口，本次退回原始价格并禁止把识别结果视为正式结论。",
+            "raw",
+        )
 
     @staticmethod
     def _point_payload(point, dates: pd.Series) -> dict[str, Any]:
@@ -530,7 +567,10 @@ class LocalHarmonicService:
             raise ValueError("scales must contain values between 1 and 55")
 
         raw = self._load_history(instrument_id)
-        continuous, price_mode, warning = self._continuous_view(instrument_id, raw)
+        continuous, price_mode, warning, price_basis_id = self._continuous_view(
+            instrument_id,
+            raw,
+        )
         selected = continuous.tail(bars).reset_index(drop=True)
         scan: HarmonicScan = scan_frame(
             selected,
@@ -614,6 +654,7 @@ class LocalHarmonicService:
         return {
             "instrument_id": instrument_id,
             "price_mode": price_mode,
+            "price_basis_id": price_basis_id,
             "warning": warning,
             "bars_requested": bars,
             "bars_returned": len(selected),
