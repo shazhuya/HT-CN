@@ -4,7 +4,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 
 set "M4_REQUIRED_BRANCH=m4/real-a-share-validation-workflow"
-set "M4_MIN_SAFE_COMMIT=c774c54928c33361952bf1a612a8555633449625"
+set "M4_MIN_SAFE_COMMIT=c34026755b3b8c491759eaacdb45376d4e1db485"
 
 where git >nul 2>nul
 if errorlevel 1 (
@@ -32,7 +32,7 @@ if /I not "!M4_BRANCH!"=="!M4_REQUIRED_BRANCH!" (
 
 git cat-file -e !M4_MIN_SAFE_COMMIT!^{commit} >nul 2>nul
 if errorlevel 1 (
-  echo [HT-CN M4] ERROR: local checkout does not contain the minimum safe T1 protocol.
+  echo [HT-CN M4] ERROR: local checkout does not contain the minimum safe Phase 3.1 prospective-evidence workflow.
   echo Required ancestor: !M4_MIN_SAFE_COMMIT!
   echo Update the local M4 branch before collecting prospective evidence.
   echo No M1 update or authoritative capture was started.
@@ -42,7 +42,7 @@ if errorlevel 1 (
 
 git merge-base --is-ancestor !M4_MIN_SAFE_COMMIT! HEAD >nul 2>nul
 if errorlevel 1 (
-  echo [HT-CN M4] ERROR: current HEAD predates or diverges from the frozen T1 protocol.
+  echo [HT-CN M4] ERROR: current HEAD predates or diverges from the minimum safe Phase 3.1 workflow.
   echo Required ancestor: !M4_MIN_SAFE_COMMIT!
   echo No M1 update or authoritative capture was started.
   pause
