@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `690cf559446bc39dd5d0151e25da524d586483bf`
-context_checkpoint_title: `M4 Phase 2.7: provider-clock freshness + confirmed suspension continuity`
+context_checkpoint: `161a5f3cd21b0bc423a68fa3e9f47c7fd8293f82`
+context_checkpoint_title: `M4 Phase 2.8: methodology provenance gate frozen`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -741,6 +741,26 @@ carry-forward row：
 - suspended first observation 不允许首次 prospective outcome enrollment；
 - 已入组 candidate 在停牌日继续保留 cohort。
 
+## M4 Phase 2.8 — Deterministic Methodology Identity
+
+D-028 已冻结：未来 authoritative prospective evidence 必须绑定确定性的 methodology identity。
+
+已完成：
+
+- capture transaction schema 从 v1 升到 v2；
+- 每个新 committed capture 保存 `methodology_contract_version` / `methodology_fingerprint`；
+- methodology fingerprint 进入 transaction identity；
+- fingerprint 覆盖 candidate / ratios / Source PRZ / Source lifecycle / RSI BAMM / Shark / 5-0 source handling / M4 capture-enrollment 关键文件；
+- 同一个 active committed chain 只允许一个 methodology fingerprint；
+- 方法漂移 append fail closed；
+- pre-fingerprint schema-v1 transaction 保持可读，但只能进入显式 migration 审计，不能和 v2 active chain 静默混合；
+- evidence-health 比较 current methodology 与 authoritative chain，mismatch 为 hard blocker；
+- compatibility manifest 与 mirror-integrity 纳入 methodology identity；
+- transition / prospective-observation derived reports 暴露 authoritative fingerprint；
+- frozen T0 baseline 不回写 fingerprint，继续仅作为 baseline / continuity evidence，且永久不进入 prospective outcome inference。
+
+当前 GitHub-hosted CI 状态仍是 runner-allocation anomaly：最新 push / PR deterministic-tests `steps=null`，没有真实执行 pytest，不能计为代码测试失败或通过。
+
 ## 本机调用规则 — D-023
 
 用户电脑不是 HT-CN 常规测试环境。
@@ -752,17 +772,18 @@ carry-forward row：
 
 ## 下一步唯一主任务
 
-**M4 Phase 2.7 — pre-closeout static/integration audit。**
+**M4 Phase 2.8 closeout + first fingerprinted future capture readiness。**
 
-继续由 assistant 完成，不调用用户电脑。
+继续优先由 assistant 完成，不把用户电脑当常规测试机。
 
 剩余收口：
 
-1. 审计 suspension carry-forward 与 transaction/transition normalization 的一致性；
-2. 审计 evidence-health / mirror-recovery / report provenance 的所有 import 与 fail-closed 路径；
-3. 检查 M4 新 schema 对 legacy T0 的 backward compatibility；
-4. 更新 Phase 2 closeout checklist；
-5. hosted CI 若 runner 恢复只运行一次；当前 steps=null/logs=null 仍不算测试执行。
+1. 完成 methodology-aware transaction / health / mirror / report 的静态交叉审计；
+2. 检查所有 `build_committed_capture` 调用都已传入 methodology identity；
+3. 检查 schema-v1 pre-fingerprint transaction 只保留 migration readability，不能追加新 evidence；
+4. 更新 Phase 2 closeout checklist / PR #13 状态；
+5. hosted CI 若 runner 恢复只认真实执行的 steps/logs；
+6. assistant-side 收口后，下一次用户本机调用只用于不可替代的真实 M1 future capture，生成首个 fingerprinted T1 transaction。
 
 
 ## 固定 Source / Product 边界
