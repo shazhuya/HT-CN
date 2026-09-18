@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test'
 
 const queuePayload = {
-  schema_version: 1,
+  schema_version: 2,
+  as_of_trade_date: '2026-09-18',
+  observed_trade_dates: ['2026-09-18'],
+  observation_integrity: 'single_as_of',
   contract: {
     version: 1,
     source_of_truth: 'existing_source_lifecycle_and_decision_narrative',
