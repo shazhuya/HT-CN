@@ -69,6 +69,7 @@ def main() -> int:
             "scripts/m3_metadata_tradability_smoke.py",
             "--catalog",
             "data/market/catalog.duckdb",
+            "--require-parquet",
         ])
 
         print("[HT-CN QA] 4/6 Real M1 product payload contract smoke", flush=True)

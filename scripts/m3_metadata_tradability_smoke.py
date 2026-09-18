@@ -207,6 +207,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="HT-CN M3 Phase 3.1 metadata/tradability smoke test")
     parser.add_argument("--catalog", default="data/market/catalog.duckdb")
     parser.add_argument("--output", default="artifacts/reports/m3-metadata-tradability-smoke.json")
+    parser.add_argument(
+        "--require-parquet",
+        action="store_true",
+        help="fail unless representative MAIN/STAR/CHINEXT parquet histories are readable",
+    )
     args = parser.parse_args()
 
     result = run(Path(args.catalog))
@@ -215,7 +220,14 @@ def main() -> int:
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, indent=2))
     print(f"\n[M3] report: {output}")
-    return 0 if result["status"] in {"pass", "security_master_pass_parquet_unavailable"} else 1
+    accepted = {"pass"} if args.require_parquet else {
+        "pass",
+        "security_master_pass_parquet_unavailable",
+    }
+    if args.require_parquet:
+        result["acceptance_mode"] = "strict_real_m1_parquet_required"
+        output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    return 0 if result["status"] in accepted else 1
 
 
 if __name__ == "__main__":
