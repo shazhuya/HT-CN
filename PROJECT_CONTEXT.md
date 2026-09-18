@@ -1372,3 +1372,59 @@ D-042 永久边界：
 
 M4 继续独立积累 prospective evidence；M5 不再因单一历史 provider-calendar 边角问题停止产品主线。
 
+## M5 Phase 1 closeout — Operator Queue green
+
+M5 Phase 1 code checkpoint:
+
+`4df6baa42cd308287796561245e2c6293bb6356d`
+
+GitHub Actions:
+
+- workflow run #1485 / id `35370628695`；
+- overall: **success**；
+- Python deterministic tests: success；
+- Web build: success；
+- Playwright Chromium install: success；
+- M5 deterministic browser acceptance: success；
+- browser evidence upload: success。
+
+冻结边界复核：
+
+- M5 相对 M4 frozen methodology components：**0 changed**；
+- M5 相对 Outcome Engine components：**0 changed**。
+
+Phase 1 已实现并验收：
+
+- 全本地 universe Operator Queue；
+- workflow buckets；
+- next key price / role；
+- first_watch / next_watch / upgrade_blocker；
+- execution/context cautions；
+- primary identity only；
+- per-instrument error isolation；
+- Queue -> 单票工作台联动；
+- API 0.4.0；
+- M5 browser CI gate。
+
+Phase 1 仍不包含：
+
+- 胜率；
+- alpha；
+- outcome-based ranking；
+- 买卖评分；
+- trade instruction；
+- 对 M4 evidence store 的写入。
+
+### M5 下一步
+
+Phase 2 转向 **Operator Delta / 今日变化**：
+
+- 新出现候选；
+- 候选消失；
+- action_state 变化；
+- lifecycle_state 变化；
+- next-key 变化；
+- context caution 变化。
+
+该变化层属于 product observation，不能冒充 M4 authoritative prospective evidence。
+
