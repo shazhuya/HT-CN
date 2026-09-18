@@ -416,3 +416,44 @@ M4 的 lifecycle journal 只记录 candidate 行，因此不能单独证明某�
 - committed-transaction backfill rejection；
 - transaction filename / row transaction-id tamper rejection；
 - frozen baseline + committed captures coexistence。
+
+
+## D-027 — 确认全天停牌保留 lifecycle continuity，但不是 traded observation
+
+**状态：Frozen M4 suspension-continuity contract**
+
+A 股全天停牌日通常没有新的日 K 线。M4 不允许因此把已有 harmonic candidate 误记为 `scanner_disappeared`，也不允许把停牌前最后一根 K 线伪装成停牌日价格。
+
+正式决定：
+
+1. 只有 `security_daily_event` 对目标交易日存在**正面事件记录**且 `trading_status='suspended'` 时，才允许 stale daily bar 作为“确认全天停牌”豁免；
+2. 当前 AKShare event feed 是 positive-evidence-only，记录本身足以证明该证券发生全天停牌；不要求 `resolution_complete=true`；
+3. `intraday_suspended` 不属于全天停牌豁免，仍要求目标交易日实际 bar；
+4. 无 event row 不等于正常交易；stale + 无 confirmed full-day suspension 继续 hard fail；
+5. confirmed suspended event 与目标交易日真实 bar 同时存在属于 evidence conflict，hard fail；
+6. 全天停牌 carry-forward：
+   - candidate 仍为 scanner present；
+   - capture `as_of_trade_date` 记目标交易日；
+   - `underlying_last_trade_date` 保留最后真实成交日；
+   - `market_observation_status='confirmed_full_day_suspended'`；
+   - execution gate 强制 `blocked_suspended`；
+   - 当日 OHLC/volume 必须为 null；
+   - lifecycle / Source Raw PRZ 只做无新价格情况下的连续性延续，不被 A 股规则层修改；
+7. confirmed suspension carry-forward 不是 traded observation；
+8. candidate 若首次在 suspended carry-forward snapshot 中出现，不允许在该日首次进入 prospective outcome cohort；
+9. 已经在此前 traded snapshot 正式 outcome-enrolled 的 candidate，停牌日继续保留 cohort membership；
+10. prospective observation 单独统计 suspended snapshot count，不把它与 scanner absence 或可交易观察混为一谈。
+
+原因：
+
+将合法全天停牌误判为 scanner disappearance 会破坏 prospective identity；将旧 bar 复制成停牌日 bar 则会制造不存在的价格路径。D-027 同时避免这两类污染。
+
+验证方式：
+
+- full-day suspended vs intraday event query regression；
+- stale bar + confirmed suspension carry-forward regression；
+- fake OHLC prohibition；
+- execution blocked_suspended regression；
+- first-seen suspended outcome-enrollment rejection；
+- already-enrolled candidate continuity across suspension；
+- suspension event + current-day bar conflict fail closed。

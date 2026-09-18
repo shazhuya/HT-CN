@@ -537,3 +537,34 @@ Actual uploaded T0 recomputed:
 
 Testing limitation:
 assistant container lacks private-repo credentials; full repo pytest was not executed locally and is not claimed. GitHub hosted run #914 remains steps=null/logs=null runner-allocation anomaly.
+
+
+## M4 Phase 2.7 / closed-day and suspension correctness
+
+Static audit found and fixed multiple prospective-integrity edge cases:
+
+- provider-confirmed closed day is now required before authoritative capture;
+- local trade calendar must match provider target;
+- partial-universe max_symbols runs are diagnostic-only;
+- evidence-health returns structured blockers instead of crashing on corrupted authoritative evidence;
+- empty frozen baseline marker is distinct from missing baseline;
+- immutable transaction and legacy baseline validation are shared/fail-closed;
+- D-027 adds confirmed full-day suspension carry-forward without fake bars.
+
+Suspension semantics:
+- only positive `trading_status=suspended` evidence qualifies;
+- `intraday_suspended` does not;
+- current-day bar + suspended event conflicts and fails;
+- confirmed suspended stale analysis is carried to capture date with blocked execution and null OHLC;
+- candidate remains present;
+- first-seen suspended candidate cannot outcome-enroll;
+- already enrolled candidate remains in cohort.
+
+Key commits in this audit chain:
+- `c78c1e8cf8c315ad4fbc69be21cf740db95b28d1`: provider-backed latest closed day;
+- `5f9cbd35d8e96cb6785af5ac079a73cf0ea7fba2`: structured evidence-health blockers;
+- `ce68a0a79c5da24d2ab87693f2e32ce6a8f78164`: shared immutable-evidence validation;
+- `2a58676d8ac15df041655b8a41b5ddf42749e411`: suspension-aware journal schema;
+- `b4349d9853ae25f5509c7149803c9168538e25ef`: suspension-aware capture pipeline;
+- `07400d89d93a2c5385f6e88bddbc40d19cf9d152`: suspension facts in prospective observations;
+- `690cf559446bc39dd5d0151e25da524d586483bf`: observation/report suspension regressions.

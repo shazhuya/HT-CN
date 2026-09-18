@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `19f2b5b1e692627dc23d36a22d197d28171aeb59`
-context_checkpoint_title: `M4 Phase 2.6: atomic evidence + self-healing compatibility mirrors + T0 closeout`
+context_checkpoint: `690cf559446bc39dd5d0151e25da524d586483bf`
+context_checkpoint_title: `M4 Phase 2.7: provider-clock freshness + confirmed suspension continuity`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -705,6 +705,42 @@ Testing evidence boundary:
 - full private-repo pytest NOT claimed，because assistant container has no GitHub private-repo credential；
 - GitHub-hosted CI run #914 still has deterministic-tests steps=null / logs=null，so runner did not execute tests。
 
+## M4 Phase 2.7 — Closed-Day / Suspension Correctness
+
+Prospective capture 时间与无交易日语义已进一步 fail-closed。
+
+### Provider-backed closed day
+
+M4 authoritative capture 复用 M3 `latest_closed_trade_clock`：
+
+- AkShare → Sina → BaoStock failover；
+- provider-confirmed latest closed trade day 必须等于本地 M1 trade_calendar latest；
+- 每只正常交易标的 analysis last_trade_date 必须等于该日期；
+- provider clock unavailable 不猜日期，authoritative capture fail closed；
+- `--max-symbols` 只允许 diagnostic，不产生 transaction/journal/manifest。
+
+### Confirmed full-day suspension — D-027
+
+只有本地 `security_daily_event` 中目标日明确存在 `trading_status='suspended'` 的 positive evidence 才允许 stale-bar carry-forward。
+
+carry-forward row：
+
+- candidate = present；
+- as_of = capture date；
+- underlying_last_trade_date = 最后真实 K 线日期；
+- market_observation_status = confirmed_full_day_suspended；
+- execution gate = blocked_suspended；
+- OHLC/volume = null；
+- event source/reason 显式保存。
+
+固定排除：
+
+- intraday_suspended 不豁免当日 bar；
+- unknown stale 不豁免；
+- suspended event + current-day bar = evidence conflict；
+- suspended first observation 不允许首次 prospective outcome enrollment；
+- 已入组 candidate 在停牌日继续保留 cohort。
+
 ## 本机调用规则 — D-023
 
 用户电脑不是 HT-CN 常规测试环境。
@@ -716,23 +752,17 @@ Testing evidence boundary:
 
 ## 下一步唯一主任务
 
-**M4 Phase 2.7 — Evidence-chain health report + PR #13 pre-closeout gates。**
+**M4 Phase 2.7 — pre-closeout static/integration audit。**
 
-仍不要求用户本机执行常规测试。
+继续由 assistant 完成，不调用用户电脑。
 
-assistant 下一批：
+剩余收口：
 
-1. 增加 transaction-store health report：
-   - frozen baseline identity；
-   - committed capture count / date range；
-   - monotonic chronology；
-   - transaction integrity；
-   - mirror repair-needed；
-   - authoritative evidence source；
-2. 把 transition / observation report 的 evidence-source provenance 显式统一；
-3. 对 Phase 2.5/2.6 做 source-level syntax/static review；
-4. PR #13 保持 Draft，直到 Phase 2 evidence chain 达到可关闭状态；
-5. hosted CI runner 若恢复，只运行一次完整 gate，不反复 rerun。
+1. 审计 suspension carry-forward 与 transaction/transition normalization 的一致性；
+2. 审计 evidence-health / mirror-recovery / report provenance 的所有 import 与 fail-closed 路径；
+3. 检查 M4 新 schema 对 legacy T0 的 backward compatibility；
+4. 更新 Phase 2 closeout checklist；
+5. hosted CI 若 runner 恢复只运行一次；当前 steps=null/logs=null 仍不算测试执行。
 
 
 ## 固定 Source / Product 边界
