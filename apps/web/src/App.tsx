@@ -197,8 +197,8 @@ export default function App() {
       <section className="hero compact">
         <div>
           <p className="eyebrow">HT-CN LOCAL · M5 OPERATOR WORKBENCH</p>
-          <h1>A 股谐波实战工作台</h1>
-          <p className="subtitle">Source lifecycle · 今日观察队列 · QFQ 连续价格 · Carney 几何与 PRZ 审计</p>
+          <h1>A 股谐波研究与辅助决策系统</h1>
+          <p className="subtitle">Carney 几何识别 · QFQ 连续价格 · 多尺度 Pivot · PRZ 审计</p>
         </div>
         <div className="health-pill" data-ok={Boolean(health)}>
           <span className="health-dot" />
