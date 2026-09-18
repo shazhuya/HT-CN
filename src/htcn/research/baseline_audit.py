@@ -255,6 +255,32 @@ def audit_t0_baseline(
             "warning",
             f"{alternate_bat_count} Alternate Bat row(s) are retained only as fail-closed observability evidence.",
         )
+    terminal_over_20d = sum(
+        count
+        for bucket, count in terminal_age_counts.items()
+        if bucket in {"21_60d", "61_180d", "over_180d"}
+    )
+    if terminal_age_days:
+        finding(
+            "mature_baseline_inventory",
+            "warning",
+            (
+                f"{len(terminal_age_days)} T0 row(s) already have Source Terminal history; "
+                f"{terminal_over_20d} are older than 20 calendar days and the oldest is "
+                f"{max(terminal_age_days)} days. They are baseline inventory, not from-formation prospective evidence."
+            ),
+        )
+
+    source_gap_count = (
+        lifecycle_counts.get("source_clock_unavailable", 0)
+        + lifecycle_counts.get("source_prz_unresolved", 0)
+    )
+    if source_gap_count:
+        finding(
+            "source_observability_gap",
+            "warning",
+            f"{source_gap_count} row(s) lack a usable Source clock or resolved Source PRZ and remain evidence-insufficient.",
+        )
 
     snapshot_checks: dict[str, Any] = {"provided": snapshot is not None}
     if snapshot is not None:
@@ -275,6 +301,50 @@ def audit_t0_baseline(
                 "snapshot_instrument_failure",
                 "blocker",
                 "Snapshot contains failed instrument analyses.",
+            )
+        instrument_count = int(snapshot.get("instrument_count") or 0)
+        successful_count = int(snapshot.get("successful_instruments") or 0)
+        if instrument_count <= 0 or successful_count != instrument_count:
+            finding(
+                "snapshot_instrument_coverage_mismatch",
+                "blocker",
+                f"Snapshot successful/instrument count mismatch: {successful_count}/{instrument_count}.",
+            )
+        if dict(snapshot.get("source_lifecycle_states") or {}) != dict(sorted(lifecycle_counts.items())):
+            finding(
+                "snapshot_lifecycle_count_mismatch",
+                "blocker",
+                "Snapshot source_lifecycle_states do not match journal counts.",
+            )
+        if dict(snapshot.get("action_states") or {}) != dict(sorted(action_counts.items())):
+            finding(
+                "snapshot_action_count_mismatch",
+                "blocker",
+                "Snapshot action_states do not match journal counts.",
+            )
+        if dict(snapshot.get("schemas") or {}) != dict(sorted(schema_counts.items())):
+            finding(
+                "snapshot_schema_count_mismatch",
+                "blocker",
+                "Snapshot schemas do not match journal counts.",
+            )
+        if snapshot.get("worktree_clean") is not True:
+            finding(
+                "snapshot_dirty_worktree",
+                "blocker",
+                "Snapshot was not captured from a clean worktree.",
+            )
+        if snapshot.get("alpha_inference_allowed") is not False:
+            finding(
+                "snapshot_alpha_boundary_mismatch",
+                "blocker",
+                "Snapshot unexpectedly permits alpha inference.",
+            )
+        if snapshot.get("is_trade_instruction") is not False:
+            finding(
+                "snapshot_trade_instruction_boundary_mismatch",
+                "blocker",
+                "Snapshot unexpectedly declares trade-instruction semantics.",
             )
         snapshot_head = snapshot.get("code_head")
         if heads and snapshot_head != heads[0]:
@@ -302,6 +372,11 @@ def audit_t0_baseline(
         "journal_row_count": len(materialized),
         "unique_candidate_count": len(set(keys)),
         "candidate_bearing_instrument_count": len(instrument_counts),
+        "zero_candidate_instrument_count": (
+            max(0, int(snapshot.get("instrument_count") or 0) - len(instrument_counts))
+            if snapshot is not None
+            else None
+        ),
         "pattern_counts": dict(sorted(pattern_counts.items())),
         "schema_counts": dict(sorted(schema_counts.items())),
         "direction_counts": dict(sorted(direction_counts.items())),
