@@ -1091,3 +1091,31 @@ AkShare 对这两只仍出现 RemoteDisconnected。
 
 不同 A-share 历史供应商对早期周六交易和个别历史 session 的覆盖不完全一致。只要缺口处于同一稳定 factor regime，就可以在 acquisition 层做可审计、受限的 calendar-gap repair；但不能跨潜在除权 regime 自动补值。
 
+## D-041 — Early-A-share historical Saturday QFQ gaps require raw pre-close continuity before repair
+
+**状态：Frozen M4 acquisition compatibility rule**
+
+Third private M4 bundle advanced formal QFQ readiness to 54/55. The only remaining blocked instrument was `SZSE.000001`, with provider-calendar gaps on 1991 historical Saturday trading sessions.
+
+Formal rule:
+
+1. Generic internal factor-gap repair remains capped at <=0.5% bracketing factor drift.
+2. A separate historical-Saturday path may be used only when every missing raw session:
+   - is Saturday;
+   - year <= 1992;
+   - is bracketed by real factor observations.
+3. Raw `pre_close` continuity is mandatory:
+   - each missing session's pre_close must match the previous raw session close within 1%;
+   - the next observed raw session's pre_close must match the last missing session close within 1%.
+4. This raw-price continuity is independent evidence that the gap does not cross a corporate-action regime boundary.
+5. Even then, bracketing factor drift must remain <=5%.
+6. If any continuity check is missing or fails, repair is refused.
+7. Repair remains linear interpolation bounded by real bracketing factors and is audit-labelled `historical_saturday_raw_preclose_continuity`.
+8. Leading gaps and trailing freshness are unaffected; trailing freshness remains owned by `qfq_carry_forward`.
+9. This is acquisition/data-provider compatibility only; harmonic methodology and Outcome Engine remain unchanged.
+10. GitHub Actions run #1459 passed after the rule and fail-closed tests were added.
+11. Freeze audit at code head `af1124dcd32bd1d719877e7d88ff74d26c6deebf`:
+    - capture methodology drift = 0/37;
+    - Outcome Engine drift = 0/4.
+12. No post-T0 authoritative future capture existed when D-041 was frozen.
+
