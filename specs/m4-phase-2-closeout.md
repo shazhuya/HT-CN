@@ -92,6 +92,9 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 - [x] M1 update log is included in the transport bundle for diagnosis.
 - [x] Final exit code is non-zero if any M1 / capture / health / report / bundle gate fails.
 - [x] Transport bundle contains available frozen baseline, committed transactions and derived reports.
+- [x] Transport ZIP is verified before atomic publication and verified again after publish.
+- [x] Manifest member size/SHA, duplicate/extra member and unsafe-path checks fail closed.
+- [x] Evidence-health-blocked bundles remain transport-valid diagnostics and never masquerade as evidence ready.
 - [x] Bundle carries SHA-256 file records and current methodology provenance.
 - [x] Bundle is explicitly non-authoritative and never modifies committed evidence.
 - [x] Corrupt authoritative files are preserved in the bundle for diagnosis rather than silently repaired.
