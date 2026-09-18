@@ -154,3 +154,23 @@ remain unchanged.
 
 No return, MFE, MAE, win rate, alpha, expected return or buy/sell ranking is introduced by
 Phase 2.11.
+
+
+## Current supersession — Phase 2.12
+
+Phase 2.11 froze price-coordinate provenance under transaction schema v4 / methodology v3.
+
+Before the first real T1 capture, the outcome-sufficiency audit found that an enrolled candidate
+could disappear from the scanner before Source Terminal and leave future OHLC without the
+original forming signal/reaction-anchor inputs needed by the existing Source execution observer.
+
+Phase 2.12 therefore advances the current T1 protocol to:
+
+- committed capture schema v5;
+- prospective observation schema v4;
+- methodology contract v4;
+- 37 methodology component paths;
+- exact methodology freeze commit `c774c54928c33361952bf1a612a8555633449625`.
+
+All D-034 price-basis rules remain active. Phase 2.12 adds frozen Source-clock reconstruction
+seed; it does not remove or weaken price-basis provenance.
