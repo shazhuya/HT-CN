@@ -516,7 +516,7 @@ def main() -> int:
     )
     print(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
     print(f"\n[M3] combined context report: {output}")
-    return 0 if overall == "all_steps_completed" else 2
+    return 0 if overall in {"all_steps_completed", "degraded"} else 2
 
 
 if __name__ == "__main__":
