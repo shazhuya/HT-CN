@@ -10,6 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from htcn.app.harmonic_service import DatasetNotFoundError
 from htcn.app.operator_delta import build_operator_delta
+from htcn.app.operator_input_identity import (
+    build_operator_cache_input_identity,
+)
 from htcn.app.operator_queue import (
     build_operator_queue,
     discover_local_instruments,
@@ -100,11 +103,16 @@ def operator_queue(
     expected_trade_date = latest_local_trade_date(
         DATA_ROOT / "catalog.duckdb"
     )
+    input_identity = build_operator_cache_input_identity(
+        data_root=DATA_ROOT,
+        project_root=ROOT,
+    )
     payload = build_or_load_operator_snapshot(
         service,
         instrument_ids,
         cache_root=OPERATOR_CACHE_ROOT,
         expected_trade_date=expected_trade_date,
+        input_identity=input_identity,
         bars=bars,
         scales=(3, 5, 8, 13),
         force_refresh=refresh,
