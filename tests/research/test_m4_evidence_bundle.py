@@ -38,6 +38,7 @@ def test_transport_bundle_contains_manifest_and_available_reports(tmp_path) -> N
     assert output.is_file()
     assert payload["alpha_inference_allowed"] is False
     assert payload["authoritative_evidence_modified"] is False
+    assert payload["transport_verification"]["status"] == "valid"
 
     with zipfile.ZipFile(output) as archive:
         names = set(archive.namelist())
@@ -71,6 +72,7 @@ def test_transport_bundle_preserves_corrupt_capture_for_diagnosis(tmp_path) -> N
 
     assert payload["status"] == "evidence_health_blocked"
     assert payload["committed_capture_read_error"] is not None
+    assert payload["transport_verification"]["status"] == "valid"
     with zipfile.ZipFile(output) as archive:
         assert (
             "authoritative/captures/2026-09-18__broken.json"
