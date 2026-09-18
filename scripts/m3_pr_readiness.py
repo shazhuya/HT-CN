@@ -161,6 +161,26 @@ def evaluate(
                 ),
             )
 
+        expected_trade_date = (
+            None if context is None else context.get("expected_trade_date")
+        )
+        if expected_trade_date:
+            stale_samples = sorted(
+                str(item.get("instrument_id"))
+                for item in samples
+                if item.get("logical_last_trade_date") != expected_trade_date
+            )
+            if stale_samples:
+                _finding(
+                    findings,
+                    "real_m1_metadata_trade_date_mismatch",
+                    "blocker",
+                    (
+                        f"Metadata smoke samples are not all aligned to expected trade date "
+                        f"{expected_trade_date}: {stale_samples}."
+                    ),
+                )
+
     if product_current and product is not None:
         if product.get("status") != "pass":
             _finding(
@@ -186,7 +206,66 @@ def evaluate(
                 ),
             )
 
+        expected_trade_date = (
+            None if context is None else context.get("expected_trade_date")
+        )
+        if expected_trade_date:
+            product_samples = [
+                item for item in (product.get("samples") or [])
+                if item.get("analysis_status") == "success"
+            ]
+            stale_product_samples = sorted(
+                str(item.get("instrument_id"))
+                for item in product_samples
+                if item.get("last_trade_date") != expected_trade_date
+            )
+            if stale_product_samples:
+                _finding(
+                    findings,
+                    "real_m1_product_trade_date_mismatch",
+                    "blocker",
+                    (
+                        f"Product smoke analyses are not all aligned to expected trade date "
+                        f"{expected_trade_date}: {stale_product_samples}."
+                    ),
+                )
+
     if context_current and context is not None:
+        expected_trade_date = context.get("expected_trade_date")
+        target_trade_date = context.get("target_trade_date")
+        logical_market_latest = context.get("logical_market_latest")
+        local_calendar_latest = context.get("local_trade_calendar_latest")
+        if not expected_trade_date:
+            _finding(
+                findings, "context_expected_trade_date_missing", "blocker",
+                "Context report does not expose expected_trade_date.",
+            )
+        else:
+            if target_trade_date != expected_trade_date:
+                _finding(
+                    findings, "context_target_trade_date_mismatch", "blocker",
+                    (
+                        f"Context target trade date {target_trade_date!r} does not match "
+                        f"provider-confirmed latest closed day {expected_trade_date!r}."
+                    ),
+                )
+            if local_calendar_latest != expected_trade_date:
+                _finding(
+                    findings, "local_calendar_trade_date_mismatch", "blocker",
+                    (
+                        f"Local trade calendar latest {local_calendar_latest!r} does not match "
+                        f"expected {expected_trade_date!r}."
+                    ),
+                )
+            if logical_market_latest != expected_trade_date:
+                _finding(
+                    findings, "logical_market_trade_date_mismatch", "blocker",
+                    (
+                        f"Logical base+delta market latest {logical_market_latest!r} does not "
+                        f"match expected {expected_trade_date!r}."
+                    ),
+                )
+
         overall = str(context.get("overall") or "unknown")
         if overall == "partial_failure":
             _finding(

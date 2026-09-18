@@ -129,6 +129,8 @@ def run(*, data_root: Path, max_samples: int = 8) -> dict[str, Any]:
             )
             audit = audit_product_payload(analysis)
             payload["analysis_status"] = "success"
+            payload["first_trade_date"] = analysis.get("first_trade_date")
+            payload["last_trade_date"] = analysis.get("last_trade_date")
             payload["pattern_count"] = audit.pattern_count
             payload["contract_passed"] = audit.passed
             payload["issue_count"] = audit.issue_count

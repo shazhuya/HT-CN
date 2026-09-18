@@ -17,12 +17,18 @@ if not exist "data\market\catalog.duckdb" (
 
 echo ============================================================
 echo HT-CN M3 最终收口
-echo 1/3 确定性工作台验收
-echo 2/3 四层上下文真实同步
-echo 3/3 当前 HEAD 合并就绪判定
+echo 1/4 M1 智能日更（base + daily_delta）
+echo 2/4 确定性工作台验收
+echo 3/4 四层上下文真实同步
+echo 4/4 当前 HEAD 合并就绪判定
 echo ============================================================
 echo.
 
+.venv\Scripts\python.exe scripts\m1_daily_update.py
+set M1_EXIT=%ERRORLEVEL%
+
+echo.
+echo [HT-CN M3 CLOSEOUT] 运行严格工作台验收...
 .venv\Scripts\python.exe scripts\qa_local.py
 set QA_EXIT=%ERRORLEVEL%
 
@@ -38,7 +44,7 @@ set READY_EXIT=%ERRORLEVEL%
 
 echo.
 echo ============================================================
-echo QA exit=%QA_EXIT% / Context exit=%CONTEXT_EXIT% / Ready exit=%READY_EXIT%
+echo M1 exit=%M1_EXIT% / QA exit=%QA_EXIT% / Context exit=%CONTEXT_EXIT% / Ready exit=%READY_EXIT%
 echo 工作台：artifacts\reports\m3-workbench-acceptance.json
 echo 上下文：artifacts\reports\m3-context-sync-summary.json
 echo 就绪报告：artifacts\reports\m3-pr-readiness.json
