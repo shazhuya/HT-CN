@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `161a5f3cd21b0bc423a68fa3e9f47c7fd8293f82`
-context_checkpoint_title: `M4 Phase 2.8: methodology provenance gate frozen`
+context_checkpoint: `f052526ec7ea701051d28b012a55050e9bed5006`
+context_checkpoint_title: `M4 Phase 2 evidence-integrity closeout frozen`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -761,6 +761,30 @@ D-028 已冻结：未来 authoritative prospective evidence 必须绑定确定�
 
 当前 GitHub-hosted CI 状态仍是 runner-allocation anomaly：最新 push / PR deterministic-tests `steps=null`，没有真实执行 pytest，不能计为代码测试失败或通过。
 
+## M4 Phase 2 Closeout
+
+Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`。
+
+当前定性：
+
+- authoritative evidence 已完成 atomic transaction / frozen baseline / no-backfill / tamper guard；
+- transition / observation chronology 已完成；
+- confirmed full-day suspension continuity 已完成；
+- D-024 strict prospective outcome enrollment 已完成；
+- D-028 methodology provenance schema v2 已完成；
+- methodology component tree 静态审计：32 / 32 路径存在；
+- production capture 与已修改 research fixtures 均已传入 methodology identity；
+- schema-v1 只保留 migration readability，不能静默续接 schema-v2；
+- Phase 2 现在是 **structurally ready for first fingerprinted future capture**；
+- 该 ready 只指证据架构，不是 alpha / 胜率 / 盈利验证。
+
+仍开放的外部 gate：
+
+1. GitHub-hosted deterministic job 必须出现真实 steps/logs；当前 runner 仍在 steps=null 阶段终止；
+2. 用户私有 M1 数据产生首个 post-T0 fingerprinted future capture；
+3. 真正出现至少一个 strict prospective_outcome_eligible candidate；
+4. 在任何 return / MFE / MAE / win-rate / alpha 统计前，另行冻结 future outcome protocol。
+
 ## 本机调用规则 — D-023
 
 用户电脑不是 HT-CN 常规测试环境。
@@ -772,18 +796,16 @@ D-028 已冻结：未来 authoritative prospective evidence 必须绑定确定�
 
 ## 下一步唯一主任务
 
-**M4 Phase 2.8 closeout + first fingerprinted future capture readiness。**
+**生成并审计首个 post-T0 fingerprinted future capture（T1）。**
 
-继续优先由 assistant 完成，不把用户电脑当常规测试机。
+Phase 2 assistant-side 结构收口已完成。下一次用户本机参与只用于 assistant 无法访问的私有 M1 数据：
 
-剩余收口：
-
-1. 完成 methodology-aware transaction / health / mirror / report 的静态交叉审计；
-2. 检查所有 `build_committed_capture` 调用都已传入 methodology identity；
-3. 检查 schema-v1 pre-fingerprint transaction 只保留 migration readability，不能追加新 evidence；
-4. 更新 Phase 2 closeout checklist / PR #13 状态；
-5. hosted CI 若 runner 恢复只认真实执行的 steps/logs；
-6. assistant-side 收口后，下一次用户本机调用只用于不可替代的真实 M1 future capture，生成首个 fingerprinted T1 transaction。
+1. 更新本地项目到当前 M4 分支；
+2. 在新的已收盘 A 股交易日运行一次 `运行M4真实A股生命周期快照.bat`；
+3. 不做重复 QA，不要求人工截图；
+4. 将生成的 authoritative capture / report 交给 assistant；
+5. assistant 随后完成 evidence-health、methodology fingerprint、transition、prospective enrollment、suspension 与 mirror 全部审计；
+6. 若尚无 strict outcome-eligible candidate，则继续积累事实快照，不提前定义收益阈值或做 alpha 推断。
 
 
 ## 固定 Source / Product 边界
