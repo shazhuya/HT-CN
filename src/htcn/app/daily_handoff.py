@@ -209,11 +209,21 @@ def _validate_product_binding(
     if not raw_cache_path:
         raise RuntimeError("m5_report_cache_path_missing")
     cache_root = (repo / "data" / "product" / "m5" / "operator_queue").resolve()
-    snapshot_path = _resolve_inside(
-        cache_root,
-        raw_cache_path,
-        label="m5_current_snapshot",
-    )
+    raw_snapshot_path = Path(raw_cache_path)
+    if raw_snapshot_path.is_absolute():
+        snapshot_path = _resolve_inside(
+            cache_root,
+            raw_snapshot_path,
+            label="m5_current_snapshot",
+        )
+    else:
+        snapshot_path = _resolve_inside(
+            repo,
+            raw_snapshot_path,
+            label="m5_current_snapshot",
+        )
+        if snapshot_path != cache_root and cache_root not in snapshot_path.parents:
+            raise RuntimeError("m5_current_snapshot_outside_cache_root")
     if snapshot_path.parent != cache_root:
         raise RuntimeError("m5_current_snapshot_not_cache_root_member")
     if snapshot_path.name != _canonical_snapshot_name(trade_date):
