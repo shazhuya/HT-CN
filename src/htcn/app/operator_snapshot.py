@@ -13,6 +13,7 @@ from typing import Any, Callable, Iterable
 import duckdb
 
 from .operator_input_identity import OperatorCacheInputIdentity
+from .operator_process_lock import OperatorCacheProcessLock
 from .operator_queue import (
     AnalysisService,
     AnalysisServiceFactory,
@@ -68,6 +69,22 @@ def _cache_filename(
     )
 
 
+def _process_lock_path(
+    *,
+    cache_root: Path,
+    expected_trade_date: str | None,
+    bars: int,
+    scales: tuple[int, ...],
+) -> Path:
+    slot_date = expected_trade_date or "unresolved"
+    slot_name = _cache_filename(
+        expected_trade_date=slot_date,
+        bars=bars,
+        scales=scales,
+    )
+    return cache_root / ".locks" / f"{slot_name}.lock"
+
+
 def _attach_cache_metadata(
     queue: dict[str, Any],
     *,
@@ -77,6 +94,8 @@ def _attach_cache_metadata(
     generated_at_utc: str | None,
     input_identity: OperatorCacheInputIdentity,
     input_identity_stable_during_build: bool | None = None,
+    cross_process_waited: bool = False,
+    cross_process_wait_seconds: float = 0.0,
 ) -> dict[str, Any]:
     payload = deepcopy(queue)
     as_of = payload.get("as_of_trade_date")
@@ -104,6 +123,11 @@ def _attach_cache_metadata(
         ),
         "single_flight_scope": "process_local_cache_identity",
         "coalesced_from_status": None,
+        "cross_process_coordination_scope": (
+            "filesystem_advisory_cache_slot_lock"
+        ),
+        "cross_process_waited": bool(cross_process_waited),
+        "cross_process_wait_seconds": float(cross_process_wait_seconds),
         "authoritative_evidence": False,
         "writes_m4_evidence": False,
     }
@@ -269,6 +293,7 @@ def build_or_load_operator_snapshot(
     max_workers: int = 1,
     service_factory: AnalysisServiceFactory | None = None,
     progress_callback: OperatorProgressCallback | None = None,
+    process_lock_timeout_seconds: float = 1800.0,
 ) -> dict[str, Any]:
     instruments = [str(value) for value in instrument_ids]
     universe_hash = operator_universe_hash(instruments)
@@ -281,6 +306,12 @@ def build_or_load_operator_snapshot(
             bars=bars,
             scales=scales,
         )
+    process_lock_path = _process_lock_path(
+        cache_root=cache_dir,
+        expected_trade_date=expected_trade_date,
+        bars=bars,
+        scales=scales,
+    )
 
     if not force_refresh:
         cached = _load_valid_cached_snapshot(
@@ -324,11 +355,18 @@ def build_or_load_operator_snapshot(
     if not owner:
         return _mark_coalesced_wait(future.result())
 
+    process_lock = OperatorCacheProcessLock(
+        process_lock_path,
+        timeout_seconds=float(process_lock_timeout_seconds),
+    )
+    process_lock_acquisition = None
     try:
-        # Re-check after becoming owner. Another process or a just-finished
-        # local request may have populated a valid cache between the fast-path
-        # check and single-flight ownership.
-        if not force_refresh:
+        process_lock_acquisition = process_lock.acquire()
+        # Re-check after becoming both process-local and filesystem-lock owner.
+        # A just-finished local request or another process may have populated a
+        # valid cache while this request was waiting. A contended force refresh
+        # is also allowed to reuse the refresh that completed ahead of it.
+        if not force_refresh or process_lock_acquisition.waited:
             cached = _load_valid_cached_snapshot(
                 cache_path=cache_path,
                 expected_trade_date=expected_trade_date,
@@ -341,12 +379,20 @@ def build_or_load_operator_snapshot(
                 queue, generated_at = cached
                 result = _attach_cache_metadata(
                     queue,
-                    status="hit_after_race",
+                    status=(
+                        "hit_after_process_wait"
+                        if process_lock_acquisition.waited
+                        else "hit_after_race"
+                    ),
                     expected_trade_date=expected_trade_date,
                     cache_path=cache_path,
                     generated_at_utc=generated_at,
                     input_identity=input_identity,
                     input_identity_stable_during_build=True,
+                    cross_process_waited=process_lock_acquisition.waited,
+                    cross_process_wait_seconds=(
+                        process_lock_acquisition.wait_seconds
+                    ),
                 )
                 future.set_result(deepcopy(result))
                 return result
@@ -431,6 +477,16 @@ def build_or_load_operator_snapshot(
             generated_at_utc=generated_at,
             input_identity=input_identity,
             input_identity_stable_during_build=input_identity_unchanged,
+            cross_process_waited=(
+                False
+                if process_lock_acquisition is None
+                else process_lock_acquisition.waited
+            ),
+            cross_process_wait_seconds=(
+                0.0
+                if process_lock_acquisition is None
+                else process_lock_acquisition.wait_seconds
+            ),
         )
         future.set_result(deepcopy(result))
         return result
@@ -438,6 +494,8 @@ def build_or_load_operator_snapshot(
         future.set_exception(exc)
         raise
     finally:
+        if process_lock_acquisition is not None:
+            process_lock.release()
         with _SINGLE_FLIGHT_GUARD:
             if _SINGLE_FLIGHT.get(flight_key) is future:
                 _SINGLE_FLIGHT.pop(flight_key, None)

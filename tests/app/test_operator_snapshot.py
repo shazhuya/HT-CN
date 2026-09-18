@@ -15,9 +15,11 @@ from htcn.app.operator_input_identity import (
 )
 from htcn.app.operator_snapshot import (
     OPERATOR_SNAPSHOT_CONTRACT_VERSION,
+    _process_lock_path,
     build_or_load_operator_snapshot,
     operator_universe_hash,
 )
+from htcn.app.operator_process_lock import ProcessLockAcquisition
 
 
 def _input_identity(
@@ -631,3 +633,137 @@ def test_operator_snapshot_different_input_identities_do_not_coalesce(
     assert first["product_cache"]["input_identity_fingerprint"] != (
         second["product_cache"]["input_identity_fingerprint"]
     )
+
+
+
+def test_operator_process_lock_path_is_cache_slot_scoped(tmp_path) -> None:
+    first = _process_lock_path(
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        bars=420,
+        scales=(3, 5, 8, 13),
+    )
+    second = _process_lock_path(
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        bars=420,
+        scales=(3, 5, 8, 13),
+    )
+    different_slot = _process_lock_path(
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        bars=600,
+        scales=(3, 5, 8, 13),
+    )
+
+    assert first == second
+    assert first != different_slot
+    assert first.parent.name == ".locks"
+
+
+def test_contended_force_refresh_reuses_cache_from_other_process(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    import htcn.app.operator_snapshot as snapshot
+
+    service = CountingService()
+    identity = _input_identity()
+    initial = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=identity,
+    )
+    assert initial["product_cache"]["status"] == "rebuilt"
+    assert service.calls == 1
+
+    class WaitedProcessLock:
+        def __init__(self, path, *, timeout_seconds):
+            self.path = path
+
+        def acquire(self):
+            return ProcessLockAcquisition(
+                waited=True,
+                wait_seconds=0.25,
+                lock_path=str(self.path),
+            )
+
+        def release(self):
+            return None
+
+    monkeypatch.setattr(
+        snapshot,
+        "OperatorCacheProcessLock",
+        WaitedProcessLock,
+    )
+
+    refreshed = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=identity,
+        force_refresh=True,
+    )
+
+    assert service.calls == 1
+    cache = refreshed["product_cache"]
+    assert cache["status"] == "hit_after_process_wait"
+    assert cache["cross_process_waited"] is True
+    assert cache["cross_process_wait_seconds"] == 0.25
+    assert cache["cross_process_coordination_scope"] == (
+        "filesystem_advisory_cache_slot_lock"
+    )
+
+
+def test_uncontended_force_refresh_still_rebuilds(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    import htcn.app.operator_snapshot as snapshot
+
+    service = CountingService()
+    identity = _input_identity()
+    build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=identity,
+    )
+    assert service.calls == 1
+
+    class ImmediateProcessLock:
+        def __init__(self, path, *, timeout_seconds):
+            self.path = path
+
+        def acquire(self):
+            return ProcessLockAcquisition(
+                waited=False,
+                wait_seconds=0.0,
+                lock_path=str(self.path),
+            )
+
+        def release(self):
+            return None
+
+    monkeypatch.setattr(
+        snapshot,
+        "OperatorCacheProcessLock",
+        ImmediateProcessLock,
+    )
+
+    refreshed = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=identity,
+        force_refresh=True,
+    )
+
+    assert service.calls == 2
+    assert refreshed["product_cache"]["status"] == "rebuilt_force"
+    assert refreshed["product_cache"]["cross_process_waited"] is False
