@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `0effcaffd033d5398ffa0e0b09ab67188a958e58`
-context_checkpoint_title: `M3 Phase 3.2: event ingestion, real execution UI wiring, core benchmark market context`
+context_checkpoint: `85b752ce9b3c5fd188a2d09943fd4aa24f618445`
+context_checkpoint_title: `M3 Phase 3.3: auditable industry context and hierarchical relative strength`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -154,6 +154,40 @@ Playwright source-overlay regression 已加入，但 GitHub-hosted runner 当前
 
 本地同步入口：`运行M3核心指数同步.bat`。指数数据未同步或源失败时，个股分析继续运行，market context 返回 `unavailable/partial`。
 
+
+## M3 Phase 3.3 — Industry / Relative-Strength Context
+
+已建立证券→行业→核心指数的分层证据链。
+
+行业映射：
+
+- 来源：AKShare / Eastmoney `stock_board_industry_name_em` + `stock_board_industry_cons_em`；
+- 全量刷新采用 **all-or-nothing 原子替换**；
+- 任一行业成分抓取失败时，旧完整映射保留；
+- 同一来源一只证券出现多个行业时返回 `membership_ambiguous`，禁止自动挑选。
+
+行业强弱不是直接使用外部行业指数，而是基于本地 M1 成分股重算：
+
+- 1 / 5 / 20 交易日成分股复合收益；
+- 等权均值 + 中位数；
+- MA20 上方占比；
+- 当日上涨 / 下跌广度；
+- 成分股 20 日平均量比；
+- 个股相对行业中位数的 5 / 20 日超额强弱。
+
+兼容性：
+
+- `pct_change` 存在时优先按本地日涨跌幅复利；
+- 旧库/异构数据缺少 `pct_change` 时退回本地 close-to-close；
+- 停牌交易日按价格不变处理；
+- 普通分析读路径不得创建 DuckDB 表或 benchmark 目录。
+
+工作台已挂载 **行业环境与分层相对强弱** card；浏览器门禁 `sector-context.spec.ts` 已加入 CI 命令。
+
+同步入口：`运行M3行业环境同步.bat`。默认行业映射七天内复用缓存，只重算本地行业快照，避免每天大量联网请求。
+
+固定边界：行业层 `owns_lifecycle=false`，`mutates_harmonic_identity=false`，`mutates_source_raw_prz=false`。
+
 ## 当前 CI 基础设施异常
 
 M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异常：
@@ -178,15 +212,15 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 3.3 — Sector / Relative-Strength Context。**
+**M3 Phase 3.4 — Concept / Theme Context + Context Hierarchy Closeout。**
 
-执行顺序：
+优先级：
 
-1. 建立证券到行业/概念的可审计映射，不用黑箱标签替代原始来源；
-2. 优先接行业/板块相对强弱与量价环境，不把板块强弱用于“救活”失败谐波；
-3. 建立个股 vs. 行业 vs. 双创/沪深300的分层相对强弱；
-4. 保持市场/行业 context 只做 evidence，不拥有 lifecycle；
-5. GitHub-hosted runner 恢复后一次性跑 Python/Web/Playwright 全门禁，不反复 rerun 空 runner。
+1. 概念板块作为多对多标签处理，不把多概念股票强行压成“唯一概念”；
+2. 只对可审计、可本地重算的概念建立 strength/breadth evidence；
+3. 形成 `individual -> industry -> concept/theme -> core market` 的分层视图，但禁止生成黑箱综合分；
+4. 增加 context freshness / coverage 元数据，明确“旧、缺、冲突”而不是静默沿用；
+5. runner 恢复后跑 Python/Web/Playwright 全门禁，并在真实 M1 catalog 上执行三套同步 smoke。
 
 
 ## 固定 Source / Product 边界

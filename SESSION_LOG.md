@@ -214,3 +214,16 @@
 - Phase 3.2 first batch committed at `0effcaffd033d5398ffa0e0b09ab67188a958e58`: local core benchmark store/sync, market-context backend payload, Workbench card and browser regression for STAR50/ChiNext/CSI300/SSE Composite.
 - Market context remains evidence-only: no composite score, no identity/Source-PRZ mutation, no lifecycle ownership.
 - GitHub-hosted CI still fails before steps/logs; development continues without repeated reruns.
+
+
+## M3 Phase 3.3 / 2026-09-18
+
+- `686e7ec7af089f3553f6094e27d20cfc4a343aa0`: industry schema, atomic membership refresh, local constituent aggregation, sync script and Windows entrypoint.
+- `2c27f45a00c42dcf67da48a0d7f5326356b640b1`: AKShare industry provider normalization and API `sector_context` integration.
+- `4fab82c9012dcf19a5c719dbe37d65a19d90b64b`: Workbench industry card.
+- `e5ede700ad63774c6c75f5e446cb8b77b7e648b5`: provider/context/browser regression gates and Phase-3.3 spec.
+- `8fafdbeff59b818b63c2db83bae3a86e86641eff`: sector browser regression added to CI command.
+- `a03d31a12d6f30d4aac1dd4787d27a63cf5afd24`: optional `pct_change` hardening with close-to-close fallback.
+- `85b752ce9b3c5fd188a2d09943fd4aa24f618445`: analysis read paths kept side-effect free; sector tables/benchmark directories are no longer created by ordinary reads.
+- Industry strength/breadth/volume is recomputed from local M1 constituent data; Eastmoney supplies membership only.
+- Multi-industry ambiguity is fail-closed; industry context cannot own lifecycle or mutate identity / Source Raw PRZ.
