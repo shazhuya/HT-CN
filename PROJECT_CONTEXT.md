@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `d28215bbae682169a8ac47ddf48399bfdf50d05a`
-context_checkpoint_title: `M3 Phase 4.9: Playwright acceptance drift repair after full real-M1 gates passed`
+context_checkpoint: `4922cca8c9dea41551d3cbeeb8e722eafbf2589f`
+context_checkpoint_title: `M4 Phase 1: prospective real-A-share lifecycle journal baseline`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -11,11 +11,65 @@ repository: `shazhuya/HT-CN`
 
 ## 当前阶段
 
-正式 `main` 已冻结 **M2.31 Source Fidelity / RSI BAMM Source Terminal Price Bar closeout**。当前开发分支为 `m3/source-clock-lifecycle-migration`，Draft PR #12 正在推进 M3 产品迁移。
+正式 `main` 已合入 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration**。
 
-M3 当前原则：
+- M3 merge commit：`edec5e21fb9e873daf8fb77fceaa0d89dbbd5b25`
+- M3 PR：#12，已于 2026-09-18 合并
+- 最终本机验收：current-head READY（known warnings only），hard blocker = 0
+- 当前开发分支：`m4/real-a-share-validation-workflow`
+
+M4 当前原则：
+
+**先建立从真实当前交易日开始的 prospective、append-only、no-backfill 生命周期证据，再讨论统计规律、机会排序或执行优先级。**
+
+M3 的 source-clock 规则继续作为不可回退基线：
 
 **live/current state 必须由可观察的 Source execution clock 驱动；historical D/C / reaction audit 只保留诊断兼容。**
+
+## 正式 main 基线 — M3
+
+M3 已正式合入 `main`，冻结以下产品基线：
+
+- canonical Source lifecycle；
+- Source-first chart overlay；
+- A 股 execution context；
+- 科创50 / 创业板指 / 沪深300 / 上证指数 market context；
+- 行业 / 概念分层相对强弱；
+- context integrity；
+- Decision Narrative；
+- execution feasibility gate；
+- product payload contract；
+- real-M1 metadata/product smoke；
+- local API / Workbench / Playwright 正式验收；
+- merge-readiness anti-false-green chain。
+
+M3 最终 READY 只代表代码与真实 M1 验收满足主线合并条件，不代表 alpha / 胜率证明。
+
+固定边界继续保持：
+
+- 5-0 production quarantine；
+- Alternate Bat fail-closed；
+- BSE deferred；
+- daily-event positive-evidence-only 仍需显式标示。
+
+## M4 Phase 1 — Prospective Lifecycle Journal
+
+M4 第一阶段不做历史回填式“验证”，而是从当前真实已收盘交易日起建立 append-only 日志。
+
+已完成：
+
+- 稳定 candidate key：使用 pattern anchor 的 **trade_date**，不使用 rolling-window bar index；
+- XABCD key 使用 X/A/B/C；
+- standalone AB=CD 使用 A/B/C；
+- Shark 0XABC 使用 0/X/A/B，不发明 C/D；
+- 5-0 不进入 M4 production validation journal；
+- journal entry 保留 source lifecycle、action state、next key price/role、execution gate、Source Raw PRZ 与 context integrity；
+- 同 code_head / as-of / candidate key 重复运行保持幂等；
+- 默认禁止 incoming as-of 早于既有 journal max date，历史 backfill fail closed；
+- 一键入口：`运行M4真实A股生命周期快照.bat`；
+- 全体 initialized listed SSE/SZSE 必须对齐同一 closed trade date；任一分析失败则本轮不追加 journal。
+
+当前 M4 证据仍是 observability / lifecycle evolution evidence，`alpha_inference_allowed=false`。
 
 ## Source Fidelity before M3 expansion
 
@@ -447,30 +501,16 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 4.9 — 用户本机第六次最终收口。**
+**M4 Phase 1 — 生成第一份真实 prospective 生命周期快照并建立 transition baseline。**
 
-第五次真实收口已经证明：
+执行顺序：
 
-- Python regression 全绿；
-- Web build 全绿；
-- strict real-M1 metadata 全绿；
-- real-M1 product contract 全绿；
-- local API + Workbench 已启动；
-- 唯一 hard blocker 是 Playwright，3 failed / 15 passed。
-
-三条失败均为验收断言漂移，不是产品逻辑失败：
-
-1. `execution-context.spec.ts` 仍断言旧 LifecycleCompass 文案；现已改为 Source Clock 证据条 + `waiting_terminal`；
-2. `live.spec.ts` 仍断言 API 0.2.0；现已对齐 0.3.0；
-3. `smoke.spec.ts` 仍断言已删除的旧 retrospective note；现已对齐 legacy fallback 的 canonical-source-lifecycle 缺失提示。
-
-下一步：
-
-1. `git pull --ff-only`；
-2. clean worktree；
-3. 重新运行 `运行M3最终收口.bat`；
-4. 若 Playwright 18/18 全绿且 readiness 为 READY / READY（有已知警告），推进 PR #12 Draft → Ready；
-5. 不再新增产品逻辑。
+1. 用户本机切换到 `m4/real-a-share-validation-workflow`；
+2. 运行 `运行M4真实A股生命周期快照.bat`；
+3. 核查全部 initialized SSE/SZSE 是否同一最新交易日、零失败；
+4. 将第一日 journal 作为 prospective T0，不做历史补录；
+5. 第二个真实交易日开始，建立 candidate lifecycle transition 对比；
+6. 在至少积累若干真实交易日之前，不把状态频数解释成胜率/alpha。
 
 
 ## 固定 Source / Product 边界

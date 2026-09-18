@@ -368,3 +368,31 @@ The three failures were stale browser assertions:
 
 No Source lifecycle, harmonic identity, Source Raw PRZ, Shark management or execution-context production logic was changed.
 Implementation fix commit: `d28215bbae682169a8ac47ddf48399bfdf50d05a`.
+
+
+## 2026-09-18 — M3 formal merge / M4 Phase 1 start
+
+### M3 正式合并
+- PR #12 已从 Draft 切到 Ready 并正式 merge；
+- merge commit：`edec5e21fb9e873daf8fb77fceaa0d89dbbd5b25`；
+- merge 前 branch vs main：ahead 85 / behind 0；
+- unresolved review threads：0；
+- 本机 current-head readiness：READY with known warnings，hard blocker=0；
+- GitHub-hosted Actions 仍存在 steps/logs 为空的 runner-allocation 异常，不作为实际测试执行。
+
+### M4 新分支
+- branch：`m4/real-a-share-validation-workflow`；
+- base：M3 merge commit；
+- 目标：先做真实 A 股 prospective lifecycle evidence，不直接做新 pattern 或黑箱评分。
+
+### M4 Phase 1 第一批
+- `d737ee73bccb5086dfbbcaa08d42e9b490dca376`：append-only lifecycle journal contract；
+- `4922cca8c9dea41551d3cbeeb8e722eafbf2589f`：全市场一键 prospective snapshot；
+- 稳定 key 用 anchor trade_date，防 rolling-window index 漂移；
+- journal 默认禁止 backfill；
+- 5-0 继续排除；
+- snapshot 只有在全部 selected initialized SSE/SZSE 分析成功且日期一致时才追加；
+- `alpha_inference_allowed=false`。
+
+### 下一步唯一主任务
+在用户真实 M1 数据上生成 M4 T0 prospective snapshot。

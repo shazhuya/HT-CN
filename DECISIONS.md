@@ -247,3 +247,33 @@ M3 Phase 3 起，A 股制度/波动信息统一进入独立 `a_share_execution_c
 
 验证方式：
 ```
+
+
+## D-022 — M4 生命周期验证默认 prospective append-only
+
+**状态：Frozen M4 validation contract**
+
+M4 对真实 A 股 Source lifecycle 的正式验证默认从当前真实已收盘交易日开始，采用 append-only prospective journal。
+
+决定：
+
+1. 不允许为了增加样本量，把已经知道后续结果的历史 completed geometry 重新包装成“当时可见的 prospective lifecycle”；
+2. 每个 journal entry 必须带 `code_head`、`as_of_trade_date`、稳定 candidate key、canonical `source_lifecycle` 与 Decision Narrative action state；
+3. candidate key 使用 pivot anchor 的交易日期，不使用 rolling analysis window 中会每日漂移的 bar index；
+4. 同一 code-head / as-of / candidate key 重复采集必须幂等；
+5. 默认禁止早于既有 journal 最大日期的 backfill；
+6. 5-0 在 production quarantine 解除前不进入 M4 正式 validation cohort；
+7. journal 初期只允许输出 observability、状态分布和真实状态转移；不得把小样本频数包装成 alpha、胜率或交易评分；
+8. 后续若要做历史 replay，必须另建显式 versioned research protocol，并证明 prefix/no-lookahead，不得混入 prospective 主账本。
+
+原因：
+
+M2.31/M3 已证明 historical completed geometry 与 live source-clock observability 并不等价。若 M4 再用后验历史重建冒充 prospective 证据，会重新引入最初要消除的 hindsight bias。
+
+验证方式：
+
+- stable candidate-key regression；
+- no-backfill regression；
+- idempotent append regression；
+- real-A-share latest-closed-day snapshot；
+- 后续跨交易日 transition ledger。

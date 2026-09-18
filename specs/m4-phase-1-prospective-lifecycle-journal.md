@@ -1,0 +1,81 @@
+# M4 Phase 1 — Prospective Real-A-Share Lifecycle Journal
+
+## Purpose
+
+Create a clean prospective evidence stream for the M3 canonical Source lifecycle.
+
+M4 Phase 1 does **not** estimate alpha, win rate or trading profitability.
+
+## Prospective boundary
+
+The formal journal starts from the current latest closed A-share session.
+
+Default behavior:
+
+- append-only;
+- no historical backfill;
+- clean Git worktree;
+- exact code HEAD stamped into every entry;
+- all captured instruments must align to one closed trade date.
+
+Historical replay, if added later, must use a separately versioned prefix/no-lookahead research protocol and may not be mixed into the prospective ledger.
+
+## Stable candidate identity
+
+Rolling-window bar indexes are not stable across daily captures.
+
+The journal therefore keys a candidate by immutable anchor trade dates:
+
+- XABCD: X / A / B / C;
+- standalone AB=CD: A / B / C;
+- Shark: 0 / X / A / B.
+
+The terminal point is deliberately excluded so a forming candidate can keep the same identity when it later completes.
+
+5-0 is excluded while production quarantine remains active.
+
+## Journal payload
+
+Each entry records:
+
+- code HEAD;
+- instrument and as-of trade date;
+- stable candidate key;
+- pattern/schema/direction/scale;
+- forming/completed geometry state;
+- canonical Source lifecycle state;
+- Decision Narrative action state;
+- next key price / role;
+- execution-context gate;
+- context-integrity summary;
+- Source Raw PRZ bounds;
+- Source Terminal trade date when observable;
+- explicit `alpha_inference_allowed=false`.
+
+## Atomic daily capture
+
+`scripts/m4_capture_lifecycle_snapshot.py`:
+
+1. requires a clean worktree;
+2. reads all initialized listed SSE/SZSE instruments;
+3. requires every analysis to end on the same local closed trade date;
+4. converts every non-5-0 candidate to journal entries;
+5. if any instrument fails, the daily journal is not appended;
+6. otherwise appends idempotently to `data/research/m4/lifecycle_journal.jsonl`.
+
+One-click entrypoint:
+
+`运行M4真实A股生命周期快照.bat`.
+
+## Interpretation
+
+Early M4 output is observability and state-transition evidence only.
+
+Do not infer:
+
+- pattern win rates;
+- expected return;
+- alpha;
+- buy/sell ranking;
+
+until a separately frozen statistical protocol exists and enough prospective observations accumulate.
