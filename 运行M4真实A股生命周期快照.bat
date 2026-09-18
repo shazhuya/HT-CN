@@ -77,6 +77,16 @@ if not "!METHODOLOGY_GUARD_EXIT!"=="0" (
   exit /b 1
 )
 
+.venv\Scripts\python.exe scripts\m4_outcome_engine_freeze_guard.py > "artifacts\reports\m4-outcome-engine-freeze-guard.json" 2>&1
+set "OUTCOME_ENGINE_GUARD_EXIT=!ERRORLEVEL!"
+type "artifacts\reports\m4-outcome-engine-freeze-guard.json"
+if not "!OUTCOME_ENGINE_GUARD_EXIT!"=="0" (
+  echo [HT-CN M4] ERROR: outcome engine or active outcome protocol differs from the frozen Phase 3.1 contract.
+  echo No M1 update or authoritative capture was started.
+  pause
+  exit /b 1
+)
+
 if not exist "data\market\catalog.duckdb" (
   echo [HT-CN M4] ERROR: real M1 catalog not found.
   pause
@@ -86,7 +96,7 @@ if not exist "data\market\catalog.duckdb" (
 echo ============================================================
 echo HT-CN M4 PROSPECTIVE EVIDENCE CAPTURE
 echo Current closed day only. No historical backfill.
-echo Preflight: frozen branch/checkpoint + clean worktree + frozen methodology components.
+echo Preflight: frozen branch/checkpoint + clean worktree + frozen capture methodology + frozen outcome engine.
 echo One run: M1 update + capture + health + transition + observation + outcome-v2 + handoff bundle.
 echo ============================================================
 echo.
@@ -159,6 +169,7 @@ if "!FINAL_EXIT!"=="0" (
 
 echo.
 echo Methodology:  artifacts\reports\m4-methodology-freeze-guard.json
+echo Outcome guard: artifacts\reports\m4-outcome-engine-freeze-guard.json
 echo M1 log:       artifacts\reports\m4-m1-update.log
 echo Snapshot:     artifacts\reports\m4-lifecycle-snapshot.json
 echo Health:       artifacts\reports\m4-evidence-health.json
