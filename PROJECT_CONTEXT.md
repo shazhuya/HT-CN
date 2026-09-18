@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `20ed0f7fc7fde00f67937eb342057f88b99bb444`
-context_checkpoint_title: `M4 T1 preflight + atomic verified evidence bundle`
+context_checkpoint: `9805f10561cd1ce6db996433b943ce97de5c322b`
+context_checkpoint_title: `M4 Phase 2.9 authoritative evidence intake revalidation`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -791,6 +791,32 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 4. 在任何 return / MFE / MAE / win-rate / alpha 统计前，另行冻结 future outcome protocol。
 
 
+
+
+
+## M4 Phase 2.9 — Evidence intake / D-031
+
+收到 T1/Tn `m4-evidence-bundle.zip` 后，不能只相信 bundle manifest 或派生报告。
+
+当前 intake 链：
+
+1. transport integrity；
+2. isolated authoritative extraction；
+3. frozen baseline / committed transaction revalidation；
+4. authoritative capture timeline rebuild；
+5. transition recompute；
+6. prospective observation recompute；
+7. derived report cross-check；
+8. methodology / capture-count / latest-date / transaction-id / code-head provenance cross-check；
+9. structured ready / ready_with_warnings / not_ready。
+
+当前 T0 expected baseline cutoff：`2026-09-17`。
+
+`evidence_health_blocked` 可以是运输完整的诊断 ZIP，但 intake 必须 `not_ready`。
+
+缺失 derived report 可以从 authoritative evidence 重算并 warning；authoritative transaction 不依赖这些 report 才成立。
+
+该层不进入 methodology fingerprint，不改变 harmonic / PRZ / Source lifecycle / enrollment 规则。
 
 ## M4 transport bundle integrity — D-030
 
