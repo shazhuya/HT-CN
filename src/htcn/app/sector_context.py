@@ -120,7 +120,15 @@ def build_industry_context(
         SectorCandidate(str(row[0]), str(row[1])) for row in rows
     )
     source = str(rows[0][2])
-    observed = pd.Timestamp(rows[0][3]).date().isoformat()
+    observed_date = pd.Timestamp(rows[0][3]).date()
+    observed = observed_date.isoformat()
+    if as_of is not None and observed_date > as_of:
+        return _empty(
+            "mapping_after_as_of",
+            candidates=candidates,
+            mapping_source=source,
+            mapping_observed_on=observed,
+        )
     if len({item.sector_code for item in candidates}) != 1:
         return _empty(
             "membership_ambiguous", candidates=candidates,

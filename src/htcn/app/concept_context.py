@@ -84,6 +84,16 @@ def build_concept_context(
         """, [instrument_id, CONCEPT_KIND, CONCEPT_SOURCE]).fetchall()
         if not memberships:
             return ConceptContext("membership_unavailable", None, None, 0, 0, ())
+        latest_observed = max(pd.Timestamp(row[3]).date() for row in memberships)
+        if as_of is not None and latest_observed > as_of:
+            return ConceptContext(
+                "mapping_after_as_of",
+                CONCEPT_SOURCE,
+                latest_observed.isoformat(),
+                len(memberships),
+                0,
+                (),
+            )
         if "sector_snapshot" not in tables:
             observed = max(pd.Timestamp(row[3]).date() for row in memberships).isoformat()
             return ConceptContext(
