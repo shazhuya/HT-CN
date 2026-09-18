@@ -373,3 +373,43 @@ def test_price_basis_drift_is_recorded_without_auto_rebase() -> None:
     assert summary["price_basis_stable_across_observations"] is False
     assert report["observations"][-1]["price_basis_matches_enrollment"] is False
     assert report["interpretation"]["price_basis_drift_is_auto_rebased"] is False
+
+
+
+def test_enrolled_present_observation_missing_price_basis_fails_closed() -> None:
+    later = _row("2026-09-19", "new")
+    later.pop("price_basis_id")
+    rows = [
+        _row("2026-09-17", "baseline"),
+        _row("2026-09-18", "new"),
+        later,
+    ]
+    try:
+        build_prospective_observation_report(rows)
+    except ValueError as exc:
+        assert "missing price basis" in str(exc)
+    else:
+        raise AssertionError("enrolled observation without price basis must fail closed")
+
+
+def test_enrolled_followup_missing_price_basis_fails_closed() -> None:
+    followup = _absent_followup("2026-09-19", "new")
+    followup.pop("price_basis_id")
+    rows = [
+        _row("2026-09-17", "baseline"),
+        _row("2026-09-18", "new"),
+    ]
+    manifest = [
+        _manifest("2026-09-18", candidates=1),
+        _manifest("2026-09-19", candidates=0),
+    ]
+    try:
+        build_prospective_observation_report(
+            rows,
+            manifest_rows=manifest,
+            followup_rows=[followup],
+        )
+    except ValueError as exc:
+        assert "missing price basis" in str(exc)
+    else:
+        raise AssertionError("follow-up without price basis must fail closed")
