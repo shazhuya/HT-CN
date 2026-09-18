@@ -1092,3 +1092,29 @@ No real future evidence was modified because the failed run never committed T1.
 
 Next user action remains a single git pull + the same one-click BAT.
 
+## 2026-09-18 — Second private bundle: QFQ 53/55
+
+Assistant-side audit of second M4 bundle:
+
+- transport hashes clean;
+- QFQ readiness formal-ready 53 / 55;
+- 50 missing factors successfully built through BaoStock;
+- only SSE.600057 and SZSE.000001 remain blocked by provider-calendar internal gaps;
+- authoritative T1 still not committed;
+- no outcome snapshot.
+
+Implemented D-040 safe internal calendar-gap repair:
+- short bracketed internal gaps only;
+- <=10 raw sessions;
+- <=0.5% bracketing factor drift;
+- linear bounded interpolation;
+- larger regime changes remain fail closed;
+- trailing carry-forward unchanged.
+
+Validation:
+- Actions run #1446 success;
+- 0/37 capture-methodology drift;
+- 0/4 Outcome Engine drift.
+
+Next local run is resumable and should skip the 53 already formal-ready instruments.
+
