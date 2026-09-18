@@ -51,20 +51,84 @@ def _calendar_provider() -> FailoverProvider:
     )
 
 
-def _latest_logical_market_date(catalog: Path, data_root: Path) -> date | None:
-    candidates: list[date] = []
+def _logical_market_coverage(
+    catalog: Path,
+    data_root: Path,
+    expected: date,
+) -> dict[str, object]:
     with duckdb.connect(str(catalog), read_only=True) as con:
-        row = con.execute("SELECT MAX(last_trade_date) FROM daily_dataset").fetchone()
-        if row is not None and row[0] is not None:
-            candidates.append(pd.Timestamp(row[0]).date())
+        rows = con.execute("""
+            SELECT d.instrument_id, d.last_trade_date
+            FROM daily_dataset d
+            JOIN security_master s ON s.instrument_id = d.instrument_id
+            WHERE s.status = 'listed'
+              AND (d.instrument_id LIKE 'SSE.%' OR d.instrument_id LIKE 'SZSE.%')
+            ORDER BY d.instrument_id
+        """).fetchall()
+
+    delta_latest: dict[str, date] = {}
     delta_dir = data_root / "daily_delta"
-    if delta_dir.exists():
-        for path in delta_dir.glob("*.parquet"):
-            try:
-                candidates.append(date.fromisoformat(path.stem))
-            except ValueError:
-                continue
-    return max(candidates) if candidates else None
+    delta_files = list(delta_dir.glob("*.parquet")) if delta_dir.exists() else []
+    if delta_files:
+        glob = (delta_dir / "*.parquet").as_posix().replace("'", "''")
+        with duckdb.connect() as con:
+            for instrument_id, latest in con.execute(
+                f"""
+                SELECT instrument_id, MAX(CAST(trade_date AS DATE))
+                FROM read_parquet('{glob}', union_by_name=true)
+                GROUP BY instrument_id
+                """
+            ).fetchall():
+                if latest is not None:
+                    delta_latest[str(instrument_id)] = pd.Timestamp(latest).date()
+
+    effective: dict[str, date | None] = {}
+    for instrument_id, base_last in rows:
+        base = None if base_last is None else pd.Timestamp(base_last).date()
+        delta = delta_latest.get(str(instrument_id))
+        if base is None:
+            effective[str(instrument_id)] = delta
+        elif delta is None:
+            effective[str(instrument_id)] = base
+        else:
+            effective[str(instrument_id)] = max(base, delta)
+
+    stale = sorted(
+        instrument_id
+        for instrument_id, latest in effective.items()
+        if latest is None or latest < expected
+    )
+    ahead = sorted(
+        instrument_id
+        for instrument_id, latest in effective.items()
+        if latest is not None and latest > expected
+    )
+    latest_dates = [item for item in effective.values() if item is not None]
+    logical_latest = max(latest_dates) if latest_dates else None
+    current_count = sum(1 for item in effective.values() if item == expected)
+
+    return {
+        "initialized_dataset_count": len(effective),
+        "current_dataset_count": current_count,
+        "stale_dataset_count": len(stale),
+        "ahead_dataset_count": len(ahead),
+        "stale_sample": stale[:20],
+        "ahead_sample": ahead[:20],
+        "logical_market_latest": (
+            None if logical_latest is None else logical_latest.isoformat()
+        ),
+    }
+
+
+def _latest_logical_market_date(catalog: Path, data_root: Path) -> date | None:
+    with duckdb.connect(str(catalog), read_only=True) as con:
+        row = con.execute("SELECT MAX(trade_date) FROM trade_calendar").fetchone()
+    if row is None or row[0] is None:
+        return None
+    expected = pd.Timestamp(row[0]).date()
+    coverage = _logical_market_coverage(catalog, data_root, expected)
+    value = coverage["logical_market_latest"]
+    return None if value is None else date.fromisoformat(str(value))
 
 
 def _latest_local_trade_date(catalog: Path) -> date:
@@ -293,15 +357,24 @@ def main() -> int:
     calendar_provider = _calendar_provider()
     clock = latest_closed_trade_clock(calendar_provider)
     expected_target = clock.target
-    logical_market_latest = _latest_logical_market_date(catalog, data_root)
+    market_coverage = _logical_market_coverage(
+        catalog, data_root, expected_target
+    )
+    logical_market_latest = (
+        None
+        if market_coverage["logical_market_latest"] is None
+        else date.fromisoformat(str(market_coverage["logical_market_latest"]))
+    )
     target = local_target
     provider = AkShareProvider()
     layers: dict[str, object] = {}
 
     freshness_ok = (
         local_target == expected_target
-        and logical_market_latest is not None
-        and logical_market_latest >= expected_target
+        and logical_market_latest == expected_target
+        and int(market_coverage["stale_dataset_count"]) == 0
+        and int(market_coverage["ahead_dataset_count"]) == 0
+        and int(market_coverage["initialized_dataset_count"]) > 0
     )
     layers["market_data_freshness"] = {
         "state": "current" if freshness_ok else "failed",
@@ -312,6 +385,12 @@ def main() -> int:
         ),
         "calendar_source": clock.calendar_source,
         "same_day_closed": clock.same_day_closed,
+        "initialized_dataset_count": market_coverage["initialized_dataset_count"],
+        "current_dataset_count": market_coverage["current_dataset_count"],
+        "stale_dataset_count": market_coverage["stale_dataset_count"],
+        "ahead_dataset_count": market_coverage["ahead_dataset_count"],
+        "stale_sample": market_coverage["stale_sample"],
+        "ahead_sample": market_coverage["ahead_sample"],
         "reason": (
             "local calendar and logical base+delta history align to latest closed trade day"
             if freshness_ok
@@ -374,6 +453,7 @@ def main() -> int:
             None if logical_market_latest is None else logical_market_latest.isoformat()
         ),
         "calendar_source": clock.calendar_source,
+        "market_dataset_coverage": market_coverage,
         "run_date_shanghai": today.isoformat(),
         "overall": overall,
         "is_score": False,

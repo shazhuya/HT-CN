@@ -25,9 +25,9 @@ def _metadata():
         "status": "pass",
         "event_feed_status": "event_partial",
         "samples": [
-            {"board_expected": "MAIN", "metadata_loaded": True, "parquet_loaded": True},
-            {"board_expected": "STAR", "metadata_loaded": True, "parquet_loaded": True},
-            {"board_expected": "CHINEXT", "metadata_loaded": True, "parquet_loaded": True},
+            {"instrument_id": "SSE.600000", "board_expected": "MAIN", "metadata_loaded": True, "parquet_loaded": True, "logical_last_trade_date": "2026-09-17"},
+            {"instrument_id": "SSE.688001", "board_expected": "STAR", "metadata_loaded": True, "parquet_loaded": True, "logical_last_trade_date": "2026-09-17"},
+            {"instrument_id": "SZSE.300001", "board_expected": "CHINEXT", "metadata_loaded": True, "parquet_loaded": True, "logical_last_trade_date": "2026-09-17"},
         ],
     }
 
@@ -39,6 +39,9 @@ def _product(patterns=2):
         "total_issues": 0,
         "successful_analyses": 3,
         "total_patterns": patterns,
+        "samples": [
+            {"instrument_id": "SSE.688001", "analysis_status": "success", "last_trade_date": "2026-09-17"},
+        ],
     }
 
 
@@ -46,7 +49,18 @@ def _context(overall="all_steps_completed"):
     return {
         "code_head": HEAD,
         "overall": overall,
+        "expected_trade_date": "2026-09-17",
+        "target_trade_date": "2026-09-17",
+        "local_trade_calendar_latest": "2026-09-17",
+        "logical_market_latest": "2026-09-17",
+        "market_dataset_coverage": {
+            "initialized_dataset_count": 3,
+            "current_dataset_count": 3,
+            "stale_dataset_count": 0,
+            "ahead_dataset_count": 0,
+        },
         "layers": {
+            "market_data_freshness": {"state": "current"},
             "execution_event": {
                 "state": "partial_positive_evidence",
                 "coverage_scope": "positive_evidence_only",

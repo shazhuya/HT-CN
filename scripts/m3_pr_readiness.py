@@ -286,6 +286,32 @@ def evaluate(
                 f"Unexpected context sync state: {overall!r}.",
             )
 
+        coverage = context.get("market_dataset_coverage") or {}
+        stale_count = int(coverage.get("stale_dataset_count") or 0)
+        ahead_count = int(coverage.get("ahead_dataset_count") or 0)
+        initialized_count = int(coverage.get("initialized_dataset_count") or 0)
+        if initialized_count <= 0:
+            _finding(
+                findings, "market_dataset_coverage_empty", "blocker",
+                "No initialized listed SSE/SZSE daily datasets were found.",
+            )
+        if stale_count > 0:
+            _finding(
+                findings, "market_dataset_stale_count", "blocker",
+                (
+                    f"{stale_count} initialized listed SSE/SZSE dataset(s) are behind "
+                    f"expected trade date {expected_trade_date}."
+                ),
+            )
+        if ahead_count > 0:
+            _finding(
+                findings, "market_dataset_ahead_of_closed_clock", "blocker",
+                (
+                    f"{ahead_count} dataset(s) are ahead of the latest closed-trade clock; "
+                    "partial current-day data may have contaminated the daily view."
+                ),
+            )
+
         layers = context.get("layers") or {}
         for layer_name, layer in layers.items():
             if not isinstance(layer, dict):
