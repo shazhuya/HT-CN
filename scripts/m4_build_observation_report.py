@@ -28,6 +28,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         f"- Prospective candidates：{payload.get('prospective_candidate_count', 0)}",
         f"- Observation rows：{payload.get('observation_count', 0)}",
         f"- Timeline source：`{interpretation.get('capture_timeline_source', 'journal_fallback')}`",
+        f"- Methodology fingerprint：`{payload.get('methodology_fingerprint')}`",
         "",
         "## Scanner presence",
         "",
@@ -138,6 +139,16 @@ def main() -> int:
         ),
     )
     payload["evidence_source"] = evidence_source
+    payload["methodology_contract_version"] = (
+        committed[0].get("methodology_contract_version")
+        if committed
+        else None
+    )
+    payload["methodology_fingerprint"] = (
+        committed[0].get("methodology_fingerprint")
+        if committed
+        else None
+    )
     payload["generated_at_utc"] = datetime.now(timezone.utc).isoformat()
     payload["journal_path"] = str(args.journal)
     payload["manifest_path"] = str(args.manifest)
