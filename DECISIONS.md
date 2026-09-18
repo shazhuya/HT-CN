@@ -1283,3 +1283,39 @@ HT-CN 实战工作台未来必须面对几百到几千只 A 股。重复全 univ
 
 当 HT-CN 从几十只标的扩展到全 A 股后，任何由 UI limit 决定 scan universe 的设计都会产生静默漏扫。D-045 将“扫描完整性”与“展示性能”彻底分离。
 
+## D-046 — 每日收盘可由一个流水线协调 M1/M4/M5，但研究证据与产品状态必须保持独立所有权
+
+**状态：Frozen M5 Phase 5 daily-operation boundary**
+
+正式决定：
+
+1. HT-CN 提供一个每日收盘一键流水线；
+2. 固定主链：
+   M1 update -> QFQ readiness -> M5 product cache + M4 authoritative capture；
+3. 分支名不拥有 methodology identity，也不作为 prospective capture 的充分条件；
+4. cross-branch capture 权限由 freeze guards、clean worktree、code identity 和 methodology fingerprint 决定；
+5. detached HEAD、dirty source worktree、missing M1 catalog 必须在任何数据 mutation 前 fail closed；
+6. methodology guard 或 Outcome Engine guard 失败时，不开始 M1 update/capture/cache；
+7. M1/QFQ failure 同时阻断新 M5 cache 与新 M4 capture；
+8. 数据 ready 后 M5 与 M4 成为独立 failure domains；
+9. M5 failure 不阻断 otherwise-valid M4 capture；
+10. M4 capture failure 不抹掉 otherwise-valid M5 product cache；
+11. M5 snapshot 只有 single-as-of、零 instrument failure、完整 coverage、current freshness、resolved as-of 时才称 product-ready；
+12. M5 cache 永远不是 authoritative evidence，也不写 M4 evidence；
+13. M4 evidence owner 仍是 authoritative capture chain；
+14. data/product/** 与 data/research/** 属于 runtime state，必须排除于 Git source cleanliness；
+15. Git ignore 不等于忽略 evidence correctness；M4 health/hash/bundle 规则继续有效；
+16. 每一步必须有独立日志，流水线必须生成统一 JSON 汇总；
+17. Windows 用户只需一个入口：`运行HT-CN每日收盘流水线.bat`；
+18. Hosted CI run #1564：
+    - overall success
+    - Python 645 passed
+    - Web build success
+    - Playwright 20 passed
+    - frozen methodology diff 0
+    - Outcome Engine diff 0。
+
+原因：
+
+用户不应为了日常使用手工协调 M1、M4、M5 多套命令；但便利性不能以混淆产品状态和研究证据为代价。D-046 将“一次运行”与“独立证据所有权”同时冻结。
+
