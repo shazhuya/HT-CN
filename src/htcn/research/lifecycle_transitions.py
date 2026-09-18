@@ -124,6 +124,11 @@ def _normalize_enrollment(
     return normalized
 
 
+def normalize_journal_rows(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Public normalized view used by downstream M4 derived reports."""
+    return _normalize_enrollment(rows)
+
+
 def _transition_kind(
     previous: dict[str, Any],
     current: dict[str, Any],
