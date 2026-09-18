@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `704bf2f6032608ab2e710fe4805ba2127c69f3ac`
-context_checkpoint_title: `M4 Phase 1.6: strict outcome enrollment and audited T0 baseline`
+context_checkpoint: `ab5f1d9b94d1be7a692d064c76175bba64cb4aad`
+context_checkpoint_title: `M4 Phase 2.4: manifest-authoritative transition and prospective observation facts`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -563,6 +563,55 @@ Lifecycle：
 M4 outcome enrollment 已由 D-024 收紧：
 `prospective_new` 不自动 outcome-eligible；必须在 terminal 前、forming、Source PRZ resolved 且不触碰冻结 source-fidelity 边界。
 
+## M4 Phase 2 — Transition / Observation Protocol
+
+M4 Phase 2 已建立不依赖 outcome 评分的事实观察层。
+
+### Raw market facts
+
+未来 journal row 新增：
+
+- as_of_open；
+- as_of_high；
+- as_of_low；
+- as_of_close；
+- as_of_volume。
+
+旧 T0 不回填、不重跑；raw market facts 从未来 snapshot 自然开始。
+
+### Prospective observation
+
+对 D-024 严格入组的 outcome cohort，按**实际 capture snapshot**生成：
+
+- captured_snapshot_index；
+- scanner present / absent；
+- consecutive_absent_snapshots；
+- lifecycle / action；
+- execution/context；
+- next-key price/role；
+- Source Terminal trade date；
+- raw OHLC/volume；
+- first lifecycle-state observation；
+- first scanner absence / reappearance。
+
+固定边界：
+
+- 不把 captured_snapshot_index 当完整交易日序号；
+- scanner absent 不等于 invalidated；
+- Source Terminal 早于 outcome enrollment 直接 fail closed；
+- 不计算 return / profit / win rate / alpha；
+- 不定义盈利阈值或买卖评分。
+
+### Snapshot manifest
+
+D-025 冻结 manifest-authoritative capture chronology：
+
+- candidate_count=0 的完整 capture 日也必须存在；
+- manifest 激活后 journal 日期必须有 manifest；
+- journal/manifest 同日 code_head 与 candidate_count 必须一致；
+- legacy T0 可在 manifest 激活前保留；
+- transition/observation 统一使用同一 capture timeline resolver。
+
 ## 本机调用规则 — D-023
 
 用户电脑不是 HT-CN 常规测试环境。
@@ -574,23 +623,24 @@ M4 outcome enrollment 已由 D-024 收紧：
 
 ## 下一步唯一主任务
 
-**M4 Phase 2 — 在不需要新本地数据的前提下，完成 T1 transition 分析协议与 outcome-observation schema。**
+**M4 Phase 2 — assistant 侧协议自验与 T0 派生报告收口。**
 
-当前 T0 已正式通过结构 gate：
+无需新的用户本机动作。
 
-- transition-ready；
-- outcome-not-ready；
-- baseline 不进入 prospective outcome cohort。
+接下来 assistant 继续：
 
-下一步 assistant 侧继续完成：
+1. 对 T0 上传文件生成正式 baseline audit / transition / observation 三份派生报告；
+2. 用 synthetic T0/T1/T2/T3 场景跑通：
+   - new candidate；
+   - zero-candidate full capture；
+   - disappearance；
+   - reappearance；
+   - delayed Source PRZ resolution；
+   - Source Terminal no-backdating；
+3. 检查新 manifest / observation schema 是否存在性能或状态漂移漏洞；
+4. 完成 PR #13 Phase 2 checkpoint。
 
-1. 冻结 T1 transition comparison protocol；
-2. 定义 prospective outcome observation 的事实字段（不定义胜率/评分）；
-3. 定义 scanner disappearance / reappearance 与 lifecycle observation 的组合语义；
-4. 定义最小持有/观察窗口的“记录方式”，但不提前规定盈利阈值；
-5. 完成 synthetic / prefix-safe 回归。
-
-只有新的真实交易日私有 M1 snapshot 本身无法由 assistant 获取时，才需要一次最小本地数据采集；此前不调用用户电脑。
+只有新的真实交易日私有 M1 snapshot 本身无法由 assistant 获取时，才需要一次最小数据采集；不要求用户运行 QA。
 
 
 ## 固定 Source / Product 边界

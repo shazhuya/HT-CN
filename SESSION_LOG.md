@@ -452,3 +452,27 @@ Actual uploaded T0 audit:
 - all action/next-key/PRZ/terminal/source-fidelity contracts internally consistent.
 
 D-024 freezes strict outcome enrollment: prospective_new alone is insufficient.
+
+
+## M4 Phase 2.1-2.4 / 2026-09-18
+
+Assistant-only implementation; no user-local QA.
+
+- `2ce430a9e512c8174b63a2ed5635281f061aa9eb`: future journal rows persist raw OHLC/volume;
+- `3dd8c1b4679d9422ca2ba4522097438b2881c8be`: raw market-fact regression;
+- `f3d4e02e8dfff9387f8c83666413aad9f1e73cf9`: public normalized journal view;
+- `62ea3b16c7fd1fa735c8f78bbd2c99a5136e7567`: prospective observation panel;
+- `0c04d9821917a51421bc10579b9223e224dafff0`: one code head per capture date;
+- `25f09983747a1163f20e9ccfe6bc73599ce1dadb`: append-only snapshot manifest;
+- `b24db0496a1e36db0331857284dbfe5e1c209909`: capture pipeline writes manifest;
+- `c5de30af208f4a7099ba8d017c2ac0f4760ffc9c`: authoritative capture timeline resolver;
+- `2d58e8bdead6e2dcc505f14e105c93d7639e5c00`: transition engine capture-timeline aware;
+- `edb74d6c9ba5db0ef8f4d43373c4961a14acd201`: observations manifest-aware;
+- `7e56c657d1fcb758fae8ceace8e40b2996d8b8b7`: zero-candidate gap / reappearance regressions;
+- `5414d499d2b30848d40d7fe9e141e11b7a1ec908`: transition report manifest-authoritative;
+- `b94ac7044d5a07fb39c2781961bdaacae9d212d6`: prospective observation report;
+- `0682130deed92a3f35d2d74b1ec0f4214420c30f`: zero-candidate baseline enrollment fix;
+- `ab5f1d9b94d1be7a692d064c76175bba64cb4aad`: manifest/journal candidate-count cross-check.
+
+Synthetic assistant-side scenario verified:
+legacy T0 -> T1 prospective-new -> T2 full capture with zero candidates -> T3 scanner reappearance / Type-I observation, with cohort identity preserved and no invalidation inference.

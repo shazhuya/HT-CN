@@ -342,3 +342,35 @@ T0 的 `baseline_existing` 永久 `prospective_outcome_eligible=false`，不能�
 - unresolved -> later resolved pre-terminal enrollment regression；
 - baseline never-upgrades regression；
 - outcome enrollment date persistence regression。
+
+
+## D-025 — Snapshot manifest 是 M4 捕获时间轴的权威来源
+
+**状态：Frozen M4 chronology contract**
+
+M4 的 lifecycle journal 只记录 candidate 行，因此不能单独证明某个交易日是否完成过全市场 snapshot。正式 capture chronology 必须由独立 append-only snapshot manifest 提供。
+
+决定：
+
+1. 每次完整 M4 capture 无论 candidate_count 为 0 或大于 0，都必须写入一条 manifest；
+2. manifest 固定记录 code_head、as_of_trade_date、instrument coverage、candidate_count、clean-worktree 与边界字段；
+3. 同一 as-of date 只能有一个 code_head；
+4. 同日同 head 重跑只有在 capture facts 完全一致时才允许幂等；
+5. manifest candidate_count 必须等于同日 journal row count；
+6. manifest 激活以后，journal 出现某个日期却没有对应 manifest 时 fail closed；
+7. manifest 激活前的旧 T0 journal 允许作为 `legacy_pre_manifest_dates`；
+8. transition / prospective observation 必须使用 manifest chronology，而不是从 candidate 行猜测“哪天采过”；
+9. `captured_snapshot_index` 只是已捕获快照序号，不等于完整交易日序号；
+10. scanner absence 只表示在一个确认已采集的 snapshot 中候选未出现，不等于 invalidated。
+
+原因：
+
+如果没有独立 capture manifest，candidate_count=0 的完整采集日会在 journal 中完全消失，无法区分“候选真的缺席”与“当天根本没采集”，会污染 disappearance/reappearance 与 outcome window。
+
+验证方式：
+
+- zero-candidate manifest regression；
+- manifest/journal code-head cross-check；
+- manifest/journal candidate-count cross-check；
+- post-activation missing-manifest fail-closed；
+- zero-candidate gap -> scanner_disappeared -> scanner_reappeared regression。
