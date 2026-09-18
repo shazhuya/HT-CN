@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,23 @@ from htcn.research.type_i_live_evidence import build_type_i_t5_events
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
 OPERATOR_CACHE_ROOT = ROOT / "data" / "product" / "m5" / "operator_queue"
+
+
+def _operator_build_workers() -> int:
+    raw = str(os.getenv("HTCN_OPERATOR_WORKERS", "4")).strip()
+    try:
+        value = int(raw)
+    except ValueError:
+        value = 4
+    return max(1, min(16, value))
+
+
+OPERATOR_BUILD_WORKERS = _operator_build_workers()
+
+
+def _operator_service_factory() -> M3SourceClockHarmonicService:
+    return M3SourceClockHarmonicService(DATA_ROOT)
+
 
 app = FastAPI(title="HT-CN API", version="0.4.0")
 service = M3SourceClockHarmonicService(DATA_ROOT)
@@ -90,6 +108,8 @@ def operator_queue(
         bars=bars,
         scales=(3, 5, 8, 13),
         force_refresh=refresh,
+        max_workers=OPERATOR_BUILD_WORKERS,
+        service_factory=_operator_service_factory,
     )
     payload["operator_index"] = {
         "schema_version": 1,
