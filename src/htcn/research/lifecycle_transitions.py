@@ -4,6 +4,8 @@ from dataclasses import asdict, dataclass
 from collections import Counter
 from typing import Any, Iterable
 
+from .lifecycle_journal import prospective_outcome_gate
+
 
 @dataclass(frozen=True, slots=True)
 class LifecycleTransition:
@@ -85,9 +87,38 @@ def _normalize_enrollment(
                     )
 
             row["enrollment_state"] = cohort[key]
-            row["prospective_outcome_eligible"] = (
-                cohort[key] == "prospective_new"
+
+            prior_rows = [
+                prior
+                for prior in normalized
+                if str(prior.get("candidate_key")) == key
+            ]
+            prior_outcome_dates = sorted(
+                str(prior.get("outcome_enrollment_trade_date"))
+                for prior in prior_rows
+                if prior.get("outcome_enrollment_trade_date")
             )
+            if cohort[key] == "baseline_existing":
+                row["prospective_outcome_eligible"] = False
+                row["outcome_eligibility_reason"] = "baseline_existing"
+                row["outcome_enrollment_trade_date"] = None
+            elif prior_outcome_dates:
+                row["prospective_outcome_eligible"] = True
+                row["outcome_eligibility_reason"] = (
+                    "prospective_outcome_cohort_already_enrolled"
+                )
+                row["outcome_enrollment_trade_date"] = prior_outcome_dates[0]
+            else:
+                eligible, reason = prospective_outcome_gate(
+                    row,
+                    enrollment_state=cohort[key],
+                )
+                row["prospective_outcome_eligible"] = eligible
+                row["outcome_eligibility_reason"] = reason
+                row["outcome_enrollment_trade_date"] = (
+                    as_of if eligible else None
+                )
+
             row["first_observed_trade_date"] = str(
                 row.get("first_observed_trade_date") or first_seen[key]
             )
@@ -315,6 +346,7 @@ def build_transition_report(
         "lifecycle_pair_counts": dict(sorted(lifecycle_pair_counts.items())),
         "latest_lifecycle_state_counts": dict(sorted(latest_state_counts.items())),
         "transition_count": len(transitions),
+        "normalized_rows": normalized,
         "transitions": [item.as_payload() for item in transitions],
         "interpretation": {
             "scanner_disappeared_is_invalidated": False,
