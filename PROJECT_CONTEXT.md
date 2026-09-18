@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `08f51e28f60840cfb6a85b85fbceb091c9392825`
-context_checkpoint_title: `M5 Phase 8 cross-process Operator rebuild coordination green`
+context_checkpoint: `dec76022098574537333e8d3abd56bcc3b928a99`
+context_checkpoint_title: `M5 Phase 9 Daily Close Product Pipeline green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -1694,3 +1694,41 @@ Governance：D-049 / `specs/m5-phase-8-cross-process-operator-rebuild.md`。
 - M5 Operator 产品不得被 M4 strict-QFQ readiness 的单票历史供应商问题阻塞；
 - M4 methodology/outcome guards 只约束 M4 research lane，不得成为 M5 product lane 的总前置门；
 - context sync 可 best-effort 更新并把 degraded 状态带入 Queue，而不是把产品入口锁死。
+
+
+## M5 Phase 9 — Daily Close Product Pipeline
+
+Current lineage completed Phase 9 on branch `m5/daily-close-product-pipeline`.
+
+Validated code checkpoint:
+`dec76022098574537333e8d3abd56bcc3b928a99`
+
+Hosted CI run `35381269831` / #1646:
+- overall success；
+- Python 682 passed；
+- Web build success；
+- Playwright 21 passed；
+- browser evidence upload success。
+
+Frozen design:
+- M1 fresh market data is the shared hard prerequisite；
+- M3 context sync is best effort for M5；
+- M5 initial product cache runs before M4 research；
+- M4 source/methodology/outcome/QFQ gates constrain only the research lane；
+- M4 degraded does not invalidate an otherwise ready M5 product；
+- after M4 research, M5 always runs a final non-force cache revalidation because research-side QFQ can mutate `adjustment/qfq`, which is part of Phase 7 Data Input Identity；
+- per-instrument failures remain isolated while explicit `instrument_errors` are surfaced；
+- subprocess output streams live and each step has a log。
+
+Freeze audit:
+- M4 capture methodology: 0 / 37 changed；
+- Outcome Engine: 0 / 4 changed。
+
+Governance:
+- D-050；
+- `specs/m5-phase-9-daily-close-product-pipeline.md`。
+
+### 下一步
+
+进入 **M5 Phase 10 — Daily Handoff Bundle v2**。
+不要切回或整体合并旧 `m5/daily-handoff-bundle` 实验分支；只择优移植思想。新交接包必须绑定 Phase 9 最终 product snapshot / input identity，并把任何嵌套 M4 evidence bundle 明确标成独立 authoritative research evidence，而不是把整个 handoff ZIP 本身升级成 authority。
