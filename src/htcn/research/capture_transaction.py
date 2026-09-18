@@ -4,15 +4,16 @@ from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
 import json
+import math
 import os
 from typing import Any, Iterable
 
 from .cohort_followup import enrolled_outcome_cohort
 
 
-CAPTURE_TRANSACTION_SCHEMA_VERSION = 4
+CAPTURE_TRANSACTION_SCHEMA_VERSION = 5
 LEGACY_BASELINE_SCHEMA_VERSION = 1
-SUPPORTED_CAPTURE_TRANSACTION_SCHEMA_VERSIONS = (1, 2, 3, 4)
+SUPPORTED_CAPTURE_TRANSACTION_SCHEMA_VERSIONS = (1, 2, 3, 4, 5)
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,6 +176,63 @@ def _validate_price_basis(
         int(basis[4:], 16)
     except ValueError as exc:
         raise ValueError(f"invalid QFQ price_basis_id encoding: {source}") from exc
+
+
+def _validate_source_clock_seed(
+    row: dict[str, Any],
+    *,
+    source: str,
+) -> None:
+    fields = (
+        "source_signal_trade_date",
+        "source_signal_clock_basis",
+        "source_reaction_anchor_label",
+        "source_reaction_anchor_price",
+    )
+    present = {
+        field: (
+            row.get(field) is not None
+            and (not isinstance(row.get(field), str) or bool(str(row.get(field)).strip()))
+        )
+        for field in fields
+    }
+    if not any(present.values()):
+        return
+    missing = [field for field, is_present in present.items() if not is_present]
+    if missing:
+        raise ValueError(
+            f"partial source-clock seed: {source}: missing={missing}"
+        )
+
+    signal_date = str(row["source_signal_trade_date"])
+    as_of = str(row.get("as_of_trade_date") or "")
+    if as_of and signal_date > as_of:
+        raise ValueError(
+            f"source-clock seed signal date is after observation: {source}"
+        )
+    if str(row["source_signal_clock_basis"]) != (
+        "last_frontier_pivot_confirmed_at=index+scale"
+    ):
+        raise ValueError(
+            f"unsupported source-clock seed basis: {source}"
+        )
+
+    schema = str(row.get("schema") or "")
+    expected_anchor = "B" if schema == "0XABC" else "A"
+    if str(row["source_reaction_anchor_label"]) != expected_anchor:
+        raise ValueError(
+            f"source-clock reaction anchor mismatch: {source}"
+        )
+    try:
+        anchor_price = float(row["source_reaction_anchor_price"])
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"invalid source-clock reaction anchor price: {source}"
+        ) from exc
+    if not math.isfinite(anchor_price) or anchor_price <= 0:
+        raise ValueError(
+            f"invalid source-clock reaction anchor price: {source}"
+        )
 
 
 def _validate_market_observation_row(
@@ -376,6 +434,12 @@ def _validate_committed_payload(
                 row,
                 source=f"{source}:journal:{row.get('candidate_key')}",
             )
+    if schema_version >= 5:
+        for row in rows:
+            _validate_source_clock_seed(
+                row,
+                source=f"{source}:journal:{row.get('candidate_key')}",
+            )
     if int(payload.get("candidate_count") or 0) != len(rows):
         raise ValueError(f"capture transaction candidate_count mismatch: {source}")
     if schema_version >= 3:
@@ -500,6 +564,10 @@ def build_committed_capture(
     )
     for row in rows:
         _validate_price_basis(
+            row,
+            source=f"build_committed_capture:journal:{row.get('candidate_key')}",
+        )
+        _validate_source_clock_seed(
             row,
             source=f"build_committed_capture:journal:{row.get('candidate_key')}",
         )
