@@ -107,7 +107,7 @@ test('M5 operator queue renders workflow buckets and selects an instrument', asy
 
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { name: 'A 股谐波实战工作台' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'A 股谐波研究与辅助决策系统' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '今日观察队列' })).toBeVisible()
   await expect(page.getByText(/这是观察工作流顺序，不是收益率排名/)).toBeVisible()
 
