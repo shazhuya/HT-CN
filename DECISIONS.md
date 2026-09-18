@@ -641,3 +641,52 @@ methodology contract v2 / 37 个组件已经在提交 `084ddf649e031e8169a761fd3
 原因：
 
 methodology fingerprint 可以在 transaction 生成时记录“实际用了哪套规则”，但第一笔 future capture 之前还没有旧 transaction 可供 current-vs-chain 比较。D-033 增加一个**事前冻结锚点**，确保第一笔 T1 本身就是经过审计的 methodology v2，而不是某个后来悄悄修改过的版本。
+
+
+
+## D-034 — Prospective evidence 必须冻结价格基准 provenance；schema v4 / methodology v3 取代 pre-T1 v2 freeze
+
+**状态：Frozen M4 price-basis provenance contract**
+
+在第一笔 post-T0 authoritative future capture 产生之前，审计发现一个会污染未来 outcome 统计的价格标尺缺口：
+
+HT-CN 正式谐波分析使用 QFQ 连续价格；但此前 M4 journal / follow-up 未保存分析时的价格基准身份，且 raw fallback 理论上仍可能进入 prospective enrollment。若候选入组后发生除权除息或上游 QFQ 因子历史重标，后续 OHLC 与入组时 PRZ/目标可能处于不同标尺，直接计算 target hit / MFE / MAE 会产生错误。
+
+正式决定：
+
+1. 正式 prospective harmonic evidence 仅接受 `price_mode in {qfq, qfq_carry_forward}`；
+2. `raw` fallback 仍可用于展示/诊断，但：
+   - `eligible_for_validation=false`；
+   - 不得进入 strict prospective outcome cohort；
+   - authoritative full-universe capture 遇到任何 non-formal price basis 时整轮 fail closed；
+3. 每次正式 analysis 输出 `price_basis_id`；
+4. QFQ `price_basis_id` 是对按日期排序的 **QFQ factor change-point sequence** 做确定性 SHA-256：
+   - 仅新增相同 factor 的 carry-forward 日期，不改变 basis ID；
+   - 新增/修订 factor regime 时改变 basis ID；
+5. M4 `LifecycleJournalEntry`、scanner-absent `cohort_followup_rows` 均保存 `price_mode + price_basis_id`；
+6. committed capture schema 从 v3 升级为 **v4**；
+7. schema v4 journal/follow-up row 缺失合法 QFQ basis 时 hard fail；
+8. v1-v3 transaction 仍可用于历史读取/审计，但不得静默续接 v4 active chain；
+9. D-024 prospective enrollment 增加正式价格基准 gate；
+10. prospective observation schema 升级为 v3，并冻结：
+    - enrollment price mode；
+    - enrollment price basis ID；
+    - 每个 observation 当前 price basis；
+    - `price_basis_matches_enrollment`；
+    - basis drift count / first drift date；
+11. 已入组 candidate 后续 scanner-present 或 scanner-absent follow-up 只要有真实 observation，就必须带 price basis provenance；
+12. basis drift 是事实 evidence，不等于 candidate invalidated，也不等于 scanner disappearance；
+13. Phase 2 不自动 rebase PRZ/target，也不在不同 basis 间直接计算 return/MFE/MAE；
+14. 发生 basis drift 时 intake 给出 warning：
+    `price_basis_drift_present_future_outcome_rebase_required`；
+15. 未来 outcome protocol 若要跨 basis 计算，必须另行预注册显式 rebasing 规则；在此之前相关 outcome 保持 unresolved；
+16. methodology contract 从 v2 升级为 **v3**，component count 保持 37；
+17. v3 exact methodology freeze commit：
+    `2b0aa92d292410098d9678a3bfd3102f3df1ed4b`；
+18. D-033 的 v2 exact freeze 是有效的历史 pre-T1 checkpoint，但已在第一笔 future capture 之前被 D-034 显式 supersede；
+19. 第一笔 post-T0 committed future capture 仍未产生，因此 v3 升级没有迁移、重写或混合任何 future evidence；
+20. QFQ price-basis provenance 不改变 Carney harmonic identity / Fibonacci ratios / Source Raw PRZ source definitions；它只冻结 A 股数据层用于 prospective evidence 的价格标尺身份。
+
+原因：
+
+未来 outcome 研究必须先保证“比较的是同一个价格标尺”。在没有 provenance 的情况下，除权除息后的 QFQ 重标可能把真实市场路径与入组时的 harmonic price levels 放到不同坐标系。D-034 选择 fail-safe 记录 basis drift，而不是在看到样本后临时选择 rebasing 方法。
