@@ -170,7 +170,7 @@ def _normalize_results(
         )
         if prohibited:
             raise ValueError(
-                f"prohibited outcome-v1 result keys for {key}: "
+                f"prohibited outcome result keys for {key}: "
                 f"{sorted(prohibited)}"
             )
         interpretation = item.get("interpretation") or {}
