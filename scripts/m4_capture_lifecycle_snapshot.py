@@ -467,6 +467,12 @@ def run(
             worktree_clean=identity.worktree_clean,
             status="pass",
             capture_transaction_id=committed_capture.transaction_id,
+            methodology_contract_version=(
+                committed_capture.methodology_contract_version
+            ),
+            methodology_fingerprint=(
+                committed_capture.methodology_fingerprint
+            ),
         )
         result["manifest_append"] = append_snapshot_manifest(
             manifest_path,
