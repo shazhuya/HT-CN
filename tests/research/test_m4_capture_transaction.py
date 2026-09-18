@@ -65,6 +65,8 @@ def test_transaction_id_is_deterministic_across_capture_time() -> None:
         successful_instruments=55,
         failed_instruments=0,
         worktree_clean=True,
+        methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+        methodology_fingerprint=TEST_METHODOLOGY_FINGERPRINT,
         journal_rows=[_row("b"), _row("a")],
     )
     assert a.transaction_id == b.transaction_id
@@ -161,6 +163,8 @@ def test_same_facts_different_capture_time_is_idempotent(tmp_path) -> None:
         successful_instruments=55,
         failed_instruments=0,
         worktree_clean=True,
+        methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+        methodology_fingerprint=TEST_METHODOLOGY_FINGERPRINT,
         journal_rows=[_row("a")],
     )
     assert first.transaction_id == second.transaction_id
