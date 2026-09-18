@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `9f95560b3d44b5eb70c4f40cc3d5e9c72471d285`
-context_checkpoint_title: `M3 Phase 4.4: machine-readable real-M1 acceptance and PR readiness closeout`
+context_checkpoint: `b536dd944e6f9b541506619fd7bd851b72bb732e`
+context_checkpoint_title: `M3 Phase 4.5: anti-false-green freshness, full-market coverage and clean-worktree readiness`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -345,6 +345,46 @@ warning 包括 positive-evidence-only 停牌源、可 fail-safe 保留旧快照�
 
 `m3_sync_all_contexts.py` 已修复成功状态名与退出码不一致问题；`all_steps_completed` 现在真实返回 0。
 
+
+## M3 Phase 4.5 — Anti-False-Green Readiness Hardening
+
+Phase 4.5 继续收紧“Ready”的证据含义，不新增谐波逻辑。
+
+新增三层强绑定：
+
+1. **同 commit**：所有正式验收报告继续要求 `code_head == current HEAD`；
+2. **clean worktree**：报告生成时和最终 readiness 评估时都必须 `worktree_clean=true`，未提交源码/配置修改直接 hard blocker；
+3. **同最新已收盘交易日**：provider-confirmed closed-trade clock、local `trade_calendar`、base+daily_delta 逻辑行情、metadata smoke 样本、product smoke 样本必须一致。
+
+新增共享 `htcn.data.trading_clock.latest_closed_trade_clock`：
+
+- 上海时钟 16:30 前只接受上一已收盘交易日；
+- 16:30 后允许当日成为 target；
+- 通过 provider trade calendar 处理周末/节假日，不用工作日猜测。
+
+M1 日更现在会把 provider 确认的 target / previous trade day 写回本地 `trade_calendar`。
+
+正式 metadata smoke 已从“只读 base parquet”改为 **base + daily_delta logical history**，避免增量架构本身造成假 stale。
+
+Context sync 新增 `market_data_freshness`：
+
+- `expected_trade_date`；
+- `local_trade_calendar_latest`；
+- `logical_market_latest`；
+- initialized/current/stale/ahead dataset count；
+- stale/ahead sample。
+
+所有已初始化、仍上市 SSE/SZSE daily dataset 必须追到 expected trade date；任何 stale dataset 或 ahead-of-closed-clock dataset 都是 Ready hard blocker。
+
+`运行M3最终收口.bat` 当前顺序：
+
+1. M1 智能日更；
+2. 严格工作台验收；
+3. 四层 context 真实同步；
+4. 当前 HEAD readiness 判定。
+
+最终 READY 因而要求：代码身份正确、工作树干净、全市场本地日线新鲜、代表样本新鲜、产品 contract 通过、浏览器验收通过、context 无结构性 failure。
+
 ## 当前 CI 基础设施异常
 
 M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异常：
@@ -369,15 +409,17 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 4.4 — 用户本机真实收口证据。**
+**M3 Phase 4.5 — 用户本机最终真实验收。**
 
-代码侧收口工具已经完成，下一步不再新增产品逻辑：
+代码侧已完成 anti-false-green 收口；下一步只生成真实证据：
 
-1. 在当前 HEAD 运行 `运行M3最终收口.bat`；
-2. 读取 `artifacts/reports/m3-pr-readiness.md`；
-3. 若 `pr_ready=false`，只处理 blocker，不因 warning 破坏已冻结 Source/Product 边界；
-4. 若 `pr_ready=true`，再将 PR #12 从 Draft 推进到 Ready；
-5. PR Ready 前不新增 pattern family、不解除 5-0 quarantine / Alternate Bat fail-closed。
+1. 当前分支必须 clean worktree；
+2. 双击 `运行M3最终收口.bat`；
+3. 最终只读取 `artifacts/reports/m3-pr-readiness.md`；
+4. 若 NOT READY，只修 blocker；
+5. 若 READY / READY（有已知警告），再将 PR #12 从 Draft 推进到 Ready。
+
+在真实 `pr_ready=true` 之前，不新增 pattern family，不解除 5-0 quarantine / Alternate Bat fail-closed。
 
 
 ## 固定 Source / Product 边界

@@ -265,3 +265,16 @@
 - Context partial failure is blocker; fail-safe degraded refresh is visible warning.
 - Positive-evidence-only suspension coverage remains a known warning and does not masquerade as complete-market evidence.
 - Code-side Phase 4.4 closeout is complete; user-local real-M1 evidence remains to be generated before PR #12 can leave Draft.
+
+
+## M3 Phase 4.5 / 2026-09-18
+
+- `33144a937360fa8cfce009c618b947da8a40d88c`: centralized provider-backed latest closed-trade clock; M1 updater now persists confirmed calendar dates.
+- `9e3b1ed8643c2cb64f2fc6418eb19101170654a0`: formal metadata smoke switched from base-only parquet to base+daily_delta logical history.
+- `4b0488f557578f1c50b3aa67c88f9938479faf3b`: context sync compares provider-confirmed expected closed day with local calendar/logical market date.
+- `ba75cb2e577458e6e48384fab51bc5c7ea52d4ed`: metadata/product/context evidence must align to one expected trade date; final closeout now starts with M1 smart daily update.
+- `3c4ed222b8002d7455ff687a48210d7b1052a440`: all initialized listed SSE/SZSE datasets must be current; any stale/ahead dataset blocks Ready.
+- `181c86c27cfbf25db69f1579f86c45dfb52fc1a0`: clean-worktree evidence identity added.
+- `26c1f171b95830bfd06923591bd959e83e659c27`: formal reports and readiness bound to clean worktree state.
+- `b536dd944e6f9b541506619fd7bd851b72bb732e`: readiness/freshness fixtures aligned with final anti-false-green contract.
+- Phase 4.5 changes acceptance only; harmonic identity / Source PRZ / lifecycle semantics remain unchanged.
