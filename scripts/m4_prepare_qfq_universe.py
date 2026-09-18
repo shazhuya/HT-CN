@@ -254,6 +254,11 @@ def run(
         errors: list[str] = []
         built = False
         for provider in providers:
+            print(
+                f"[HT-CN M4 QFQ] {position}/{len(instruments)} "
+                f"FETCH {instrument_id}: provider={getattr(provider, 'name', type(provider).__name__)}",
+                flush=True,
+            )
             try:
                 factors, source, attempts = _fetch_candidate(
                     instrument_id=instrument_id,
