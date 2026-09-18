@@ -547,3 +547,30 @@ M4 evidence bundle 是非权威运输层，但它必须可靠地把 frozen basel
 原因：
 
 运输层不是权威证据，但如果运输层无法证明自身完整性，assistant 无法可靠地区分“原始 evidence 有问题”和“ZIP 在交接过程中损坏”。先验证临时包再原子发布，可以在不增加用户操作的前提下把这两类故障分离。
+
+
+## D-031 — T1/Tn 交接必须从 authoritative evidence 重算，不信任 ZIP 内派生报告
+
+**状态：Frozen M4 evidence-intake contract**
+
+运输完整只说明 ZIP 没有在交接层损坏，不等于其中的研究状态已经通过。收到 T1/Tn handoff 后，assistant 必须从 frozen baseline + immutable committed transactions 重新验证并重新计算 lifecycle / prospective observation，再与 bundle 中的 derived reports 对账。
+
+正式决定：
+
+1. intake 第一层先执行 D-030 transport verification；
+2. 只有 transport-valid 的 authoritative members 才进入隔离临时目录；
+3. committed captures 必须重新经过 transaction validator，不能只信 manifest；
+4. frozen baseline identity / cutoff 必须重新验证；当前 T0 cutoff 固定为 `2026-09-17`；
+5. capture timeline 必须从 authoritative evidence 重建；
+6. lifecycle transitions 必须重新计算；
+7. prospective observations / outcome enrollment facts 必须重新计算；
+8. ZIP 中 transition / observation reports 只作为派生缓存；与重算结果不一致为 hard blocker；
+9. bundle-level methodology、capture count、latest date、transaction ID、code head、clean-worktree provenance 必须与 committed chain 一致；
+10. `evidence_health_blocked` 即使运输完整，intake 仍必须 `not_ready`；
+11. 缺失 derived report 可以从 authoritative evidence 重算并 warning，不因此否定 transaction 本身；
+12. intake 只报告事实观测，不计算 return / MFE / MAE / win rate / alpha / 买卖评分；
+13. intake 属于 evidence-consumption 层，不改变 harmonic identity、Source Raw PRZ、Source lifecycle、BAMM 或 prospective enrollment，因此不进入 methodology fingerprint。
+
+原因：
+
+如果直接信任 ZIP 内的 derived reports，就可能出现“transaction 是新的，但 report 是旧的”或“外层 manifest 与内层 authoritative chain 不一致”而未被发现。前瞻研究必须以 immutable authoritative evidence 为唯一事实源，派生报告随时可以重算。
