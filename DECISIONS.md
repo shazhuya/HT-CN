@@ -758,7 +758,7 @@ Prospective research 不能让 scanner visibility 决定一个已入组 candidat
 
 ## D-036 — M4 Outcome Protocol v1 在第一笔真实 outcome 前预注册；Source-event 与 market-path 分层
 
-**状态：Frozen preregistered outcome protocol v1**
+**状态：Historical preregistration — superseded by D-037 before first real prospective outcome**
 
 在 T0 之后尚未产生第一笔真实 future committed capture、尚未看到任何 prospective outcome 的前提下，冻结 M4 第一版 outcome protocol。
 
