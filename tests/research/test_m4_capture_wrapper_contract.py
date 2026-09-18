@@ -56,3 +56,18 @@ def test_capture_wrapper_treats_outcome_as_final_gate() -> None:
     assert 'if not "!OUTCOME_EXIT!"=="0" set "FINAL_EXIT=1"' in text
     assert "m4-outcome-v2.json" in text
     assert "data\\research\\m4\\outcomes" in text
+
+
+
+def test_capture_wrapper_runs_outcome_engine_freeze_guard_before_m1() -> None:
+    text = _wrapper_text()
+    m1_update = text.index("scripts\\m1_daily_update.py")
+    engine_guard = text.index(
+        "scripts\\m4_outcome_engine_freeze_guard.py"
+    )
+    assert engine_guard < m1_update
+    assert "m4-outcome-engine-freeze-guard.json" in text
+    assert (
+        "outcome engine or active outcome protocol differs"
+        in text
+    )
