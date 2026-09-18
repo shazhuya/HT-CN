@@ -242,6 +242,17 @@ def read_committed_captures(root: str | Path) -> list[dict[str, Any]]:
             raise ValueError(f"capture transaction is not committed: {path}")
         if int(payload.get("schema_version") or 0) != CAPTURE_TRANSACTION_SCHEMA_VERSION:
             raise ValueError(f"unsupported capture transaction schema: {path}")
+        if payload.get("worktree_clean") is not True:
+            raise ValueError(f"capture transaction was not from clean worktree: {path}")
+        if payload.get("alpha_inference_allowed") is not False:
+            raise ValueError(f"capture transaction unexpectedly permits alpha inference: {path}")
+        if payload.get("is_trade_instruction") is not False:
+            raise ValueError(f"capture transaction unexpectedly permits trade instruction: {path}")
+        instrument_count = int(payload.get("instrument_count") or 0)
+        successful = int(payload.get("successful_instruments") or 0)
+        failed = int(payload.get("failed_instruments") or 0)
+        if instrument_count <= 0 or successful != instrument_count or failed != 0:
+            raise ValueError(f"capture transaction instrument coverage is incomplete: {path}")
         as_of = str(payload.get("as_of_trade_date") or "")
         txid = str(payload.get("transaction_id") or "")
         rows = [dict(row) for row in payload.get("journal_rows") or []]
@@ -255,6 +266,16 @@ def read_committed_captures(root: str | Path) -> list[dict[str, Any]]:
         )
         if txid != expected:
             raise ValueError(f"capture transaction id mismatch: {path}")
+        expected_name = f"{as_of}__{txid}.json"
+        if path.name != expected_name:
+            raise ValueError(
+                f"capture transaction filename mismatch: {path.name} != {expected_name}"
+            )
+        for row in rows:
+            if str(row.get("capture_transaction_id") or "") != txid:
+                raise ValueError(
+                    f"capture transaction row transaction-id mismatch: {path}"
+                )
         if as_of in dates:
             raise ValueError(f"multiple committed capture transactions on {as_of}")
         dates.add(as_of)

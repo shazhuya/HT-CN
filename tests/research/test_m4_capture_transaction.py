@@ -3,7 +3,9 @@ from htcn.research.capture_transaction import (
     capture_transaction_id,
     commit_capture_transaction,
     committed_capture_view,
+    freeze_legacy_baseline,
     read_committed_captures,
+    read_frozen_legacy_baseline,
 )
 
 
@@ -124,3 +126,78 @@ def test_transaction_rejects_partial_instrument_coverage() -> None:
         assert "complete instrument coverage" in str(exc)
     else:
         raise AssertionError("partial instrument capture must fail")
+
+
+def test_same_facts_different_capture_time_is_idempotent(tmp_path) -> None:
+    first = _capture([_row("a")])
+    second = build_committed_capture(
+        code_head="h",
+        as_of_trade_date="2026-09-18",
+        captured_at_utc="2026-09-18T11:00:00+00:00",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        worktree_clean=True,
+        journal_rows=[_row("a")],
+    )
+    assert first.transaction_id == second.transaction_id
+    commit_capture_transaction(tmp_path, first)
+    result = commit_capture_transaction(tmp_path, second)
+    assert result["status"] == "already_committed"
+
+
+def test_legacy_baseline_is_atomic_and_immutable(tmp_path) -> None:
+    rows = [_row("legacy", date="2026-09-17", head="old")]
+    first = freeze_legacy_baseline(tmp_path, rows)
+    second = freeze_legacy_baseline(tmp_path, rows)
+    assert first["status"] == "frozen"
+    assert second["status"] == "already_frozen"
+    assert read_frozen_legacy_baseline(tmp_path) == rows
+
+
+def test_legacy_baseline_drift_fails_closed(tmp_path) -> None:
+    freeze_legacy_baseline(
+        tmp_path,
+        [_row("legacy", date="2026-09-17", head="old")],
+    )
+    try:
+        freeze_legacy_baseline(
+            tmp_path,
+            [_row("changed", date="2026-09-17", head="old")],
+        )
+    except ValueError as exc:
+        assert "already frozen with different evidence" in str(exc)
+    else:
+        raise AssertionError("frozen legacy baseline must be immutable")
+
+
+def test_reader_rejects_renamed_transaction_file(tmp_path) -> None:
+    capture = _capture([_row("a")])
+    result = commit_capture_transaction(tmp_path, capture)
+    from pathlib import Path
+    original = Path(result["path"])
+    renamed = original.with_name("2026-09-18__wrong.json")
+    original.rename(renamed)
+    try:
+        read_committed_captures(tmp_path)
+    except ValueError as exc:
+        assert "filename mismatch" in str(exc)
+    else:
+        raise AssertionError("renamed committed transaction must fail")
+
+
+def test_reader_rejects_row_transaction_id_tamper(tmp_path) -> None:
+    import json
+    capture = _capture([_row("a")])
+    result = commit_capture_transaction(tmp_path, capture)
+    from pathlib import Path
+    path = Path(result["path"])
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["journal_rows"][0]["capture_transaction_id"] = "tampered"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    try:
+        read_committed_captures(tmp_path)
+    except ValueError as exc:
+        assert "row transaction-id mismatch" in str(exc)
+    else:
+        raise AssertionError("row transaction id tamper must fail")
