@@ -259,6 +259,20 @@ def append_entries(
     target = Path(path)
     existing = read_journal(target)
     existing_dates = [str(row.get("as_of_trade_date")) for row in existing if row.get("as_of_trade_date")]
+    incoming_heads = {entry.code_head for entry in incoming}
+    if len(incoming_heads) != 1:
+        raise ValueError(f"one capture must contain one code head, got {sorted(incoming_heads)}")
+    incoming_head = next(iter(incoming_heads))
+    existing_same_date_heads = {
+        str(row.get("code_head"))
+        for row in existing
+        if str(row.get("as_of_trade_date")) == as_of
+    }
+    if existing_same_date_heads and existing_same_date_heads != {incoming_head}:
+        raise ValueError(
+            f"prospective journal forbids mixed code heads on {as_of}: "
+            f"existing={sorted(existing_same_date_heads)} incoming={incoming_head}"
+        )
     if existing_dates and as_of < max(existing_dates):
         raise ValueError(
             f"prospective journal forbids backfill: incoming {as_of} < existing max {max(existing_dates)}"
