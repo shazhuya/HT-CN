@@ -33,7 +33,7 @@ def test_capture_wrapper_fails_closed_before_authoritative_capture() -> None:
     text = _wrapper_text()
     assert "No M1 update or authoritative capture was started." in text
     assert "worktree is not clean before M1 update" in text
-    assert "current HEAD predates or diverges from the frozen T1 protocol" in text
+    assert "current HEAD predates or diverges from the minimum safe Phase 3.1 workflow" in text
     assert "scripts\\m4_capture_lifecycle_snapshot.py" in text
     assert "methodology components differ from the frozen T1 protocol" in text
     assert "m4-methodology-freeze-guard.json" in text
