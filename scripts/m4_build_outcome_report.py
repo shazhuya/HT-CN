@@ -100,6 +100,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         f"- Protocol：{payload.get('outcome_protocol_id')}",
         f"- Protocol fingerprint：{payload.get('outcome_protocol_fingerprint')}",
         f"- Capture methodology：{payload.get('capture_methodology_fingerprint')}",
+        f"- Outcome engine：v{payload.get('outcome_engine_contract_version')} / {payload.get('outcome_engine_fingerprint')}",
         f"- Candidate count：{payload.get('candidate_count', 0)}",
         f"- Outcome snapshot：{payload.get('outcome_snapshot_id')}",
         "",
@@ -170,6 +171,8 @@ def run(
         "outcome_protocol_fingerprint": protocol_identity.fingerprint,
         "outcome_as_of_trade_date": outcome_as_of_trade_date,
         "capture_methodology_fingerprint": None,
+        "outcome_engine_contract_version": None,
+        "outcome_engine_fingerprint": None,
         "candidate_count": 0,
         "status_counts": {},
         "results": [],
@@ -308,6 +311,12 @@ def run(
         results=results,
     )
     payload["outcome_snapshot_id"] = snapshot.snapshot_id
+    payload["outcome_engine_contract_version"] = (
+        snapshot.outcome_engine_contract_version
+    )
+    payload["outcome_engine_fingerprint"] = (
+        snapshot.outcome_engine_fingerprint
+    )
     try:
         committed_snapshot = commit_outcome_snapshot(
             outcome_root,
