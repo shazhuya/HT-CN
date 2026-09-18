@@ -254,6 +254,8 @@ def audit_evidence_bundle(
                     "transition_counts",
                     "lifecycle_pair_counts",
                     "latest_lifecycle_state_counts",
+                    "normalized_rows",
+                    "transitions",
                 )
                 mismatch = _report_fields_match(
                     included_transition,
@@ -291,6 +293,7 @@ def audit_evidence_bundle(
                     "lifecycle_observation_counts",
                     "market_observation_counts",
                     "candidate_summaries",
+                    "observations",
                 )
                 mismatch = _report_fields_match(
                     included_observation,
