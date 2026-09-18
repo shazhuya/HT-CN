@@ -14,8 +14,8 @@ from htcn.harmonic.source_lifecycle import derive_source_lifecycle
 
 from .outcome_protocol import (
     canonical_outcome_protocol_fingerprint,
-    load_outcome_protocol_v1,
-    validate_outcome_protocol_v1,
+    load_outcome_protocol,
+    validate_outcome_protocol,
 )
 
 
@@ -152,7 +152,7 @@ def _frozen_source_prz(
         source_prz_component_names=(component_name,),
         source_prz_defining_component=component_name,
         source_prz_selection_method="frozen_enrollment_source_prz",
-        source_prz_source_refs=("m4-outcome-v1-enrollment-seed",),
+        source_prz_source_refs=("m4-outcome-enrollment-seed",),
         source_prz_note=(
             "Outcome reconstruction reuses the Source Raw PRZ frozen at "
             "prospective enrollment."
@@ -253,6 +253,7 @@ def _window_excursion(
     direction: PatternDirection,
     reaction_span: float,
     window: int,
+    zero_floor: bool,
 ) -> dict[str, Any]:
     available = max(0, len(frame) - (terminal_bar + 1))
     if available < window:
@@ -274,6 +275,9 @@ def _window_excursion(
     else:
         mfe = terminal_price - float(sample["low"].min())
         mae = float(sample["high"].max()) - terminal_price
+    if zero_floor:
+        mfe = max(0.0, mfe)
+        mae = max(0.0, mae)
 
     return {
         "status": "mature",
@@ -333,7 +337,7 @@ def _base_result(
     protocol: dict[str, Any],
     market_path: pd.DataFrame,
 ) -> dict[str, Any]:
-    protocol_identity = validate_outcome_protocol_v1(protocol)
+    protocol_identity = validate_outcome_protocol(protocol)
     candidate_key = str(candidate_summary.get("candidate_key") or "")
     instrument_id = str(candidate_summary.get("instrument_id") or "")
     enrolled = str(
@@ -418,9 +422,9 @@ def evaluate_candidate_outcome(
     protocol: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if protocol is None:
-        protocol, _ = load_outcome_protocol_v1()
+        protocol, _ = load_outcome_protocol()
     else:
-        validate_outcome_protocol_v1(protocol)
+        validate_outcome_protocol(protocol)
 
     methodology = _validate_methodology_fingerprint(
         methodology_fingerprint
@@ -635,9 +639,9 @@ def evaluate_candidate_outcome(
         raise ValueError(
             "outcome reaction span must be positive after terminal"
         )
-    windows = (
-        protocol.get("descriptive_path_metrics") or {}
-    ).get("windows_traded_bars") or []
+    metric_contract = protocol.get("descriptive_path_metrics") or {}
+    windows = metric_contract.get("windows_traded_bars") or []
+    zero_floor = bool(metric_contract.get("zero_floor") is True)
     result["descriptive_path_windows"] = {
         str(int(window)): _window_excursion(
             frame,
@@ -646,6 +650,7 @@ def evaluate_candidate_outcome(
             direction=direction,
             reaction_span=reaction_span,
             window=int(window),
+            zero_floor=zero_floor,
         )
         for window in windows
     }
