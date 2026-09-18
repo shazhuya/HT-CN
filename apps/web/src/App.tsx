@@ -4,6 +4,7 @@ import TypeIT5Evidence, { TypeIT5Event } from './TypeIT5Evidence'
 import AShareExecutionContext, { AShareExecutionContextPayload } from './AShareExecutionContext'
 import MarketContext, { MarketContextPayload } from './MarketContext'
 import SectorContext, { IndustryContextPayload } from './SectorContext'
+import ConceptContext, { ConceptContextPayload } from './ConceptContext'
 
 type Health = {
   status: string
@@ -33,6 +34,7 @@ type Analysis = {
   a_share_execution_context?: AShareExecutionContextPayload
   market_context?: MarketContextPayload
   sector_context?: IndustryContextPayload
+  concept_context?: ConceptContextPayload
   engine_note: string
 }
 
@@ -255,6 +257,7 @@ export default function App() {
           <AShareExecutionContext context={analysis.a_share_execution_context} />
           <MarketContext context={analysis.market_context} />
           <SectorContext context={analysis.sector_context} />
+          <ConceptContext context={analysis.concept_context} />
           <TypeIT5Evidence events={analysis.type_i_t5_events ?? []} />
 
           <section className="workspace">
