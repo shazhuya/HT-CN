@@ -1272,11 +1272,11 @@ HT-CN 实战工作台未来必须面对几百到几千只 A 股。重复全 univ
 10. Phase 4 不引入 predictive ranking、win rate、alpha、trade instruction；
 11. Phase 4 不修改 harmonic identity / Source Raw PRZ / lifecycle；
 12. Phase 4 不写 M4 evidence store；
-13. Hosted CI run #1543：
+13. Hosted CI run #1583：
     - overall success
     - Python 629 passed
     - Web build success
-    - Playwright 20 passed
+    - Playwright 21 passed
     - browser evidence upload success。
 
 原因：
