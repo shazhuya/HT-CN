@@ -65,6 +65,18 @@ def build_bundle(
 
     members: list[dict[str, Any]] = []
 
+    outcome_protocol_path = Path(
+        "research/m4-outcome-protocol-v1.json"
+    )
+    if outcome_protocol_path.is_file():
+        members.append(
+            _member(
+                outcome_protocol_path,
+                arcname="protocols/m4-outcome-protocol-v1.json",
+                required=True,
+            )
+        )
+
     outcome_snapshot_read_error: str | None = None
     outcome_snapshots: list[dict[str, Any]] = []
     if outcome_root is not None:
