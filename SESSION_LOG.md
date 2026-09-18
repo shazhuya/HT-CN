@@ -337,3 +337,15 @@ Fix:
 Implementation checkpoints:
 - `7f142a78de9dc671a8d1385493018c681e845526` — forming Shark canonical source lifecycle.
 - `b4b18f555dec47a4cbfbe63d1777aa85c30f0e3a` — Shark-specific management preserved on source clock.
+
+
+## M3 Phase 4.8.1 / 2026-09-18
+
+Fourth user-local closeout on `81d92557493b8874b040f6142e9d416ea6ae619e` stopped at one new Shark lifecycle regression assertion:
+- implementation returned 50% BC target 110.44;
+- Reciprocal AB=CD was 110.88;
+- frozen Shark rule is first encountered of 50% BC and Reciprocal AB=CD;
+- therefore implementation was correct and the test expectation was wrong.
+
+Fix commit: `105a08ddfc4cef16a22e8504fd4c289fe2eb0c2f`.
+No harmonic logic, Source Raw PRZ, lifecycle semantics, or management formulas were changed.
