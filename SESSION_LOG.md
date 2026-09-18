@@ -1005,3 +1005,35 @@ PR #13 became mergeable_state=clean with no review threads, but remains Draft be
 
 Code-side Phase 3.1 pre-T1 implementation is therefore closed. The next non-substitutable gate is one private-M1 future capture through the existing one-click wrapper and assistant-side independent intake of the resulting evidence bundle.
 
+## 2026-09-18 — D-038 first-T1 acquisition gate
+
+After Phase 3.1 code-side closeout, the one-click private-M1 wrapper still accepted an older minimum-safe checkpoint (`c3402675...`).
+
+That was tightened before the first real post-T0 future capture.
+
+Change:
+
+- `M4_MIN_SAFE_COMMIT` advanced to hosted-CI-green
+  `d29870d3a2ef7b60dec4fd8f0dbef2d7a8f0b5a7`;
+- stale local checkout now fails before M1 update;
+- wrapper static contract updated accordingly.
+
+Validation:
+
+- implementation checkpoint:
+  `106c53da04dab0c3fcc9d03d6b2148106128ff77`;
+- GitHub Actions run #1414:
+  deterministic Python + Node + Web build success;
+- Playwright skip remains expected for M4 under the current branch predicate;
+- 37 capture-methodology components changed since `c774c549...`: 0;
+- 4 Outcome Engine components changed since `9cbc0d3d...`: 0.
+
+Decision:
+
+- D-038 freezes this as an acquisition-safety rule only;
+- it does not alter pattern identity, Source Raw PRZ, Source lifecycle, enrollment, outcome protocol or outcome evaluator.
+
+Next non-substitutable gate:
+
+one clean private-M1 execution of `运行M4真实A股生命周期快照.bat`, followed by assistant-side intake of `artifacts/reports/m4-evidence-bundle.zip`.
+
