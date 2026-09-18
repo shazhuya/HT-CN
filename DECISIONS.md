@@ -1254,3 +1254,32 @@ HT-CN 已经具备较强的单标的 source-aligned 解释能力，但缺少日�
 
 HT-CN 实战工作台未来必须面对几百到几千只 A 股。重复全 universe 扫描会把产品性能变成主要瓶颈。D-044 允许产品层做可验证、可失效、可回退的每日缓存，同时明确禁止把缓存升级成研究证据或 methodology state。
 
+## D-045 — UI 展示范围永远不得定义 HT-CN Operator Queue 的扫描 universe
+
+**状态：Frozen M5 Phase 4 full-universe boundary**
+
+正式决定：
+
+1. Operator Queue scan/cache universe 固定为所有当前本地已初始化 instrument；
+2. UI page size、搜索、筛选不得缩小 scan/cache universe；
+3. legacy `limit` query 参数只做兼容，后端必须忽略其 scan 语义；
+4. `operator_index.universe_scope=all_initialized_local_instruments`；
+5. presentation_does_not_define_universe=true；
+6. search/filter/pagination 只作用于浏览器展示；
+7. presentation 操作不得改变 localStorage Delta snapshot；
+8. presentation 操作不得触发新的 harmonic scan；
+9. instrument picker 上限放宽到 10,000；
+10. Phase 4 不引入 predictive ranking、win rate、alpha、trade instruction；
+11. Phase 4 不修改 harmonic identity / Source Raw PRZ / lifecycle；
+12. Phase 4 不写 M4 evidence store；
+13. Hosted CI run #1543：
+    - overall success
+    - Python 629 passed
+    - Web build success
+    - Playwright 20 passed
+    - browser evidence upload success。
+
+原因：
+
+当 HT-CN 从几十只标的扩展到全 A 股后，任何由 UI limit 决定 scan universe 的设计都会产生静默漏扫。D-045 将“扫描完整性”与“展示性能”彻底分离。
+
