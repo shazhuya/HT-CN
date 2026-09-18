@@ -36,6 +36,7 @@ class LifecycleJournalEntry:
     eligible_for_validation: bool
     enrollment_state: str = "pending_append_classification"
     first_observed_trade_date: str | None = None
+    prospective_outcome_eligible: bool = False
     evidence_only: bool = True
     is_trade_instruction: bool = False
     alpha_inference_allowed: bool = False
@@ -256,6 +257,9 @@ def append_entries(
         payload = entry.as_payload()
         payload["first_observed_trade_date"] = first_observed
         payload["enrollment_state"] = enrollment_state
+        payload["prospective_outcome_eligible"] = (
+            enrollment_state == "prospective_new"
+        )
         payloads.append(payload)
         prior_by_candidate.setdefault(entry.candidate_key, []).append(payload)
 

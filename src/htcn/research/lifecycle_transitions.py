@@ -85,6 +85,9 @@ def _normalize_enrollment(
                     )
 
             row["enrollment_state"] = cohort[key]
+            row["prospective_outcome_eligible"] = (
+                cohort[key] == "prospective_new"
+            )
             row["first_observed_trade_date"] = str(
                 row.get("first_observed_trade_date") or first_seen[key]
             )
@@ -285,6 +288,11 @@ def build_transition_report(
     latest_state_counts = Counter(
         str(row.get("source_lifecycle_state")) for row in latest_rows
     )
+    prospective_outcome_eligible_count = sum(
+        1
+        for row in normalized
+        if row.get("prospective_outcome_eligible") is True
+    )
 
     return {
         "schema_version": 1,
@@ -301,6 +309,7 @@ def build_transition_report(
         "latest_trade_date": latest_date,
         "journal_row_count": len(normalized),
         "latest_candidate_count": len(latest_rows),
+        "prospective_outcome_eligible_row_count": prospective_outcome_eligible_count,
         "cohort_counts": dict(sorted(cohort_counts.items())),
         "transition_counts": dict(sorted(transition_counts.items())),
         "lifecycle_pair_counts": dict(sorted(lifecycle_pair_counts.items())),

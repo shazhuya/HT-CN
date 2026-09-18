@@ -141,6 +141,7 @@ def test_first_capture_is_baseline_existing(tmp_path) -> None:
     assert result["prospective_new_appended"] == 0
     assert payload["enrollment_state"] == "baseline_existing"
     assert payload["first_observed_trade_date"] == "2026-09-18"
+    assert payload["prospective_outcome_eligible"] is False
 
 
 def test_candidate_first_seen_after_baseline_is_prospective_new(tmp_path) -> None:
@@ -157,6 +158,7 @@ def test_candidate_first_seen_after_baseline_is_prospective_new(tmp_path) -> Non
     assert result["prospective_new_appended"] == 1
     assert latest["enrollment_state"] == "prospective_new"
     assert latest["first_observed_trade_date"] == "2026-09-19"
+    assert latest["prospective_outcome_eligible"] is True
 
 
 def test_existing_baseline_candidate_stays_baseline_on_later_capture(tmp_path) -> None:

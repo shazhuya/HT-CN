@@ -42,6 +42,7 @@ def test_single_t0_snapshot_is_baseline_only() -> None:
     ])
     assert report["status"] == "baseline_only"
     assert report["cohort_counts"] == {"baseline_existing": 2}
+    assert report["prospective_outcome_eligible_row_count"] == 0
     assert report["transition_counts"] == {"baseline_observed": 2}
     assert report["interpretation"]["alpha_inference_allowed"] is False
 
@@ -57,6 +58,8 @@ def test_new_candidate_after_t0_is_prospective_new() -> None:
     assert new.transition_kind == "new_candidate"
     assert new.enrollment_state == "prospective_new"
     assert new.first_observed_trade_date == "2026-09-18"
+    report = build_transition_report(rows)
+    assert report["prospective_outcome_eligible_row_count"] == 1
 
 
 def test_existing_baseline_candidate_never_becomes_prospective_new() -> None:
