@@ -753,3 +753,80 @@ scanner-absent follow-up 虽然可以继续保存真实 OHLC，但如果 candida
 原因：
 
 Prospective research 不能让 scanner visibility 决定一个已入组 candidate 是否继续拥有可计算的 source outcome。D-035 把 forming 时已经可观察的 source-clock 起点冻结下来，使 scanner presence 和 future source-event reconstruction 永久解耦。
+
+
+
+## D-036 — M4 Outcome Protocol v1 在第一笔真实 outcome 前预注册；Source-event 与 market-path 分层
+
+**状态：Frozen preregistered outcome protocol v1**
+
+在 T0 之后尚未产生第一笔真实 future committed capture、尚未看到任何 prospective outcome 的前提下，冻结 M4 第一版 outcome protocol。
+
+正式决定：
+
+1. outcome protocol 与 capture methodology 分开版本化：
+   - capture methodology：v4 / schema v5；
+   - outcome protocol：`m4-outcome-v1`；
+2. outcome cohort 只接受 authoritative evidence 中 `prospective_outcome_eligible=true` 的 candidate；
+3. T0 baseline、pre-enrollment historical Source Terminal、5-0、fail-closed Alternate Bat 不得进入 outcome cohort；
+4. outcome market path 不以 `captured_snapshot_index` 代替交易日序列；
+5. source-event reconstruction 使用本地 M1 **base + daily_delta logical daily history** 的完整 traded-bar path，以解决用户没有每天运行 capture 时的 observation gap；
+6. outcome path 只允许与 enrollment `price_basis_id` 相同的正式 QFQ basis；若 basis drift：
+   - drift 前可成熟的 source facts 保留；
+   - drift 后需要价格比较的 metric 记 unresolved；
+   - v1 不自动 rebase；
+7. outcome evaluator 必须复用现有：
+   - `observe_source_execution()`
+   - `derive_source_lifecycle()`
+   禁止复制一套略有差异的 Terminal / Type-I / Type-II 公式；
+8. frozen enrollment Source-clock seed 是 reconstruction 起点；
+9. 若重建发现 Source Terminal 早于 outcome enrollment，记为 evidence contradiction，禁止把它当正常 outcome；
+10. full-day suspension 不计为 traded bar；固定 bar window 只按真实 traded bars 计数；
+11. Phase 3.0 primary source-event facts：
+    - Source Terminal observed / not yet observed；
+    - terminal trade date / terminal price；
+    - Type-I 38.2% target 是否在 T+1...T+5 traded bars 内命中；
+    - 38.2% / 61.8% first-hit traded-bar offset；
+    - reaction-only later 38.2%；
+    - first Source PRZ exit；
+    - Type-II re-entry；
+    - strict Type-II terminal-side retest；
+    - post-Type-II reversal-direction exit；
+12. 对 Shark：
+    - generic 38.2% / 61.8% 仅作为 canonical Type-I reaction classification；
+    - **不得**把它称为 Shark-specific management target；
+    - Shark 专属 “50% vs Reciprocal AB=CD first target” 不进入 outcome-v1，除非后续单独冻结完整 target input protocol；
+13. Type-II price path 只标为 `type_ii_price_structure_evidence`；
+    未同时满足单独 indicator-confirmation protocol 时，不得写成完整 Carney Type-II reversal proof；
+14. market-path descriptive metrics 只在 Source Terminal 后计算：
+    - 5 traded bars：primary source-aligned window；
+    - 10 / 20 traded bars：预注册 secondary descriptive windows；
+15. 每个窗口记录：
+    - MFE；
+    - MAE；
+    - MFE / MAE 占 `abs(reaction_anchor_price - terminal_price)` 的 span units；
+    - MFE / MAE 占 terminal price 的百分比；
+16. post-terminal window 不包含 T-Bar 本身，从 T+1 开始；
+17. 5/10/20-bar metric 只有在对应 traded bars 全部可观察、价格 basis 未中断时才成熟；不足时标 immature，不用部分窗口冒充完整窗口；
+18. v1 不定义 stop-loss、entry price、position size、fees、T+1 execution P&L，因此不计算交易收益；
+19. v1 不定义“盈利/亏损”“胜/负”二元标签，不输出 win rate；
+20. v1 不做 alpha、benchmark excess return、p-value、显著性、策略排名；
+21. terminal 未出现或 Type-II 尚未完成的 candidate 保持 right-censored / ongoing，不机械记失败；
+22. 每次 outcome extraction 必须记录：
+    - candidate key；
+    - enrollment methodology fingerprint；
+    - outcome protocol ID；
+    - outcome as-of trade date；
+    - M1 price basis ID；
+    - reconstructed traded-date path；
+    - canonical path SHA-256；
+23. 同一 candidate + same outcome as-of 若 canonical market-path hash 变化，必须报告 data drift，不得静默覆盖旧 outcome evidence；
+24. outcome-v1 的机器可读协议冻结在 `research/m4-outcome-protocol-v1.json`；
+25. 第一版 evaluator 必须逐字段服从该协议；任何 metric/window/denominator 变化都需要新的 outcome protocol version，不能改写 v1；
+26. outcome-v1 是 descriptive prospective validation，不是盈利证明。
+
+Source 对齐：
+
+- Carney Volume III：Type-I first PRZ test、Terminal Price Bar、3-5 bars immediate confirmation、38.2%/61.8% automatic objectives；
+- Type-II 是 secondary PRZ retest，且完整 reversal 需要价格与 indicator confirmation；
+- HT-CN 的完整 M1 path、QFQ basis、path hash、5/10/20 secondary windows 属于 A-share research engineering，不冒充 Carney 原文。
