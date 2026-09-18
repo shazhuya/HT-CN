@@ -98,6 +98,50 @@ def capture_transaction_id(
     return sha256(_canonical_json(identity).encode("utf-8")).hexdigest()[:24]
 
 
+def _validate_market_observation_row(
+    row: dict[str, Any],
+) -> None:
+    status = str(row.get("market_observation_status") or "traded")
+    as_of = str(row.get("as_of_trade_date") or "")
+    underlying_raw = row.get("underlying_last_trade_date")
+    underlying = None if underlying_raw is None else str(underlying_raw)
+
+    if status == "traded":
+        if underlying is not None and underlying != as_of:
+            raise ValueError(
+                "traded observation underlying_last_trade_date must equal as_of"
+            )
+        return
+
+    if status != "confirmed_full_day_suspended":
+        raise ValueError(
+            f"unsupported market_observation_status: {status}"
+        )
+    if underlying is None or not as_of or underlying >= as_of:
+        raise ValueError(
+            "suspended observation requires underlying_last_trade_date before as_of"
+        )
+    if str(row.get("execution_context_gate") or "") != "blocked_suspended":
+        raise ValueError(
+            "suspended observation requires execution_context_gate=blocked_suspended"
+        )
+    if not str(row.get("daily_event_source") or ""):
+        raise ValueError(
+            "suspended observation requires positive daily_event_source evidence"
+        )
+    raw_fields = (
+        "as_of_open",
+        "as_of_high",
+        "as_of_low",
+        "as_of_close",
+        "as_of_volume",
+    )
+    if any(row.get(field) is not None for field in raw_fields):
+        raise ValueError(
+            "suspended observation must not contain synthetic as-of OHLC/volume"
+        )
+
+
 def _validate_rows(
     *,
     code_head: str,
@@ -118,6 +162,7 @@ def _validate_rows(
             raise ValueError("capture transaction row unexpectedly permits alpha inference")
         if row.get("is_trade_instruction") is not False:
             raise ValueError("capture transaction row unexpectedly permits trade instruction")
+        _validate_market_observation_row(row)
     if len(keys) != len(set(keys)):
         raise ValueError("capture transaction contains duplicate candidate_key")
 

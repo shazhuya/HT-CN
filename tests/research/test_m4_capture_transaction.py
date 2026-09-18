@@ -346,3 +346,56 @@ def test_legacy_baseline_rejects_cutoff_before_last_row(tmp_path) -> None:
         assert "after baseline_through_trade_date" in str(exc)
     else:
         raise AssertionError("baseline cutoff before row date must fail")
+
+
+def test_transaction_rejects_suspended_row_with_fake_ohlc() -> None:
+    row = _row("suspended")
+    row.update({
+        "underlying_last_trade_date": "2026-09-17",
+        "market_observation_status": "confirmed_full_day_suspended",
+        "execution_context_gate": "blocked_suspended",
+        "daily_event_source": "feed",
+        "as_of_close": 10.0,
+    })
+    try:
+        _capture([row])
+    except ValueError as exc:
+        assert "must not contain synthetic" in str(exc)
+    else:
+        raise AssertionError("suspended fake OHLC must fail")
+
+
+def test_transaction_accepts_valid_suspended_continuity_row() -> None:
+    row = _row("suspended")
+    row.update({
+        "underlying_last_trade_date": "2026-09-17",
+        "market_observation_status": "confirmed_full_day_suspended",
+        "execution_context_gate": "blocked_suspended",
+        "daily_event_source": "feed",
+        "daily_event_reason": "full",
+        "as_of_open": None,
+        "as_of_high": None,
+        "as_of_low": None,
+        "as_of_close": None,
+        "as_of_volume": None,
+    })
+    capture = _capture([row])
+    assert capture.journal_rows[0]["market_observation_status"] == (
+        "confirmed_full_day_suspended"
+    )
+
+
+def test_transaction_rejects_suspended_row_without_positive_event_source() -> None:
+    row = _row("suspended")
+    row.update({
+        "underlying_last_trade_date": "2026-09-17",
+        "market_observation_status": "confirmed_full_day_suspended",
+        "execution_context_gate": "blocked_suspended",
+        "daily_event_source": None,
+    })
+    try:
+        _capture([row])
+    except ValueError as exc:
+        assert "positive daily_event_source" in str(exc)
+    else:
+        raise AssertionError("suspended row without event evidence must fail")
