@@ -348,3 +348,32 @@ def test_invalid_partial_seed_fails_closed() -> None:
             current_price_basis_id=BASIS,
             methodology_fingerprint=METHOD,
         )
+
+
+
+def test_outcome_v2_excursions_are_nonnegative_magnitudes() -> None:
+    frame = _frame([
+        ("2026-09-16", 105.0, 107.0, 103.0, 106.0),
+        ("2026-09-17", 100.0, 102.0, 98.0, 99.0),
+        ("2026-09-18", 98.0, 99.0, 95.0, 96.0),
+        ("2026-09-21", 98.0, 99.0, 97.0, 98.0),
+        ("2026-09-22", 99.0, 100.0, 98.0, 99.0),
+        ("2026-09-23", 100.0, 101.0, 99.0, 100.0),
+        ("2026-09-24", 101.0, 102.0, 100.0, 101.0),
+        ("2026-09-25", 102.0, 103.0, 101.0, 102.0),
+    ])
+    result = evaluate_candidate_outcome(
+        _summary(),
+        frame,
+        outcome_as_of_trade_date="2026-09-25",
+        current_price_mode="qfq",
+        current_price_basis_id=BASIS,
+        methodology_fingerprint=METHOD,
+    )
+    window = result["descriptive_path_windows"]["5"]
+    assert window["status"] == "mature"
+    assert window["metrics"]["mfe_price"] == 8.0
+    assert window["metrics"]["mae_price"] == 0.0
+    assert window["metrics"]["mae_terminal_pct"] == 0.0
+    assert window["metrics"]["mae_reaction_span_units"] == 0.0
+    assert result["outcome_protocol_id"] == "m4-outcome-v2"
