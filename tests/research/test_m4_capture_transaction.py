@@ -266,3 +266,26 @@ def test_committed_transactions_forbid_backfill_after_newer_date(tmp_path) -> No
         assert "forbids backfill" in str(exc)
     else:
         raise AssertionError("transaction backfill must fail closed")
+
+
+def test_tampered_baseline_cutoff_blocks_future_commit(tmp_path) -> None:
+    import json
+    freeze_legacy_baseline(
+        tmp_path,
+        [_row("legacy", date="2026-09-17", head="old")],
+        baseline_through_trade_date="2026-09-17",
+    )
+    path = tmp_path / "legacy_baseline.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["baseline_through_trade_date"] = "2026-09-16"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    capture = _capture(
+        [_row("new", date="2026-09-18")],
+        date="2026-09-18",
+    )
+    try:
+        commit_capture_transaction(tmp_path, capture)
+    except ValueError as exc:
+        assert "legacy baseline identity mismatch" in str(exc)
+    else:
+        raise AssertionError("tampered baseline must fail before future commit")

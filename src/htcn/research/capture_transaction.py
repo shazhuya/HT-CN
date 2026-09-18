@@ -193,10 +193,7 @@ def commit_capture_transaction(
 
     baseline_path = _legacy_baseline_path(target_root)
     if baseline_path.exists():
-        baseline_payload = json.loads(baseline_path.read_text(encoding="utf-8"))
-        baseline_through = str(
-            baseline_payload.get("baseline_through_trade_date") or ""
-        )
+        baseline_through = frozen_legacy_baseline_through_date(target_root)
         if baseline_through and capture.as_of_trade_date <= baseline_through:
             raise ValueError(
                 f"capture transaction must be after frozen legacy baseline: "
@@ -471,8 +468,8 @@ def frozen_legacy_baseline_through_date(root: str | Path) -> str | None:
     path = _legacy_baseline_path(root)
     if not path.exists():
         return None
+    # Validate the immutable baseline identity before trusting its cutoff.
+    read_frozen_legacy_baseline(root)
     payload = json.loads(path.read_text(encoding="utf-8"))
-    if payload.get("status") != "frozen_legacy_baseline":
-        raise ValueError("legacy baseline status is invalid")
     value = payload.get("baseline_through_trade_date")
     return None if value is None else str(value)
