@@ -146,6 +146,8 @@ def build_daily_handoff_bundle(
     cache_root = repo / "data" / "product" / "m5" / "operator_queue"
 
     members: list[tuple[str, bytes, str]] = []
+    product_ready = bool(pipeline_summary.get("m5_product_ready"))
+    research_ready = bool(pipeline_summary.get("m4_research_ready"))
     pipeline_bytes = _canonical_json_bytes(pipeline_summary)
     members.append((
         "pipeline/m5-daily-close-pipeline.json",
@@ -163,7 +165,14 @@ def build_daily_handoff_bundle(
 
     snapshots = _canonical_product_snapshots(cache_root, limit=2)
     for index, path in enumerate(snapshots):
-        role = "m5_current_product_snapshot" if index == 0 else "m5_previous_product_snapshot"
+        if product_ready:
+            role = (
+                "m5_current_product_snapshot"
+                if index == 0
+                else "m5_previous_product_snapshot"
+            )
+        else:
+            role = "m5_existing_product_snapshot"
         members.append((
             f"m5/operator_snapshots/{path.name}",
             path.read_bytes(),
@@ -190,11 +199,13 @@ def build_daily_handoff_bundle(
         members.append((
             "m4/m4-evidence-bundle.zip",
             m4_bundle.read_bytes(),
-            "m4_evidence_transport_bundle",
+            (
+                "m4_evidence_transport_bundle"
+                if research_ready
+                else "m4_existing_evidence_transport_bundle"
+            ),
         ))
 
-    product_ready = bool(pipeline_summary.get("m5_product_ready"))
-    research_ready = bool(pipeline_summary.get("m4_research_ready"))
     current_snapshot_count = sum(
         1 for _, _, role in members
         if role == "m5_current_product_snapshot"
