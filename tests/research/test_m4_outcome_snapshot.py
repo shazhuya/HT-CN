@@ -136,7 +136,7 @@ def test_tampered_snapshot_id_is_detected(tmp_path) -> None:
     payload["results"][0]["market_path_rows"][0]["close"] = 100.5
     path.write_text(json.dumps(payload), encoding="utf-8")
 
-    with pytest.raises(ValueError, match="snapshot id mismatch"):
+    with pytest.raises(ValueError, match="market path hash mismatch"):
         read_outcome_snapshots(tmp_path)
 
 
