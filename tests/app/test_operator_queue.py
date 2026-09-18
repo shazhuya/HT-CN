@@ -3,6 +3,7 @@ from __future__ import annotations
 from htcn.app.operator_queue import (
     WORKFLOW_BUCKET_ORDER,
     build_operator_queue,
+    filter_operator_queue_payload,
 )
 
 
@@ -271,3 +272,31 @@ def test_operator_queue_reports_mixed_as_of_dates() -> None:
         "2026-09-18",
     ]
     assert payload["observation_integrity"] == "mixed_as_of"
+
+
+
+def test_operator_queue_presentation_filter_preserves_full_snapshot_input() -> None:
+    service = FakeService({
+        "SSE.1": _analysis(
+            _pattern(
+                pattern_id="five_zero",
+                action_state="evidence_insufficient",
+                lifecycle_state="source_clock_unavailable",
+            ),
+            _pattern(
+                pattern_id="bat",
+                action_state="waiting",
+                lifecycle_state="approaching_source_prz",
+            ),
+        )
+    })
+    full = build_operator_queue(service, ["SSE.1"])
+    filtered = filter_operator_queue_payload(
+        full,
+        include_evidence_insufficient=False,
+    )
+
+    assert full["candidate_count"] == 2
+    assert filtered["candidate_count"] == 1
+    assert filtered["items"][0]["pattern_id"] == "bat"
+    assert full["items"][0]["action_state"] == "evidence_insufficient"
