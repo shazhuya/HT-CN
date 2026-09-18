@@ -16,13 +16,19 @@ from htcn.data.concepts import (
     concept_sync_is_fresh,
     sync_concept_memberships,
 )
-from htcn.data.providers import AkShareProvider
+from htcn.data.providers import (
+    AkShareProvider,
+    AkShareSinaProvider,
+    BaoStockProvider,
+    FailoverProvider,
+)
 from htcn.data.sectors import (
     build_industry_snapshot_from_local_market,
     membership_sync_is_fresh,
     sync_industry_memberships,
 )
 from htcn.data.trading_events import sync_daily_trading_events
+from htcn.data.trading_clock import latest_closed_trade_clock
 
 
 SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
@@ -36,6 +42,29 @@ def _git_head() -> str | None:
     except Exception:
         return None
 BENCHMARK_START = date(2024, 1, 1)
+
+
+def _calendar_provider() -> FailoverProvider:
+    return FailoverProvider(
+        AkShareProvider(),
+        FailoverProvider(AkShareSinaProvider(), BaoStockProvider()),
+    )
+
+
+def _latest_logical_market_date(catalog: Path, data_root: Path) -> date | None:
+    candidates: list[date] = []
+    with duckdb.connect(str(catalog), read_only=True) as con:
+        row = con.execute("SELECT MAX(last_trade_date) FROM daily_dataset").fetchone()
+        if row is not None and row[0] is not None:
+            candidates.append(pd.Timestamp(row[0]).date())
+    delta_dir = data_root / "daily_delta"
+    if delta_dir.exists():
+        for path in delta_dir.glob("*.parquet"):
+            try:
+                candidates.append(date.fromisoformat(path.stem))
+            except ValueError:
+                continue
+    return max(candidates) if candidates else None
 
 
 def _latest_local_trade_date(catalog: Path) -> date:
@@ -259,10 +288,36 @@ def main() -> int:
     if not catalog.exists():
         raise SystemExit(f"catalog not found: {catalog}")
 
-    target = _latest_local_trade_date(catalog)
+    local_target = _latest_local_trade_date(catalog)
     today = datetime.now(SHANGHAI_TZ).date()
+    calendar_provider = _calendar_provider()
+    clock = latest_closed_trade_clock(calendar_provider)
+    expected_target = clock.target
+    logical_market_latest = _latest_logical_market_date(catalog, data_root)
+    target = local_target
     provider = AkShareProvider()
     layers: dict[str, object] = {}
+
+    freshness_ok = (
+        local_target == expected_target
+        and logical_market_latest is not None
+        and logical_market_latest >= expected_target
+    )
+    layers["market_data_freshness"] = {
+        "state": "current" if freshness_ok else "failed",
+        "expected_trade_date": expected_target.isoformat(),
+        "local_trade_calendar_latest": local_target.isoformat(),
+        "logical_market_latest": (
+            None if logical_market_latest is None else logical_market_latest.isoformat()
+        ),
+        "calendar_source": clock.calendar_source,
+        "same_day_closed": clock.same_day_closed,
+        "reason": (
+            "local calendar and logical base+delta history align to latest closed trade day"
+            if freshness_ok
+            else "local M1 calendar/history does not align to latest closed trade day"
+        ),
+    }
 
     try:
         count = sync_daily_trading_events(
@@ -313,6 +368,12 @@ def main() -> int:
         "schema_version": 1,
         "code_head": _git_head(),
         "target_trade_date": target.isoformat(),
+        "expected_trade_date": expected_target.isoformat(),
+        "local_trade_calendar_latest": local_target.isoformat(),
+        "logical_market_latest": (
+            None if logical_market_latest is None else logical_market_latest.isoformat()
+        ),
+        "calendar_source": clock.calendar_source,
         "run_date_shanghai": today.isoformat(),
         "overall": overall,
         "is_score": False,
