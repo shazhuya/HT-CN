@@ -5,6 +5,7 @@ import AShareExecutionContext, { AShareExecutionContextPayload } from './AShareE
 import MarketContext, { MarketContextPayload } from './MarketContext'
 import SectorContext, { IndustryContextPayload } from './SectorContext'
 import ConceptContext, { ConceptContextPayload } from './ConceptContext'
+import ContextIntegrity, { ContextIntegrityPayload } from './ContextIntegrity'
 
 type Health = {
   status: string
@@ -35,6 +36,7 @@ type Analysis = {
   market_context?: MarketContextPayload
   sector_context?: IndustryContextPayload
   concept_context?: ConceptContextPayload
+  context_integrity?: ContextIntegrityPayload
   engine_note: string
 }
 
@@ -254,6 +256,7 @@ export default function App() {
 
           {analysis.warning && <div className="warning-card">{analysis.warning}</div>}
 
+          <ContextIntegrity context={analysis.context_integrity} />
           <AShareExecutionContext context={analysis.a_share_execution_context} />
           <MarketContext context={analysis.market_context} />
           <SectorContext context={analysis.sector_context} />
