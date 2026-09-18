@@ -20,6 +20,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         f"- 日志交易日数量：{payload.get('date_count', 0)}",
         f"- Journal 行数：{payload.get('journal_row_count', 0)}",
         f"- 最新候选数：{payload.get('latest_candidate_count', 0)}",
+        f"- Prospective outcome eligible 行数：{payload.get('prospective_outcome_eligible_row_count', 0)}",
         "",
         "## Cohort",
         "",
@@ -63,6 +64,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         "- 不使用线性 lifecycle 排名，因此不会把分叉状态强行解释成‘升级/降级’。",
         "- `baseline_existing` 不是从 formation 开始的 prospective 样本。",
         "- 只有 T0 之后首次出现的 `prospective_new` 才属于真正新入组候选。",
+        "- 只有 prospective_outcome_eligible=true 的记录才允许进入未来 outcome protocol；T0 baseline 永远排除。",
         "- 本报告不计算胜率、收益率、alpha 或交易评分。",
         "",
     ])

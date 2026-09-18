@@ -9,6 +9,7 @@ def test_markdown_keeps_disappearance_and_alpha_boundaries_explicit() -> None:
         "date_count": 2,
         "journal_row_count": 4,
         "latest_candidate_count": 2,
+        "prospective_outcome_eligible_row_count": 1,
         "cohort_counts": {
             "baseline_existing": 3,
             "prospective_new": 1,
@@ -37,6 +38,7 @@ def test_baseline_only_markdown_does_not_claim_transition() -> None:
         "date_count": 1,
         "journal_row_count": 87,
         "latest_candidate_count": 87,
+        "prospective_outcome_eligible_row_count": 0,
         "cohort_counts": {"baseline_existing": 87},
         "transition_counts": {"baseline_observed": 87},
         "latest_lifecycle_state_counts": {"approaching_source_prz": 50},
@@ -44,4 +46,5 @@ def test_baseline_only_markdown_does_not_claim_transition() -> None:
     }
     text = render_markdown(payload)
     assert "baseline_existing" in text
+    assert "Prospective outcome eligible 行数：0" in text
     assert "当前没有可比较的跨交易日 lifecycle change" in text
