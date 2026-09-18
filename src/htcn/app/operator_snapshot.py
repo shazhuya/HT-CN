@@ -12,6 +12,7 @@ from typing import Any, Iterable
 
 import duckdb
 
+from .operator_input_identity import OperatorCacheInputIdentity
 from .operator_queue import (
     AnalysisService,
     AnalysisServiceFactory,
@@ -21,7 +22,7 @@ from .operator_queue import (
 
 
 OPERATOR_SNAPSHOT_SCHEMA_VERSION = 1
-OPERATOR_SNAPSHOT_CONTRACT_VERSION = 1
+OPERATOR_SNAPSHOT_CONTRACT_VERSION = 2
 
 _SINGLE_FLIGHT_GUARD = Lock()
 _SINGLE_FLIGHT: dict[str, Future[dict[str, Any]]] = {}
@@ -74,6 +75,7 @@ def _attach_cache_metadata(
     expected_trade_date: str | None,
     cache_path: Path | None,
     generated_at_utc: str | None,
+    input_identity: OperatorCacheInputIdentity,
 ) -> dict[str, Any]:
     payload = deepcopy(queue)
     as_of = payload.get("as_of_trade_date")
@@ -92,6 +94,10 @@ def _attach_cache_metadata(
         "freshness": freshness,
         "cache_path": None if cache_path is None else str(cache_path),
         "generated_at_utc": generated_at_utc,
+        "input_identity_contract_version": input_identity.contract_version,
+        "input_identity_fingerprint": input_identity.fingerprint,
+        "data_input_fingerprint": input_identity.data.fingerprint,
+        "analysis_code_fingerprint": input_identity.analysis_code.fingerprint,
         "single_flight_scope": "process_local_cache_identity",
         "coalesced_from_status": None,
         "authoritative_evidence": False,
@@ -107,6 +113,7 @@ def _validate_cached_snapshot(
     bars: int,
     scales: tuple[int, ...],
     universe_hash: str,
+    input_identity: OperatorCacheInputIdentity,
 ) -> dict[str, Any]:
     if int(payload.get("schema_version") or 0) != OPERATOR_SNAPSHOT_SCHEMA_VERSION:
         raise ValueError("operator snapshot schema mismatch")
@@ -120,6 +127,19 @@ def _validate_cached_snapshot(
         raise ValueError("operator snapshot scales mismatch")
     if str(payload.get("universe_hash") or "") != universe_hash:
         raise ValueError("operator snapshot universe mismatch")
+    stored_identity = payload.get("input_identity")
+    if not isinstance(stored_identity, dict):
+        raise ValueError("operator snapshot input identity missing")
+    if int(stored_identity.get("contract_version") or 0) != input_identity.contract_version:
+        raise ValueError("operator snapshot input-identity contract mismatch")
+    if str(stored_identity.get("fingerprint") or "") != input_identity.fingerprint:
+        raise ValueError("operator snapshot input identity mismatch")
+    stored_data = stored_identity.get("data") or {}
+    stored_code = stored_identity.get("analysis_code") or {}
+    if str(stored_data.get("fingerprint") or "") != input_identity.data.fingerprint:
+        raise ValueError("operator snapshot data-input identity mismatch")
+    if str(stored_code.get("fingerprint") or "") != input_identity.analysis_code.fingerprint:
+        raise ValueError("operator snapshot analysis-code identity mismatch")
     queue = payload.get("queue")
     if not isinstance(queue, dict):
         raise ValueError("operator snapshot missing queue")
@@ -147,6 +167,7 @@ def _single_flight_key(
     bars: int,
     scales: tuple[int, ...],
     universe_hash: str,
+    input_identity: OperatorCacheInputIdentity,
 ) -> str:
     material = {
         "cache_root": str(cache_root.resolve()),
@@ -155,6 +176,8 @@ def _single_flight_key(
         "scales": list(scales),
         "universe_hash": universe_hash,
         "contract_version": OPERATOR_SNAPSHOT_CONTRACT_VERSION,
+        "input_identity_contract_version": input_identity.contract_version,
+        "input_identity_fingerprint": input_identity.fingerprint,
     }
     return sha256(_canonical_json(material).encode("utf-8")).hexdigest()
 
@@ -166,6 +189,7 @@ def _load_valid_cached_snapshot(
     bars: int,
     scales: tuple[int, ...],
     universe_hash: str,
+    input_identity: OperatorCacheInputIdentity,
 ) -> tuple[dict[str, Any], str] | None:
     if (
         cache_path is None
@@ -183,6 +207,7 @@ def _load_valid_cached_snapshot(
             bars=bars,
             scales=scales,
             universe_hash=universe_hash,
+            input_identity=input_identity,
         )
         return queue, str(stored.get("generated_at_utc") or "")
     except Exception:
@@ -228,6 +253,7 @@ def build_or_load_operator_snapshot(
     *,
     cache_root: str | Path,
     expected_trade_date: str | None,
+    input_identity: OperatorCacheInputIdentity,
     bars: int = 420,
     scales: tuple[int, ...] = (3, 5, 8, 13),
     force_refresh: bool = False,
@@ -254,6 +280,7 @@ def build_or_load_operator_snapshot(
             bars=bars,
             scales=scales,
             universe_hash=universe_hash,
+            input_identity=input_identity,
         )
         if cached is not None:
             queue, generated_at = cached
@@ -263,6 +290,7 @@ def build_or_load_operator_snapshot(
                 expected_trade_date=expected_trade_date,
                 cache_path=cache_path,
                 generated_at_utc=generated_at,
+                input_identity=input_identity,
             )
 
     flight_key = _single_flight_key(
@@ -271,6 +299,7 @@ def build_or_load_operator_snapshot(
         bars=bars,
         scales=scales,
         universe_hash=universe_hash,
+        input_identity=input_identity,
     )
     with _SINGLE_FLIGHT_GUARD:
         existing = _SINGLE_FLIGHT.get(flight_key)
@@ -296,6 +325,7 @@ def build_or_load_operator_snapshot(
                 bars=bars,
                 scales=scales,
                 universe_hash=universe_hash,
+                input_identity=input_identity,
             )
             if cached is not None:
                 queue, generated_at = cached
@@ -305,6 +335,7 @@ def build_or_load_operator_snapshot(
                     expected_trade_date=expected_trade_date,
                     cache_path=cache_path,
                     generated_at_utc=generated_at,
+                    input_identity=input_identity,
                 )
                 future.set_result(deepcopy(result))
                 return result
@@ -356,6 +387,7 @@ def build_or_load_operator_snapshot(
                 "scales": list(scales),
                 "universe_hash": universe_hash,
                 "instrument_count": len(instruments),
+                "input_identity": input_identity.as_payload(),
                 "queue": queue,
                 "authoritative_evidence": False,
                 "writes_m4_evidence": False,
@@ -371,6 +403,7 @@ def build_or_load_operator_snapshot(
             expected_trade_date=expected_trade_date,
             cache_path=cache_path if can_cache else None,
             generated_at_utc=generated_at,
+            input_identity=input_identity,
         )
         future.set_result(deepcopy(result))
         return result
