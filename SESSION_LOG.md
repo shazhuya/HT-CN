@@ -568,3 +568,36 @@ Key commits in this audit chain:
 - `b4349d9853ae25f5509c7149803c9168538e25ef`: suspension-aware capture pipeline;
 - `07400d89d93a2c5385f6e88bddbc40d19cf9d152`: suspension facts in prospective observations;
 - `690cf559446bc39dd5d0151e25da524d586483bf`: observation/report suspension regressions.
+
+
+## M4 Phase 2.8 / methodology identity
+
+Assistant-side source audit found that the first Phase 2.8 commit created a deterministic
+methodology fingerprint module but did not yet bind that identity into authoritative evidence.
+
+Closed in this batch:
+
+- expanded methodology fingerprint coverage to include advanced RSI BAMM / indicator /
+  lifecycle / 5-0 source files that can affect harmonic interpretation;
+- capture transaction schema advanced to v2;
+- new committed captures require `methodology_contract_version` and
+  `methodology_fingerprint`;
+- methodology identity is included in deterministic transaction-id material;
+- active committed chain rejects methodology drift before append;
+- schema-v1 pre-fingerprint captures remain readable only for explicit migration audit;
+- evidence-health compares the current methodology fingerprint with the authoritative chain
+  and blocks mismatch;
+- snapshot compatibility manifest exposes methodology identity;
+- mirror integrity now detects methodology-field drift;
+- transition and prospective-observation reports expose the authoritative fingerprint;
+- D-028 and `specs/m4-phase-2-8-methodology-identity.md` freeze the contract.
+
+Additional correction from this audit:
+the initial fingerprint list omitted `rsi_bamm.py`, `rsi_bamm_lifecycle.py`,
+`five_zero_source.py`, `indicators.py` and `lifecycle.py`; they are now included and
+protected by a regression test.
+
+GitHub Actions remains infrastructure-limited:
+latest push / pull_request deterministic-tests jobs completed with `steps=null`, so no pytest
+or Web build actually executed. This is the same known runner-allocation anomaly and is not
+counted as test pass or code failure.
