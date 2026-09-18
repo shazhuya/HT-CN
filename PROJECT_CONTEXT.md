@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `f12f6f789945f657e0446a113737320849d0b7b3`
-context_checkpoint_title: `M4 Phase 2.10 methodology-v2 exact pre-T1 freeze guard`
+context_checkpoint: `e4265af78c7c15c4336e4416d4199808cbca2590`
+context_checkpoint_title: `M4 Phase 2.11 schema-v4 QFQ price-basis provenance + methodology v3`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -796,11 +796,35 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 
 
 
+
+## M4 Phase 2.11 — Price-basis provenance / D-034
+
+第一笔真实 post-T0 future capture 之前，发现并修复价格标尺 provenance 缺口。
+
+当前正式 T1 协议：
+
+- committed capture schema：**v4**；
+- methodology contract：**v3**；
+- fingerprint components：**37**；
+- exact methodology freeze commit：`2b0aa92d292410098d9678a3bfd3102f3df1ed4b`；
+- formal prospective price mode 仅允许 `qfq / qfq_carry_forward`；
+- raw fallback 只能诊断展示，`eligible_for_validation=false`，且 authoritative capture 整轮 fail closed；
+- 每个正式 analysis / journal / follow-up 保存 `price_mode + price_basis_id`；
+- `price_basis_id` 对 QFQ factor **change-point sequence** 做 SHA-256，同 factor 仅延长日期不会改变 ID；
+- schema v4 journal / follow-up 缺 basis 直接 hard fail；
+- prospective observation schema v3 冻结 enrollment basis，并记录后续 basis drift；
+- basis drift 不自动重基准，不改 scanner/lifecycle，不计算跨 basis return / MFE / MAE；
+- intake 在 drift 存在时输出 warning：
+  `price_basis_drift_present_future_outcome_rebase_required`；
+- 未来若计算跨 basis outcome，必须单独预注册 rebasing protocol。
+
+D-033 的 v2 exact freeze 仍作为历史审计 checkpoint 保留，但在第一笔 T1 之前已被 D-034 显式 supersede。
+
 ## M4 pre-T1 exact methodology freeze — D-033
 
 第一笔 T1 不能只依赖“HEAD 包含 methodology-v2 commit”。
 
-当前精确冻结：
+历史 D-033 精确冻结（已被 D-034 supersede）：
 
 - frozen methodology commit：`084ddf649e031e8169a761fd3b8578f73b31b5c2`；
 - methodology contract：v2；
@@ -934,8 +958,8 @@ Phase 2 assistant-side 结构收口已完成。下一次用户本机参与只用
 - `m4/real-a-share-validation-workflow` HEAD 与本 `context_checkpoint` 的差异；
 - PR #13 当前状态；
 - Actions runner 是否恢复真实 `steps/logs`，不得把 runner_id=0 当代码失败；
-- `specs/m4-phase-2-8-methodology-identity.md`、`m4-phase-2-9-evidence-intake.md`、`m4-phase-2-10-cohort-followup.md` 与当前代码是否一致；
-- 当前 methodology contract / fingerprint component count 是否仍为 v2 / 37；
+- `specs/m4-phase-2-8-methodology-identity.md`、`m4-phase-2-9-evidence-intake.md`、`m4-phase-2-10-cohort-followup.md`、`m4-phase-2-11-price-basis-provenance.md` 与当前代码是否一致；
+- 当前 authoritative schema / methodology contract / fingerprint component count 是否仍为 v4 / v3 / 37；
 - 是否已经产生第一笔 post-T0 authoritative capture；若有，必须先从 evidence bundle / transaction chain 恢复，不得猜测。
 
 完成上述检查后，才能宣称“已恢复 HT-CN 当前现场”。
