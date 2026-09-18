@@ -201,3 +201,16 @@ def test_reader_rejects_row_transaction_id_tamper(tmp_path) -> None:
         assert "row transaction-id mismatch" in str(exc)
     else:
         raise AssertionError("row transaction id tamper must fail")
+
+
+def test_reader_allows_frozen_baseline_and_committed_capture_to_coexist(tmp_path) -> None:
+    freeze_legacy_baseline(
+        tmp_path,
+        [_row("legacy", date="2026-09-17", head="old")],
+    )
+    capture = _capture([_row("new")])
+    commit_capture_transaction(tmp_path, capture)
+    committed = read_committed_captures(tmp_path)
+    assert len(committed) == 1
+    assert committed[0]["transaction_id"] == capture.transaction_id
+    assert len(read_frozen_legacy_baseline(tmp_path)) == 1

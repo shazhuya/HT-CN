@@ -234,7 +234,7 @@ def read_committed_captures(root: str | Path) -> list[dict[str, Any]]:
         return []
     captures: list[dict[str, Any]] = []
     dates: set[str] = set()
-    for path in sorted(target_root.glob("*.json")):
+    for path in sorted(target_root.glob("????-??-??__*.json")):
         if path.name.startswith("."):
             continue
         payload = json.loads(path.read_text(encoding="utf-8"))
