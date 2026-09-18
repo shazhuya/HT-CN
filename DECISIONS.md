@@ -690,3 +690,66 @@ HT-CN 正式谐波分析使用 QFQ 连续价格；但此前 M4 journal / follow-
 原因：
 
 未来 outcome 研究必须先保证“比较的是同一个价格标尺”。在没有 provenance 的情况下，除权除息后的 QFQ 重标可能把真实市场路径与入组时的 harmonic price levels 放到不同坐标系。D-034 选择 fail-safe 记录 basis drift，而不是在看到样本后临时选择 rebasing 方法。
+
+
+
+## D-035 — Outcome enrollment 必须冻结可重建 Source execution clock 的最小 seed；schema v5 / methodology v4
+
+**状态：Frozen M4 source-clock reconstruction contract**
+
+在 Phase 2.11 price-basis provenance 收口后，对未来 outcome protocol 做数据充分性审计时发现：
+
+scanner-absent follow-up 虽然可以继续保存真实 OHLC，但如果 candidate 在 Source Terminal 出现之前从 scanner 消失，仅有 direction + frozen Source Raw PRZ + future OHLC 仍不足以无损重建现有 `observe_source_execution()` 时钟。该函数还需要：
+
+- forming projection 的 observable signal time；
+- reaction anchor price。
+
+如果这些事实不在 enrollment 时冻结，未来 Type-I / Type-II source-event 研究会对“持续被 scanner 看见”的 candidate 产生 informative censoring。
+
+正式决定：
+
+1. strict prospective outcome enrollment 必须冻结最小 Source-clock seed：
+   - `source_signal_trade_date`
+   - `source_signal_clock_basis`
+   - `source_reaction_anchor_label`
+   - `source_reaction_anchor_price`
+2. 当前 signal clock basis 固定为：
+   `last_frontier_pivot_confirmed_at=index+scale`；
+3. reaction anchor 使用现有 Source execution 规则：
+   - Shark / `0XABC`：B；
+   - XABCD / standalone AB=CD：A；
+4. 这些字段直接来自 forming payload 已有 `execution_clock`，不重新推导、不发明新的 harmonic identity；
+5. candidate 若缺任一 seed 字段，D-024 outcome enrollment fail closed，reason：
+   `source_clock_seed_unresolved`；
+6. signal trade date 晚于当前 observation 时 fail closed，reason：
+   `source_clock_seed_after_observation`；
+7. journal row 可完全没有 seed（例如非 enrollment candidate），但不得只保存部分 seed；
+8. committed capture schema 从 v4 升级为 **v5**：
+   - seed 四项要么全有、要么全无；
+   - partial seed hard fail；
+   - v1-v4 只保留历史读取兼容，不得静默续接 v5；
+9. prospective observation schema 从 v3 升级为 **v4**；
+10. outcome enrollment candidate summary 永久冻结 `enrollment_source_clock_seed`，包含：
+    - pattern_id / schema / direction / scale；
+    - enrollment lifecycle；
+    - frozen Source Raw PRZ；
+    - signal trade date / signal clock basis；
+    - reaction anchor label / price；
+11. candidate 入组后 scanner 消失：
+    - scanner presence 仍为 absent；
+    - follow-up 不拥有 lifecycle；
+    - frozen enrollment seed 不被删除；
+    - future source-event evaluator 可用 frozen seed + authoritative market observations 重建 Source execution clock；
+12. candidate 后续变 completed 时，不要求 completed payload 重复携带 forming execution_clock；enrollment seed 已经冻结；
+13. seed 不修改 harmonic identity、Fibonacci ratios、Source Raw PRZ、BAMM 或 candidate key；
+14. seed 不构成交易指令、胜率或 alpha；
+15. 若 price basis 后续 drift，D-034 继续优先：在显式 rebasing protocol 冻结前，不允许跨 basis 直接计算 target hit / return / MFE / MAE；
+16. methodology contract 从 v3 升级为 **v4**，component path count 保持 37；
+17. methodology-v4 exact freeze commit：
+    `c774c54928c33361952bf1a612a8555633449625`；
+18. D-034 的 methodology-v3 freeze 是有效历史 checkpoint，但在第一笔 T1 之前已被 D-035 显式 supersede；
+19. 第一笔 post-T0 future committed capture 仍未产生，因此 v4 升级没有迁移、重写或混合任何 future evidence。
+
+原因：
+
+Prospective research 不能让 scanner visibility 决定一个已入组 candidate 是否继续拥有可计算的 source outcome。D-035 把 forming 时已经可观察的 source-clock 起点冻结下来，使 scanner presence 和 future source-event reconstruction 永久解耦。
