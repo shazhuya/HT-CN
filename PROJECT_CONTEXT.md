@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `d6fc4972674456a5047e9115f2a9be1ad3b543ce`
-context_checkpoint_title: `M4 QFQ readiness 53/55; safe internal provider-calendar gap repair frozen`
+context_checkpoint: `af1124dcd32bd1d719877e7d88ff74d26c6deebf`
+context_checkpoint_title: `M4 QFQ readiness 54/55; historical Saturday continuity repair frozen`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -1316,4 +1316,24 @@ Freeze audit：
 - Outcome Engine：0/4 drift。
 
 下一次本地运行预计只需要重新处理剩余 2 个缺 factor 标的；已完成的 53 个会直接 READY，不重复整批下载。
+
+## M4 third private bundle — D-041
+
+Latest bundle audit:
+- formal QFQ ready: 54/55;
+- newly repaired in that run: SSE.600057;
+- only remaining blocked instrument: SZSE.000001;
+- remaining missing provider-calendar sessions are all 1991 Saturdays;
+- committed_capture_count=0;
+- outcome_snapshot_count=0;
+- no authoritative T1 was written.
+
+D-041 adds a separate early-Saturday compatibility path that requires raw pre-close continuity on both sides before any repair. It does not relax the generic 0.5% factor-regime rule.
+
+Validation:
+- GitHub Actions run #1459: success;
+- capture methodology drift 0/37;
+- Outcome Engine drift 0/4.
+
+Next local run should reuse 54 already-ready instruments and only attempt SZSE.000001 before entering authoritative T1 capture.
 
