@@ -18,39 +18,45 @@ if not exist "data\market\catalog.duckdb" (
 echo ============================================================
 echo HT-CN M4 PROSPECTIVE EVIDENCE CAPTURE
 echo Current closed day only. No historical backfill.
-echo One run: capture + health + transition + observation.
+echo One run: capture + health + transition + observation + handoff bundle.
 echo ============================================================
 echo.
 
-echo [1/4] Authoritative lifecycle capture...
+echo [1/5] Authoritative lifecycle capture...
 .venv\Scripts\python.exe scripts\m4_capture_lifecycle_snapshot.py
 set "CAPTURE_EXIT=!ERRORLEVEL!"
 
 echo.
-echo [2/4] Evidence-chain health...
+echo [2/5] Evidence-chain health...
 .venv\Scripts\python.exe scripts\m4_evidence_health.py
 set "HEALTH_EXIT=!ERRORLEVEL!"
 
 echo.
-echo [3/4] Lifecycle transition report...
+echo [3/5] Lifecycle transition report...
 .venv\Scripts\python.exe scripts\m4_build_transition_report.py
 set "TRANSITION_EXIT=!ERRORLEVEL!"
 
 echo.
-echo [4/4] Prospective observation report...
+echo [4/5] Prospective observation report...
 .venv\Scripts\python.exe scripts\m4_build_observation_report.py
 set "OBSERVATION_EXIT=!ERRORLEVEL!"
+
+echo.
+echo [5/5] Evidence handoff bundle...
+.venv\Scripts\python.exe scripts\m4_export_evidence_bundle.py
+set "BUNDLE_EXIT=!ERRORLEVEL!"
 
 set "FINAL_EXIT=0"
 if not "!CAPTURE_EXIT!"=="0" set "FINAL_EXIT=1"
 if not "!HEALTH_EXIT!"=="0" set "FINAL_EXIT=1"
 if not "!TRANSITION_EXIT!"=="0" set "FINAL_EXIT=1"
 if not "!OBSERVATION_EXIT!"=="0" set "FINAL_EXIT=1"
+if not "!BUNDLE_EXIT!"=="0" set "FINAL_EXIT=1"
 
 echo.
 echo ============================================================
 echo HT-CN M4 CAPTURE SUMMARY
-echo capture=!CAPTURE_EXIT! health=!HEALTH_EXIT! transition=!TRANSITION_EXIT! observation=!OBSERVATION_EXIT!
+echo capture=!CAPTURE_EXIT! health=!HEALTH_EXIT! transition=!TRANSITION_EXIT! observation=!OBSERVATION_EXIT! bundle=!BUNDLE_EXIT!
 echo ============================================================
 
 if "!FINAL_EXIT!"=="0" (
@@ -64,6 +70,7 @@ echo Snapshot:     artifacts\reports\m4-lifecycle-snapshot.json
 echo Health:       artifacts\reports\m4-evidence-health.json
 echo Transitions:  artifacts\reports\m4-lifecycle-transitions.json
 echo Observations: artifacts\reports\m4-prospective-observations.json
+echo Bundle:       artifacts\reports\m4-evidence-bundle.zip
 echo Transactions: data\research\m4\captures
 echo Journal mirror: data\research\m4\lifecycle_journal.jsonl
 echo Manifest mirror: data\research\m4\snapshot_manifest.jsonl
