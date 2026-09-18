@@ -43,6 +43,12 @@ STEP_SPECS: dict[str, DailyCloseStep] = {
         "m5-daily-operator-cache.log",
         "m5_product",
     ),
+    "m5_operator_cache_finalize": DailyCloseStep(
+        "m5_operator_cache_finalize",
+        ("scripts/m5_precompute_operator_snapshot.py",),
+        "m5-daily-operator-cache-finalize.log",
+        "m5_product",
+    ),
     "m4_methodology_guard": DailyCloseStep(
         "m4_methodology_guard",
         ("scripts/m4_methodology_freeze_guard.py",),
@@ -129,10 +135,12 @@ def execute_daily_close_steps(
     research_preflight_ready: bool = True,
     research_preflight_reason: str | None = None,
 ) -> dict[str, object]:
-    """Run the daily product lane first, then an independently gated M4 lane.
+    """Run M5 early, isolate M4, then revalidate final M5 cache identity.
 
     Shared M1 freshness may gate both lanes. M4 methodology/QFQ requirements
-    never gate M5 Operator Queue product readiness.
+    never gate M5 Operator Queue readiness. A final non-force product cache
+    validation closes any input-identity change caused by the later M4 QFQ
+    provisioning step.
     """
     results: dict[str, DailyCloseStepResult] = {}
 
@@ -148,7 +156,10 @@ def execute_daily_close_steps(
 
         product_step = STEP_SPECS["m5_operator_cache"]
         product_code = int(run_step(product_step))
-        results["m5_operator_cache"] = _ran(product_step, product_code)
+        results["m5_operator_cache"] = _ran(
+            product_step,
+            product_code,
+        )
     else:
         context_code = 1
         product_code = 1
@@ -160,9 +171,6 @@ def execute_daily_close_steps(
             "m5_operator_cache",
             "m1_update_failed",
         )
-
-    m5_product_ready = market_data_ready and product_code == 0
-    m5_context_refresh_ready = market_data_ready and context_code == 0
 
     research_names = (
         "m4_methodology_guard",
@@ -183,89 +191,129 @@ def execute_daily_close_steps(
         )
         for name in research_names:
             results[name] = _skipped(name, reason)
-        return build_daily_close_summary(results)
-
-    methodology_step = STEP_SPECS["m4_methodology_guard"]
-    methodology_code = int(run_step(methodology_step))
-    results["m4_methodology_guard"] = _ran(
-        methodology_step,
-        methodology_code,
-    )
-
-    outcome_guard_step = STEP_SPECS["m4_outcome_guard"]
-    outcome_guard_code = int(run_step(outcome_guard_step))
-    results["m4_outcome_guard"] = _ran(
-        outcome_guard_step,
-        outcome_guard_code,
-    )
-    guards_ready = methodology_code == 0 and outcome_guard_code == 0
-
-    if guards_ready and market_data_ready:
-        qfq_step = STEP_SPECS["m4_qfq_readiness"]
-        qfq_code = int(run_step(qfq_step))
-        results["m4_qfq_readiness"] = _ran(qfq_step, qfq_code)
     else:
-        qfq_code = 1
-        results["m4_qfq_readiness"] = _skipped(
-            "m4_qfq_readiness",
-            (
-                "m4_guard_failed"
-                if not guards_ready
-                else "m1_update_failed"
-            ),
+        methodology_step = STEP_SPECS["m4_methodology_guard"]
+        methodology_code = int(run_step(methodology_step))
+        results["m4_methodology_guard"] = _ran(
+            methodology_step,
+            methodology_code,
         )
 
-    if guards_ready and market_data_ready and qfq_code == 0:
-        capture_step = STEP_SPECS["m4_capture"]
-        capture_code = int(run_step(capture_step))
-        results["m4_capture"] = _ran(capture_step, capture_code)
-    else:
-        capture_code = 1
-        results["m4_capture"] = _skipped(
-            "m4_capture",
-            (
-                "m4_qfq_not_ready"
-                if guards_ready and market_data_ready
-                else "m4_guard_or_market_data_not_ready"
-            ),
+        outcome_guard_step = STEP_SPECS["m4_outcome_guard"]
+        outcome_guard_code = int(run_step(outcome_guard_step))
+        results["m4_outcome_guard"] = _ran(
+            outcome_guard_step,
+            outcome_guard_code,
+        )
+        guards_ready = (
+            methodology_code == 0
+            and outcome_guard_code == 0
         )
 
-    if guards_ready:
-        for name in ("m4_health", "m4_transition", "m4_observation"):
-            step = STEP_SPECS[name]
+        if guards_ready and market_data_ready:
+            qfq_step = STEP_SPECS["m4_qfq_readiness"]
+            qfq_code = int(run_step(qfq_step))
+            results["m4_qfq_readiness"] = _ran(
+                qfq_step,
+                qfq_code,
+            )
+        else:
+            qfq_code = 1
+            results["m4_qfq_readiness"] = _skipped(
+                "m4_qfq_readiness",
+                (
+                    "m4_guard_failed"
+                    if not guards_ready
+                    else "m1_update_failed"
+                ),
+            )
+
+        if guards_ready and market_data_ready and qfq_code == 0:
+            capture_step = STEP_SPECS["m4_capture"]
+            capture_code = int(run_step(capture_step))
+            results["m4_capture"] = _ran(
+                capture_step,
+                capture_code,
+            )
+        else:
+            capture_code = 1
+            results["m4_capture"] = _skipped(
+                "m4_capture",
+                (
+                    "m4_qfq_not_ready"
+                    if guards_ready and market_data_ready
+                    else "m4_guard_or_market_data_not_ready"
+                ),
+            )
+
+        if guards_ready:
+            for name in (
+                "m4_health",
+                "m4_transition",
+                "m4_observation",
+            ):
+                step = STEP_SPECS[name]
+                code = int(run_step(step))
+                results[name] = _ran(step, code)
+        else:
+            for name in (
+                "m4_health",
+                "m4_transition",
+                "m4_observation",
+            ):
+                results[name] = _skipped(
+                    name,
+                    "m4_guard_failed",
+                )
+
+        health_ready = (
+            results["m4_health"].status == "passed"
+            and results["m4_health"].exit_code == 0
+        )
+        observation_ready = (
+            results["m4_observation"].status == "passed"
+            and results["m4_observation"].exit_code == 0
+        )
+
+        if (
+            capture_code == 0
+            and health_ready
+            and observation_ready
+        ):
+            step = STEP_SPECS["m4_outcome"]
             code = int(run_step(step))
-            results[name] = _ran(step, code)
-    else:
-        for name in ("m4_health", "m4_transition", "m4_observation"):
-            results[name] = _skipped(name, "m4_guard_failed")
+            results["m4_outcome"] = _ran(step, code)
+        else:
+            results["m4_outcome"] = _skipped(
+                "m4_outcome",
+                "capture_health_or_observation_not_ready",
+            )
 
-    health_ready = (
-        results["m4_health"].status == "passed"
-        and results["m4_health"].exit_code == 0
-    )
-    observation_ready = (
-        results["m4_observation"].status == "passed"
-        and results["m4_observation"].exit_code == 0
-    )
+        if guards_ready:
+            step = STEP_SPECS["m4_bundle"]
+            code = int(run_step(step))
+            results["m4_bundle"] = _ran(step, code)
+        else:
+            results["m4_bundle"] = _skipped(
+                "m4_bundle",
+                "m4_guard_failed",
+            )
 
-    if capture_code == 0 and health_ready and observation_ready:
-        step = STEP_SPECS["m4_outcome"]
-        code = int(run_step(step))
-        results["m4_outcome"] = _ran(step, code)
-    else:
-        results["m4_outcome"] = _skipped(
-            "m4_outcome",
-            "capture_health_or_observation_not_ready",
+    # M4 QFQ provisioning can change adjustment/qfq, which is part of the
+    # Phase-7 M5 data identity. Revalidate product cache *after* the research
+    # lane. This call is non-force: unchanged input becomes a cheap cache hit;
+    # changed input causes exactly one current-identity rebuild.
+    if market_data_ready:
+        final_step = STEP_SPECS["m5_operator_cache_finalize"]
+        final_code = int(run_step(final_step))
+        results["m5_operator_cache_finalize"] = _ran(
+            final_step,
+            final_code,
         )
-
-    if guards_ready:
-        step = STEP_SPECS["m4_bundle"]
-        code = int(run_step(step))
-        results["m4_bundle"] = _ran(step, code)
     else:
-        results["m4_bundle"] = _skipped(
-            "m4_bundle",
-            "m4_guard_failed",
+        results["m5_operator_cache_finalize"] = _skipped(
+            "m5_operator_cache_finalize",
+            "m1_update_failed",
         )
 
     return build_daily_close_summary(results)
@@ -284,7 +332,13 @@ def build_daily_close_summary(
 
     market_data_ready = passed("m1_update")
     m5_context_refresh_ready = passed("context_sync")
-    m5_product_ready = market_data_ready and passed("m5_operator_cache")
+    m5_initial_product_ready = (
+        market_data_ready and passed("m5_operator_cache")
+    )
+    m5_product_ready = (
+        market_data_ready
+        and passed("m5_operator_cache_finalize")
+    )
     m4_research_ready = (
         market_data_ready
         and passed("m4_methodology_guard")
@@ -321,6 +375,8 @@ def build_daily_close_summary(
         "exit_code": exit_code,
         "market_data_ready": market_data_ready,
         "m5_product_ready": m5_product_ready,
+        "m5_initial_product_ready": m5_initial_product_ready,
+        "m5_final_cache_revalidated_after_research_lane": True,
         "m5_context_refresh_ready": m5_context_refresh_ready,
         "m5_context_degraded_but_product_allowed": (
             m5_product_ready and not m5_context_refresh_ready
@@ -335,6 +391,7 @@ def build_daily_close_summary(
             "m5_product_requires_m4_qfq": False,
             "m5_product_requires_m4_guards": False,
             "m5_product_requires_context_sync_success": False,
+            "m5_final_cache_revalidation_after_m4": True,
             "m5_cache_is_authoritative_evidence": False,
             "m5_cache_writes_m4_evidence": False,
             "m4_evidence_owned_by_authoritative_capture_chain": True,
