@@ -26,6 +26,10 @@ class ProspectiveObservation:
     next_key_price: float | None
     next_key_price_role: str | None
     source_terminal_trade_date: str | None
+    underlying_last_trade_date: str | None
+    market_observation_status: str | None
+    daily_event_source: str | None
+    daily_event_reason: str | None
     as_of_open: float | None
     as_of_high: float | None
     as_of_low: float | None
@@ -158,6 +162,10 @@ def build_prospective_observation_report(
                         next_key_price=None,
                         next_key_price_role=None,
                         source_terminal_trade_date=None,
+                        underlying_last_trade_date=None,
+                        market_observation_status=None,
+                        daily_event_source=None,
+                        daily_event_reason=None,
                         as_of_open=None,
                         as_of_high=None,
                         as_of_low=None,
@@ -219,6 +227,24 @@ def build_prospective_observation_report(
                         else str(row.get("next_key_price_role"))
                     ),
                     source_terminal_trade_date=terminal,
+                    underlying_last_trade_date=(
+                        None
+                        if row.get("underlying_last_trade_date") is None
+                        else str(row.get("underlying_last_trade_date"))
+                    ),
+                    market_observation_status=str(
+                        row.get("market_observation_status") or "traded"
+                    ),
+                    daily_event_source=(
+                        None
+                        if row.get("daily_event_source") is None
+                        else str(row.get("daily_event_source"))
+                    ),
+                    daily_event_reason=(
+                        None
+                        if row.get("daily_event_reason") is None
+                        else str(row.get("daily_event_reason"))
+                    ),
                     as_of_open=_float_or_none(row.get("as_of_open")),
                     as_of_high=_float_or_none(row.get("as_of_high")),
                     as_of_low=_float_or_none(row.get("as_of_low")),
@@ -246,6 +272,11 @@ def build_prospective_observation_report(
         for item in observations
         if item.source_lifecycle_state is not None
     )
+    market_observation_counts = Counter(
+        item.market_observation_status
+        for item in observations
+        if item.market_observation_status is not None
+    )
 
     return {
         "schema_version": 1,
@@ -255,6 +286,9 @@ def build_prospective_observation_report(
         "observation_count": len(observations),
         "scanner_presence_counts": dict(sorted(presence_counts.items())),
         "lifecycle_observation_counts": dict(sorted(lifecycle_counts.items())),
+        "market_observation_counts": dict(
+            sorted(market_observation_counts.items())
+        ),
         "candidate_summaries": candidate_summaries,
         "observations": [item.as_payload() for item in observations],
         "interpretation": {
@@ -262,6 +296,7 @@ def build_prospective_observation_report(
             "legacy_pre_manifest_dates": list(timeline.legacy_pre_manifest_dates),
             "captured_snapshot_index_is_trade_session_index": False,
             "scanner_absence_is_invalidation": False,
+            "confirmed_suspension_is_traded_observation": False,
             "return_metrics_computed": False,
             "profit_threshold_defined": False,
             "alpha_inference_allowed": False,
