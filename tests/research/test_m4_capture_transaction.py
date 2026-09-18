@@ -496,3 +496,57 @@ def test_reader_preserves_pre_fingerprint_schema_v1_for_explicit_migration(tmp_p
     committed = read_committed_captures(tmp_path)
     assert committed[0]["schema_version"] == 1
     assert committed[0].get("methodology_fingerprint") is None
+
+
+def test_v1_chain_blocks_v2_append_without_explicit_migration(tmp_path) -> None:
+    import json
+
+    freeze_legacy_baseline(
+        tmp_path,
+        [],
+        baseline_through_trade_date="2026-09-17",
+    )
+    row = _row("legacy-v1")
+    txid = capture_transaction_id(
+        code_head="h",
+        as_of_trade_date="2026-09-18",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        journal_rows=[row],
+        schema_version=1,
+    )
+    payload = {
+        "transaction_id": txid,
+        "code_head": "h",
+        "as_of_trade_date": "2026-09-18",
+        "captured_at_utc": "2026-09-18T09:00:00+00:00",
+        "instrument_count": 55,
+        "successful_instruments": 55,
+        "failed_instruments": 0,
+        "candidate_count": 1,
+        "worktree_clean": True,
+        "journal_rows": [{**row, "capture_transaction_id": txid}],
+        "status": "committed",
+        "schema_version": 1,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+    }
+    (tmp_path / f"2026-09-18__{txid}.json").write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
+
+    v2 = _capture(
+        [_row("new-v2", date="2026-09-19", head="h2")],
+        date="2026-09-19",
+        head="h2",
+    )
+    try:
+        commit_capture_transaction(tmp_path, v2)
+    except ValueError as exc:
+        assert "predates methodology fingerprint" in str(exc)
+    else:
+        raise AssertionError(
+            "pre-fingerprint v1 chain must require explicit migration before v2 append"
+        )
