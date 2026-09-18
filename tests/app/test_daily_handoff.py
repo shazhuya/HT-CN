@@ -316,3 +316,23 @@ def test_degraded_transport_can_exist_without_product_snapshot(
     )
     assert payload["status"] == "degraded_transport"
     assert verify_daily_handoff_bundle(output).status == "valid"
+
+
+def test_handoff_accepts_repo_relative_cache_path(tmp_path: Path) -> None:
+    pipeline, snapshot = _prepare_product_ready(tmp_path)
+    report_path = (
+        tmp_path / "artifacts" / "reports" / "m5-operator-snapshot.json"
+    )
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["product_cache"]["cache_path"] = str(snapshot.relative_to(tmp_path))
+    _write_json(report_path, report)
+
+    output = tmp_path / "handoff.zip"
+    payload = build_daily_handoff_bundle(
+        root=tmp_path,
+        pipeline_summary=pipeline,
+        output=output,
+    )
+
+    assert payload["verification"]["status"] == "valid"
+    assert payload["product_binding"]["cache_path"] == str(snapshot.resolve())
