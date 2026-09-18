@@ -11,6 +11,10 @@ import duckdb
 
 from htcn.app.evidence_identity import read_code_identity
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
+from htcn.research.capture_transaction import (
+    build_committed_capture,
+    commit_capture_transaction,
+)
 from htcn.research.lifecycle_journal import append_entries, entries_from_analysis
 from htcn.research.snapshot_manifest import (
     SnapshotManifestEntry,
@@ -51,6 +55,7 @@ def run(
     data_root: Path,
     journal_path: Path,
     manifest_path: Path,
+    transaction_root: Path,
     max_symbols: int = 0,
 ) -> dict[str, Any]:
     catalog = data_root / "catalog.duckdb"
@@ -66,7 +71,9 @@ def run(
         "is_trade_instruction": False,
         "journal_path": str(journal_path),
         "manifest_path": str(manifest_path),
+        "transaction_root": str(transaction_root),
         "errors": [],
+        "warnings": [],
     }
 
     if not identity.worktree_clean:
@@ -131,34 +138,61 @@ def run(
         result["status"] = "failed_no_journal_append"
         return result
 
-    existing_manifest = read_snapshot_manifest(manifest_path)
-    baseline_trade_date = (
-        min(str(row["as_of_trade_date"]) for row in existing_manifest)
-        if existing_manifest
-        else expected
-    )
-    append_result = append_entries(
-        journal_path,
-        all_entries,
-        baseline_trade_date=baseline_trade_date,
-    )
-    result["journal_append"] = append_result
-
-    manifest_entry = SnapshotManifestEntry(
+    committed_capture = build_committed_capture(
         code_head=str(identity.head),
         as_of_trade_date=expected,
         captured_at_utc=str(result["captured_at_utc"]),
         instrument_count=len(instruments),
         successful_instruments=successful,
         failed_instruments=len(instruments) - successful,
-        candidate_count=len(all_entries),
         worktree_clean=identity.worktree_clean,
-        status="pass",
+        journal_rows=[entry.as_payload() for entry in all_entries],
     )
-    result["manifest_append"] = append_snapshot_manifest(
-        manifest_path,
-        manifest_entry,
+    result["capture_transaction"] = commit_capture_transaction(
+        transaction_root,
+        committed_capture,
     )
+    result["capture_transaction_id"] = committed_capture.transaction_id
+
+    existing_manifest = read_snapshot_manifest(manifest_path)
+    baseline_trade_date = (
+        min(str(row["as_of_trade_date"]) for row in existing_manifest)
+        if existing_manifest
+        else expected
+    )
+
+    mirror_status = "complete"
+    try:
+        append_result = append_entries(
+            journal_path,
+            all_entries,
+            baseline_trade_date=baseline_trade_date,
+        )
+        result["journal_append"] = append_result
+
+        manifest_entry = SnapshotManifestEntry(
+            code_head=str(identity.head),
+            as_of_trade_date=expected,
+            captured_at_utc=str(result["captured_at_utc"]),
+            instrument_count=len(instruments),
+            successful_instruments=successful,
+            failed_instruments=len(instruments) - successful,
+            candidate_count=len(all_entries),
+            worktree_clean=identity.worktree_clean,
+            status="pass",
+        )
+        result["manifest_append"] = append_snapshot_manifest(
+            manifest_path,
+            manifest_entry,
+        )
+    except Exception as exc:
+        mirror_status = "incomplete"
+        result["warnings"].append({
+            "scope": "compatibility_mirrors",
+            "error": f"{type(exc).__name__}: {exc}",
+            "authoritative_capture_committed": True,
+        })
+    result["mirror_status"] = mirror_status
 
     result["source_lifecycle_states"] = _summary_counter(
         [entry.source_lifecycle_state for entry in all_entries]
@@ -188,6 +222,10 @@ def main() -> int:
         default="data/research/m4/snapshot_manifest.jsonl",
     )
     parser.add_argument(
+        "--transaction-root",
+        default="data/research/m4/captures",
+    )
+    parser.add_argument(
         "--output",
         default="artifacts/reports/m4-lifecycle-snapshot.json",
     )
@@ -198,6 +236,7 @@ def main() -> int:
         data_root=Path(args.data_root),
         journal_path=Path(args.journal),
         manifest_path=Path(args.manifest),
+        transaction_root=Path(args.transaction_root),
         max_symbols=max(0, args.max_symbols),
     )
     output = Path(args.output)
