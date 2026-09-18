@@ -22,10 +22,10 @@ def _pattern(
         "state": "forming",
         "is_primary_identity": primary,
         "points": [
-            {"index": 1},
-            {"index": 2},
-            {"index": 3},
-            {"index": 4},
+            {"index": 1, "trade_date": "2026-09-10"},
+            {"index": 2, "trade_date": "2026-09-11"},
+            {"index": 3, "trade_date": "2026-09-14"},
+            {"index": 4, "trade_date": "2026-09-15"},
         ],
         "source_lifecycle": {
             "state": lifecycle_state,
@@ -194,3 +194,80 @@ def test_workflow_bucket_order_is_explicit_and_small() -> None:
         "waiting": 2,
         "evidence_insufficient": 3,
     }
+
+
+
+def test_operator_queue_exposes_single_as_of_trade_date() -> None:
+    service = FakeService({
+        "SSE.1": _analysis(
+            _pattern(
+                pattern_id="bat",
+                action_state="waiting",
+                lifecycle_state="approaching_source_prz",
+            )
+        ),
+    })
+
+    payload = build_operator_queue(service, ["SSE.1"])
+
+    assert payload["schema_version"] == 2
+    assert payload["as_of_trade_date"] == "2026-09-18"
+    assert payload["observed_trade_dates"] == ["2026-09-18"]
+    assert payload["observation_integrity"] == "single_as_of"
+
+
+def test_operator_queue_display_key_uses_trade_dates_not_rolling_indexes() -> None:
+    first = _pattern(
+        pattern_id="bat",
+        action_state="waiting",
+        lifecycle_state="approaching_source_prz",
+    )
+    shifted = {
+        **first,
+        "points": [
+            {**point, "index": int(point["index"]) - 1}
+            for point in first["points"]
+        ],
+    }
+    service = FakeService({
+        "SSE.1": _analysis(first),
+        "SSE.2": _analysis(shifted),
+    })
+
+    payload = build_operator_queue(service, ["SSE.1", "SSE.2"])
+    first_key = payload["items"][0]["display_key"]
+    second_key = payload["items"][1]["display_key"]
+
+    assert first_key.split(":", 1)[1] == second_key.split(":", 1)[1]
+    assert "2026-09-10" in first_key
+
+
+def test_operator_queue_reports_mixed_as_of_dates() -> None:
+    service = FakeService({
+        "SSE.1": _analysis(
+            _pattern(
+                pattern_id="bat",
+                action_state="waiting",
+                lifecycle_state="approaching_source_prz",
+            )
+        ),
+        "SSE.2": {
+            **_analysis(
+                _pattern(
+                    pattern_id="crab",
+                    action_state="waiting",
+                    lifecycle_state="approaching_source_prz",
+                )
+            ),
+            "last_trade_date": "2026-09-17",
+        },
+    })
+
+    payload = build_operator_queue(service, ["SSE.1", "SSE.2"])
+
+    assert payload["as_of_trade_date"] is None
+    assert payload["observed_trade_dates"] == [
+        "2026-09-17",
+        "2026-09-18",
+    ]
+    assert payload["observation_integrity"] == "mixed_as_of"
