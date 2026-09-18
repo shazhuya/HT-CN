@@ -1,0 +1,71 @@
+from __future__ import annotations
+
+import pandas as pd
+
+from scripts.m4_prepare_qfq_universe import _strict_factor_candidate
+
+
+def _raw(days: int = 20) -> pd.DataFrame:
+    dates = pd.bdate_range("2026-01-01", periods=days)
+    return pd.DataFrame({
+        "instrument_id": ["SSE.600000"] * len(dates),
+        "trade_date": dates,
+        "open": [10.0] * len(dates),
+        "high": [10.5] * len(dates),
+        "low": [9.5] * len(dates),
+        "close": [10.0] * len(dates),
+        "volume": [1000.0] * len(dates),
+    })
+
+
+def _factors(raw: pd.DataFrame, keep: list[int]) -> pd.DataFrame:
+    selected = raw.iloc[keep]
+    return pd.DataFrame({
+        "instrument_id": selected["instrument_id"].tolist(),
+        "trade_date": selected["trade_date"].tolist(),
+        "price_factor": [1.0] * len(selected),
+        "mode": ["qfq"] * len(selected),
+        "source": ["test"] * len(selected),
+    })
+
+
+def test_strict_qfq_candidate_accepts_full_history() -> None:
+    raw = _raw()
+    factors = _factors(raw, list(range(len(raw))))
+    ready, reason = _strict_factor_candidate(raw, factors)
+    assert ready is True
+    assert reason == "strict_factor_candidate_ready"
+
+
+def test_strict_qfq_candidate_allows_small_trailing_gap_for_carry_forward() -> None:
+    raw = _raw(20)
+    factors = _factors(raw, list(range(19)))
+    ready, reason = _strict_factor_candidate(raw, factors)
+    assert ready is True
+    assert reason == "strict_factor_candidate_ready"
+
+
+def test_strict_qfq_candidate_rejects_historical_internal_gap() -> None:
+    raw = _raw(20)
+    keep = [index for index in range(20) if index != 10]
+    factors = _factors(raw, keep)
+    ready, reason = _strict_factor_candidate(raw, factors)
+    assert ready is False
+    assert reason.startswith("historical_factor_gap:")
+
+
+def test_strict_qfq_candidate_rejects_low_overlap() -> None:
+    raw = _raw(20)
+    factors = _factors(raw, list(range(10)))
+    ready, reason = _strict_factor_candidate(raw, factors)
+    assert ready is False
+    assert reason.startswith("factor_overlap_too_low:")
+
+
+def test_strict_qfq_candidate_rejects_nonpositive_factor() -> None:
+    raw = _raw()
+    factors = _factors(raw, list(range(len(raw))))
+    factors.loc[factors.index[-1], "price_factor"] = 0.0
+    ready, reason = _strict_factor_candidate(raw, factors)
+    assert ready is False
+    assert reason == "non_positive_factor"
