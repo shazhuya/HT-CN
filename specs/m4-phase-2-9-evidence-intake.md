@@ -108,3 +108,21 @@ It does not change:
 - prospective enrollment rules.
 
 Therefore the intake implementation is intentionally outside the methodology fingerprint.
+
+
+## Schema-v3 follow-up intake
+
+With Phase 2.10, the authoritative committed transaction may also contain
+`cohort_followup_rows` for previously outcome-enrolled candidates that are scanner-absent.
+
+Intake therefore:
+
+1. validates follow-up rows through committed-transaction validation;
+2. reconstructs the authoritative follow-up view;
+3. recomputes prospective observations with those market facts;
+4. keeps scanner presence `absent` and lifecycle/action null for follow-up-only observations;
+5. compares the complete recomputed `observations`, `normalized_rows` and `transitions`
+   payloads with included derived reports, not only aggregate counts.
+
+The intake implementation itself remains outside the methodology fingerprint because it
+revalidates/consumes evidence rather than defining the evidence-generation rules.
