@@ -232,3 +232,15 @@ def test_explicit_capture_timeline_records_zero_candidate_gap() -> None:
     )
     assert disappeared.transition_kind == "scanner_disappeared"
     assert reappeared.transition_kind == "scanner_reappeared"
+
+
+def test_zero_candidate_baseline_date_keeps_t1_candidate_prospective_new() -> None:
+    rows = [_row("2026-09-18", "new", lifecycle="waiting_terminal")]
+    report = build_transition_report(
+        rows,
+        captured_dates=["2026-09-17", "2026-09-18"],
+    )
+    normalized = report["normalized_rows"][0]
+    assert normalized["enrollment_state"] == "prospective_new"
+    assert normalized["first_observed_trade_date"] == "2026-09-18"
+    assert report["transition_counts"]["new_candidate"] == 1

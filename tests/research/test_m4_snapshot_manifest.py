@@ -138,3 +138,14 @@ def test_capture_timeline_allows_zero_candidate_manifest_without_journal_rows() 
     )
     assert timeline.dates == ("2026-09-18",)
     assert timeline.source == "manifest"
+
+
+def test_explicit_zero_candidate_legacy_date_is_kept_before_manifest() -> None:
+    manifest = [_manifest_row("2026-09-18", head="h", candidates=1)]
+    timeline = resolve_capture_timeline(
+        [{"as_of_trade_date": "2026-09-18", "code_head": "h"}],
+        manifest,
+        legacy_baseline_trade_date="2026-09-17",
+    )
+    assert timeline.dates == ("2026-09-17", "2026-09-18")
+    assert timeline.legacy_pre_manifest_dates == ("2026-09-17",)

@@ -155,3 +155,18 @@ def test_manifest_zero_candidate_date_becomes_absent_observation() -> None:
     assert report["interpretation"]["capture_timeline_source"] == (
         "manifest_plus_legacy_journal"
     )
+
+
+def test_zero_candidate_legacy_t0_does_not_steal_t1_enrollment() -> None:
+    rows = [_row("2026-09-18", "new")]
+    manifest = [_manifest("2026-09-18", candidates=1)]
+    report = build_prospective_observation_report(
+        rows,
+        manifest_rows=manifest,
+        legacy_baseline_trade_date="2026-09-17",
+    )
+    assert report["captured_dates"] == ["2026-09-17", "2026-09-18"]
+    assert report["prospective_candidate_count"] == 1
+    summary = report["candidate_summaries"][0]
+    assert summary["outcome_enrollment_trade_date"] == "2026-09-18"
+    assert summary["captured_snapshot_count"] == 1
