@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 FORMAL_BASIS = "qfq:" + "1" * 64
+SOURCE_SIGNAL_DATE = "2026-09-16"
+SOURCE_CLOCK_BASIS = "last_frontier_pivot_confirmed_at=index+scale"
 
 from htcn.research.lifecycle_journal import (
     LifecycleJournalEntry,
@@ -51,6 +53,12 @@ def _pattern(schema="XABCD", shift=0):
         "decision_narrative": {
             "action_state": "waiting",
             "execution_context_gate": "tradable",
+        },
+        "execution_clock": {
+            "signal_bar": 0,
+            "signal_clock_basis": SOURCE_CLOCK_BASIS,
+            "reaction_anchor_label": "B" if schema == "0XABC" else "A",
+            "reaction_anchor_price": 101.0,
         },
     }
 
@@ -116,6 +124,10 @@ def _entry(date: str, key: str = "k", head: str = "h") -> LifecycleJournalEntry:
         source_prz_high=101.0,
         source_terminal_trade_date=None,
         eligible_for_validation=True,
+        source_signal_trade_date=SOURCE_SIGNAL_DATE,
+        source_signal_clock_basis=SOURCE_CLOCK_BASIS,
+        source_reaction_anchor_label="A",
+        source_reaction_anchor_price=101.0,
     )
 
 
@@ -207,6 +219,10 @@ def test_prospective_outcome_gate_blocks_alternate_bat() -> None:
             "eligible_for_validation": True,
             "price_mode": "qfq",
             "price_basis_id": FORMAL_BASIS,
+            "source_signal_trade_date": SOURCE_SIGNAL_DATE,
+            "source_signal_clock_basis": SOURCE_CLOCK_BASIS,
+            "source_reaction_anchor_label": "A",
+            "source_reaction_anchor_price": 101.0,
             "pattern_state": "forming",
             "source_lifecycle_state": "waiting_terminal",
             "source_prz_low": 90.0,
@@ -226,6 +242,10 @@ def test_prospective_outcome_gate_requires_pre_terminal_forming_state() -> None:
             "eligible_for_validation": True,
             "price_mode": "qfq",
             "price_basis_id": FORMAL_BASIS,
+            "source_signal_trade_date": SOURCE_SIGNAL_DATE,
+            "source_signal_clock_basis": SOURCE_CLOCK_BASIS,
+            "source_reaction_anchor_label": "A",
+            "source_reaction_anchor_price": 101.0,
             "pattern_state": "completed",
             "source_lifecycle_state": "type_i_confirmed",
             "source_prz_low": 90.0,
@@ -245,6 +265,10 @@ def test_prospective_outcome_gate_allows_resolved_pre_terminal_candidate() -> No
             "eligible_for_validation": True,
             "price_mode": "qfq",
             "price_basis_id": FORMAL_BASIS,
+            "source_signal_trade_date": SOURCE_SIGNAL_DATE,
+            "source_signal_clock_basis": SOURCE_CLOCK_BASIS,
+            "source_reaction_anchor_label": "A",
+            "source_reaction_anchor_price": 101.0,
             "pattern_state": "forming",
             "source_lifecycle_state": "waiting_terminal",
             "source_prz_low": 90.0,
@@ -390,6 +414,10 @@ def test_first_seen_suspension_row_cannot_enter_outcome_cohort() -> None:
             "eligible_for_validation": True,
             "price_mode": "qfq",
             "price_basis_id": FORMAL_BASIS,
+            "source_signal_trade_date": SOURCE_SIGNAL_DATE,
+            "source_signal_clock_basis": SOURCE_CLOCK_BASIS,
+            "source_reaction_anchor_label": "A",
+            "source_reaction_anchor_price": 101.0,
             "pattern_state": "forming",
             "source_lifecycle_state": "waiting_terminal",
             "source_prz_low": 90.0,
@@ -439,3 +467,54 @@ def test_entries_from_analysis_marks_raw_fallback_ineligible() -> None:
     assert rows[0].eligible_for_validation is False
     assert rows[0].price_mode == "raw"
     assert rows[0].price_basis_id == "raw"
+
+
+
+def test_prospective_outcome_gate_requires_complete_source_clock_seed() -> None:
+    payload = {
+        "as_of_trade_date": "2026-09-18",
+        "pattern_id": "abcd",
+        "eligible_for_validation": True,
+        "price_mode": "qfq",
+        "price_basis_id": FORMAL_BASIS,
+        "pattern_state": "forming",
+        "source_lifecycle_state": "waiting_terminal",
+        "source_prz_low": 90.0,
+        "source_prz_high": 92.0,
+        "source_terminal_trade_date": None,
+    }
+    eligible, reason = prospective_outcome_gate(
+        payload,
+        enrollment_state="prospective_new",
+    )
+    assert eligible is False
+    assert reason == "source_clock_seed_unresolved"
+
+
+def test_entries_from_analysis_freezes_source_clock_seed() -> None:
+    pattern = _pattern("ABCD")
+    analysis = {
+        "instrument_id": "SSE.600000",
+        "last_trade_date": "2026-09-18",
+        "price_mode": "qfq",
+        "price_basis_id": FORMAL_BASIS,
+        "bars": [{
+            "index": 0,
+            "trade_date": SOURCE_SIGNAL_DATE,
+            "open": 10.0,
+            "high": 10.5,
+            "low": 9.9,
+            "close": 10.4,
+            "volume": 1200,
+        }],
+        "context_integrity": {"summary_state": "complete"},
+        "completed": [],
+        "forming": [pattern],
+    }
+    rows = entries_from_analysis(analysis, code_head="abc")
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.source_signal_trade_date == SOURCE_SIGNAL_DATE
+    assert row.source_signal_clock_basis == SOURCE_CLOCK_BASIS
+    assert row.source_reaction_anchor_label == "A"
+    assert row.source_reaction_anchor_price == 101.0
