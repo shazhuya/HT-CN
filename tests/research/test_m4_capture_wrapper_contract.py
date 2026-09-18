@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WRAPPER = ROOT / "运行M4真实A股生命周期快照.bat"
-MIN_SAFE_COMMIT = "c34026755b3b8c491759eaacdb45376d4e1db485"
+MIN_SAFE_COMMIT = "d29870d3a2ef7b60dec4fd8f0dbef2d7a8f0b5a7"
 REQUIRED_BRANCH = "m4/real-a-share-validation-workflow"
 
 
@@ -33,7 +33,7 @@ def test_capture_wrapper_fails_closed_before_authoritative_capture() -> None:
     text = _wrapper_text()
     assert "No M1 update or authoritative capture was started." in text
     assert "worktree is not clean before M1 update" in text
-    assert "current HEAD predates or diverges from the minimum safe Phase 3.1 workflow" in text
+    assert "current HEAD predates or diverges from the minimum safe hosted-CI-green Phase 3.1 workflow" in text
     assert "scripts\\m4_capture_lifecycle_snapshot.py" in text
     assert "methodology components differ from the frozen T1 protocol" in text
     assert "m4-methodology-freeze-guard.json" in text
