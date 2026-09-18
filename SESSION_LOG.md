@@ -349,3 +349,22 @@ Fourth user-local closeout on `81d92557493b8874b040f6142e9d416ea6ae619e` stopped
 
 Fix commit: `105a08ddfc4cef16a22e8504fd4c289fe2eb0c2f`.
 No harmonic logic, Source Raw PRZ, lifecycle semantics, or management formulas were changed.
+
+
+## M3 Phase 4.9 / 2026-09-18
+
+Fifth user-local closeout on `c6c9514647fadf50bf08e00c0cc58bbbb886c330` reached the final browser layer:
+- Python regression passed;
+- Web build passed;
+- strict real-M1 metadata passed;
+- real-M1 product contract passed;
+- local services started;
+- Playwright result: 15 passed / 3 failed.
+
+The three failures were stale browser assertions:
+- execution-context still expected pre-Phase-4 LifecycleCompass copy;
+- live test still expected API 0.2.0 instead of 0.3.0;
+- fixture smoke still expected an old retrospective note removed during UI consolidation.
+
+No Source lifecycle, harmonic identity, Source Raw PRZ, Shark management or execution-context production logic was changed.
+Implementation fix commit: `d28215bbae682169a8ac47ddf48399bfdf50d05a`.

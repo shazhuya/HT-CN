@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `105a08ddfc4cef16a22e8504fd4c289fe2eb0c2f`
-context_checkpoint_title: `M3 Phase 4.8.1: correct Shark first-target regression expectation`
+context_checkpoint: `d28215bbae682169a8ac47ddf48399bfdf50d05a`
+context_checkpoint_title: `M3 Phase 4.9: Playwright acceptance drift repair after full real-M1 gates passed`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -447,25 +447,30 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 4.8.1 — 用户本机第五次最终收口。**
+**M3 Phase 4.9 — 用户本机第六次最终收口。**
 
-第四次真实收口只发现一个确定性单测期望错误：
+第五次真实收口已经证明：
 
-- forming Shark source-clock 实现返回 initial target = 110.44；
-- 该值是 50% BC；
-- Reciprocal AB=CD = 110.88；
-- Carney/HT-CN 冻结规则要求二者从 C/T-Bar 先到者作为 initial target，因此实现正确、测试错误。
+- Python regression 全绿；
+- Web build 全绿；
+- strict real-M1 metadata 全绿；
+- real-M1 product contract 全绿；
+- local API + Workbench 已启动；
+- 唯一 hard blocker 是 Playwright，3 failed / 15 passed。
 
-现已只修测试：
-`initial_target == target_50_bc`，`initial_target_basis == "50_percent"`。
+三条失败均为验收断言漂移，不是产品逻辑失败：
+
+1. `execution-context.spec.ts` 仍断言旧 LifecycleCompass 文案；现已改为 Source Clock 证据条 + `waiting_terminal`；
+2. `live.spec.ts` 仍断言 API 0.2.0；现已对齐 0.3.0；
+3. `smoke.spec.ts` 仍断言已删除的旧 retrospective note；现已对齐 legacy fallback 的 canonical-source-lifecycle 缺失提示。
 
 下一步：
 
 1. `git pull --ff-only`；
 2. clean worktree；
 3. 重新运行 `运行M3最终收口.bat`；
-4. 重点观察 Real-M1 product contract 是否从两个 forming Shark issue 降为 0；
-5. 若 QA 继续跑完 local services + Playwright 且 readiness 为 READY / READY（有已知警告），推进 PR #12 Draft → Ready。
+4. 若 Playwright 18/18 全绿且 readiness 为 READY / READY（有已知警告），推进 PR #12 Draft → Ready；
+5. 不再新增产品逻辑。
 
 
 ## 固定 Source / Product 边界
