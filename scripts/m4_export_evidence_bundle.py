@@ -137,6 +137,8 @@ def build_bundle(
         "m4-methodology-freeze-guard.json",
         "m4-outcome-engine-freeze-guard.json",
         "m4-m1-update.log",
+        "m4-qfq-readiness.json",
+        "m4-qfq-readiness.log",
         "m4-lifecycle-snapshot.json",
         "m4-evidence-health.json",
         "m4-evidence-health.md",
