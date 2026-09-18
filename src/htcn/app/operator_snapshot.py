@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from concurrent.futures import Future
 from copy import deepcopy
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
 import os
 from pathlib import Path
+from threading import Lock
 from typing import Any, Iterable
 
 import duckdb
@@ -20,6 +22,9 @@ from .operator_queue import (
 
 OPERATOR_SNAPSHOT_SCHEMA_VERSION = 1
 OPERATOR_SNAPSHOT_CONTRACT_VERSION = 1
+
+_SINGLE_FLIGHT_GUARD = Lock()
+_SINGLE_FLIGHT: dict[str, Future[dict[str, Any]]] = {}
 
 
 def _canonical_json(value: object) -> str:
@@ -87,6 +92,8 @@ def _attach_cache_metadata(
         "freshness": freshness,
         "cache_path": None if cache_path is None else str(cache_path),
         "generated_at_utc": generated_at_utc,
+        "single_flight_scope": "process_local_cache_identity",
+        "coalesced_from_status": None,
         "authoritative_evidence": False,
         "writes_m4_evidence": False,
     }
@@ -131,6 +138,68 @@ def _validate_cached_snapshot(
                 f"operator snapshot queue boundary violation: {field}"
             )
     return queue
+
+
+def _single_flight_key(
+    *,
+    cache_root: Path,
+    expected_trade_date: str | None,
+    bars: int,
+    scales: tuple[int, ...],
+    universe_hash: str,
+) -> str:
+    material = {
+        "cache_root": str(cache_root.resolve()),
+        "expected_trade_date": expected_trade_date,
+        "bars": int(bars),
+        "scales": list(scales),
+        "universe_hash": universe_hash,
+        "contract_version": OPERATOR_SNAPSHOT_CONTRACT_VERSION,
+    }
+    return sha256(_canonical_json(material).encode("utf-8")).hexdigest()
+
+
+def _load_valid_cached_snapshot(
+    *,
+    cache_path: Path | None,
+    expected_trade_date: str | None,
+    bars: int,
+    scales: tuple[int, ...],
+    universe_hash: str,
+) -> tuple[dict[str, Any], str] | None:
+    if (
+        cache_path is None
+        or expected_trade_date is None
+        or not cache_path.is_file()
+    ):
+        return None
+    try:
+        stored = json.loads(cache_path.read_text(encoding="utf-8"))
+        if not isinstance(stored, dict):
+            raise ValueError("operator snapshot must be a JSON object")
+        queue = _validate_cached_snapshot(
+            stored,
+            expected_trade_date=expected_trade_date,
+            bars=bars,
+            scales=scales,
+            universe_hash=universe_hash,
+        )
+        return queue, str(stored.get("generated_at_utc") or "")
+    except Exception:
+        return None
+
+
+def _mark_coalesced_wait(
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    out = deepcopy(payload)
+    cache = dict(out.get("product_cache") or {})
+    original_status = str(cache.get("status") or "unknown")
+    cache["status"] = "coalesced_wait"
+    cache["coalesced_from_status"] = original_status
+    cache["single_flight_scope"] = "process_local_cache_identity"
+    out["product_cache"] = cache
+    return out
 
 
 def _write_snapshot_atomic(path: Path, payload: dict[str, Any]) -> None:
@@ -178,93 +247,138 @@ def build_or_load_operator_snapshot(
             scales=scales,
         )
 
-    if (
-        not force_refresh
-        and cache_path is not None
-        and cache_path.is_file()
-    ):
-        try:
-            stored = json.loads(cache_path.read_text(encoding="utf-8"))
-            if not isinstance(stored, dict):
-                raise ValueError("operator snapshot must be a JSON object")
-            queue = _validate_cached_snapshot(
-                stored,
-                expected_trade_date=expected_trade_date,
-                bars=bars,
-                scales=scales,
-                universe_hash=universe_hash,
-            )
+    if not force_refresh:
+        cached = _load_valid_cached_snapshot(
+            cache_path=cache_path,
+            expected_trade_date=expected_trade_date,
+            bars=bars,
+            scales=scales,
+            universe_hash=universe_hash,
+        )
+        if cached is not None:
+            queue, generated_at = cached
             return _attach_cache_metadata(
                 queue,
                 status="hit",
                 expected_trade_date=expected_trade_date,
                 cache_path=cache_path,
-                generated_at_utc=str(stored.get("generated_at_utc") or ""),
+                generated_at_utc=generated_at,
             )
-        except Exception:
-            # Product cache corruption/staleness must never block live rebuild.
-            pass
 
-    queue = build_operator_queue(
-        service,
-        instruments,
+    flight_key = _single_flight_key(
+        cache_root=cache_dir,
+        expected_trade_date=expected_trade_date,
         bars=bars,
         scales=scales,
-        include_evidence_insufficient=True,
-        max_workers=max_workers,
-        service_factory=service_factory,
-        progress_callback=progress_callback,
+        universe_hash=universe_hash,
     )
-    generated_at = datetime.now(timezone.utc).isoformat()
+    with _SINGLE_FLIGHT_GUARD:
+        existing = _SINGLE_FLIGHT.get(flight_key)
+        if existing is None:
+            future: Future[dict[str, Any]] = Future()
+            _SINGLE_FLIGHT[flight_key] = future
+            owner = True
+        else:
+            future = existing
+            owner = False
 
-    if cache_path is None and queue.get("as_of_trade_date"):
-        cache_path = cache_dir / _cache_filename(
-            expected_trade_date=str(queue["as_of_trade_date"]),
+    if not owner:
+        return _mark_coalesced_wait(future.result())
+
+    try:
+        # Re-check after becoming owner. Another process or a just-finished
+        # local request may have populated a valid cache between the fast-path
+        # check and single-flight ownership.
+        if not force_refresh:
+            cached = _load_valid_cached_snapshot(
+                cache_path=cache_path,
+                expected_trade_date=expected_trade_date,
+                bars=bars,
+                scales=scales,
+                universe_hash=universe_hash,
+            )
+            if cached is not None:
+                queue, generated_at = cached
+                result = _attach_cache_metadata(
+                    queue,
+                    status="hit_after_race",
+                    expected_trade_date=expected_trade_date,
+                    cache_path=cache_path,
+                    generated_at_utc=generated_at,
+                )
+                future.set_result(deepcopy(result))
+                return result
+
+        queue = build_operator_queue(
+            service,
+            instruments,
             bars=bars,
             scales=scales,
+            include_evidence_insufficient=True,
+            max_workers=max_workers,
+            service_factory=service_factory,
+            progress_callback=progress_callback,
         )
+        generated_at = datetime.now(timezone.utc).isoformat()
 
-    queue_as_of = (
-        None
-        if queue.get("as_of_trade_date") is None
-        else str(queue.get("as_of_trade_date"))
-    )
-    expected_matches = (
-        expected_trade_date is None
-        or queue_as_of == str(expected_trade_date)
-    )
-    can_cache = (
-        cache_path is not None
-        and queue.get("observation_integrity") == "single_as_of"
-        and queue_as_of is not None
-        and expected_matches
-    )
-    if can_cache:
-        stored_payload = {
-            "schema_version": OPERATOR_SNAPSHOT_SCHEMA_VERSION,
-            "contract_version": OPERATOR_SNAPSHOT_CONTRACT_VERSION,
-            "generated_at_utc": generated_at,
-            "expected_trade_date": (
-                expected_trade_date
-                or str(queue.get("as_of_trade_date"))
-            ),
-            "bars": int(bars),
-            "scales": list(scales),
-            "universe_hash": universe_hash,
-            "instrument_count": len(instruments),
-            "queue": queue,
-            "authoritative_evidence": False,
-            "writes_m4_evidence": False,
-        }
-        _write_snapshot_atomic(cache_path, stored_payload)
-        status = "rebuilt_force" if force_refresh else "rebuilt"
-    else:
-        status = "live_not_cached"
+        if cache_path is None and queue.get("as_of_trade_date"):
+            cache_path = cache_dir / _cache_filename(
+                expected_trade_date=str(queue["as_of_trade_date"]),
+                bars=bars,
+                scales=scales,
+            )
 
-    return _attach_cache_metadata(
-        queue,
-        status=status,
-        expected_trade_date=expected_trade_date,
-        cache_path=cache_path if can_cache else None,
-        generated_at_utc=generated_at,
-    )
+        queue_as_of = (
+            None
+            if queue.get("as_of_trade_date") is None
+            else str(queue.get("as_of_trade_date"))
+        )
+        expected_matches = (
+            expected_trade_date is None
+            or queue_as_of == str(expected_trade_date)
+        )
+        can_cache = (
+            cache_path is not None
+            and queue.get("observation_integrity") == "single_as_of"
+            and queue_as_of is not None
+            and expected_matches
+        )
+        if can_cache:
+            stored_payload = {
+                "schema_version": OPERATOR_SNAPSHOT_SCHEMA_VERSION,
+                "contract_version": OPERATOR_SNAPSHOT_CONTRACT_VERSION,
+                "generated_at_utc": generated_at,
+                "expected_trade_date": (
+                    expected_trade_date
+                    or str(queue.get("as_of_trade_date"))
+                ),
+                "bars": int(bars),
+                "scales": list(scales),
+                "universe_hash": universe_hash,
+                "instrument_count": len(instruments),
+                "queue": queue,
+                "authoritative_evidence": False,
+                "writes_m4_evidence": False,
+            }
+            _write_snapshot_atomic(cache_path, stored_payload)
+            status = "rebuilt_force" if force_refresh else "rebuilt"
+        else:
+            status = "live_not_cached"
+
+        result = _attach_cache_metadata(
+            queue,
+            status=status,
+            expected_trade_date=expected_trade_date,
+            cache_path=cache_path if can_cache else None,
+            generated_at_utc=generated_at,
+        )
+        future.set_result(deepcopy(result))
+        return result
+    except BaseException as exc:
+        future.set_exception(exc)
+        raise
+    finally:
+        with _SINGLE_FLIGHT_GUARD:
+            if _SINGLE_FLIGHT.get(flight_key) is future:
+                _SINGLE_FLIGHT.pop(flight_key, None)
+
