@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from htcn.app.harmonic_service import DatasetNotFoundError
+from htcn.app.operator_delta import build_operator_delta
 from htcn.app.operator_queue import (
     build_operator_queue,
     discover_local_instruments,
@@ -69,6 +71,23 @@ def operator_queue(
         scales=(3, 5, 8, 13),
         include_evidence_insufficient=include_evidence_insufficient,
     )
+
+@app.post("/api/operator/delta")
+def operator_delta(
+    payload: dict[str, Any] = Body(...),
+) -> dict[str, object]:
+    previous = payload.get("previous")
+    current = payload.get("current")
+    if not isinstance(previous, dict) or not isinstance(current, dict):
+        raise HTTPException(
+            status_code=400,
+            detail="operator delta requires previous and current queue snapshots",
+        )
+    try:
+        return build_operator_delta(previous, current)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
 
 @app.get("/api/harmonic/rules")
 def harmonic_rules() -> dict[str, object]:
