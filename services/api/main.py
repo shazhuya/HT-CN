@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from htcn.app.harmonic_service import DatasetNotFoundError
 from htcn.app.operator_delta import build_operator_delta
 from htcn.app.operator_input_identity import (
+    build_analysis_code_identity,
     build_operator_cache_input_identity,
 )
 from htcn.app.operator_queue import (
@@ -29,6 +30,17 @@ from htcn.research.type_i_live_evidence import build_type_i_t5_events
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
 OPERATOR_CACHE_ROOT = ROOT / "data" / "product" / "m5" / "operator_queue"
+OPERATOR_ANALYSIS_CODE_IDENTITY = build_analysis_code_identity(
+    project_root=ROOT,
+)
+
+
+def _operator_input_identity():
+    return build_operator_cache_input_identity(
+        data_root=DATA_ROOT,
+        project_root=ROOT,
+        analysis_code_identity=OPERATOR_ANALYSIS_CODE_IDENTITY,
+    )
 
 
 def _operator_build_workers() -> int:
@@ -103,16 +115,14 @@ def operator_queue(
     expected_trade_date = latest_local_trade_date(
         DATA_ROOT / "catalog.duckdb"
     )
-    input_identity = build_operator_cache_input_identity(
-        data_root=DATA_ROOT,
-        project_root=ROOT,
-    )
+    input_identity = _operator_input_identity()
     payload = build_or_load_operator_snapshot(
         service,
         instrument_ids,
         cache_root=OPERATOR_CACHE_ROOT,
         expected_trade_date=expected_trade_date,
         input_identity=input_identity,
+        input_identity_factory=_operator_input_identity,
         bars=bars,
         scales=(3, 5, 8, 13),
         force_refresh=refresh,
