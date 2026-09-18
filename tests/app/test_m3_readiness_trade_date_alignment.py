@@ -63,6 +63,12 @@ def _reports(expected="2026-09-17"):
         "target_trade_date": expected,
         "local_trade_calendar_latest": expected,
         "logical_market_latest": expected,
+        "market_dataset_coverage": {
+            "initialized_dataset_count": 3,
+            "current_dataset_count": 3,
+            "stale_dataset_count": 0,
+            "ahead_dataset_count": 0,
+        },
         "layers": {
             "market_data_freshness": {"state": "current"},
             "execution_event": {"state": "partial_positive_evidence", "coverage_scope": "positive_evidence_only"},
