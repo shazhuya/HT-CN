@@ -7,6 +7,8 @@ import json
 import os
 from typing import Any, Iterable
 
+from .cohort_followup import enrolled_outcome_cohort
+
 
 CAPTURE_TRANSACTION_SCHEMA_VERSION = 3
 LEGACY_BASELINE_SCHEMA_VERSION = 1
@@ -510,6 +512,70 @@ def _capture_filename(capture: CommittedCapture) -> str:
     return f"{capture.as_of_trade_date}__{capture.transaction_id}.json"
 
 
+
+def _validate_followup_chain(
+    root: str | Path,
+    captures: Iterable[dict[str, Any]],
+) -> None:
+    ordered = sorted(
+        [dict(item) for item in captures],
+        key=lambda item: str(item.get("as_of_trade_date") or ""),
+    )
+    if not ordered:
+        return
+
+    if not _legacy_baseline_path(root).exists():
+        if any(item.get("cohort_followup_rows") for item in ordered):
+            raise ValueError(
+                "cohort follow-up evidence requires frozen legacy baseline"
+            )
+        return
+
+    baseline_rows = read_frozen_legacy_baseline(root)
+    baseline_trade_date = frozen_legacy_baseline_through_date(root)
+    prior_journal = [dict(row) for row in baseline_rows]
+
+    for capture in ordered:
+        as_of = str(capture.get("as_of_trade_date") or "")
+        prior_cohort = enrolled_outcome_cohort(
+            prior_journal,
+            baseline_trade_date=baseline_trade_date,
+        )
+        present_keys = {
+            str(row.get("candidate_key") or "")
+            for row in capture.get("journal_rows") or []
+        }
+        for followup in capture.get("cohort_followup_rows") or []:
+            key = str(followup.get("candidate_key") or "")
+            expected = prior_cohort.get(key)
+            if expected is None:
+                raise ValueError(
+                    f"cohort follow-up candidate was not previously outcome-enrolled: {key}"
+                )
+            if key in present_keys:
+                raise ValueError(
+                    f"cohort follow-up candidate is scanner-present on {as_of}: {key}"
+                )
+            if (
+                str(followup.get("instrument_id") or "")
+                != expected["instrument_id"]
+            ):
+                raise ValueError(
+                    f"cohort follow-up instrument identity drift: {key}"
+                )
+            if (
+                str(followup.get("outcome_enrollment_trade_date") or "")
+                != expected["outcome_enrollment_trade_date"]
+            ):
+                raise ValueError(
+                    f"cohort follow-up enrollment date drift: {key}"
+                )
+
+        prior_journal.extend(
+            dict(row) for row in capture.get("journal_rows") or []
+        )
+
+
 def commit_capture_transaction(
     root: str | Path,
     capture: CommittedCapture,
@@ -527,6 +593,11 @@ def commit_capture_transaction(
                 "existing committed capture predates methodology fingerprint; "
                 "explicit methodology migration is required"
             )
+        if int(existing.get("schema_version") or 0) != capture.schema_version:
+            raise ValueError(
+                "capture transaction schema drift across active chain; "
+                "start an explicit migration epoch instead of mixing schemas"
+            )
         if (
             int(existing_version) != capture.methodology_contract_version
             or existing_fingerprint != capture.methodology_fingerprint
@@ -535,6 +606,11 @@ def commit_capture_transaction(
                 "methodology fingerprint drift across committed capture chain; "
                 "start an explicitly versioned methodology epoch instead of mixing evidence"
             )
+
+    _validate_followup_chain(
+        target_root,
+        [*existing_payloads, capture.as_payload()],
+    )
 
     existing_paths = sorted(target_root.glob("????-??-??__*.json"))
     existing_dates = [path.name.split("__", 1)[0] for path in existing_paths]
@@ -628,6 +704,15 @@ def read_committed_captures(root: str | Path) -> list[dict[str, Any]]:
         raise ValueError(
             "committed capture chain contains mixed methodology fingerprints"
         )
+    schema_versions = {
+        int(item.get("schema_version") or 0)
+        for item in captures
+    }
+    if len(schema_versions) > 1:
+        raise ValueError(
+            "committed capture chain contains mixed transaction schemas"
+        )
+    _validate_followup_chain(target_root, captures)
     return captures
 
 def committed_capture_view(
@@ -660,6 +745,9 @@ def committed_capture_view(
             "successful_instruments": capture["successful_instruments"],
             "failed_instruments": capture["failed_instruments"],
             "candidate_count": capture["candidate_count"],
+            "cohort_followup_count": int(
+                capture.get("cohort_followup_count") or 0
+            ),
             "worktree_clean": capture["worktree_clean"],
             "methodology_contract_version": capture.get(
                 "methodology_contract_version"
@@ -670,6 +758,20 @@ def committed_capture_view(
             "is_trade_instruction": False,
         })
     return journal_rows, manifest_rows
+
+
+def committed_followup_view(
+    capture_rows: Iterable[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for capture in sorted(
+        [dict(item) for item in capture_rows],
+        key=lambda item: str(item.get("as_of_trade_date") or ""),
+    ):
+        txid = str(capture.get("transaction_id") or "")
+        for row in capture.get("cohort_followup_rows") or []:
+            rows.append({**dict(row), "capture_transaction_id": txid})
+    return rows
 
 
 def _legacy_baseline_path(root: str | Path) -> Path:
