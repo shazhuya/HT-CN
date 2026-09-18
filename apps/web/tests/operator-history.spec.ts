@@ -163,11 +163,13 @@ test('M5 operator history shows append-only summaries and instrument changes', a
     .fill('SSE.688256')
   await history.getByRole('button', { name: '查询历史' }).click()
 
-  await expect(history.getByText('该标的候选 1')).toBeVisible()
-  await expect(history.getByText('生命周期变化 · 下一关键价变化')).toBeVisible()
-  await expect(history.getByText('waiting_terminal → t_plus_1')).toBeVisible()
+  const latestDay = history.locator('.operator-history__day').first()
+  await expect(latestDay.getByText('2026-09-18')).toBeVisible()
+  await expect(latestDay.getByText('该标的候选 1')).toBeVisible()
+  await expect(latestDay.getByText('生命周期变化 · 下一关键价变化')).toBeVisible()
+  await expect(latestDay.getByText('waiting_terminal → t_plus_1')).toBeVisible()
 
-  await history.getByRole('button', { name: 'SSE.688256' }).click()
+  await latestDay.getByRole('button', { name: 'SSE.688256' }).click()
   await expect(
     page.getByLabel('analysis-controls').locator('input[list="instrument-list"]'),
   ).toHaveValue('SSE.688256')
