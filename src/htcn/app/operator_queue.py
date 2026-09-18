@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Protocol
+from threading import local
+from typing import Any, Callable, Iterable, Protocol
 
 
 WORKFLOW_BUCKET_ORDER: dict[str, int] = {
@@ -22,6 +24,10 @@ class AnalysisService(Protocol):
         bars: int,
         scales: tuple[int, ...],
     ) -> dict[str, Any]: ...
+
+
+AnalysisServiceFactory = Callable[[], AnalysisService]
+OperatorProgressCallback = Callable[[int, int, str, bool], None]
 
 
 @dataclass(frozen=True, slots=True)
@@ -157,6 +163,9 @@ def build_operator_queue(
     bars: int = 420,
     scales: tuple[int, ...] = (3, 5, 8, 13),
     include_evidence_insufficient: bool = True,
+    max_workers: int = 1,
+    service_factory: AnalysisServiceFactory | None = None,
+    progress_callback: OperatorProgressCallback | None = None,
 ) -> dict[str, Any]:
     items: list[dict[str, Any]] = []
     errors: list[dict[str, str]] = []
@@ -164,13 +173,121 @@ def build_operator_queue(
     observed_trade_dates: set[str] = set()
 
     instrument_list = [str(value) for value in instrument_ids]
-    for instrument_id in instrument_list:
+    requested_workers = max(1, int(max_workers))
+    parallel_requested = requested_workers > 1 and len(instrument_list) > 1
+    parallel_enabled = parallel_requested and service_factory is not None
+    effective_workers = (
+        min(requested_workers, len(instrument_list))
+        if parallel_enabled
+        else 1
+    )
+    fallback_reason = (
+        "service_factory_required_for_parallel_isolation"
+        if parallel_requested and service_factory is None
+        else None
+    )
+    thread_state = local()
+
+    def worker_service() -> AnalysisService:
+        if not parallel_enabled or service_factory is None:
+            return service
+        instance = getattr(thread_state, "service", None)
+        if instance is None:
+            instance = service_factory()
+            thread_state.service = instance
+        return instance
+
+    def analyze_one(
+        instrument_id: str,
+    ) -> tuple[str, dict[str, Any] | None, str | None]:
         try:
-            analysis = service.analyze(
+            analysis = worker_service().analyze(
                 instrument_id,
                 bars=bars,
                 scales=scales,
             )
+            return instrument_id, analysis, None
+        except Exception as exc:
+            return (
+                instrument_id,
+                None,
+                f"{type(exc).__name__}: {exc}",
+            )
+
+    def emit_progress(
+        completed: int,
+        instrument_id: str,
+        ok: bool,
+    ) -> None:
+        if progress_callback is None:
+            return
+        try:
+            progress_callback(
+                completed,
+                len(instrument_list),
+                instrument_id,
+                ok,
+            )
+        except Exception:
+            # Product progress reporting must never alter queue semantics.
+            return
+
+    if parallel_enabled:
+        with ThreadPoolExecutor(
+            max_workers=effective_workers,
+            thread_name_prefix="htcn-operator",
+        ) as executor:
+            futures = {
+                executor.submit(analyze_one, instrument_id): instrument_id
+                for instrument_id in instrument_list
+            }
+            results = (
+                future.result()
+                for future in as_completed(futures)
+            )
+            for completed, result in enumerate(results, start=1):
+                instrument_id, analysis, error = result
+                if analysis is None:
+                    errors.append({
+                        "instrument_id": instrument_id,
+                        "error": error or "unknown analysis error",
+                    })
+                    emit_progress(completed, instrument_id, False)
+                    continue
+                analyzed += 1
+                last_trade_date = str(
+                    analysis.get("last_trade_date") or ""
+                ).strip()
+                if last_trade_date:
+                    observed_trade_dates.add(last_trade_date)
+                for pattern in _primary_patterns(analysis):
+                    item = _queue_item(
+                        instrument_id=instrument_id,
+                        analysis=analysis,
+                        pattern=pattern,
+                    )
+                    if item is None:
+                        continue
+                    if (
+                        not include_evidence_insufficient
+                        and item["action_state"] == "evidence_insufficient"
+                    ):
+                        continue
+                    items.append(item)
+                emit_progress(completed, instrument_id, True)
+    else:
+        for completed, instrument_id in enumerate(
+            instrument_list,
+            start=1,
+        ):
+            _, analysis, error = analyze_one(instrument_id)
+            if analysis is None:
+                errors.append({
+                    "instrument_id": instrument_id,
+                    "error": error or "unknown analysis error",
+                })
+                emit_progress(completed, instrument_id, False)
+                continue
             analyzed += 1
             last_trade_date = str(
                 analysis.get("last_trade_date") or ""
@@ -191,11 +308,7 @@ def build_operator_queue(
                 ):
                     continue
                 items.append(item)
-        except Exception as exc:
-            errors.append({
-                "instrument_id": instrument_id,
-                "error": f"{type(exc).__name__}: {exc}",
-            })
+            emit_progress(completed, instrument_id, True)
 
     items.sort(
         key=lambda item: (
@@ -226,6 +339,24 @@ def build_operator_queue(
     return {
         "schema_version": 2,
         "contract": OperatorQueueContract().as_payload(),
+        "build_execution": {
+            "mode": (
+                "parallel_thread_pool"
+                if parallel_enabled
+                else "sequential"
+            ),
+            "requested_max_workers": requested_workers,
+            "effective_max_workers": effective_workers,
+            "service_isolation": (
+                "thread_local_service_factory"
+                if parallel_enabled
+                else "single_service"
+            ),
+            "parallel_fallback_reason": fallback_reason,
+            "changes_queue_semantics": False,
+            "authoritative_evidence": False,
+            "writes_m4_evidence": False,
+        },
         "as_of_trade_date": as_of_trade_date,
         "observed_trade_dates": sorted_trade_dates,
         "observation_integrity": observation_integrity,
