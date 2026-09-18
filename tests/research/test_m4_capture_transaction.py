@@ -214,3 +214,55 @@ def test_reader_allows_frozen_baseline_and_committed_capture_to_coexist(tmp_path
     assert len(committed) == 1
     assert committed[0]["transaction_id"] == capture.transaction_id
     assert len(read_frozen_legacy_baseline(tmp_path)) == 1
+
+
+def test_zero_row_legacy_baseline_can_freeze_explicit_cutoff(tmp_path) -> None:
+    result = freeze_legacy_baseline(
+        tmp_path,
+        [],
+        baseline_through_trade_date="2026-09-17",
+    )
+    assert result["status"] == "frozen"
+    from htcn.research.capture_transaction import frozen_legacy_baseline_through_date
+    assert frozen_legacy_baseline_through_date(tmp_path) == "2026-09-17"
+
+
+def test_transaction_must_be_after_frozen_legacy_cutoff(tmp_path) -> None:
+    freeze_legacy_baseline(
+        tmp_path,
+        [],
+        baseline_through_trade_date="2026-09-17",
+    )
+    same_day = _capture(
+        [_row("a", date="2026-09-17")],
+        date="2026-09-17",
+    )
+    try:
+        commit_capture_transaction(tmp_path, same_day)
+    except ValueError as exc:
+        assert "after frozen legacy baseline" in str(exc)
+    else:
+        raise AssertionError("same-day capture must not replace frozen baseline")
+
+
+def test_committed_transactions_forbid_backfill_after_newer_date(tmp_path) -> None:
+    freeze_legacy_baseline(
+        tmp_path,
+        [],
+        baseline_through_trade_date="2026-09-17",
+    )
+    newer = _capture(
+        [_row("newer", date="2026-09-19")],
+        date="2026-09-19",
+    )
+    older = _capture(
+        [_row("older", date="2026-09-18")],
+        date="2026-09-18",
+    )
+    commit_capture_transaction(tmp_path, newer)
+    try:
+        commit_capture_transaction(tmp_path, older)
+    except ValueError as exc:
+        assert "forbids backfill" in str(exc)
+    else:
+        raise AssertionError("transaction backfill must fail closed")

@@ -143,9 +143,22 @@ def run(
     existing_committed = read_committed_captures(transaction_root)
     if not existing_committed:
         legacy_rows = read_journal(journal_path)
+        legacy_manifest_rows = read_snapshot_manifest(manifest_path)
+        legacy_dates = [
+            str(row.get("as_of_trade_date"))
+            for row in legacy_rows
+            if row.get("as_of_trade_date")
+        ]
+        legacy_dates.extend(
+            str(row.get("as_of_trade_date"))
+            for row in legacy_manifest_rows
+            if row.get("as_of_trade_date")
+        )
+        baseline_through = max(legacy_dates) if legacy_dates else None
         result["legacy_baseline_freeze"] = freeze_legacy_baseline(
             transaction_root,
             legacy_rows,
+            baseline_through_trade_date=baseline_through,
         )
 
     committed_capture = build_committed_capture(
