@@ -5,6 +5,7 @@ from datetime import date
 import pandas as pd
 
 from ..models import Security
+from ..trading_events import SecurityDailyEventRecord
 from ..symbols import classify_symbol, instrument_id_from_symbol, symbol_from_instrument_id
 
 
@@ -143,6 +144,97 @@ class AkShareProvider:
         out = pd.DataFrame.from_records(records)
         ordered = [column for column in columns if column in out.columns]
         return out[ordered].copy()
+
+    event_source = "akshare_stock_tfp_em"
+
+    def get_daily_trading_events(self, trade_date: date) -> list[SecurityDailyEventRecord]:
+        """Return confirmed suspension evidence for one A-share session.
+
+        ``stock_tfp_em`` is treated as a positive-evidence feed. Even when the request
+        succeeds, absence from its result does not certify that a security had no other
+        exchange-level exception that day. Every returned record therefore remains
+        ``resolution_complete=False``.
+        """
+        frame = self._ak.stock_tfp_em(date=trade_date.strftime("%Y%m%d"))
+        if frame is None or frame.empty:
+            return []
+
+        code_col = self._column(frame, "代码", "code", "证券代码")
+        start_col = self._column(frame, "停牌时间", "suspend_time")
+        end_col = next(
+            (name for name in ("停牌截止时间", "suspend_end") if name in frame.columns),
+            None,
+        )
+        duration_col = next(
+            (name for name in ("停牌期限", "duration") if name in frame.columns),
+            None,
+        )
+        reason_col = next(
+            (name for name in ("停牌原因", "reason") if name in frame.columns),
+            None,
+        )
+        resume_col = next(
+            (name for name in ("预计复牌时间", "resume_time") if name in frame.columns),
+            None,
+        )
+
+        def clean_text(value: object) -> str:
+            if value is None or pd.isna(value):
+                return ""
+            return str(value).strip()
+
+        def clean_date(value: object) -> date | None:
+            if value is None or pd.isna(value):
+                return None
+            stamp = pd.to_datetime(value, errors="coerce")
+            return None if pd.isna(stamp) else stamp.date()
+
+        records: list[SecurityDailyEventRecord] = []
+        for raw in frame.to_dict("records"):
+            code_value = raw.get(code_col)
+            if code_value is None or pd.isna(code_value):
+                continue
+            symbol = str(code_value).strip()
+            if symbol.endswith(".0"):
+                symbol = symbol[:-2]
+            symbol = symbol.zfill(6)
+            try:
+                instrument_id = instrument_id_from_symbol(symbol)
+            except ValueError:
+                continue
+            if not instrument_id.startswith(("SSE.", "SZSE.")):
+                continue
+
+            start_date = clean_date(raw.get(start_col))
+            end_date = clean_date(raw.get(end_col)) if end_col else None
+            resume_date = clean_date(raw.get(resume_col)) if resume_col else None
+            if start_date is None or start_date > trade_date:
+                continue
+            if end_date is not None and trade_date > end_date:
+                continue
+            if end_date is None and resume_date is not None and trade_date >= resume_date:
+                continue
+
+            duration = clean_text(raw.get(duration_col)) if duration_col else ""
+            reason = clean_text(raw.get(reason_col)) if reason_col else ""
+            status = "intraday_suspended" if "盘中" in duration else "suspended"
+            detail_parts = [part for part in (reason, duration) if part]
+            if resume_date is not None:
+                detail_parts.append(f"预计复牌:{resume_date.isoformat()}")
+
+            records.append(
+                SecurityDailyEventRecord(
+                    instrument_id=instrument_id,
+                    trade_date=trade_date,
+                    trading_status=status,
+                    no_price_limit=None,
+                    price_limit_pct_override=None,
+                    resolution_complete=False,
+                    source=self.event_source,
+                    reason=" | ".join(detail_parts) or None,
+                )
+            )
+        return records
 
     def _get_daily_with_adjust(
         self,

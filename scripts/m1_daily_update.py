@@ -14,6 +14,7 @@ from htcn.data.delta import MarketDailyDeltaStore
 from htcn.data.providers import AkShareProvider, AkShareSinaProvider, BaoStockProvider, FailoverProvider
 from htcn.data.store import ParquetDailyStore
 from htcn.data.sync import sync_daily
+from htcn.data.trading_events import sync_daily_trading_events
 from htcn.data.universe import SUPPORTED_INITIAL_DAILY_PREFIXES
 
 
@@ -89,6 +90,25 @@ def main() -> int:
         f"bulk_snapshot={'YES' if allow_snapshot else 'NO'}",
         flush=True,
     )
+
+    try:
+        event_provider = provider.primary if isinstance(provider.primary, AkShareProvider) else AkShareProvider()
+        event_count = sync_daily_trading_events(
+            catalog_path=CATALOG_PATH,
+            provider=event_provider,
+            trade_date=target,
+        )
+        print(
+            f"[HT-CN M3 EVENT] positive suspension events synced for {target}: {event_count}; "
+            "coverage=positive_evidence_only",
+            flush=True,
+        )
+    except Exception as exc:
+        print(
+            f"[HT-CN M3 EVENT] event feed unavailable; price update continues fail-safe: "
+            f"{type(exc).__name__}: {exc}",
+            flush=True,
+        )
 
     listed_ids = set(catalog.list_security_ids(listed_only=True))
     delta_latest = delta_store.latest_dates_by_instrument()

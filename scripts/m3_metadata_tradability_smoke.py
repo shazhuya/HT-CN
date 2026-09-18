@@ -57,6 +57,7 @@ def run(catalog: Path) -> dict[str, Any]:
         "status": "failed",
         "security_master": {},
         "daily_event_table": {},
+        "daily_event_sync": {},
         "samples": [],
     }
     if not catalog.exists():
@@ -89,6 +90,43 @@ def run(catalog: Path) -> dict[str, Any]:
             "exists": event_exists,
             "count": event_count,
         }
+        sync_exists = _table_exists(con, "security_daily_event_sync")
+        latest_sync = None
+        if sync_exists:
+            latest_sync = con.execute(
+                """
+                SELECT trade_date, source, status, record_count, coverage_scope, error_message
+                FROM security_daily_event_sync
+                ORDER BY trade_date DESC, updated_at DESC
+                LIMIT 1
+                """
+            ).fetchone()
+        result["daily_event_sync"] = {
+            "exists": sync_exists,
+            "latest": (
+                None
+                if latest_sync is None
+                else {
+                    "trade_date": str(latest_sync[0]),
+                    "source": str(latest_sync[1]),
+                    "status": str(latest_sync[2]),
+                    "record_count": int(latest_sync[3]),
+                    "coverage_scope": str(latest_sync[4]),
+                    "error_message": latest_sync[5],
+                }
+            ),
+        }
+        if event_exists:
+            confirmed_suspended = int(
+                con.execute(
+                    """
+                    SELECT COUNT(*) FROM security_daily_event
+                    WHERE trading_status IN ('suspended', 'intraday_suspended')
+                    """
+                ).fetchone()[0]
+            )
+        else:
+            confirmed_suspended = 0
         samples = _sample_rows(con)
 
     sample_payloads: list[dict[str, Any]] = []
@@ -154,10 +192,14 @@ def run(catalog: Path) -> dict[str, Any]:
         if core_ok
         else "failed"
     )
-    result["event_feed_status"] = (
-        "populated" if result["daily_event_table"]["count"] else "table_present_but_empty"
-        if result["daily_event_table"]["exists"] else "not_initialized"
-    )
+    latest_sync_payload = result["daily_event_sync"].get("latest")
+    if latest_sync_payload is None or latest_sync_payload.get("status") != "success":
+        result["event_feed_status"] = "event_unknown"
+    elif latest_sync_payload.get("coverage_scope") == "complete_market":
+        result["event_feed_status"] = "event_complete"
+    else:
+        result["event_feed_status"] = "event_partial"
+    result["confirmed_suspended_count"] = confirmed_suspended
     return result
 
 
