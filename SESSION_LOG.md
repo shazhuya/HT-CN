@@ -506,3 +506,34 @@ Assistant-side Python execution:
 Hosted CI:
 - run #914 completed failure with deterministic-tests steps=null/logs=null;
 - same known runner-allocation failure, not code execution.
+
+
+## M4 Phase 2.6 / mirror recovery and T0 closeout
+
+Implementation:
+- `5e8a2c8febc8b6e7caaf538906058cd5d0bb3a25`: mirror integrity / repair engine；
+- `19f2b5b1e692627dc23d36a22d197d28171aeb59`: transaction IDs stamped into compatibility mirrors + auto repair；
+- `d1fee7d40efc2a7db32f6077585fd533c61f6d71`: monotonic transaction chronology after frozen baseline；
+- `b803a2f723b2d6d3b97bd2f60fdc67cb44a1a1f7`: zero-candidate legacy cutoff preservation。
+
+Assistant-side executable verification:
+- transaction core: PASS；
+- same facts/different capture time idempotency: PASS；
+- frozen baseline immutable: PASS；
+- baseline-day overwrite blocked: PASS；
+- T1/T2 forward chronology: PASS；
+- historical backfill blocked: PASS；
+- mirror corrupt/missing recovery: PASS；
+- authoritative evidence unchanged by repair: PASS。
+
+Actual uploaded T0 recomputed:
+- 87 rows / 87 unique candidates；
+- baseline audit 0 blockers / 6 warnings；
+- transition baseline_only；
+- 87 baseline_existing；
+- 0 prospective_new；
+- 0 prospective outcome eligible；
+- prospective observation no_outcome_cohort / 0 rows。
+
+Testing limitation:
+assistant container lacks private-repo credentials; full repo pytest was not executed locally and is not claimed. GitHub hosted run #914 remains steps=null/logs=null runner-allocation anomaly.

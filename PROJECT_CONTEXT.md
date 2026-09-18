@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `b803a2f723b2d6d3b97bd2f60fdc67cb44a1a1f7`
-context_checkpoint_title: `M4 Phase 2.5: atomic committed-capture evidence chain`
+context_checkpoint: `19f2b5b1e692627dc23d36a22d197d28171aeb59`
+context_checkpoint_title: `M4 Phase 2.6: atomic evidence + self-healing compatibility mirrors + T0 closeout`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -661,6 +661,50 @@ Assistant-side executable validation 已完成：
 
 GitHub-hosted Actions 仍为 runner-allocation anomaly：最新 run #914 deterministic-tests 为 steps=null / logs=null，因此不计入通过或失败证据。
 
+## M4 Phase 2.6 — Mirror Recovery / T0 Closeout
+
+Compatibility mirrors are now explicitly non-authoritative and self-healing.
+
+Implemented:
+
+- transaction ID stamped into future lifecycle journal mirror rows；
+- transaction ID stamped into future snapshot manifest mirror rows；
+- post-capture mirror integrity inspection；
+- corrupt/missing/drift mirror can be rebuilt from frozen baseline + committed transactions；
+- repair uses atomic temp + fsync + os.replace；
+- repair never mutates committed transaction files；
+- transaction store inactive => repair no-op，避免误改 legacy-only T0。
+
+Assistant-side recovery execution:
+
+- journal corrupt + manifest corrupt -> rebuilt：PASS；
+- both mirrors missing -> rebuilt：PASS；
+- authoritative evidence remains unchanged：PASS。
+
+真实上传 T0 在当前 Phase 2.6 规则下重新计算：
+
+- baseline audit = pass_with_warnings；
+- blocker = 0；
+- warning = 6；
+- transition_ready = true；
+- prospective_outcome_ready = false；
+- transition = baseline_only；
+- baseline_existing = 87；
+- prospective_new = 0；
+- prospective_outcome_eligible = 0；
+- prospective observation status = no_outcome_cohort；
+- observation rows = 0；
+- 55/55 instruments successful；
+- 44 candidate-bearing instruments / 11 zero-candidate instruments；
+- Source Terminal already observed = 11；
+- oldest Source Terminal age = 583 calendar days。
+
+Testing evidence boundary:
+
+- assistant container executed transaction / chronology / mirror-recovery synthetic scenarios：PASS；
+- full private-repo pytest NOT claimed，because assistant container has no GitHub private-repo credential；
+- GitHub-hosted CI run #914 still has deterministic-tests steps=null / logs=null，so runner did not execute tests。
+
 ## 本机调用规则 — D-023
 
 用户电脑不是 HT-CN 常规测试环境。
@@ -672,19 +716,23 @@ GitHub-hosted Actions 仍为 runner-allocation anomaly：最新 run #914 determi
 
 ## 下一步唯一主任务
 
-**M4 Phase 2.6 — transaction/mirror recovery tooling + current T0 derived closeout。**
+**M4 Phase 2.7 — Evidence-chain health report + PR #13 pre-closeout gates。**
 
-仍不需要用户本机执行 QA。
+仍不要求用户本机执行常规测试。
 
-assistant 侧下一批：
+assistant 下一批：
 
-1. 增加 compatibility mirror repair/rebuild，只允许从 frozen baseline + committed transactions 派生；
-2. repair 不得改动 committed capture；
-3. 为 transaction store 增加 integrity summary / repair-needed 状态；
-4. 对用户已上传 T0 生成正式 baseline audit / transition / prospective-observation closeout；
-5. PR #13 继续保持 Draft，直到 Phase 2 evidence layer 完成 assistant-side gates。
-
-新的真实交易日只有在 assistant 无法访问私有 M1 snapshot 时，才需要最小数据采集；其余测试继续由 assistant 自行完成。
+1. 增加 transaction-store health report：
+   - frozen baseline identity；
+   - committed capture count / date range；
+   - monotonic chronology；
+   - transaction integrity；
+   - mirror repair-needed；
+   - authoritative evidence source；
+2. 把 transition / observation report 的 evidence-source provenance 显式统一；
+3. 对 Phase 2.5/2.6 做 source-level syntax/static review；
+4. PR #13 保持 Draft，直到 Phase 2 evidence chain 达到可关闭状态；
+5. hosted CI runner 若恢复，只运行一次完整 gate，不反复 rerun。
 
 
 ## 固定 Source / Product 边界
