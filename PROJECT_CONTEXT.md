@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `f052526ec7ea701051d28b012a55050e9bed5006`
-context_checkpoint_title: `M4 Phase 2 evidence-integrity closeout frozen`
+context_checkpoint: `5c1ca3e2238b22acef949c1d7c630c04eb8c866f`
+context_checkpoint_title: `M4 Phase 2 closeout + one-click evidence handoff`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -776,6 +776,9 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 - production capture 与已修改 research fixtures 均已传入 methodology identity；
 - schema-v1 只保留 migration readability，不能静默续接 schema-v2；
 - Phase 2 现在是 **structurally ready for first fingerprinted future capture**；
+- `运行M4真实A股生命周期快照.bat` 已收敛为一次运行完成 capture → health → transition → observation → evidence bundle；
+- 单一交接文件：`artifacts/reports/m4-evidence-bundle.zip`；
+- bundle 只是运输层；即使 authoritative evidence 损坏也原样打包诊断，不会修复/改写权威证据；
 - 该 ready 只指证据架构，不是 alpha / 胜率 / 盈利验证。
 
 仍开放的外部 gate：
@@ -803,8 +806,8 @@ Phase 2 assistant-side 结构收口已完成。下一次用户本机参与只用
 1. 更新本地项目到当前 M4 分支；
 2. 在新的已收盘 A 股交易日运行一次 `运行M4真实A股生命周期快照.bat`；
 3. 不做重复 QA，不要求人工截图；
-4. 将生成的 authoritative capture / report 交给 assistant；
-5. assistant 随后完成 evidence-health、methodology fingerprint、transition、prospective enrollment、suspension 与 mirror 全部审计；
+4. 只需交给 assistant：`artifacts/reports/m4-evidence-bundle.zip`；
+5. assistant 从 bundle 中审计 authoritative capture、evidence-health、methodology fingerprint、transition、prospective enrollment、suspension 与 mirror；
 6. 若尚无 strict outcome-eligible candidate，则继续积累事实快照，不提前定义收益阈值或做 alpha 推断。
 
 
