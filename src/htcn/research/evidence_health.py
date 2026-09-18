@@ -101,7 +101,7 @@ def build_evidence_chain_health(
             "mirror_integrity": _unavailable_mirror_state(
                 "not_checked_authoritative_blocker"
             ),
-            "blocker_count": 1,
+            "blocker_count": len(blockers),
             "warning_count": 0,
             "blockers": blockers,
             "warnings": [],
