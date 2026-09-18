@@ -965,3 +965,43 @@ No profitability / win-rate / alpha claim is allowed.
 - if hosted runner remains unallocated, report it as infrastructure limitation, not code-test pass/fail;
 - only then request the next irreducibly private M1 one-click capture when needed.
 
+## 2026-09-18 — Hosted CI recovery and Phase 3.1 deterministic green
+
+GitHub-hosted Actions resumed real runner allocation during Phase 3.1 closeout.
+
+Observed sequence:
+
+1. run #1398 executed real Python tests:
+   - 4 failed / 586 passed;
+   - failures were real code/test-contract findings, no longer attributable to runner allocation.
+2. corrections:
+   - isolated capture backfill chronology fixture from cohort follow-up coverage;
+   - aligned wrapper contract text with Phase 3.1 minimum-safe wording;
+   - repaired zero-candidate manifest fixture so positive manifest counts have journal rows;
+   - exposed intake blockers explicitly.
+3. run #1404:
+   - 1 failed / 589 passed;
+   - exact blocker:
+     `outcome_snapshot_protocol_member_missing:m4-outcome-v2`;
+   - root cause: snapshot protocol ID `m4-outcome-v2` had been naively mapped to
+     `protocols/m4-outcome-v2.json`, while canonical bundled file is
+     `protocols/m4-outcome-protocol-v2.json`.
+4. fixed only transport/intake filename mapping; frozen outcome protocol and evaluator were not changed.
+5. run #1406 on code checkpoint
+   `8833d1d78bc266fc26efff92bd0a89204cb5ec12`:
+   - overall workflow: **success**;
+   - Python: **590 passed**;
+   - Web dependencies: pass;
+   - Web build: pass;
+   - Playwright: conditionally skipped by existing M2/M3 branch predicate, not failed;
+   - autonomous real-A-share research: skipped by design.
+
+Freeze audit after all fixes:
+
+- 37 capture-methodology components changed since `c774c549...`: **0**;
+- 4 outcome-engine components changed since `9cbc0d3d...`: **0**.
+
+PR #13 became mergeable_state=clean with no review threads, but remains Draft because no post-T0 real private-M1 future capture exists.
+
+Code-side Phase 3.1 pre-T1 implementation is therefore closed. The next non-substitutable gate is one private-M1 future capture through the existing one-click wrapper and assistant-side independent intake of the resulting evidence bundle.
+
