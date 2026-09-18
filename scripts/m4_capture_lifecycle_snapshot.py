@@ -18,6 +18,7 @@ from htcn.research.capture_transaction import (
     freeze_legacy_baseline,
     read_committed_captures,
 )
+from htcn.research.evidence_health import build_evidence_chain_health
 from htcn.research.lifecycle_journal import append_entries, entries_from_analysis, read_journal
 from htcn.research.mirror_recovery import (
     inspect_compatibility_mirrors,
@@ -266,6 +267,17 @@ def run(
         [entry.execution_context_gate for entry in all_entries]
     )
     result["schemas"] = _summary_counter([entry.schema for entry in all_entries])
+
+    health = build_evidence_chain_health(
+        transaction_root=transaction_root,
+        journal_path=journal_path,
+        manifest_path=manifest_path,
+    )
+    result["evidence_health"] = health
+    if int(health.get("blocker_count") or 0) > 0:
+        result["status"] = "committed_evidence_health_blocked"
+        return result
+
     result["status"] = "pass"
     return result
 
