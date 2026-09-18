@@ -5,7 +5,7 @@ from hashlib import sha256
 from pathlib import Path
 
 
-METHODOLOGY_CONTRACT_VERSION = 3
+METHODOLOGY_CONTRACT_VERSION = 4
 
 # Conservative file-level fingerprint for anything that can change candidate identity,
 # Source Raw PRZ, canonical Source lifecycle, action-state interpretation, or M4
