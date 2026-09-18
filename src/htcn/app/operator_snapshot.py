@@ -10,7 +10,12 @@ from typing import Any, Iterable
 
 import duckdb
 
-from .operator_queue import AnalysisService, build_operator_queue
+from .operator_queue import (
+    AnalysisService,
+    AnalysisServiceFactory,
+    OperatorProgressCallback,
+    build_operator_queue,
+)
 
 
 OPERATOR_SNAPSHOT_SCHEMA_VERSION = 1
@@ -157,6 +162,9 @@ def build_or_load_operator_snapshot(
     bars: int = 420,
     scales: tuple[int, ...] = (3, 5, 8, 13),
     force_refresh: bool = False,
+    max_workers: int = 1,
+    service_factory: AnalysisServiceFactory | None = None,
+    progress_callback: OperatorProgressCallback | None = None,
 ) -> dict[str, Any]:
     instruments = [str(value) for value in instrument_ids]
     universe_hash = operator_universe_hash(instruments)
@@ -203,6 +211,9 @@ def build_or_load_operator_snapshot(
         bars=bars,
         scales=scales,
         include_evidence_insufficient=True,
+        max_workers=max_workers,
+        service_factory=service_factory,
+        progress_callback=progress_callback,
     )
     generated_at = datetime.now(timezone.utc).isoformat()
 
