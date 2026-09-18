@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `f33433f58a422e03790b529b73b713b2f9e7f2b1`
-context_checkpoint_title: `M4 Phase 3.1 outcome-v2 evidence chain + frozen outcome engine`
+context_checkpoint: `8833d1d78bc266fc26efff92bd0a89204cb5ec12`
+context_checkpoint_title: `M4 Phase 3.1 code-side closeout: outcome-v2 + hosted CI green`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -1077,4 +1077,66 @@ Phase 3.1 已完成：
 5. assistant intake 独立复验 capture + outcome evidence。
 
 D-023 继续有效：用户电脑不是常规测试机，只承担不可替代的私有 M1 数据采集。
+
+## M4 Phase 3.1 hosted-CI closeout — 2026-09-18
+
+GitHub-hosted runner allocation has recovered. The prior `steps=null` infrastructure anomaly is no longer the current testing boundary.
+
+Current validated code checkpoint:
+
+`8833d1d78bc266fc26efff92bd0a89204cb5ec12`
+
+GitHub Actions:
+
+- workflow: `HT-CN CI`;
+- run: **#1406** / id `35358993415`;
+- overall conclusion: **success**;
+- deterministic-tests job: **success**;
+- Python: **590 passed**, 1162 warnings;
+- Node 22 setup: pass;
+- `npm ci`: pass, 0 vulnerabilities;
+- Web build: pass;
+- Playwright steps: intentionally skipped because current workflow only enables deterministic browser acceptance on `m3/*` and specified `m2/*` source branches; M4 did not satisfy that branch predicate;
+- autonomous real-A-share research job: skipped by design because M4 push/PR does not satisfy the M2 `[research]` / workflow-dispatch condition.
+
+The CI recovery also exposed real test failures in earlier runs; those were fixed without changing frozen methodology or outcome engine:
+
+- run #1398: 4 failed / 586 passed;
+- run #1404: 1 failed / 589 passed;
+- run #1406: 590 passed.
+
+Fixes were confined to stale test fixtures/assertions and transport/intake mapping:
+
+- chronology backfill test isolated from cohort-followup semantics;
+- wrapper assertion aligned to Phase 3.1 minimum-safe wording;
+- manifest fixture now respects positive candidate-count/journal-row consistency;
+- snapshot outcome protocol ID now maps to canonical bundle filename
+  `m4-outcome-protocol-v2.json`.
+
+Post-fix freeze audit remains:
+
+- capture methodology: **0 / 37 changed** since
+  `c774c54928c33361952bf1a612a8555633449625`;
+- outcome engine: **0 / 4 changed** since
+  `9cbc0d3d30ac5f0a87748a39788cbee04a44bcc8`.
+
+PR #13 at this checkpoint:
+
+- open;
+- Draft;
+- mergeable=true;
+- mergeable_state=clean;
+- review threads=0.
+
+Draft remains intentional because **no first post-T0 private-M1 future capture exists yet**. Code-side Phase 3.1 is ready; empirical M4 acceptance still requires irreducibly private future evidence.
+
+Next required real action is not another feature change. It is one clean run of:
+
+`运行M4真实A股生命周期快照.bat`
+
+on the user's private M1 checkout after updating to a HEAD containing the Phase 3.1 minimum-safe checkpoint. The single handoff artifact remains:
+
+`artifacts/reports/m4-evidence-bundle.zip`
+
+After that bundle is supplied, assistant-side intake must independently verify capture authority + prospective enrollment + outcome evidence. D-023 remains active: no routine user-PC QA.
 
