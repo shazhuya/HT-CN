@@ -190,12 +190,19 @@ def build_bundle(
             if path.is_file():
                 archive.write(path, arcname=str(item["arcname"]))
 
-    tmp.replace(output)
+    verification = verify_evidence_bundle(tmp)
+    if verification.status != "valid":
+        tmp.unlink(missing_ok=True)
+        raise RuntimeError(
+            "M4 evidence transport bundle failed integrity verification: "
+            + "; ".join(verification.errors)
+        )
 
+    tmp.replace(output)
     verification = verify_evidence_bundle(output)
     if verification.status != "valid":
         raise RuntimeError(
-            "M4 evidence transport bundle failed integrity verification: "
+            "M4 evidence transport bundle changed after atomic replace: "
             + "; ".join(verification.errors)
         )
 
