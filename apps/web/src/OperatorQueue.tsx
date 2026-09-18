@@ -58,6 +58,15 @@ type OperatorQueuePayload = {
   lifecycle_state_counts: Record<string, number>
   items: OperatorQueueItem[]
   errors: { instrument_id: string; error: string }[]
+  operator_index?: {
+    schema_version: number
+    universe_scope: string
+    universe_instrument_count: number
+    presentation_does_not_define_universe: boolean
+    legacy_limit_ignored: number | null
+    authoritative_evidence: boolean
+    writes_m4_evidence: boolean
+  }
   product_cache?: {
     schema_version: number
     contract_version: number
@@ -150,6 +159,13 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [includeInsufficient, setIncludeInsufficient] = useState(true)
+  const [searchText, setSearchText] = useState('')
+  const [actionFilter, setActionFilter] = useState('all')
+  const [lifecycleFilter, setLifecycleFilter] = useState('all')
+  const [patternFilter, setPatternFilter] = useState('all')
+  const [directionFilter, setDirectionFilter] = useState('all')
+  const [pageSize, setPageSize] = useState(50)
+  const [pageIndex, setPageIndex] = useState(0)
   const [delta, setDelta] = useState<OperatorDeltaPayload | null>(null)
   const [deltaLoading, setDeltaLoading] = useState(false)
   const [deltaError, setDeltaError] = useState<string | null>(null)
@@ -257,7 +273,6 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
     setLoading(true)
     setError(null)
     const query = new URLSearchParams({
-      limit: '500',
       bars: '420',
       include_evidence_insufficient: 'true',
       refresh: forceRefresh ? 'true' : 'false',
@@ -279,23 +294,92 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
     load(false)
   }, [load])
 
-  const visibleItems = useMemo(() => {
+  const filterOptions = useMemo(() => {
     const items = payload?.items ?? []
-    if (includeInsufficient) return items
-    return items.filter(
-      (item) => item.action_state !== 'evidence_insufficient',
-    )
-  }, [payload, includeInsufficient])
+    return {
+      actions: [...new Set(items.map((item) => item.action_state))].sort(),
+      lifecycles: [...new Set(items.map((item) => item.lifecycle_state))].sort(),
+      patterns: [...new Set(items.map((item) => item.pattern_id))].sort(),
+      directions: [...new Set(items.map((item) => item.direction))].sort(),
+    }
+  }, [payload])
+
+  const filteredItems = useMemo(() => {
+    const needle = searchText.trim().toLowerCase()
+    return (payload?.items ?? []).filter((item) => {
+      if (
+        !includeInsufficient
+        && item.action_state === 'evidence_insufficient'
+      ) return false
+      if (
+        actionFilter !== 'all'
+        && item.action_state !== actionFilter
+      ) return false
+      if (
+        lifecycleFilter !== 'all'
+        && item.lifecycle_state !== lifecycleFilter
+      ) return false
+      if (
+        patternFilter !== 'all'
+        && item.pattern_id !== patternFilter
+      ) return false
+      if (
+        directionFilter !== 'all'
+        && item.direction !== directionFilter
+      ) return false
+      if (!needle) return true
+      const haystack = [
+        item.instrument_id,
+        item.pattern_id,
+        patternLabel(item.pattern_id),
+        item.lifecycle_state,
+        lifecycleLabel(item.lifecycle_state),
+        item.action_state,
+        actionLabel(item.action_state),
+      ].join(' ').toLowerCase()
+      return haystack.includes(needle)
+    })
+  }, [
+    payload,
+    includeInsufficient,
+    searchText,
+    actionFilter,
+    lifecycleFilter,
+    patternFilter,
+    directionFilter,
+  ])
+
+  useEffect(() => {
+    setPageIndex(0)
+  }, [
+    searchText,
+    actionFilter,
+    lifecycleFilter,
+    patternFilter,
+    directionFilter,
+    includeInsufficient,
+    pageSize,
+  ])
+
+  const pageCount = Math.max(
+    1,
+    Math.ceil(filteredItems.length / pageSize),
+  )
+  const safePageIndex = Math.min(pageIndex, pageCount - 1)
+  const pageItems = useMemo(() => {
+    const start = safePageIndex * pageSize
+    return filteredItems.slice(start, start + pageSize)
+  }, [filteredItems, safePageIndex, pageSize])
 
   const groups = useMemo(() => {
     const result = new Map<string, OperatorQueueItem[]>()
-    for (const item of visibleItems) {
+    for (const item of pageItems) {
       const current = result.get(item.action_state) ?? []
       current.push(item)
       result.set(item.action_state, current)
     }
     return result
-  }, [visibleItems])
+  }, [pageItems])
 
   const orderedStates = [
     'execution_evaluation',
@@ -334,6 +418,14 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
 
       {payload && (
         <>
+          {payload.operator_index && (
+            <div className="operator-queue__universe">
+              <strong>扫描范围：完整本地初始化 universe</strong>
+              <span>{payload.operator_index.universe_instrument_count} 只标的</span>
+              <span>搜索/筛选/分页只影响展示，不改变扫描与 Delta universe</span>
+            </div>
+          )}
+
           {payload.product_cache && (
             <div className="operator-queue__cache">
               <span>
@@ -384,6 +476,88 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
               }
             }}
           />
+
+          <section className="operator-index-controls" aria-label="operator-index-controls">
+            <div className="operator-index-controls__top">
+              <label className="operator-index-controls__search">
+                <span>搜索</span>
+                <input
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  placeholder="代码 / 形态 / 生命周期"
+                />
+              </label>
+              <label>
+                <span>工作状态</span>
+                <select value={actionFilter} onChange={(event) => setActionFilter(event.target.value)}>
+                  <option value="all">全部</option>
+                  {filterOptions.actions.map((value) => (
+                    <option key={value} value={value}>{actionLabel(value)}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>生命周期</span>
+                <select value={lifecycleFilter} onChange={(event) => setLifecycleFilter(event.target.value)}>
+                  <option value="all">全部</option>
+                  {filterOptions.lifecycles.map((value) => (
+                    <option key={value} value={value}>{lifecycleLabel(value)}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>形态</span>
+                <select value={patternFilter} onChange={(event) => setPatternFilter(event.target.value)}>
+                  <option value="all">全部</option>
+                  {filterOptions.patterns.map((value) => (
+                    <option key={value} value={value}>{patternLabel(value)}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>方向</span>
+                <select value={directionFilter} onChange={(event) => setDirectionFilter(event.target.value)}>
+                  <option value="all">全部</option>
+                  {filterOptions.directions.map((value) => (
+                    <option key={value} value={value}>
+                      {value === 'bullish' ? '看涨' : value === 'bearish' ? '看跌' : value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>每页</span>
+                <select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={200}>200</option>
+                </select>
+              </label>
+            </div>
+            <div className="operator-index-controls__status">
+              <span>
+                匹配 <strong>{filteredItems.length}</strong> / 全部 <strong>{payload.candidate_count}</strong> 个候选
+              </span>
+              <span>
+                页码 {safePageIndex + 1} / {pageCount}
+              </span>
+              <div className="operator-index-controls__paging">
+                <button
+                  onClick={() => setPageIndex((value) => Math.max(0, value - 1))}
+                  disabled={safePageIndex <= 0}
+                >
+                  上一页
+                </button>
+                <button
+                  onClick={() => setPageIndex((value) => Math.min(pageCount - 1, value + 1))}
+                  disabled={safePageIndex >= pageCount - 1}
+                >
+                  下一页
+                </button>
+              </div>
+            </div>
+          </section>
 
           <div className="operator-queue__notice">
             <strong>排序含义：</strong>
