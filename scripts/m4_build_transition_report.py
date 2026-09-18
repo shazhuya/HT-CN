@@ -8,6 +8,7 @@ from typing import Any
 
 from htcn.research.lifecycle_journal import read_journal
 from htcn.research.lifecycle_transitions import build_transition_report
+from htcn.research.snapshot_manifest import read_snapshot_manifest, resolve_capture_timeline
 
 
 def render_markdown(payload: dict[str, Any]) -> str:
@@ -21,6 +22,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         f"- Journal 行数：{payload.get('journal_row_count', 0)}",
         f"- 最新候选数：{payload.get('latest_candidate_count', 0)}",
         f"- Prospective outcome eligible 行数：{payload.get('prospective_outcome_eligible_row_count', 0)}",
+        f"- Capture timeline：`{(payload.get('capture_timeline') or {}).get('source', 'journal_fallback')}`",
         "",
         "## Cohort",
         "",
@@ -80,15 +82,31 @@ def main() -> int:
         default="data/research/m4/lifecycle_journal.jsonl",
     )
     parser.add_argument(
+        "--manifest",
+        default="data/research/m4/snapshot_manifest.jsonl",
+    )
+    parser.add_argument(
         "--output",
         default="artifacts/reports/m4-lifecycle-transitions.json",
     )
     args = parser.parse_args()
 
     rows = read_journal(Path(args.journal))
-    payload = build_transition_report(rows)
+    manifest_path = Path(args.manifest)
+    manifest_rows = (
+        read_snapshot_manifest(manifest_path)
+        if manifest_path.exists()
+        else []
+    )
+    timeline = resolve_capture_timeline(rows, manifest_rows)
+    payload = build_transition_report(
+        rows,
+        captured_dates=timeline.dates,
+    )
+    payload["capture_timeline"] = timeline.as_payload()
     payload["generated_at_utc"] = datetime.now(timezone.utc).isoformat()
     payload["journal_path"] = str(args.journal)
+    payload["manifest_path"] = str(args.manifest)
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
