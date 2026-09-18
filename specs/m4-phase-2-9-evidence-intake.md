@@ -126,3 +126,22 @@ Intake therefore:
 
 The intake implementation itself remains outside the methodology fingerprint because it
 revalidates/consumes evidence rather than defining the evidence-generation rules.
+
+
+## Price-basis provenance intake
+
+Phase 2.11 adds `price_mode` and `price_basis_id` to authoritative schema-v4 rows.
+
+Intake recomputes the observation panel from authoritative evidence and surfaces any enrolled
+candidate with basis drift.
+
+Current behavior:
+
+- basis drift does not invalidate the transport or committed evidence;
+- basis drift is reported as
+  `price_basis_drift_present_future_outcome_rebase_required`;
+- no automatic cross-basis rebasing is performed;
+- no return/MFE/MAE is calculated.
+
+A future outcome protocol must define rebasing before cross-basis performance statistics are
+allowed.
