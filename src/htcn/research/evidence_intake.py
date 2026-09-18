@@ -338,6 +338,20 @@ def audit_evidence_bundle(
                 if row.get("market_observation_status")
                 == "confirmed_full_day_suspended"
             ]
+            basis_drift_summaries = [
+                dict(item)
+                for item in observation.get("candidate_summaries") or []
+                if int(item.get("price_basis_drift_snapshot_count") or 0) > 0
+            ]
+            basis_drift_keys = sorted(
+                str(item.get("candidate_key") or "")
+                for item in basis_drift_summaries
+                if item.get("candidate_key")
+            )
+            if basis_drift_keys:
+                warnings.append(
+                    "price_basis_drift_present_future_outcome_rebase_required"
+                )
 
             lifecycle_latest = Counter(
                 str(row.get("source_lifecycle_state"))
@@ -381,6 +395,8 @@ def audit_evidence_bundle(
                 "prospective_outcome_eligible_candidate_keys": eligible_keys,
                 "prospective_observation_status": observation.get("status"),
                 "prospective_observation_count": observation.get("observation_count"),
+                "price_basis_drift_candidate_count": len(basis_drift_keys),
+                "price_basis_drift_candidate_keys": basis_drift_keys,
                 "cohort_followup_row_count": len(followup_rows),
                 "confirmed_full_day_suspended_row_count": len(suspension_rows),
             })
