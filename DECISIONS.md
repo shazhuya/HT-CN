@@ -1531,3 +1531,74 @@ M5 已经进入全 universe、并行、缓存和 single-flight 的实战产品�
 原因：
 
 每日产品入口的第一职责是稳定地产出“当前输入对应的当前 Queue”。M4 research 有更严格的 evidence/source/QFQ 约束，这些约束不能反向变成 M5 的总开关；同时，M4 QFQ 又确实可能改变 Phase 7 已纳入 identity 的产品输入，所以必须在 research lane 后做一次轻量、非 force 的最终 revalidation。D-050 将“解耦”与“最终一致性”同时冻结。
+
+
+## D-051 — 每日交接包必须精确绑定 Phase 9 最终产品快照，且 transport failure 不得改写产品/研究就绪状态
+
+**状态：Frozen M5 Phase 10 daily handoff transport boundary**
+
+正式决定：
+
+1. Daily Handoff Bundle v2 是 transport artifact，不是 research authority；
+2. 外层 handoff 永久声明：
+   - `transport_only=true`；
+   - `authoritative_evidence=false`；
+   - `writes_m4_evidence=false`；
+   - `is_trade_instruction=false`；
+   - `alpha_inference_allowed=false`；
+3. `m5_product_ready=true` 时，current product snapshot 不得通过“扫描目录后选择最新文件”推断；
+4. current snapshot 必须从最终 `m5-operator-snapshot.json` 的 `product_cache.cache_path` 精确绑定；
+5. final M5 report 必须满足：
+   - schema v2；
+   - product_ready=true；
+   - single-as-of；
+   - persisted cache status；
+   - freshness=current；
+   - input identity stable；
+   - expected/queue/as-of trade date 一致；
+   - report identity 与 cache identity 一致；
+6. exact cache path 必须被限制在 `data/product/m5/operator_queue/`；
+7. exact current snapshot 文件名必须符合 canonical trade-date/bars/scales slot；
+8. current snapshot 必须满足 Operator snapshot schema v1 / contract v2；
+9. current snapshot 的 trade date / bars / scales / queue integrity 必须与 final report 一致；
+10. current snapshot 的完整 input identity 必须与 final report 完全相同；
+11. current snapshot 必须继续声明：
+    - authoritative_evidence=false；
+    - writes_m4_evidence=false；
+12. optional previous snapshot 只能作为历史产品上下文，不能参与 current 选择；
+13. previous snapshot 也必须满足 canonical contract/date/single-as-of/non-authoritative 约束；
+14. handoff 必须携带实际 Phase 9 pipeline report，传入 payload 与磁盘文件内容必须一致；
+15. manifest 必须记录 pipeline / final M5 report / current snapshot 的 SHA-256 与 product binding；
+16. verifier 必须独立解析 pipeline / final M5 report / current snapshot，交叉核对 ready flags、overall status、trade date、cache readiness 与 input identity；不能只相信 manifest 自述；
+17. ZIP member 必须使用安全 relative arcname，每个 member 记录 size + SHA-256，manifest member set 必须与实际 archive 精确一致；
+18. manifest 中的 source/cache path 使用 repository-relative 表达，不携带本机绝对路径；
+19. `m4_research_ready=true` 时，handoff 必须存在且验证通过当前 `m4-evidence-bundle.zip`；
+20. research degraded 时，可携带验证通过的 existing M4 evidence bundle，但 role 必须明确为 existing，而不是 current research success；
+21. research degraded 且旧 M4 bundle 无效时，省略该 bundle 并记录 warning；
+22. 所有嵌套 M4 bundle 必须继续使用现有 `verify_evidence_bundle` 验证；
+23. 外层 handoff 不获得 nested M4 capture chain 的 authority；M4 authority 永远留在原 evidence chain；
+24. handoff ZIP 必须临时写入、原子替换前 verify、替换后再次 verify；
+25. handoff runner 必须把 transport 状态写入独立 `m5-daily-handoff.json`；
+26. runner 必须记录 Phase 9 pipeline report 构建前后 SHA-256，证明 pipeline 未被修改；
+27. output/report/pipeline 三条路径不得互相覆盖；
+28. transport build 失败只影响 handoff transport exit/status，不得编辑 Phase 9 pipeline report；
+29. transport failure 不得把既有 `m5_product_ready` 或 `m4_research_ready` 重新写值或重新解释；
+30. `运行HT-CN每日交接包.bat` 只运行 handoff builder，不偷偷重跑 Phase 9 daily pipeline；
+31. Phase 10 仍不改变 Queue semantics、harmonic identity、Source Raw PRZ 或 lifecycle；
+32. Phase 10 不写 M4 evidence，不使用胜率/alpha/predictive score，不输出交易指令；
+33. Phase 9 governance checkpoint → Phase 10 validated code checkpoint 仅新增 7 个 handoff/product/test/BAT 文件；
+34. M4 capture methodology drift：0 / 37；
+35. Outcome Engine drift：0 / 4；
+36. validated code checkpoint：
+    `99e3bf7aba1e656601bdcf4831d4b215eede4e8d`；
+37. Hosted CI run `35382676878` / #1665：
+    - overall success；
+    - Python 699 passed；
+    - Web build success；
+    - Playwright 21 passed；
+    - browser evidence upload success；
+38. draft PR #22 只是 Phase 10 hosted-CI / diff audit carrier，不代表已经合并到 Phase 9 或 main。
+
+原因：
+
+每日交接包的价值在于把“这次收盘流水线实际得到的最终产品状态”可靠搬走，而不是再做一次“哪个文件看起来最新”的推断。Phase 7 已把 input identity 纳入产品缓存，Phase 9 又在 M4 research/QFQ 后执行最终 revalidation；因此 Phase 10 只能精确绑定那一个最终结果。与此同时，运输层的失败不应倒灌到产品/研究语义。D-051 把 exact binding、portable verification、M4 authority isolation 与 transport-failure isolation 一次冻结。
