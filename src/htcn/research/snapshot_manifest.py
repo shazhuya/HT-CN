@@ -27,6 +27,7 @@ class SnapshotManifestEntry:
     candidate_count: int
     worktree_clean: bool
     status: str
+    capture_transaction_id: str | None = None
     alpha_inference_allowed: bool = False
     is_trade_instruction: bool = False
 

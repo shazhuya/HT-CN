@@ -42,6 +42,7 @@ class LifecycleJournalEntry:
     source_prz_high: float | None
     source_terminal_trade_date: str | None
     eligible_for_validation: bool
+    capture_transaction_id: str | None = None
     as_of_open: float | None = None
     as_of_high: float | None = None
     as_of_low: float | None = None

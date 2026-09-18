@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 from collections import Counter
 from datetime import datetime, timezone
 import json
@@ -18,6 +19,10 @@ from htcn.research.capture_transaction import (
     read_committed_captures,
 )
 from htcn.research.lifecycle_journal import append_entries, entries_from_analysis, read_journal
+from htcn.research.mirror_recovery import (
+    inspect_compatibility_mirrors,
+    repair_compatibility_mirrors,
+)
 from htcn.research.snapshot_manifest import (
     SnapshotManifestEntry,
     append_snapshot_manifest,
@@ -184,11 +189,18 @@ def run(
         else expected
     )
 
+    mirror_entries = [
+        replace(
+            entry,
+            capture_transaction_id=committed_capture.transaction_id,
+        )
+        for entry in all_entries
+    ]
     mirror_status = "complete"
     try:
         append_result = append_entries(
             journal_path,
-            all_entries,
+            mirror_entries,
             baseline_trade_date=baseline_trade_date,
         )
         result["journal_append"] = append_result
@@ -203,18 +215,45 @@ def run(
             candidate_count=len(all_entries),
             worktree_clean=identity.worktree_clean,
             status="pass",
+            capture_transaction_id=committed_capture.transaction_id,
         )
         result["manifest_append"] = append_snapshot_manifest(
             manifest_path,
             manifest_entry,
         )
+        integrity = inspect_compatibility_mirrors(
+            transaction_root=transaction_root,
+            journal_path=journal_path,
+            manifest_path=manifest_path,
+        )
+        result["mirror_integrity"] = integrity.as_payload()
+        if integrity.repair_needed:
+            result["mirror_repair"] = repair_compatibility_mirrors(
+                transaction_root=transaction_root,
+                journal_path=journal_path,
+                manifest_path=manifest_path,
+            )
+            mirror_status = "repaired"
     except Exception as exc:
-        mirror_status = "incomplete"
         result["warnings"].append({
             "scope": "compatibility_mirrors",
             "error": f"{type(exc).__name__}: {exc}",
             "authoritative_capture_committed": True,
         })
+        try:
+            result["mirror_repair"] = repair_compatibility_mirrors(
+                transaction_root=transaction_root,
+                journal_path=journal_path,
+                manifest_path=manifest_path,
+            )
+            mirror_status = "repaired"
+        except Exception as repair_exc:
+            mirror_status = "incomplete"
+            result["warnings"].append({
+                "scope": "compatibility_mirror_repair",
+                "error": f"{type(repair_exc).__name__}: {repair_exc}",
+                "authoritative_capture_committed": True,
+            })
     result["mirror_status"] = mirror_status
 
     result["source_lifecycle_states"] = _summary_counter(
