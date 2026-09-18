@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+FORMAL_BASIS = "qfq:" + "1" * 64
+
 from htcn.research.lifecycle_journal import (
     LifecycleJournalEntry,
     append_entries,
@@ -77,6 +79,8 @@ def test_entries_from_analysis_excludes_five_zero_and_preserves_source_state() -
     analysis = {
         "instrument_id": "SSE.688300",
         "last_trade_date": "2026-09-18",
+        "price_mode": "qfq",
+        "price_basis_id": FORMAL_BASIS,
         "bars": [],
         "context_integrity": {"summary_state": "partial"},
         "completed": [],
@@ -106,6 +110,8 @@ def _entry(date: str, key: str = "k", head: str = "h") -> LifecycleJournalEntry:
         next_key_price_role="source_prz_terminal_side",
         execution_context_gate="tradable",
         context_integrity_summary="complete",
+        price_mode="qfq",
+        price_basis_id=FORMAL_BASIS,
         source_prz_low=99.0,
         source_prz_high=101.0,
         source_terminal_trade_date=None,
@@ -198,6 +204,9 @@ def test_prospective_outcome_gate_blocks_alternate_bat() -> None:
     eligible, reason = prospective_outcome_gate(
         {
             "pattern_id": "alternate_bat",
+            "eligible_for_validation": True,
+            "price_mode": "qfq",
+            "price_basis_id": FORMAL_BASIS,
             "pattern_state": "forming",
             "source_lifecycle_state": "waiting_terminal",
             "source_prz_low": 90.0,
@@ -214,6 +223,9 @@ def test_prospective_outcome_gate_requires_pre_terminal_forming_state() -> None:
     eligible, reason = prospective_outcome_gate(
         {
             "pattern_id": "abcd",
+            "eligible_for_validation": True,
+            "price_mode": "qfq",
+            "price_basis_id": FORMAL_BASIS,
             "pattern_state": "completed",
             "source_lifecycle_state": "type_i_confirmed",
             "source_prz_low": 90.0,
@@ -230,6 +242,9 @@ def test_prospective_outcome_gate_allows_resolved_pre_terminal_candidate() -> No
     eligible, reason = prospective_outcome_gate(
         {
             "pattern_id": "abcd",
+            "eligible_for_validation": True,
+            "price_mode": "qfq",
+            "price_basis_id": FORMAL_BASIS,
             "pattern_state": "forming",
             "source_lifecycle_state": "waiting_terminal",
             "source_prz_low": 90.0,
@@ -247,6 +262,8 @@ def test_entries_from_analysis_captures_latest_raw_market_facts() -> None:
     analysis = {
         "instrument_id": "SSE.600000",
         "last_trade_date": "2026-09-18",
+        "price_mode": "qfq",
+        "price_basis_id": FORMAL_BASIS,
         "bars": [
             {
                 "index": 0,
@@ -300,6 +317,8 @@ def test_confirmed_suspension_carry_forward_has_no_fake_market_bar() -> None:
     analysis = {
         "instrument_id": "SSE.600000",
         "last_trade_date": "2026-09-17",
+        "price_mode": "qfq",
+        "price_basis_id": FORMAL_BASIS,
         "bars": [
             {
                 "index": 0,
@@ -342,6 +361,8 @@ def test_suspension_carry_forward_requires_later_capture_date() -> None:
     analysis = {
         "instrument_id": "SSE.600000",
         "last_trade_date": "2026-09-18",
+        "price_mode": "qfq",
+        "price_basis_id": FORMAL_BASIS,
         "bars": [],
         "context_integrity": {"summary_state": "complete"},
         "completed": [],
@@ -366,6 +387,9 @@ def test_first_seen_suspension_row_cannot_enter_outcome_cohort() -> None:
     eligible, reason = prospective_outcome_gate(
         {
             "pattern_id": "abcd",
+            "eligible_for_validation": True,
+            "price_mode": "qfq",
+            "price_basis_id": FORMAL_BASIS,
             "pattern_state": "forming",
             "source_lifecycle_state": "waiting_terminal",
             "source_prz_low": 90.0,
@@ -377,3 +401,41 @@ def test_first_seen_suspension_row_cannot_enter_outcome_cohort() -> None:
     )
     assert eligible is False
     assert reason == "first_observed_not_traded_session"
+
+
+
+def test_prospective_outcome_gate_blocks_raw_fallback_basis() -> None:
+    eligible, reason = prospective_outcome_gate(
+        {
+            "pattern_id": "abcd",
+            "eligible_for_validation": False,
+            "price_mode": "raw",
+            "price_basis_id": "raw",
+            "pattern_state": "forming",
+            "source_lifecycle_state": "waiting_terminal",
+            "source_prz_low": 90.0,
+            "source_prz_high": 92.0,
+            "source_terminal_trade_date": None,
+        },
+        enrollment_state="prospective_new",
+    )
+    assert eligible is False
+    assert reason == "candidate_not_formal_validation_eligible"
+
+
+def test_entries_from_analysis_marks_raw_fallback_ineligible() -> None:
+    analysis = {
+        "instrument_id": "SSE.600000",
+        "last_trade_date": "2026-09-18",
+        "price_mode": "raw",
+        "price_basis_id": "raw",
+        "bars": [],
+        "context_integrity": {"summary_state": "complete"},
+        "completed": [],
+        "forming": [_pattern("ABCD")],
+    }
+    rows = entries_from_analysis(analysis, code_head="abc")
+    assert len(rows) == 1
+    assert rows[0].eligible_for_validation is False
+    assert rows[0].price_mode == "raw"
+    assert rows[0].price_basis_id == "raw"
