@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `e4265af78c7c15c4336e4416d4199808cbca2590`
-context_checkpoint_title: `M4 Phase 2.11 schema-v4 QFQ price-basis provenance + methodology v3`
+context_checkpoint: `25729a304e9004d4c63b44dcdd1a7bfcdabb023b`
+context_checkpoint_title: `M4 Phase 2.11 final governance sync — schema v4 / methodology v3`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
