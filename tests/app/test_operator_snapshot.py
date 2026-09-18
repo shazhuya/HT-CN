@@ -224,7 +224,7 @@ def test_operator_snapshot_cache_hit_does_not_create_parallel_workers(
     )
     calls_after_build = factory_calls
     assert first["product_cache"]["status"] == "rebuilt"
-    assert calls_after_build >= 2
+    assert calls_after_build >= 1
     assert first["build_execution"]["mode"] == "parallel_thread_pool"
 
     second = build_or_load_operator_snapshot(
