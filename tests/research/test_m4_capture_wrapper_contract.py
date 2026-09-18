@@ -26,6 +26,7 @@ def test_capture_wrapper_preflight_runs_before_private_m1_update() -> None:
     assert text.index("git symbolic-ref --quiet --short HEAD") < m1_update
     assert text.index("git merge-base --is-ancestor") < m1_update
     assert text.index("git status --porcelain") < m1_update
+    assert text.index("scripts\\m4_methodology_freeze_guard.py") < m1_update
 
 
 def test_capture_wrapper_fails_closed_before_authoritative_capture() -> None:
@@ -34,3 +35,5 @@ def test_capture_wrapper_fails_closed_before_authoritative_capture() -> None:
     assert "worktree is not clean before M1 update" in text
     assert "current HEAD predates or diverges from the frozen T1 protocol" in text
     assert "scripts\\m4_capture_lifecycle_snapshot.py" in text
+    assert "methodology components differ from the frozen T1 protocol" in text
+    assert "m4-methodology-freeze-guard.json" in text
