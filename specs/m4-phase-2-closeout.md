@@ -84,6 +84,9 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 
 ## One-click private-M1 handoff
 
+- [x] Local checkout preflight runs before any private M1 update or authoritative capture.
+- [x] Preflight requires the frozen M4 branch, minimum safe checkpoint ancestry and a clean worktree.
+- [x] Preflight failure guarantees that neither M1 update nor authoritative capture starts.
 - [x] One-click local capture first runs full M1 smart daily update, then capture, health, transition, observation and transport-bundle stages.
 - [x] M1 update failure skips new authoritative capture instead of accepting stale market data.
 - [x] M1 update log is included in the transport bundle for diagnosis.
