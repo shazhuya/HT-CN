@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `d77f5e444143df420e910b36a6084067a2ea5974`
-context_checkpoint_title: `M4 Phase 2.12 schema-v5 frozen source-clock seed + methodology v4`
+context_checkpoint: `f33433f58a422e03790b529b73b713b2f9e7f2b1`
+context_checkpoint_title: `M4 Phase 3.1 outcome-v2 evidence chain + frozen outcome engine`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -991,3 +991,90 @@ Phase 2 assistant-side 结构收口已完成。下一次用户本机参与只用
 - 是否已经产生第一笔 post-T0 authoritative capture；若有，必须先从 evidence bundle / transaction chain 恢复，不得猜测。
 
 完成上述检查后，才能宣称“已恢复 HT-CN 当前现场”。
+
+## M4 Phase 3.1 — Outcome evidence v2 / D-037
+
+当前跨对话权威状态已经从 Phase 2 的“只积累生命周期证据”推进到 **Phase 3.1 outcome evidence implementation frozen, waiting for first real post-T0 future capture**。
+
+三层 provenance 永久分离：
+
+1. **Capture methodology**
+   - contract v4；
+   - committed capture schema v5；
+   - prospective observation schema v4；
+   - 37 components；
+   - exact freeze commit：`c774c54928c33361952bf1a612a8555633449625`；
+   - 从该 freeze 到本 checkpoint 的 37-component diff = **0**。
+
+2. **Outcome protocol**
+   - historical v1 保留、不改写；
+   - active = `m4-outcome-v2`；
+   - v2 SHA-256：
+     `5822b302e11d197682dc4bb6d835fb0a3b2d62fc97f788c7a323ecda2770555b`；
+   - v2 在第一笔真实 prospective outcome 前修正 MFE/MAE 为 zero-floor nonnegative magnitude。
+
+3. **Outcome engine**
+   - contract v1；
+   - 4 components；
+   - exact code anchor：
+     `9cbc0d3d30ac5f0a87748a39788cbee04a44bcc8`；
+   - 从该 anchor 到本 checkpoint 的 4-component diff = **0**；
+   - 每个 outcome result / snapshot 绑定 engine fingerprint。
+
+Phase 3.1 已完成：
+
+- deterministic outcome evaluator；
+- 复用 `observe_source_execution()` / `derive_source_lifecycle()`；
+- Source Terminal / Type-I / Type-II price-structure facts；
+- 5/10/20 traded-bar descriptive MFE/MAE；
+- MFE/MAE 从 T+1 开始、不包含 Terminal bar；
+- right-censoring；
+- price-basis drift fail-safe；
+- canonical `market_path_rows` + SHA-256；
+- immutable outcome snapshot schema v2；
+- same-date fact drift detection；
+- historical outcome backfill rejection；
+- protocol / capture methodology / outcome engine chain-identity consistency；
+- bundle 携带 frozen protocol、outcome snapshots 与 engine-freeze provenance；
+- intake 使用 frozen enrollment seed + bundled OHLCV path **离线重跑 evaluator**；
+- semantic tamper 即使重新生成 snapshot ID / ZIP SHA 仍必须 fail closed；
+- `m4_outcome_engine_freeze_guard.py` 在私有 M1 update 之前执行；
+- one-click workflow 已扩展为：
+  capture-methodology guard → outcome-engine guard → M1 update → capture → health → transition → observation → outcome-v2 → bundle；
+- Phase 3.1 minimum-safe workflow checkpoint：
+  `c34026755b3b8c491759eaacdb45376d4e1db485`。
+
+仍然没有改变：
+
+- 5-0 production quarantine；
+- Alternate Bat fail-closed；
+- BSE deferred；
+- Type-II price structure 不能冒充完整 Carney indicator-confirmed reversal；
+- Shark generic Type-I 不能冒充 Shark-specific management target；
+- `alpha_inference_allowed=false`；
+- outcome-v2 不定义 entry / stop / fees / execution P&L / win-loss / win rate / alpha / ranking。
+
+### 当前真实证据状态
+
+- frozen T0 cutoff：2026-09-17；
+- T0 candidates：87；
+- T0 prospective outcome eligible：0；
+- **尚无 post-T0 real authoritative future capture**；
+- **尚无真实 prospective-new outcome cohort**；
+- **尚无真实 outcome snapshot**；
+- 因此尚不能报告真实 MFE/MAE 分布、win rate、alpha 或盈利能力。
+
+### 下一真实 gate
+
+代码侧 pre-T1 架构的下一步不再是扩功能。
+
+下一步是：
+
+1. 核对 hosted CI 当前 runner 状态；
+2. 保持 capture methodology 与 outcome engine exact freeze；
+3. 在需要私有 M1 数据时，仅运行一次现有 `运行M4真实A股生命周期快照.bat`；
+4. 将生成的单一 `m4-evidence-bundle.zip` 交回 assistant；
+5. assistant intake 独立复验 capture + outcome evidence。
+
+D-023 继续有效：用户电脑不是常规测试机，只承担不可替代的私有 M1 数据采集。
+
