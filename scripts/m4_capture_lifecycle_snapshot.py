@@ -16,6 +16,7 @@ from htcn.research.capture_transaction import (
     build_committed_capture,
     commit_capture_transaction,
     freeze_legacy_baseline,
+    frozen_legacy_baseline_through_date,
     read_committed_captures,
 )
 from htcn.research.evidence_health import build_evidence_chain_health
@@ -98,11 +99,15 @@ def run(
         return result
 
     expected = _expected_trade_date(catalog)
-    instruments = _instrument_ids(catalog)
-    if max_symbols > 0:
-        instruments = instruments[:max_symbols]
+    all_instruments = _instrument_ids(catalog)
+    instruments = all_instruments
+    diagnostic_partial_universe = max_symbols > 0
+    if diagnostic_partial_universe:
+        instruments = all_instruments[:max_symbols]
     result["expected_trade_date"] = expected
+    result["initialized_instrument_count"] = len(all_instruments)
     result["instrument_count"] = len(instruments)
+    result["diagnostic_partial_universe"] = diagnostic_partial_universe
 
     service = M3SourceClockHarmonicService(data_root)
     all_entries = []
@@ -146,6 +151,18 @@ def run(
         result["status"] = "failed_no_journal_append"
         return result
 
+    if diagnostic_partial_universe:
+        result["status"] = "diagnostic_partial_universe_no_commit"
+        result["warnings"].append({
+            "scope": "authoritative_capture",
+            "error": (
+                "max_symbols creates a partial-universe diagnostic run; "
+                "authoritative transaction/journal/manifest writes are disabled"
+            ),
+            "authoritative_capture_committed": False,
+        })
+        return result
+
     existing_committed = read_committed_captures(transaction_root)
     if not existing_committed:
         legacy_rows = read_journal(journal_path)
@@ -183,11 +200,9 @@ def run(
     )
     result["capture_transaction_id"] = committed_capture.transaction_id
 
-    existing_manifest = read_snapshot_manifest(manifest_path)
     baseline_trade_date = (
-        min(str(row["as_of_trade_date"]) for row in existing_manifest)
-        if existing_manifest
-        else expected
+        frozen_legacy_baseline_through_date(transaction_root)
+        or expected
     )
 
     mirror_entries = [
