@@ -126,6 +126,19 @@ def _observation_panel_through(
     )
 
 
+def _outcome_protocol_bundle_member(protocol_id: str) -> str:
+    mapping = {
+        "m4-outcome-v1": "protocols/m4-outcome-protocol-v1.json",
+        "m4-outcome-v2": "protocols/m4-outcome-protocol-v2.json",
+    }
+    try:
+        return mapping[protocol_id]
+    except KeyError as exc:
+        raise ValueError(
+            f"unsupported bundled outcome protocol id: {protocol_id}"
+        ) from exc
+
+
 def _outcome_result_without_transport_warning(
     value: dict[str, Any],
 ) -> dict[str, Any]:
@@ -492,7 +505,9 @@ def audit_evidence_bundle(
                     continue
                 bundled_snapshot_protocol = _json_member(
                     archive,
-                    f"protocols/{snapshot_protocol_id}.json",
+                    _outcome_protocol_bundle_member(
+                        snapshot_protocol_id
+                    ),
                 )
                 if bundled_snapshot_protocol is None:
                     blockers.append(
