@@ -389,9 +389,60 @@ export default function LifecycleCompass({ pattern, bars }: Props) {
   if (!pattern) return null
 
   const latestBar = bars.at(-1)
+  const sourceLifecycle = (pattern as SourceAwarePattern).source_lifecycle
   const state = buildLifecycleCompass(pattern, latestBar)
   const bamm = getBammEvidence(pattern)
-  const sourceDriven = Boolean((pattern as SourceAwarePattern).source_lifecycle)
+  const sourceDriven = Boolean(sourceLifecycle)
+
+  if (sourceDriven && sourceLifecycle) {
+    const mark = (value: number | null) => value == null ? '—' : `#${value}`
+    const hit = (value: number | null) => value == null ? '未到达' : `#${value}`
+    return (
+      <section className="lifecycle-compass source-evidence-compact" aria-label="Source Clock 证据" data-testid="lifecycle-compass">
+        <div className="lifecycle-title-row">
+          <div>
+            <p className="kicker">M3 · Source-Clock Evidence</p>
+            <h2>Source Clock 证据</h2>
+          </div>
+          <span className="lifecycle-boundary">{sourceBoundary(pattern, sourceLifecycle)}</span>
+        </div>
+
+        <div className="source-clock-grid">
+          <article data-testid="source-clock-state">
+            <span>Canonical State</span>
+            <strong>{sourceLifecycle.state}</strong>
+            <p>{sourceLifecycle.state_reason}</p>
+          </article>
+          <article>
+            <span>Source 时间点</span>
+            <strong>T-Bar {mark(sourceLifecycle.source_terminal_bar)} · T+1 {mark(sourceLifecycle.execution_start_bar)}</strong>
+            <p>Signal {mark(sourceLifecycle.signal_bar)} · PRZ Entry {mark(sourceLifecycle.source_prz_entry_bar)}</p>
+          </article>
+          <article>
+            <span>Type-I</span>
+            <strong>T1 {hit(sourceLifecycle.type_i_t1_bar)} · T2 {hit(sourceLifecycle.type_i_t2_bar)}</strong>
+            <p>距 T-Bar {sourceLifecycle.bars_since_terminal ?? '—'} 根 · 下一关键价 {sourceLifecycle.next_key_price == null ? '—' : fmtPrice(sourceLifecycle.next_key_price)}</p>
+          </article>
+          <article>
+            <span>Type-II</span>
+            <strong>重入 {mark(sourceLifecycle.type_ii_retest_entry_bar)} · T-Bar {mark(sourceLifecycle.type_ii_terminal_bar)}</strong>
+            <p>再离区 {mark(sourceLifecycle.reversal_exit_after_type_ii_bar)} · strict full retest {sourceLifecycle.strict_type_ii_full_retest ? '开启' : '关闭'}</p>
+          </article>
+        </div>
+
+        {bamm && (
+          <div className={`lifecycle-evidence ${bamm.confirmed ? 'confirmed' : ''}`} data-testid="bamm-evidence-channel">
+            <strong>{bamm.label}</strong>
+            <span>{bamm.detail}</span>
+          </div>
+        )}
+
+        <p className="lifecycle-note">
+          本区只展示 Source Clock 原始证据；“现在在哪 / 先看什么 / 到了再看什么 / 不能升级条件”统一由上方 Decision Narrative 负责。历史 reaction_audit 不覆盖 canonical source lifecycle。
+        </p>
+      </section>
+    )
+  }
 
   return (
     <section className="lifecycle-compass" aria-label="谐波生命周期导航" data-testid="lifecycle-compass">

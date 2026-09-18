@@ -140,3 +140,58 @@
     display: grid;
   }
 }
+
+
+.source-clock-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.source-clock-grid article {
+  min-width: 0;
+  border: 1px solid #223144;
+  border-radius: 11px;
+  padding: 11px 12px;
+  background: #101821;
+}
+
+.source-clock-grid article > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #7e90a4;
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+
+.source-clock-grid article > strong {
+  display: block;
+  color: #eef4fb;
+  font-size: 13px;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+.source-clock-grid article > p {
+  margin: 7px 0 0;
+  color: #94a5b7;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.source-evidence-compact {
+  padding-top: 14px;
+  padding-bottom: 13px;
+}
+
+@media (max-width: 1050px) {
+  .source-clock-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .source-clock-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -241,10 +241,11 @@ test('canonical source lifecycle overrides contradictory retrospective D-clock a
   })
 
   const compass = page.getByTestId('lifecycle-compass')
-  await expect(compass.getByText('PRZ 内/曾进入 · 等待 Source T-Bar')).toBeVisible()
+  await expect(compass.getByText('Source Clock 证据')).toBeVisible()
+  await expect(page.getByTestId('source-clock-state').getByText('waiting_terminal')).toBeVisible()
   await expect(compass.getByText('后验 Type-I · 已到 T2（61.8%）')).toHaveCount(0)
-  await expect(compass.getByText(/当前状态由当时可观察的 Source PRZ \/ Terminal Price Bar 时钟驱动/)).toBeVisible()
-  await expect(page.getByTestId('lifecycle-action')).toBeVisible()
+  await expect(compass.getByText(/历史 reaction_audit 不覆盖 canonical source lifecycle/)).toBeVisible()
+  await expect(page.getByTestId('lifecycle-action')).toHaveCount(0)
 })
 
 test('BAMM is rendered as a separate evidence channel and cannot own lifecycle state', async ({ page }) => {
@@ -269,7 +270,7 @@ test('BAMM is rendered as a separate evidence channel and cannot own lifecycle s
     },
   })
 
-  await expect(page.getByText('Type-I · 早期 38.2% 反应确认')).toBeVisible()
+  await expect(page.getByTestId('source-clock-state').getByText('type_i_confirmed')).toBeVisible()
   const evidence = page.getByTestId('bamm-evidence-channel')
   await expect(evidence.getByText(/RSI BAMM · Source confirmed/)).toBeVisible()
   await expect(evidence.getByText(/不改变 lifecycle、identity 或 Source PRZ/)).toBeVisible()
