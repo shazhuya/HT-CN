@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import json
+import threading
+import time
 
 from htcn.app.operator_snapshot import (
     OPERATOR_SNAPSHOT_CONTRACT_VERSION,
@@ -238,3 +241,168 @@ def test_operator_snapshot_cache_hit_does_not_create_parallel_workers(
 
     assert second["product_cache"]["status"] == "hit"
     assert factory_calls == calls_after_build
+
+
+
+class BlockingCountingService:
+    def __init__(
+        self,
+        *,
+        started: threading.Event,
+        release: threading.Event,
+        counter: dict[str, int],
+        lock: threading.Lock,
+        as_of: str = "2026-09-18",
+    ) -> None:
+        self.started = started
+        self.release = release
+        self.counter = counter
+        self.lock = lock
+        self.as_of = as_of
+
+    def analyze(
+        self,
+        instrument_id: str,
+        *,
+        bars: int,
+        scales: tuple[int, ...],
+    ) -> dict:
+        with self.lock:
+            self.counter["calls"] = self.counter.get("calls", 0) + 1
+        self.started.set()
+        if not self.release.wait(timeout=3):
+            raise RuntimeError("test release timeout")
+        return {
+            "last_trade_date": self.as_of,
+            "price_mode": "qfq",
+            "warning": None,
+            "completed": [],
+            "forming": [_pattern()],
+        }
+
+
+def test_operator_snapshot_single_flight_coalesces_concurrent_cache_miss(
+    tmp_path,
+) -> None:
+    started = threading.Event()
+    release = threading.Event()
+    lock = threading.Lock()
+    counter = {"calls": 0}
+    service = BlockingCountingService(
+        started=started,
+        release=release,
+        counter=counter,
+        lock=lock,
+    )
+
+    def run() -> dict:
+        return build_or_load_operator_snapshot(
+            service,
+            ["SSE.1"],
+            cache_root=tmp_path,
+            expected_trade_date="2026-09-18",
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        first_future = executor.submit(run)
+        assert started.wait(timeout=2)
+        second_future = executor.submit(run)
+        time.sleep(0.05)
+        release.set()
+        first = first_future.result(timeout=3)
+        second = second_future.result(timeout=3)
+
+    assert counter["calls"] == 1
+    statuses = {
+        first["product_cache"]["status"],
+        second["product_cache"]["status"],
+    }
+    assert statuses == {"rebuilt", "coalesced_wait"}
+    coalesced = (
+        first
+        if first["product_cache"]["status"] == "coalesced_wait"
+        else second
+    )
+    assert coalesced["product_cache"]["coalesced_from_status"] == "rebuilt"
+    assert coalesced["product_cache"]["single_flight_scope"] == (
+        "process_local_cache_identity"
+    )
+
+
+def test_operator_snapshot_single_flight_coalesces_concurrent_force_refresh(
+    tmp_path,
+) -> None:
+    build_or_load_operator_snapshot(
+        CountingService(),
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+    )
+
+    started = threading.Event()
+    release = threading.Event()
+    lock = threading.Lock()
+    counter = {"calls": 0}
+    service = BlockingCountingService(
+        started=started,
+        release=release,
+        counter=counter,
+        lock=lock,
+    )
+
+    def refresh() -> dict:
+        return build_or_load_operator_snapshot(
+            service,
+            ["SSE.1"],
+            cache_root=tmp_path,
+            expected_trade_date="2026-09-18",
+            force_refresh=True,
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        first_future = executor.submit(refresh)
+        assert started.wait(timeout=2)
+        second_future = executor.submit(refresh)
+        time.sleep(0.05)
+        release.set()
+        first = first_future.result(timeout=3)
+        second = second_future.result(timeout=3)
+
+    assert counter["calls"] == 1
+    statuses = {
+        first["product_cache"]["status"],
+        second["product_cache"]["status"],
+    }
+    assert statuses == {"rebuilt_force", "coalesced_wait"}
+    coalesced = (
+        first
+        if first["product_cache"]["status"] == "coalesced_wait"
+        else second
+    )
+    assert coalesced["product_cache"]["coalesced_from_status"] == (
+        "rebuilt_force"
+    )
+
+
+def test_operator_snapshot_regular_cache_metadata_exposes_single_flight_scope(
+    tmp_path,
+) -> None:
+    service = CountingService()
+    build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+    )
+    hit = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+    )
+
+    assert hit["product_cache"]["status"] == "hit"
+    assert hit["product_cache"]["single_flight_scope"] == (
+        "process_local_cache_identity"
+    )
+    assert hit["product_cache"]["coalesced_from_status"] is None
