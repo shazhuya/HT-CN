@@ -299,4 +299,7 @@ def test_operator_queue_presentation_filter_preserves_full_snapshot_input() -> N
     assert full["candidate_count"] == 2
     assert filtered["candidate_count"] == 1
     assert filtered["items"][0]["pattern_id"] == "bat"
-    assert full["items"][0]["action_state"] == "evidence_insufficient"
+    assert {
+        item["action_state"]
+        for item in full["items"]
+    } == {"waiting", "evidence_insufficient"}
