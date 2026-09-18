@@ -7,7 +7,12 @@ import zipfile
 
 from htcn.research.evidence_bundle import verify_evidence_bundle
 from htcn.research.evidence_intake import audit_evidence_bundle
-from htcn.research.capture_transaction import (\n    build_committed_capture,\n    commit_capture_transaction,\n    freeze_legacy_baseline,\n)\nfrom scripts.m4_export_evidence_bundle import build_bundle
+from htcn.research.capture_transaction import (
+    build_committed_capture,
+    commit_capture_transaction,
+    freeze_legacy_baseline,
+)
+from scripts.m4_export_evidence_bundle import build_bundle
 
 
 def _bundle(tmp_path: Path):
