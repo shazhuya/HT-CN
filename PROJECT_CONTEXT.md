@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `9805f10561cd1ce6db996433b943ce97de5c322b`
-context_checkpoint_title: `M4 Phase 2.9 authoritative evidence intake revalidation`
+context_checkpoint: `29fae09844a8dc96e57b5336c6a774859ef92b1b`
+context_checkpoint_title: `M4 Phase 2.10 schema-v3 cohort follow-up + methodology v2`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -772,7 +772,7 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 - confirmed full-day suspension continuity 已完成；
 - D-024 strict prospective outcome enrollment 已完成；
 - D-028 methodology provenance schema v2 已完成；
-- methodology component tree 静态审计：32 / 32 路径存在；
+- methodology component tree 静态审计：37 / 37 路径存在；
 - production capture 与已修改 research fixtures 均已传入 methodology identity；
 - schema-v1 只保留 migration readability，不能静默续接 schema-v2；
 - Phase 2 现在是 **structurally ready for first fingerprinted future capture**；
@@ -794,6 +794,34 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 
 
 
+
+## M4 Phase 2.10 — Cohort follow-up / D-032
+
+在第一笔 post-T0 fingerprinted committed capture 产生之前，M4 又修正了一个会污染未来 outcome 研究的 censoring 缺口：
+
+**candidate 可以从 scanner 消失，但已正式入组 cohort 的证券市场路径不能因此消失。**
+
+当前冻结：
+
+- committed capture schema：**v3**；
+- methodology contract：**v2**；
+- fingerprint components：**37**；
+- scanner-present candidate 继续写 `journal_rows`；
+- 已 outcome-enrolled、但当前 scanner absent 的 candidate 写独立 `cohort_followup_rows`；
+- follow-up 只记录真实 market observation，不拥有 harmonic lifecycle / action state / Source PRZ；
+- schema v3 强制：
+  `followup_keys == prior enrolled cohort - current scanner-present keys`；
+- traded follow-up 必须保存当前日 OHLC/volume；
+- confirmed full-day suspension follow-up 不允许伪造 OHLC；
+- prospective observation 与 intake 已消费 follow-up market facts；
+- intake 对 `normalized_rows / transitions / observations` 做完整 payload 重算对账；
+- methodology v2 新增 fingerprint：
+  `capture_transaction.py / cohort_followup.py / lifecycle_transitions.py / prospective_observations.py / snapshot_manifest.py`；
+- T0 cutoff 仍为 `2026-09-17`，未被重写；
+- 当前仍没有第一笔 post-T0 committed future capture，因此 methodology-v2 freeze 没有迁移或污染既有 future evidence。
+
+Phase 2.10 仍不计算 return / MFE / MAE / win-rate / alpha。
+
 ## M4 Phase 2.9 — Evidence intake / D-031
 
 收到 T1/Tn `m4-evidence-bundle.zip` 后，不能只相信 bundle manifest 或派生报告。
@@ -806,7 +834,7 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 4. authoritative capture timeline rebuild；
 5. transition recompute；
 6. prospective observation recompute；
-7. derived report cross-check；
+7. derived report full-payload cross-check（normalized_rows / transitions / observations）；
 8. methodology / capture-count / latest-date / transaction-id / code-head provenance cross-check；
 9. structured ready / ready_with_warnings / not_ready。
 
@@ -832,7 +860,7 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 在任何私有 M1 更新或 authoritative capture 之前，一键入口现在先验证：
 
 - 当前分支必须为 `m4/real-a-share-validation-workflow`；
-- HEAD 必须包含最低安全 checkpoint `3bd0c236d5f1318caf0b6125f9f99ef1f113e0af`；
+- HEAD 必须包含最低安全 checkpoint `084ddf649e031e8169a761fd3b8578f73b31b5c2`；
 - detached / wrong branch / stale-or-diverged protocol 均 fail closed；
 - worktree 必须 clean；
 - preflight 失败时明确保证 **M1 update 和 authoritative capture 均未启动**。
@@ -884,11 +912,12 @@ Phase 2 assistant-side 结构收口已完成。下一次用户本机参与只用
 
 ## 新会话恢复必须核对
 
-- `main` 当前正式 release 是否仍为 M2.31 或已有后续 merge；
-- `m3/source-clock-lifecycle-migration` HEAD 与本 `context_checkpoint` 差异；
-- PR #12 当前状态；
-- Actions runner 是否恢复真正执行；
-- `specs/m3-source-clock-lifecycle-migration.md` 与当前代码是否一致；
-- execution context 是否已经完成真实 M1 catalog smoke test。
+- `main` 是否仍包含 M3 merge `edec5e21...`，以及是否已有 M4 后续正式 merge；
+- `m4/real-a-share-validation-workflow` HEAD 与本 `context_checkpoint` 的差异；
+- PR #13 当前状态；
+- Actions runner 是否恢复真实 `steps/logs`，不得把 runner_id=0 当代码失败；
+- `specs/m4-phase-2-8-methodology-identity.md`、`m4-phase-2-9-evidence-intake.md`、`m4-phase-2-10-cohort-followup.md` 与当前代码是否一致；
+- 当前 methodology contract / fingerprint component count 是否仍为 v2 / 37；
+- 是否已经产生第一笔 post-T0 authoritative capture；若有，必须先从 evidence bundle / transaction chain 恢复，不得猜测。
 
 完成上述检查后，才能宣称“已恢复 HT-CN 当前现场”。
