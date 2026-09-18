@@ -575,3 +575,59 @@ def test_operator_snapshot_cache_hit_reports_stable_input_identity(
     assert hit["product_cache"]["status"] == "hit"
     assert hit["product_cache"]["input_identity_stable_during_build"] is True
     assert hit["product_cache"]["input_identity_fingerprint"] == identity.fingerprint
+
+
+
+def test_operator_snapshot_different_input_identities_do_not_coalesce(
+    tmp_path,
+) -> None:
+    barrier = threading.Barrier(2)
+    lock = threading.Lock()
+    counter = {"calls": 0}
+
+    class IdentityProbeService:
+        def analyze(
+            self,
+            instrument_id: str,
+            *,
+            bars: int,
+            scales: tuple[int, ...],
+        ) -> dict:
+            with lock:
+                counter["calls"] += 1
+            barrier.wait(timeout=3)
+            return {
+                "last_trade_date": "2026-09-18",
+                "price_mode": "qfq",
+                "warning": None,
+                "completed": [],
+                "forming": [_pattern()],
+            }
+
+    def run(identity: OperatorCacheInputIdentity) -> dict:
+        return build_or_load_operator_snapshot(
+            IdentityProbeService(),
+            ["SSE.1"],
+            cache_root=tmp_path,
+            expected_trade_date="2026-09-18",
+            input_identity=identity,
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        first_future = executor.submit(
+            run,
+            _input_identity(data_fingerprint="data-a"),
+        )
+        second_future = executor.submit(
+            run,
+            _input_identity(data_fingerprint="data-b"),
+        )
+        first = first_future.result(timeout=4)
+        second = second_future.result(timeout=4)
+
+    assert counter["calls"] == 2
+    assert first["product_cache"]["status"] == "rebuilt"
+    assert second["product_cache"]["status"] == "rebuilt"
+    assert first["product_cache"]["input_identity_fingerprint"] != (
+        second["product_cache"]["input_identity_fingerprint"]
+    )
