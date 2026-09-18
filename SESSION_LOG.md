@@ -668,3 +668,19 @@ Methodology boundary:
 the wrapper/test change does not modify harmonic identity, Source Raw PRZ, Source lifecycle, BAMM evidence or prospective enrollment semantics and is intentionally outside the methodology fingerprint set.
 
 D-023 remains unchanged: the user's computer is not a routine test runner. It is used only when private M1 data must be collected.
+
+
+## M4 T1 evidence-bundle integrity hardening / 2026-09-18
+
+Assistant-side only; no user-local QA requested.
+
+- `1631af0df3302631f00367b8142e89d33f77c616`: added structural evidence-bundle verifier;
+- `9cdf2803e61cd366452a5c6d2b765a7ae03f417d`: standalone verifier entrypoint;
+- `4b727fb1ee5566154953d001f936e35922b8af5e`: verifier regression cases added to existing bundle tests;
+- assistant-side synthetic execution passed valid / tampered-hash / unlisted-member / path-traversal / blocked-diagnostic / false-ready scenarios;
+- `d4f31612173457c305a9ebe943d9930bed861409`: exporter self-verifies generated bundle;
+- `73985d2fd4d4544589dce92bf9ddce1f76ba3f88`: exporter tests require successful self-verification;
+- `20ed0f7fc7fde00f67937eb342057f88b99bb444`: temp bundle is verified before atomic publish, then verified again after publish;
+- D-030 freezes transport-integrity semantics.
+
+These changes do not modify authoritative capture semantics or the harmonic methodology fingerprint.
