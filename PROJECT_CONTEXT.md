@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `ce90d575009b658a6a6c3a1d33b21cf107ce54cd`
-context_checkpoint_title: `M3 Phase 4.6: real-run blocker fixes for artifacts, Windows wrapper and external-context fail-safe`
+context_checkpoint: `5a301baf848d740a537b2b07032057dd566309f9`
+context_checkpoint_title: `M3 Phase 4.7: deterministic regression drift repair after second real closeout`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -447,14 +447,23 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 4.6 — 用户本机第二次最终收口。**
+**M3 Phase 4.7 — 用户本机第三次最终收口。**
 
-1. `git pull` 到最新 `m3/source-clock-lifecycle-migration`；
-2. 确认 `git status --short` 无输出；
+第二次真实收口已经把 blocker 收敛为 5 个 deterministic regression drift，现均已修复：
+
+1. context sync exit-contract test 更新为 `all_steps_completed/degraded -> exit 0`；
+2. external replication SHA 校验改为 canonical LF，冻结 SHA 本身未改变；
+3. continuity sentinel `Source Fidelity before M3 expansion` 恢复；
+4. health endpoint test 对齐 API `0.3.0`；
+5. Golden Ledger 显式恢复术语 `Source Terminal Price Bar`。
+
+下一步：
+
+1. `git pull --ff-only`；
+2. 确认 clean worktree；
 3. 重新运行 `运行M3最终收口.bat`；
-4. 只提交新的 `artifacts/reports/m3-pr-readiness.md`；
-5. 若 READY / READY（有已知警告），推进 PR #12 Draft → Ready；
-6. 若 NOT READY，仅处理剩余 blocker，不扩展新功能。
+4. 提交新的 `m3-pr-readiness.md`；
+5. 若 READY / READY（有已知警告），推进 PR #12 Draft → Ready。
 
 
 ## 固定 Source / Product 边界

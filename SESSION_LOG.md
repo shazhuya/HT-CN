@@ -290,3 +290,22 @@
 - Degraded external-only context sync now exits 0; structural partial failure remains non-zero.
 - Readiness tests freeze READY-with-warnings for external-unavailable context and NOT READY for local failed context.
 - Current implementation checkpoint before docs commit: `ce90d575009b658a6a6c3a1d33b21cf107ce54cd`.
+
+
+## M3 Phase 4.7 / 2026-09-18
+
+Second user-local closeout on `28488826...` proved:
+- M1 fast-pass current: 55/55 initialized datasets already at 2026-09-17;
+- worktree clean fix worked;
+- context external-unavailable semantics worked: context exit 0 with explicit warnings;
+- remaining blockers were exclusively deterministic pytest regression drift.
+
+Five repairs:
+- context sync exit-contract test updated for degraded nonblocking semantics;
+- frozen external replication hash verification normalized checkout CRLF to canonical LF; canonical SHA verified as `4116aeaae8e783f2f5ebc244a001cf78b407cd39b5265eae4e24906c3b819f09`;
+- continuity sentinel phrase restored;
+- API health test aligned to version 0.3.0;
+- Golden Ledger now explicitly names Source Terminal Price Bar.
+
+`.gitattributes` now enforces LF for JSON/Markdown/Python to reduce future Windows hash drift.
+Implementation checkpoint: `5a301baf848d740a537b2b07032057dd566309f9`.
