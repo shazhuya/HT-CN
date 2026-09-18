@@ -142,6 +142,7 @@ def build_prospective_observation_report(
     enrollment: dict[str, str] = {}
     enrollment_price_mode: dict[str, str] = {}
     enrollment_price_basis: dict[str, str] = {}
+    enrollment_seed: dict[str, dict[str, Any]] = {}
     instrument_by_key: dict[str, str] = {}
     for row in normalized:
         key = str(row["candidate_key"])
@@ -177,6 +178,46 @@ def build_prospective_observation_report(
                     )
                 enrollment_price_mode[key] = mode
                 enrollment_price_basis[key] = basis
+                seed = {
+                    "pattern_id": str(row.get("pattern_id") or ""),
+                    "schema": str(row.get("schema") or ""),
+                    "direction": str(row.get("direction") or ""),
+                    "scale": int(row.get("scale") or 0),
+                    "source_lifecycle_state": str(
+                        row.get("source_lifecycle_state") or ""
+                    ),
+                    "source_prz_low": _float_or_none(row.get("source_prz_low")),
+                    "source_prz_high": _float_or_none(row.get("source_prz_high")),
+                    "source_signal_trade_date": str(
+                        row.get("source_signal_trade_date") or ""
+                    ),
+                    "source_signal_clock_basis": str(
+                        row.get("source_signal_clock_basis") or ""
+                    ),
+                    "source_reaction_anchor_label": str(
+                        row.get("source_reaction_anchor_label") or ""
+                    ),
+                    "source_reaction_anchor_price": _float_or_none(
+                        row.get("source_reaction_anchor_price")
+                    ),
+                }
+                if (
+                    not seed["pattern_id"]
+                    or not seed["schema"]
+                    or not seed["direction"]
+                    or seed["scale"] <= 0
+                    or not seed["source_lifecycle_state"]
+                    or seed["source_prz_low"] is None
+                    or seed["source_prz_high"] is None
+                    or not seed["source_signal_trade_date"]
+                    or not seed["source_signal_clock_basis"]
+                    or not seed["source_reaction_anchor_label"]
+                    or seed["source_reaction_anchor_price"] is None
+                ):
+                    raise ValueError(
+                        f"candidate {key} enrollment is missing source-clock seed"
+                    )
+                enrollment_seed[key] = seed
 
     instrument_by_key_from_followup: dict[str, str] = {}
     for as_of, items in followup_by_date.items():
@@ -234,9 +275,14 @@ def build_prospective_observation_report(
         first_basis_drift_date: str | None = None
         enrolled_basis = enrollment_price_basis.get(key)
         enrolled_mode = enrollment_price_mode.get(key)
+        frozen_seed = enrollment_seed.get(key)
         if not enrolled_basis or not enrolled_mode:
             raise ValueError(
                 f"candidate {key} missing frozen enrollment price basis"
+            )
+        if frozen_seed is None:
+            raise ValueError(
+                f"candidate {key} missing frozen source-clock seed"
             )
 
         for captured_index, as_of in enumerate(observation_dates):
@@ -474,6 +520,7 @@ def build_prospective_observation_report(
             "outcome_enrollment_trade_date": enrolled,
             "enrollment_price_mode": enrolled_mode,
             "enrollment_price_basis_id": enrolled_basis,
+            "enrollment_source_clock_seed": dict(frozen_seed),
             "price_basis_drift_snapshot_count": basis_drift_count,
             "first_price_basis_drift_date": first_basis_drift_date,
             "price_basis_stable_across_observations": basis_drift_count == 0,
