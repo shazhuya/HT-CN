@@ -20,6 +20,11 @@ artifacts/**
 data/**/*.parquet
 data/**/*.duckdb
 data/**/*.db
+# Runtime product/research state must not dirty the source worktree.
+# M4 evidence remains authoritative in its own append-only store/bundles;
+# Git cleanliness is reserved for source/methodology changes.
+data/product/**
+data/research/**
 artifacts/screenshots/*
 artifacts/debug/*
 artifacts/reports/*
