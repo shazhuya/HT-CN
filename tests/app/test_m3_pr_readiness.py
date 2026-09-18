@@ -147,3 +147,48 @@ def test_human_readable_report_exposes_ready_and_findings() -> None:
     assert "硬阻断" in rendered
     assert "警告" in rendered
     assert "Daily event" in rendered
+
+
+def test_external_context_unavailable_is_warning_not_blocker() -> None:
+    workbench = _workbench()
+    metadata = _metadata()
+    product = _product()
+    context = _context("degraded")
+    context["layers"]["market"] = {"state": "partial"}
+    context["layers"]["industry"] = {"state": "external_unavailable"}
+    context["layers"]["concept"] = {"state": "external_unavailable"}
+
+    result = evaluate(
+        current_head=HEAD,
+        workbench=workbench,
+        metadata=metadata,
+        product=product,
+        context=context,
+    )
+
+    assert result["pr_ready"] is True
+    warning_codes = {item["code"] for item in result["warnings"]}
+    assert "context_sync_degraded" in warning_codes
+    assert "context_industry_external_unavailable" in warning_codes
+    assert "context_concept_external_unavailable" in warning_codes
+
+
+def test_local_context_failure_remains_hard_blocker() -> None:
+    workbench = _workbench()
+    metadata = _metadata()
+    product = _product()
+    context = _context("partial_failure")
+    context["layers"]["industry"] = {"state": "failed"}
+
+    result = evaluate(
+        current_head=HEAD,
+        workbench=workbench,
+        metadata=metadata,
+        product=product,
+        context=context,
+    )
+
+    assert result["pr_ready"] is False
+    blocker_codes = {item["code"] for item in result["blockers"]}
+    assert "context_sync_partial_failure" in blocker_codes
+    assert "context_industry_failed" in blocker_codes
