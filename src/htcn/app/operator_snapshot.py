@@ -7,8 +7,8 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path
-from threading import Lock
-from typing import Any, Iterable
+from threading import Lock, get_ident
+from typing import Any, Callable, Iterable
 
 import duckdb
 
@@ -76,6 +76,7 @@ def _attach_cache_metadata(
     cache_path: Path | None,
     generated_at_utc: str | None,
     input_identity: OperatorCacheInputIdentity,
+    input_identity_stable_during_build: bool | None = None,
 ) -> dict[str, Any]:
     payload = deepcopy(queue)
     as_of = payload.get("as_of_trade_date")
@@ -98,6 +99,9 @@ def _attach_cache_metadata(
         "input_identity_fingerprint": input_identity.fingerprint,
         "data_input_fingerprint": input_identity.data.fingerprint,
         "analysis_code_fingerprint": input_identity.analysis_code.fingerprint,
+        "input_identity_stable_during_build": (
+            input_identity_stable_during_build
+        ),
         "single_flight_scope": "process_local_cache_identity",
         "coalesced_from_status": None,
         "authoritative_evidence": False,
@@ -208,6 +212,7 @@ def _load_valid_cached_snapshot(
             scales=scales,
             universe_hash=universe_hash,
             input_identity=input_identity,
+            input_identity_stable_during_build=input_identity_unchanged,
         )
         return queue, str(stored.get("generated_at_utc") or "")
     except Exception:
@@ -229,7 +234,9 @@ def _mark_coalesced_wait(
 
 def _write_snapshot_atomic(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.tmp")
+    tmp = path.with_name(
+        f".{path.name}.{os.getpid()}.{get_ident()}.tmp"
+    )
     encoded = (
         json.dumps(
             payload,
@@ -254,6 +261,9 @@ def build_or_load_operator_snapshot(
     cache_root: str | Path,
     expected_trade_date: str | None,
     input_identity: OperatorCacheInputIdentity,
+    input_identity_factory: (
+        Callable[[], OperatorCacheInputIdentity] | None
+    ) = None,
     bars: int = 420,
     scales: tuple[int, ...] = (3, 5, 8, 13),
     force_refresh: bool = False,
@@ -291,6 +301,7 @@ def build_or_load_operator_snapshot(
                 cache_path=cache_path,
                 generated_at_utc=generated_at,
                 input_identity=input_identity,
+                input_identity_stable_during_build=True,
             )
 
     flight_key = _single_flight_key(
@@ -336,6 +347,7 @@ def build_or_load_operator_snapshot(
                     cache_path=cache_path,
                     generated_at_utc=generated_at,
                     input_identity=input_identity,
+                    input_identity_stable_during_build=True,
                 )
                 future.set_result(deepcopy(result))
                 return result
@@ -359,6 +371,16 @@ def build_or_load_operator_snapshot(
                 scales=scales,
             )
 
+        final_input_identity = (
+            input_identity_factory()
+            if input_identity_factory is not None
+            else input_identity
+        )
+        input_identity_unchanged = (
+            final_input_identity.fingerprint
+            == input_identity.fingerprint
+        )
+
         queue_as_of = (
             None
             if queue.get("as_of_trade_date") is None
@@ -373,6 +395,7 @@ def build_or_load_operator_snapshot(
             and queue.get("observation_integrity") == "single_as_of"
             and queue_as_of is not None
             and expected_matches
+            and input_identity_unchanged
         )
         if can_cache:
             stored_payload = {
@@ -395,7 +418,11 @@ def build_or_load_operator_snapshot(
             _write_snapshot_atomic(cache_path, stored_payload)
             status = "rebuilt_force" if force_refresh else "rebuilt"
         else:
-            status = "live_not_cached"
+            status = (
+                "live_not_cached"
+                if input_identity_unchanged
+                else "live_not_cached_input_changed"
+            )
 
         result = _attach_cache_metadata(
             queue,
