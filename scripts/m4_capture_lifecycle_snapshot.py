@@ -362,6 +362,18 @@ def run(
                 max_completed=20,
                 max_forming=20,
             )
+            price_mode = str(analysis.get("price_mode") or "")
+            price_basis_id = str(analysis.get("price_basis_id") or "")
+            if (
+                price_mode not in {"qfq", "qfq_carry_forward"}
+                or not price_basis_id.startswith("qfq:")
+            ):
+                raise RuntimeError(
+                    "formal prospective capture requires QFQ price basis: "
+                    f"mode={price_mode or 'missing'} "
+                    f"basis={price_basis_id or 'missing'}"
+                )
+
             as_of = str(analysis.get("last_trade_date"))
             suspension = suspension_events.get(instrument_id)
 
