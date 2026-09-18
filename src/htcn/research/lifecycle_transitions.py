@@ -60,6 +60,7 @@ def _normalize_enrollment(
     baseline_date = dates[0]
     first_seen: dict[str, str] = {}
     cohort: dict[str, str] = {}
+    outcome_enrollment: dict[str, str] = {}
 
     normalized: list[dict[str, Any]] = []
     for as_of in dates:
@@ -88,26 +89,16 @@ def _normalize_enrollment(
 
             row["enrollment_state"] = cohort[key]
 
-            prior_rows = [
-                prior
-                for prior in normalized
-                if str(prior.get("candidate_key")) == key
-            ]
-            prior_outcome_dates = sorted(
-                str(prior.get("outcome_enrollment_trade_date"))
-                for prior in prior_rows
-                if prior.get("outcome_enrollment_trade_date")
-            )
             if cohort[key] == "baseline_existing":
                 row["prospective_outcome_eligible"] = False
                 row["outcome_eligibility_reason"] = "baseline_existing"
                 row["outcome_enrollment_trade_date"] = None
-            elif prior_outcome_dates:
+            elif key in outcome_enrollment:
                 row["prospective_outcome_eligible"] = True
                 row["outcome_eligibility_reason"] = (
                     "prospective_outcome_cohort_already_enrolled"
                 )
-                row["outcome_enrollment_trade_date"] = prior_outcome_dates[0]
+                row["outcome_enrollment_trade_date"] = outcome_enrollment[key]
             else:
                 eligible, reason = prospective_outcome_gate(
                     row,
@@ -118,6 +109,8 @@ def _normalize_enrollment(
                 row["outcome_enrollment_trade_date"] = (
                     as_of if eligible else None
                 )
+                if eligible:
+                    outcome_enrollment[key] = as_of
 
             row["first_observed_trade_date"] = str(
                 row.get("first_observed_trade_date") or first_seen[key]
