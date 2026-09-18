@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `dec76022098574537333e8d3abd56bcc3b928a99`
-context_checkpoint_title: `M5 Phase 9 Daily Close Product Pipeline green`
+context_checkpoint: `99e3bf7aba1e656601bdcf4831d4b215eede4e8d`
+context_checkpoint_title: `M5 Phase 10 Daily Handoff Bundle v2 green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -1732,3 +1732,54 @@ Governance:
 
 进入 **M5 Phase 10 — Daily Handoff Bundle v2**。
 不要切回或整体合并旧 `m5/daily-handoff-bundle` 实验分支；只择优移植思想。新交接包必须绑定 Phase 9 最终 product snapshot / input identity，并把任何嵌套 M4 evidence bundle 明确标成独立 authoritative research evidence，而不是把整个 handoff ZIP 本身升级成 authority。
+
+
+## M5 Phase 10 — Daily Handoff Bundle v2
+
+Current branch:
+`m5/daily-handoff-bundle-v2`
+
+Validated code checkpoint:
+`99e3bf7aba1e656601bdcf4831d4b215eede4e8d`
+
+Hosted validation:
+- draft PR #22 used only as CI/diff carrier；
+- Actions run `35382676878` / #1665：success；
+- Python 699 passed；
+- Web build success；
+- Playwright 21 passed；
+- browser evidence upload success。
+
+Frozen implementation:
+- current M5 product snapshot is bound from the final Phase 9 `m5-operator-snapshot.json` exact cache path, never guessed by scanning for the latest JSON；
+- final M5 report and snapshot are cross-checked for contract v2, trade date, single-as-of state and Phase 7 input identity；
+- cache path is confined to the Operator cache root and canonical date/bars/scales filename；
+- manifest paths are repository-relative/portable, not local absolute paths；
+- outer ZIP remains transport-only/non-authoritative；
+- optional previous M5 snapshot is context only, never current identity；
+- current M4 evidence is required only when the Phase 9 research lane says ready；
+- degraded research may carry a separately verified existing M4 bundle without calling it current research success；
+- all nested M4 bundles use the frozen evidence-bundle verifier；
+- each member has size/SHA-256 and exact manifest membership；
+- ZIP is verified before and after atomic replace；
+- pipeline/M5 report/current snapshot are independently parsed and cross-verified by the handoff verifier；
+- handoff runner writes a separate `m5-daily-handoff.json` and proves the Phase 9 pipeline report hash is unchanged；
+- output/report/pipeline path collisions are forbidden；
+- handoff transport failure never rewrites `m5_product_ready` or `m4_research_ready`；
+- one-click `运行HT-CN每日交接包.bat` only builds the handoff and does not rerun Phase 9。
+
+Artifacts:
+- `artifacts/reports/htcn-daily-handoff-v2.zip`
+- `artifacts/reports/m5-daily-handoff.json`
+
+Freeze audit:
+- M4 capture methodology: 0 / 37 changed；
+- Outcome Engine: 0 / 4 changed。
+
+Governance:
+- D-051；
+- `specs/m5-phase-10-daily-handoff-bundle-v2.md`。
+
+### 下一步
+
+Phase 10 已解决“每日结果如何可靠交接/搬运”。下一阶段应继续留在 M5 产品主线，优先做 **Daily Operator History / Change Journal v1**：把每天 final Operator snapshot 的产品级变化长期留档并提供跨日检索，但仍必须与 M4 authoritative prospective evidence 隔离。禁止用该 history 直接生成胜率/alpha/预测排序。
