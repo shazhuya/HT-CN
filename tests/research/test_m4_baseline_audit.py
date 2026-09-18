@@ -33,10 +33,17 @@ def test_clean_t0_is_transition_ready_but_not_outcome_ready() -> None:
     snapshot = {
         "status": "pass",
         "candidate_count": 2,
+        "instrument_count": 1,
         "failed_instruments": 0,
         "successful_instruments": 1,
         "code_head": "h",
         "expected_trade_date": "2026-09-17",
+        "worktree_clean": True,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+        "source_lifecycle_states": {"waiting_terminal": 2},
+        "action_states": {"waiting": 2},
+        "schemas": {"ABCD": 2},
     }
     result = audit_t0_baseline(rows, snapshot=snapshot)
     assert result["blocker_count"] == 0
@@ -73,3 +80,39 @@ def test_pattern_concentration_is_warning_not_score() -> None:
     result = audit_t0_baseline(rows)
     assert any(item["code"] == "pattern_concentration" for item in result["warnings"])
     assert result["interpretation"]["uses_score"] is False
+
+
+def test_snapshot_count_drift_blocks_t0() -> None:
+    rows = [_row("a")]
+    snapshot = {
+        "status": "pass",
+        "candidate_count": 1,
+        "instrument_count": 1,
+        "failed_instruments": 0,
+        "successful_instruments": 1,
+        "code_head": "h",
+        "expected_trade_date": "2026-09-17",
+        "worktree_clean": True,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+        "source_lifecycle_states": {"approaching_source_prz": 1},
+        "action_states": {"waiting": 1},
+        "schemas": {"ABCD": 1},
+    }
+    result = audit_t0_baseline(rows, snapshot=snapshot)
+    codes = {item["code"] for item in result["blockers"]}
+    assert "snapshot_lifecycle_count_mismatch" in codes
+
+
+def test_mature_terminal_inventory_is_warning_not_blocker() -> None:
+    row = _row("a")
+    row["source_lifecycle_state"] = "type_i_confirmed"
+    row["action_state"] = "execution_evaluation"
+    row["next_key_price_role"] = "type_i_61_8_target"
+    row["source_terminal_trade_date"] = "2026-01-01"
+    result = audit_t0_baseline([row])
+    assert result["blocker_count"] == 0
+    assert any(
+        item["code"] == "mature_baseline_inventory"
+        for item in result["warnings"]
+    )
