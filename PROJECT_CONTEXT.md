@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `25729a304e9004d4c63b44dcdd1a7bfcdabb023b`
-context_checkpoint_title: `M4 Phase 2.11 final governance sync — schema v4 / methodology v3`
+context_checkpoint: `d77f5e444143df420e910b36a6084067a2ea5974`
+context_checkpoint_title: `M4 Phase 2.12 schema-v5 frozen source-clock seed + methodology v4`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -797,6 +797,34 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 
 
 
+
+## M4 Phase 2.12 — Frozen Source-clock seed / D-035
+
+在第一笔真实 T1 之前继续做 outcome 数据充分性审计，发现 scanner 消失前若还没有 Source Terminal，仅保存 future OHLC 仍不足以重建现有 Source execution clock。
+
+当前正式 T1 协议升级为：
+
+- committed capture schema：**v5**；
+- prospective observation schema：**v4**；
+- methodology contract：**v4**；
+- fingerprint components：**37**；
+- exact methodology freeze commit：`c774c54928c33361952bf1a612a8555633449625`；
+- strict outcome enrollment 必须冻结四项 Source-clock seed：
+  - `source_signal_trade_date`
+  - `source_signal_clock_basis`
+  - `source_reaction_anchor_label`
+  - `source_reaction_anchor_price`
+- signal clock basis 固定为 `last_frontier_pivot_confirmed_at=index+scale`；
+- reaction anchor：Shark/0XABC 用 B，XABCD/ABCD 用 A；
+- seed 四项要么全有、要么全无；partial seed 在 schema v5 hard fail；
+- 缺 seed 的 candidate 可以作为普通 evidence 保存，但不能进入 strict prospective outcome cohort；
+- enrollment candidate summary 冻结完整 `enrollment_source_clock_seed`；
+- scanner 后续消失仍保持 absent，follow-up 不拥有 lifecycle，但 frozen seed + authoritative OHLC 允许未来重建 Source Terminal / Type-I / Type-II facts；
+- D-034 price-basis 规则继续有效；basis drift 时仍禁止自动跨标尺 outcome 计算；
+- 第一笔 post-T0 future committed capture 仍未产生，所以 methodology-v4 没有迁移或混合既有 future evidence。
+
+D-034 的 v3 freeze 与 D-033 的 v2 freeze 都保留为历史 checkpoint，但当前唯一可用于第一笔 T1 的 exact freeze 是 D-035 / `c774c549...`。
+
 ## M4 Phase 2.11 — Price-basis provenance / D-034
 
 第一笔真实 post-T0 future capture 之前，发现并修复价格标尺 provenance 缺口。
@@ -902,7 +930,7 @@ Phase 2.10 仍不计算 return / MFE / MAE / win-rate / alpha。
 在任何私有 M1 更新或 authoritative capture 之前，一键入口现在先验证：
 
 - 当前分支必须为 `m4/real-a-share-validation-workflow`；
-- HEAD 必须包含最低安全 checkpoint `084ddf649e031e8169a761fd3b8578f73b31b5c2`；
+- HEAD 必须包含最低安全 checkpoint `c774c54928c33361952bf1a612a8555633449625`；
 - detached / wrong branch / stale-or-diverged protocol 均 fail closed；
 - worktree 必须 clean；
 - preflight 失败时明确保证 **M1 update 和 authoritative capture 均未启动**。
@@ -958,8 +986,8 @@ Phase 2 assistant-side 结构收口已完成。下一次用户本机参与只用
 - `m4/real-a-share-validation-workflow` HEAD 与本 `context_checkpoint` 的差异；
 - PR #13 当前状态；
 - Actions runner 是否恢复真实 `steps/logs`，不得把 runner_id=0 当代码失败；
-- `specs/m4-phase-2-8-methodology-identity.md`、`m4-phase-2-9-evidence-intake.md`、`m4-phase-2-10-cohort-followup.md`、`m4-phase-2-11-price-basis-provenance.md` 与当前代码是否一致；
-- 当前 authoritative schema / methodology contract / fingerprint component count 是否仍为 v4 / v3 / 37；
+- `specs/m4-phase-2-8-methodology-identity.md`、`m4-phase-2-9-evidence-intake.md`、`m4-phase-2-10-cohort-followup.md`、`m4-phase-2-11-price-basis-provenance.md`、`m4-phase-2-12-source-clock-seed.md` 与当前代码是否一致；
+- 当前 authoritative schema / observation schema / methodology contract / fingerprint component count 是否仍为 v5 / v4 / v4 / 37；
 - 是否已经产生第一笔 post-T0 authoritative capture；若有，必须先从 evidence bundle / transaction chain 恢复，不得猜测。
 
 完成上述检查后，才能宣称“已恢复 HT-CN 当前现场”。
