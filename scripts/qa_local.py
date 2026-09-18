@@ -57,13 +57,31 @@ def main() -> int:
     web: subprocess.Popen[bytes] | None = None
 
     try:
-        print("[HT-CN QA] 1/4 Python tests", flush=True)
-        run([str(VENV_PYTHON), "-m", "pytest"])
+        print("[HT-CN QA] 1/6 Deterministic Python regression", flush=True)
+        run([str(VENV_PYTHON), "-m", "pytest", "-q"])
 
-        print("[HT-CN QA] 2/4 Web build", flush=True)
+        print("[HT-CN QA] 2/6 Web type-check + build", flush=True)
         run(["npm.cmd", "run", "build"], cwd=WEB_DIR)
 
-        print("[HT-CN QA] 3/4 Start test services", flush=True)
+        print("[HT-CN QA] 3/6 Real M1 metadata / tradability read smoke", flush=True)
+        run([
+            str(VENV_PYTHON),
+            "scripts/m3_metadata_tradability_smoke.py",
+            "--catalog",
+            "data/market/catalog.duckdb",
+        ])
+
+        print("[HT-CN QA] 4/6 Real M1 product payload contract smoke", flush=True)
+        run([
+            str(VENV_PYTHON),
+            "scripts/m3_product_contract_smoke.py",
+            "--data-root",
+            "data/market",
+            "--max-samples",
+            "8",
+        ])
+
+        print("[HT-CN QA] 5/6 Start local API + Workbench", flush=True)
         api = subprocess.Popen(
             [
                 str(VENV_PYTHON),
@@ -88,10 +106,15 @@ def main() -> int:
         wait_for_port("127.0.0.1", 8765)
         wait_for_port("127.0.0.1", 5173)
 
-        print("[HT-CN QA] 4/4 Playwright browser tests", flush=True)
+        print("[HT-CN QA] 6/6 Full Playwright browser acceptance", flush=True)
         run(["npx.cmd", "playwright", "test"], cwd=WEB_DIR)
 
         print("[HT-CN QA] PASS", flush=True)
+        print(
+            "[HT-CN QA] reports: m3-metadata-tradability-smoke.json / "
+            "m3-product-contract-smoke.json / playwright/index.html",
+            flush=True,
+        )
         return 0
     except subprocess.CalledProcessError as exc:
         print(f"[HT-CN QA] FAIL: command exited with code {exc.returncode}", file=sys.stderr)
