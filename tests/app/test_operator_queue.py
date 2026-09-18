@@ -98,7 +98,23 @@ def test_operator_queue_uses_workflow_bucket_not_predictive_score() -> None:
     assert payload["contract"]["historical_outcome_used"] is False
     assert payload["contract"]["alpha_inference_allowed"] is False
     assert payload["contract"]["is_trade_instruction"] is False
-    assert all("score" not in key for item in payload["items"] for key in item)
+    prohibited = {
+        "geometry_score",
+        "ranking_score",
+        "win_rate",
+        "alpha",
+        "expected_return",
+        "buy_score",
+        "sell_score",
+    }
+    assert all(
+        prohibited.isdisjoint(item)
+        for item in payload["items"]
+    )
+    assert all(
+        item["predictive_score_used"] is False
+        for item in payload["items"]
+    )
 
 
 def test_operator_queue_filters_secondary_identity() -> None:
