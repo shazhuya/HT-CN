@@ -1037,3 +1037,58 @@ Next non-substitutable gate:
 
 one clean private-M1 execution of `运行M4真实A股生命周期快照.bat`, followed by assistant-side intake of `artifacts/reports/m4-evidence-bundle.zip`.
 
+## 2026-09-18 — First private M4 bundle intake: QFQ provisioning gate
+
+Received the first user-produced `m4-evidence-bundle.zip`.
+
+Assistant-side transport audit:
+
+- 12 manifest-listed files;
+- all file size + SHA-256 entries verified;
+- no transport corruption;
+- methodology freeze guard frozen_match;
+- Outcome Engine freeze guard frozen_match.
+
+M1 update log:
+
+- latest closed A-share day 2026-09-18;
+- initialized 55;
+- all-market bulk snapshot failed with RemoteDisconnected;
+- updater correctly fell back to slow-path repairs;
+- 55 / 55 raw histories reached 2026-09-18;
+- failed raw updates = 0.
+
+Formal prospective capture:
+
+- 3 successful;
+- 52 failed;
+- all 52 failures were formal-QFQ gate failures;
+- only successful symbols were 600519 / 688256 / 300820, exactly the historical adjustment pilot set;
+- capture status `failed_no_journal_append`;
+- no authoritative transaction;
+- no T1 journal append;
+- no outcome snapshot.
+
+Root cause:
+
+raw updater and formal-QFQ evidence requirements were not connected by an acquisition readiness stage.
+
+Implemented:
+
+- strict resumable QFQ universe preparation script;
+- existing qfq/qfq_carry_forward reuse;
+- AkShare -> BaoStock missing-factor repair;
+- >=95% overlap + no internal historical factor gaps + positive finite factors;
+- wrapper blocks capture unless M1 + QFQ both pass;
+- QFQ diagnostics added to bundle.
+
+Validation:
+
+- GitHub Actions run #1431 success;
+- capture methodology 0/37 drift;
+- Outcome Engine 0/4 drift.
+
+No real future evidence was modified because the failed run never committed T1.
+
+Next user action remains a single git pull + the same one-click BAT.
+
