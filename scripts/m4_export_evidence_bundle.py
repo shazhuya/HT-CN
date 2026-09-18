@@ -13,6 +13,7 @@ from htcn.research.capture_transaction import read_committed_captures
 from htcn.research.evidence_bundle import verify_evidence_bundle
 from htcn.research.evidence_health import build_evidence_chain_health
 from htcn.research.methodology_identity import build_methodology_identity
+from htcn.research.outcome_snapshot import read_outcome_snapshots
 
 
 BUNDLE_SCHEMA_VERSION = 1
@@ -46,6 +47,7 @@ def build_bundle(
     manifest_path: Path,
     reports_root: Path,
     output: Path,
+    outcome_root: Path | None = None,
 ) -> dict[str, Any]:
     identity = read_code_identity()
     methodology = build_methodology_identity()
@@ -62,6 +64,27 @@ def build_bundle(
         committed_read_error = f"{type(exc).__name__}: {exc}"
 
     members: list[dict[str, Any]] = []
+
+    outcome_snapshot_read_error: str | None = None
+    outcome_snapshots: list[dict[str, Any]] = []
+    if outcome_root is not None:
+        try:
+            outcome_snapshots = read_outcome_snapshots(outcome_root)
+        except Exception as exc:
+            outcome_snapshot_read_error = (
+                f"{type(exc).__name__}: {exc}"
+            )
+        if outcome_root.exists():
+            for path in sorted(
+                outcome_root.glob("????-??-??__*.json")
+            ):
+                members.append(
+                    _member(
+                        path,
+                        arcname=f"outcomes/{path.name}",
+                        required=False,
+                    )
+                )
 
     baseline = transaction_root / "legacy_baseline.json"
     if baseline.is_file():
@@ -92,6 +115,8 @@ def build_bundle(
         "m4-lifecycle-transitions.md",
         "m4-prospective-observations.json",
         "m4-prospective-observations.md",
+        "m4-outcome-v1.json",
+        "m4-outcome-v1.md",
     )
     for name in report_names:
         path = reports_root / name
@@ -155,6 +180,20 @@ def build_bundle(
         "evidence_health_status": health.get("status"),
         "evidence_health_blocker_count": health.get("blocker_count"),
         "committed_capture_read_error": committed_read_error,
+        "outcome_snapshot_count": len(outcome_snapshots),
+        "latest_outcome_as_of_trade_date": (
+            None
+            if not outcome_snapshots
+            else outcome_snapshots[-1].get(
+                "outcome_as_of_trade_date"
+            )
+        ),
+        "latest_outcome_snapshot_id": (
+            None
+            if not outcome_snapshots
+            else outcome_snapshots[-1].get("snapshot_id")
+        ),
+        "outcome_snapshot_read_error": outcome_snapshot_read_error,
         "alpha_inference_allowed": False,
         "is_trade_instruction": False,
         "authoritative_evidence_modified": False,
@@ -237,6 +276,10 @@ def main() -> int:
         default="artifacts/reports",
     )
     parser.add_argument(
+        "--outcome-root",
+        default="data/research/m4/outcomes",
+    )
+    parser.add_argument(
         "--output",
         default="artifacts/reports/m4-evidence-bundle.zip",
     )
@@ -248,6 +291,7 @@ def main() -> int:
         manifest_path=Path(args.manifest),
         reports_root=Path(args.reports_root),
         output=Path(args.output),
+        outcome_root=Path(args.outcome_root),
     )
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     print(f"\n[M4] evidence transport bundle: {payload['output']}")
