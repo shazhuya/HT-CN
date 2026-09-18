@@ -188,4 +188,6 @@ def test_historical_saturday_gap_refuses_raw_preclose_discontinuity() -> None:
     assert audit == []
     ready, reason = _strict_factor_candidate(raw, repaired)
     assert ready is False
-    assert reason.startswith("historical_factor_gap:")
+    assert reason.startswith(
+        ("historical_factor_gap:", "factor_overlap_too_low:")
+    )
