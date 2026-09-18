@@ -158,26 +158,33 @@ def build_decision_narrative(
     *,
     source_lifecycle: dict[str, Any] | None,
     context_integrity: dict[str, Any] | None,
+    execution_context: dict[str, Any] | None = None,
 ) -> DecisionNarrative:
     lifecycle = source_lifecycle or {}
     state = str(lifecycle.get("state") or "source_clock_unavailable")
     current, first, next_, blocker = _texts(state)
 
     cautions: list[str] = []
-    execution_gate = "execution_context_unavailable"
+    execution_integrity_state = "missing"
     for layer in (context_integrity or {}).get("layers") or []:
         layer_name = str(layer.get("layer") or "unknown")
         layer_state = str(layer.get("state") or "missing")
         if layer_name == "execution":
-            execution_gate = (
-                "current"
-                if layer_state == "current"
-                else f"execution_{layer_state}"
-            )
+            execution_integrity_state = layer_state
         if layer_state != "current":
             cautions.append(
                 f"{layer_name}:{layer_state} — {str(layer.get('reason') or '').strip()}"
             )
+
+    execution = execution_context or {}
+    if execution_integrity_state != "current":
+        execution_gate = f"execution_{execution_integrity_state}"
+    elif execution.get("tradable_on_as_of_date") is False:
+        execution_gate = "blocked_suspended"
+    elif execution.get("tradable_on_as_of_date") is True:
+        execution_gate = "tradable"
+    else:
+        execution_gate = "tradability_unresolved"
 
     return DecisionNarrative(
         lifecycle_state=state,

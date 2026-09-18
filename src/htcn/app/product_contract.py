@@ -114,11 +114,20 @@ def audit_product_payload(analysis: dict[str, Any]) -> ProductContractAudit:
         rebuilt = build_decision_narrative(
             source_lifecycle=lifecycle,
             context_integrity=integrity,
+            execution_context=top_execution,
         ).as_payload()
         if narrative.get("action_state") != rebuilt["action_state"]:
             issues.append(ProductContractIssue(
                 "action_state_mismatch", scope,
                 f"expected {rebuilt['action_state']!r}, got {narrative.get('action_state')!r}",
+            ))
+        if narrative.get("execution_context_gate") != rebuilt["execution_context_gate"]:
+            issues.append(ProductContractIssue(
+                "execution_context_gate_mismatch", scope,
+                (
+                    f"expected {rebuilt['execution_context_gate']!r}, "
+                    f"got {narrative.get('execution_context_gate')!r}"
+                ),
             ))
 
         if narrative.get("next_key_price_role") != lifecycle.get("next_key_price_role"):

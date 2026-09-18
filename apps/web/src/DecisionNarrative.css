@@ -13,3 +13,5 @@
 .decision-narrative-note{margin:12px 0 0;font-size:12px;line-height:1.55;opacity:.72}
 @media(max-width:1000px){.decision-narrative-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.decision-narrative-grid{grid-template-columns:1fr}.decision-narrative-key{display:block}}
+
+.decision-narrative-execution-gate{margin-top:10px;padding:9px 12px;border:1px dashed rgba(255,255,255,.13);border-radius:10px;font-size:12px;line-height:1.45;opacity:.82}

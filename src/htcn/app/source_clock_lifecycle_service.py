@@ -190,6 +190,7 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             pattern["decision_narrative"] = build_decision_narrative(
                 source_lifecycle=pattern.get("source_lifecycle"),
                 context_integrity=analysis["context_integrity"],
+                execution_context=execution_context,
             ).as_payload()
         for pattern in [*(analysis.get("completed") or []), *(analysis.get("forming") or [])]:
             pattern["a_share_execution_context"] = execution_context

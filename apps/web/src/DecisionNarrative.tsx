@@ -25,6 +25,16 @@ const actionLabels: Record<string, string> = {
   evidence_insufficient: '证据不足',
 }
 
+const executionGateLabels: Record<string, string> = {
+  tradable: '执行制度：当日可交易',
+  blocked_suspended: '执行制度：停牌阻断',
+  tradability_unresolved: '执行制度：可交易性未完整解析',
+  execution_unresolved: '执行制度：特殊事件证据未完整',
+  execution_missing: '执行制度：上下文缺失',
+  execution_stale: '执行制度：证据日期过期',
+  execution_future_observation: '执行制度：未来观测 · 禁止回填',
+}
+
 const roleLabels: Record<string, string> = {
   source_prz_entry_edge: 'Source PRZ 入场边界',
   source_prz_terminal_side: 'Source PRZ terminal side',
@@ -72,6 +82,9 @@ export default function DecisionNarrative({ narrative }: { narrative?: DecisionN
       <div className="decision-narrative-key">
         <strong>下一关键价</strong>
         <span>{price(narrative.next_key_price)} · {narrative.next_key_price_role ? (roleLabels[narrative.next_key_price_role] ?? narrative.next_key_price_role) : '当前无冻结关键价'}</span>
+      </div>
+      <div className="decision-narrative-execution-gate" data-testid="execution-context-gate" data-gate={narrative.execution_context_gate}>
+        {executionGateLabels[narrative.execution_context_gate] ?? `执行制度：${narrative.execution_context_gate}`}
       </div>
 
       {narrative.context_cautions.length > 0 && (
