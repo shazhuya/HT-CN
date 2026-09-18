@@ -4,7 +4,15 @@ from pathlib import Path
 import json
 import zipfile
 
+from htcn.app.evidence_identity import read_code_identity
+from htcn.research.capture_transaction import (
+    build_committed_capture,
+    commit_capture_transaction,
+    freeze_legacy_baseline,
+)
 from htcn.research.evidence_intake import audit_evidence_bundle
+from htcn.research.methodology_identity import build_methodology_identity
+from scripts.m4_export_evidence_bundle import build_bundle
 
 
 def _write_bundle(
@@ -117,3 +125,53 @@ def test_intake_keeps_alpha_and_trade_boundaries_false(tmp_path: Path) -> None:
     assert result.summary["alpha_inference_allowed"] is False
     assert result.summary["is_trade_instruction"] is False
     assert result.summary["authoritative_evidence_modified"] is False
+
+
+def test_intake_accepts_valid_post_t0_zero_candidate_capture(tmp_path: Path) -> None:
+    transaction_root = tmp_path / "captures"
+    journal_path = tmp_path / "journal.jsonl"
+    manifest_path = tmp_path / "manifest.jsonl"
+    reports_root = tmp_path / "reports"
+    reports_root.mkdir()
+
+    freeze_legacy_baseline(
+        transaction_root,
+        [],
+        baseline_through_trade_date="2026-09-17",
+    )
+
+    identity = read_code_identity()
+    methodology = build_methodology_identity()
+    capture = build_committed_capture(
+        code_head=identity.head,
+        as_of_trade_date="2026-09-18",
+        captured_at_utc="2026-09-18T08:00:00+00:00",
+        instrument_count=1,
+        successful_instruments=1,
+        failed_instruments=0,
+        worktree_clean=True,
+        methodology_contract_version=methodology.contract_version,
+        methodology_fingerprint=methodology.fingerprint,
+        journal_rows=[],
+    )
+    commit_capture_transaction(transaction_root, capture)
+
+    output = reports_root / "bundle.zip"
+    build_bundle(
+        transaction_root=transaction_root,
+        journal_path=journal_path,
+        manifest_path=manifest_path,
+        reports_root=reports_root,
+        output=output,
+    )
+
+    result = audit_evidence_bundle(
+        output,
+        expected_baseline_trade_date="2026-09-17",
+    )
+    assert result.blocker_count == 0
+    assert result.status in {"ready", "ready_with_warnings"}
+    assert result.summary["committed_capture_count"] == 1
+    assert result.summary["latest_committed_capture_date"] == "2026-09-18"
+    assert result.summary["prospective_new_candidate_count"] == 0
+    assert result.summary["prospective_outcome_eligible_candidate_count"] == 0
