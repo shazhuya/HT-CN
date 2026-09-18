@@ -93,6 +93,15 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 - [x] Methodology contract v2 fingerprints 37 files, including capture chronology, enrollment normalization and follow-up semantics.
 - [x] No post-T0 fingerprinted future capture existed before methodology-v2 freeze.
 
+## Exact pre-T1 methodology code freeze — D-033
+
+- [x] Frozen methodology-v2 component commit is `084ddf649e031e8169a761fd3b8578f73b31b5c2`.
+- [x] Current contract version / component count are fixed at v2 / 37.
+- [x] Capture preflight rejects any post-freeze change to the 37 methodology paths.
+- [x] Methodology guard runs before M1 update or authoritative capture.
+- [x] Guard provenance report is included in the evidence transport bundle.
+- [x] Audit from frozen commit to current closeout found 0 methodology-component changes.
+
 ## One-click private-M1 handoff
 
 
