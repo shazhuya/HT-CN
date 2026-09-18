@@ -1524,3 +1524,34 @@ Implemented:
 
 D-045 freezes the rule that presentation never defines the scan universe.
 
+## M5 Phase 5 closeout — Parallel Daily Operator Build green
+
+Validated checkpoint:
+
+`96417f63d40d844b5d9d560fde5b47176b90aded`
+
+Actions run #1601:
+
+- overall success；
+- Python 634 passed；
+- Web build success；
+- Playwright 21 passed；
+- browser evidence upload success。
+
+Implemented:
+
+- bounded parallel Queue build；
+- default 4 workers / env override 1..16；
+- per-thread independent M3 service；
+- no-factory sequential fallback；
+- deterministic final sorting；
+- product progress callback；
+- precompute live progress；
+- precompute full-universe only；
+- cache hit skips worker creation。
+
+D-046 freezes parallelism as throughput-only:
+- no Queue semantic changes；
+- no methodology changes；
+- no M4 evidence writes。
+
