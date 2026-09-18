@@ -9,6 +9,7 @@ from typing import Any, Iterable
 
 
 CAPTURE_TRANSACTION_SCHEMA_VERSION = 1
+LEGACY_BASELINE_SCHEMA_VERSION = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,6 +122,94 @@ def _validate_rows(
         raise ValueError("capture transaction contains duplicate candidate_key")
 
 
+
+def _validate_committed_payload(
+    payload: dict[str, Any],
+    *,
+    source: str,
+) -> tuple[str, str, list[dict[str, Any]]]:
+    if payload.get("status") != "committed":
+        raise ValueError(f"capture transaction is not committed: {source}")
+    if int(payload.get("schema_version") or 0) != CAPTURE_TRANSACTION_SCHEMA_VERSION:
+        raise ValueError(f"unsupported capture transaction schema: {source}")
+    if payload.get("worktree_clean") is not True:
+        raise ValueError(f"capture transaction was not from clean worktree: {source}")
+    if payload.get("alpha_inference_allowed") is not False:
+        raise ValueError(f"capture transaction unexpectedly permits alpha inference: {source}")
+    if payload.get("is_trade_instruction") is not False:
+        raise ValueError(f"capture transaction unexpectedly permits trade instruction: {source}")
+    if not str(payload.get("captured_at_utc") or ""):
+        raise ValueError(f"capture transaction missing captured_at_utc: {source}")
+    code_head = str(payload.get("code_head") or "")
+    as_of = str(payload.get("as_of_trade_date") or "")
+    if not code_head or not as_of:
+        raise ValueError(f"capture transaction missing code_head/as_of: {source}")
+    instrument_count = int(payload.get("instrument_count") or 0)
+    successful = int(payload.get("successful_instruments") or 0)
+    failed = int(payload.get("failed_instruments") or 0)
+    if instrument_count <= 0 or successful != instrument_count or failed != 0:
+        raise ValueError(f"capture transaction instrument coverage is incomplete: {source}")
+    rows = [dict(row) for row in payload.get("journal_rows") or []]
+    _validate_rows(
+        code_head=code_head,
+        as_of_trade_date=as_of,
+        journal_rows=rows,
+    )
+    if int(payload.get("candidate_count") or 0) != len(rows):
+        raise ValueError(f"capture transaction candidate_count mismatch: {source}")
+    txid = str(payload.get("transaction_id") or "")
+    expected = capture_transaction_id(
+        code_head=code_head,
+        as_of_trade_date=as_of,
+        instrument_count=instrument_count,
+        successful_instruments=successful,
+        failed_instruments=failed,
+        journal_rows=rows,
+    )
+    if txid != expected:
+        raise ValueError(f"capture transaction id mismatch: {source}")
+    for row in rows:
+        if str(row.get("capture_transaction_id") or "") != txid:
+            raise ValueError(
+                f"capture transaction row transaction-id mismatch: {source}"
+            )
+    return as_of, txid, rows
+
+
+def _validate_legacy_rows(
+    rows: list[dict[str, Any]],
+    *,
+    baseline_through_trade_date: str | None,
+) -> None:
+    keys_by_date: dict[str, list[str]] = {}
+    heads_by_date: dict[str, set[str]] = {}
+    row_dates: list[str] = []
+    for row in rows:
+        as_of = str(row.get("as_of_trade_date") or "")
+        code_head = str(row.get("code_head") or "")
+        key = str(row.get("candidate_key") or "")
+        if not as_of or not code_head or not key:
+            raise ValueError("legacy baseline row missing date/head/candidate_key")
+        if row.get("alpha_inference_allowed") is not False:
+            raise ValueError("legacy baseline row unexpectedly permits alpha inference")
+        if row.get("is_trade_instruction") is not False:
+            raise ValueError("legacy baseline row unexpectedly permits trade instruction")
+        row_dates.append(as_of)
+        keys_by_date.setdefault(as_of, []).append(key)
+        heads_by_date.setdefault(as_of, set()).add(code_head)
+    for as_of, keys in keys_by_date.items():
+        if len(keys) != len(set(keys)):
+            raise ValueError(f"legacy baseline duplicate candidate_key on {as_of}")
+        heads = heads_by_date[as_of]
+        if len(heads) != 1:
+            raise ValueError(f"legacy baseline mixed code heads on {as_of}")
+    if row_dates and baseline_through_trade_date is None:
+        raise ValueError("legacy baseline with rows requires cutoff date")
+    if row_dates and max(row_dates) > str(baseline_through_trade_date):
+        raise ValueError(
+            "legacy baseline contains row after baseline_through_trade_date"
+        )
+
 def build_committed_capture(
     *,
     code_head: str,
@@ -208,22 +297,17 @@ def commit_capture_transaction(
     for path in same_date:
         if path.name == final_path.name:
             existing = json.loads(path.read_text(encoding="utf-8"))
-            existing_txid = str(existing.get("transaction_id") or "")
+            existing_as_of, existing_txid, _ = _validate_committed_payload(
+                existing,
+                source=str(path),
+            )
+            if existing_as_of != capture.as_of_trade_date:
+                raise ValueError(
+                    f"committed capture as-of drift for {capture.as_of_trade_date}"
+                )
             if existing_txid != capture.transaction_id:
                 raise ValueError(
                     f"committed capture transaction-id drift for {capture.as_of_trade_date}"
-                )
-            existing_identity = capture_transaction_id(
-                code_head=str(existing.get("code_head") or ""),
-                as_of_trade_date=str(existing.get("as_of_trade_date") or ""),
-                instrument_count=int(existing.get("instrument_count") or 0),
-                successful_instruments=int(existing.get("successful_instruments") or 0),
-                failed_instruments=int(existing.get("failed_instruments") or 0),
-                journal_rows=existing.get("journal_rows") or [],
-            )
-            if existing_identity != capture.transaction_id:
-                raise ValueError(
-                    f"committed capture payload drift for {capture.as_of_trade_date}"
                 )
             return {
                 "status": "already_committed",
@@ -255,61 +339,22 @@ def read_committed_captures(root: str | Path) -> list[dict[str, Any]]:
     captures: list[dict[str, Any]] = []
     dates: set[str] = set()
     for path in sorted(target_root.glob("????-??-??__*.json")):
-        if path.name.startswith("."):
-            continue
         payload = json.loads(path.read_text(encoding="utf-8"))
-        if payload.get("status") != "committed":
-            raise ValueError(f"capture transaction is not committed: {path}")
-        if int(payload.get("schema_version") or 0) != CAPTURE_TRANSACTION_SCHEMA_VERSION:
-            raise ValueError(f"unsupported capture transaction schema: {path}")
-        if payload.get("worktree_clean") is not True:
-            raise ValueError(f"capture transaction was not from clean worktree: {path}")
-        if payload.get("alpha_inference_allowed") is not False:
-            raise ValueError(f"capture transaction unexpectedly permits alpha inference: {path}")
-        if payload.get("is_trade_instruction") is not False:
-            raise ValueError(f"capture transaction unexpectedly permits trade instruction: {path}")
-        instrument_count = int(payload.get("instrument_count") or 0)
-        successful = int(payload.get("successful_instruments") or 0)
-        failed = int(payload.get("failed_instruments") or 0)
-        if instrument_count <= 0 or successful != instrument_count or failed != 0:
-            raise ValueError(f"capture transaction instrument coverage is incomplete: {path}")
-        as_of = str(payload.get("as_of_trade_date") or "")
-        txid = str(payload.get("transaction_id") or "")
-        rows = [dict(row) for row in payload.get("journal_rows") or []]
-        expected = capture_transaction_id(
-            code_head=str(payload.get("code_head") or ""),
-            as_of_trade_date=as_of,
-            instrument_count=int(payload.get("instrument_count") or 0),
-            successful_instruments=int(payload.get("successful_instruments") or 0),
-            failed_instruments=int(payload.get("failed_instruments") or 0),
-            journal_rows=rows,
+        as_of, txid, _ = _validate_committed_payload(
+            payload,
+            source=str(path),
         )
-        if txid != expected:
-            raise ValueError(f"capture transaction id mismatch: {path}")
         expected_name = f"{as_of}__{txid}.json"
         if path.name != expected_name:
             raise ValueError(
                 f"capture transaction filename mismatch: {path.name} != {expected_name}"
             )
-        for row in rows:
-            if str(row.get("capture_transaction_id") or "") != txid:
-                raise ValueError(
-                    f"capture transaction row transaction-id mismatch: {path}"
-                )
         if as_of in dates:
             raise ValueError(f"multiple committed capture transactions on {as_of}")
         dates.add(as_of)
-        _validate_rows(
-            code_head=str(payload.get("code_head") or ""),
-            as_of_trade_date=as_of,
-            journal_rows=rows,
-        )
-        if int(payload.get("candidate_count") or 0) != len(rows):
-            raise ValueError(f"capture transaction candidate_count mismatch: {path}")
         captures.append(payload)
     captures.sort(key=lambda item: str(item.get("as_of_trade_date")))
     return captures
-
 
 def committed_capture_view(
     *,
@@ -396,8 +441,12 @@ def freeze_legacy_baseline(
     baseline_id = sha256(
         _canonical_json(identity_payload).encode("utf-8")
     ).hexdigest()[:24]
+    _validate_legacy_rows(
+        materialized,
+        baseline_through_trade_date=baseline_through,
+    )
     payload = {
-        "schema_version": 1,
+        "schema_version": LEGACY_BASELINE_SCHEMA_VERSION,
         "status": "frozen_legacy_baseline",
         "baseline_id": baseline_id,
         "baseline_through_trade_date": baseline_through,
@@ -408,6 +457,7 @@ def freeze_legacy_baseline(
     }
     final_path = _legacy_baseline_path(target_root)
     if final_path.exists():
+        read_frozen_legacy_baseline(target_root)
         existing = json.loads(final_path.read_text(encoding="utf-8"))
         if str(existing.get("baseline_id") or "") != baseline_id:
             raise ValueError("legacy baseline is already frozen with different evidence")
@@ -437,6 +487,8 @@ def read_frozen_legacy_baseline(root: str | Path) -> list[dict[str, Any]]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("status") != "frozen_legacy_baseline":
         raise ValueError("legacy baseline status is invalid")
+    if int(payload.get("schema_version") or 0) != LEGACY_BASELINE_SCHEMA_VERSION:
+        raise ValueError("legacy baseline schema is invalid")
     rows = [dict(row) for row in payload.get("journal_rows") or []]
     baseline_through = payload.get("baseline_through_trade_date")
     identity_payload = {
@@ -460,6 +512,12 @@ def read_frozen_legacy_baseline(root: str | Path) -> list[dict[str, Any]]:
         raise ValueError("legacy baseline unexpectedly permits alpha inference")
     if payload.get("is_trade_instruction") is not False:
         raise ValueError("legacy baseline unexpectedly permits trade instruction")
+    _validate_legacy_rows(
+        rows,
+        baseline_through_trade_date=(
+            None if baseline_through is None else str(baseline_through)
+        ),
+    )
     return rows
 
 
@@ -473,3 +531,12 @@ def frozen_legacy_baseline_through_date(root: str | Path) -> str | None:
     payload = json.loads(path.read_text(encoding="utf-8"))
     value = payload.get("baseline_through_trade_date")
     return None if value is None else str(value)
+
+
+
+def frozen_legacy_baseline_present(root: str | Path) -> bool:
+    path = _legacy_baseline_path(root)
+    if not path.exists():
+        return False
+    read_frozen_legacy_baseline(root)
+    return True
