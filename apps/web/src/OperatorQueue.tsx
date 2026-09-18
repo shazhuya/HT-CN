@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import OperatorDeltaPanel, { OperatorDeltaPayload } from './OperatorDelta'
 import './OperatorQueue.css'
 
 type OperatorQueueContract = {
@@ -44,6 +45,9 @@ type OperatorQueueItem = {
 
 type OperatorQueuePayload = {
   schema_version: number
+  as_of_trade_date: string | null
+  observed_trade_dates: string[]
+  observation_integrity: string
   contract: OperatorQueueContract
   instrument_count: number
   analyzed_instrument_count: number
@@ -114,11 +118,128 @@ function priceLabel(value: number | null) {
   return value == null ? '—' : value.toFixed(2)
 }
 
+const CURRENT_SNAPSHOT_KEY = 'htcn.operator.queue.current.v2'
+const PREVIOUS_SNAPSHOT_KEY = 'htcn.operator.queue.previous.v2'
+
+function readStoredSnapshot(key: string): OperatorQueuePayload | null {
+  try {
+    const raw = window.localStorage.getItem(key)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as OperatorQueuePayload
+    if (!parsed || typeof parsed !== 'object') return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
 export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
   const [payload, setPayload] = useState<OperatorQueuePayload | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [includeInsufficient, setIncludeInsufficient] = useState(true)
+  const [delta, setDelta] = useState<OperatorDeltaPayload | null>(null)
+  const [deltaLoading, setDeltaLoading] = useState(false)
+  const [deltaError, setDeltaError] = useState<string | null>(null)
+  const [baselineMessage, setBaselineMessage] = useState<string | null>(null)
+
+  const compareSnapshots = useCallback((
+    previous: OperatorQueuePayload,
+    current: OperatorQueuePayload,
+  ) => {
+    setDeltaLoading(true)
+    setDeltaError(null)
+    fetch(`${apiBase}/api/operator/delta`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ previous, current }),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as { detail?: string } | null
+          throw new Error(body?.detail ?? `HTTP ${response.status}`)
+        }
+        return response.json() as Promise<OperatorDeltaPayload>
+      })
+      .then((value) => {
+        setDelta(value)
+        setBaselineMessage(null)
+      })
+      .catch((err: Error) => {
+        setDelta(null)
+        setDeltaError(err.message)
+      })
+      .finally(() => setDeltaLoading(false))
+  }, [apiBase])
+
+  const observeSnapshot = useCallback((next: OperatorQueuePayload) => {
+    if (
+      next.observation_integrity !== 'single_as_of'
+      || !next.as_of_trade_date
+    ) {
+      setDelta(null)
+      setDeltaError(null)
+      setBaselineMessage(
+        '当前 Queue 不是单一交易日快照，今日变化暂不生成，避免混合日期误判。',
+      )
+      return
+    }
+
+    const storedCurrent = readStoredSnapshot(CURRENT_SNAPSHOT_KEY)
+    if (!storedCurrent?.as_of_trade_date) {
+      window.localStorage.setItem(
+        CURRENT_SNAPSHOT_KEY,
+        JSON.stringify(next),
+      )
+      setDelta(null)
+      setDeltaError(null)
+      setBaselineMessage(
+        `已建立 ${next.as_of_trade_date} 产品观察基线；下一交易日将显示变化。`,
+      )
+      return
+    }
+
+    if (next.as_of_trade_date < storedCurrent.as_of_trade_date) {
+      setDelta(null)
+      setDeltaError(null)
+      setBaselineMessage(
+        `当前快照 ${next.as_of_trade_date} 早于本地基线 ${storedCurrent.as_of_trade_date}，不回写变化历史。`,
+      )
+      return
+    }
+
+    let previous: OperatorQueuePayload | null = null
+    if (next.as_of_trade_date > storedCurrent.as_of_trade_date) {
+      previous = storedCurrent
+      window.localStorage.setItem(
+        PREVIOUS_SNAPSHOT_KEY,
+        JSON.stringify(storedCurrent),
+      )
+      window.localStorage.setItem(
+        CURRENT_SNAPSHOT_KEY,
+        JSON.stringify(next),
+      )
+    } else {
+      window.localStorage.setItem(
+        CURRENT_SNAPSHOT_KEY,
+        JSON.stringify(next),
+      )
+      previous = readStoredSnapshot(PREVIOUS_SNAPSHOT_KEY)
+    }
+
+    if (
+      previous?.as_of_trade_date
+      && previous.as_of_trade_date < next.as_of_trade_date
+    ) {
+      compareSnapshots(previous, next)
+    } else {
+      setDelta(null)
+      setDeltaError(null)
+      setBaselineMessage(
+        `当前仍为 ${next.as_of_trade_date}；需要上一交易日产品快照后才能生成“今日变化”。`,
+      )
+    }
+  }, [compareSnapshots])
 
   const load = useCallback(() => {
     setLoading(true)
@@ -126,31 +247,42 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
     const query = new URLSearchParams({
       limit: '500',
       bars: '420',
-      include_evidence_insufficient: includeInsufficient ? 'true' : 'false',
+      include_evidence_insufficient: 'true',
     })
     fetch(`${apiBase}/api/operator/queue?${query.toString()}`)
       .then(async (response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         return response.json() as Promise<OperatorQueuePayload>
       })
-      .then(setPayload)
+      .then((value) => {
+        setPayload(value)
+        observeSnapshot(value)
+      })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false))
-  }, [apiBase, includeInsufficient])
+  }, [apiBase, observeSnapshot])
 
   useEffect(() => {
     load()
   }, [load])
 
+  const visibleItems = useMemo(() => {
+    const items = payload?.items ?? []
+    if (includeInsufficient) return items
+    return items.filter(
+      (item) => item.action_state !== 'evidence_insufficient',
+    )
+  }, [payload, includeInsufficient])
+
   const groups = useMemo(() => {
     const result = new Map<string, OperatorQueueItem[]>()
-    for (const item of payload?.items ?? []) {
+    for (const item of visibleItems) {
       const current = result.get(item.action_state) ?? []
       current.push(item)
       result.set(item.action_state, current)
     }
     return result
-  }, [payload])
+  }, [visibleItems])
 
   const orderedStates = [
     'execution_evaluation',
@@ -196,6 +328,34 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
             <div><span>候选结构</span><strong>{payload.candidate_count}</strong></div>
             <div><span>数据错误</span><strong>{payload.failed_instrument_count}</strong></div>
           </div>
+
+          <OperatorDeltaPanel
+            delta={delta}
+            loading={deltaLoading}
+            error={deltaError}
+            baselineMessage={baselineMessage}
+            onSelectInstrument={onSelectInstrument}
+            onResetBaseline={() => {
+              window.localStorage.removeItem(CURRENT_SNAPSHOT_KEY)
+              window.localStorage.removeItem(PREVIOUS_SNAPSHOT_KEY)
+              setDelta(null)
+              setDeltaError(null)
+              if (
+                payload.observation_integrity === 'single_as_of'
+                && payload.as_of_trade_date
+              ) {
+                window.localStorage.setItem(
+                  CURRENT_SNAPSHOT_KEY,
+                  JSON.stringify(payload),
+                )
+                setBaselineMessage(
+                  `已用 ${payload.as_of_trade_date} 重新建立产品观察基线。`,
+                )
+              } else {
+                setBaselineMessage('变化基线已清除。')
+              }
+            }}
+          />
 
           <div className="operator-queue__notice">
             <strong>排序含义：</strong>
