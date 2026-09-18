@@ -44,7 +44,7 @@ def health() -> dict[str, str]:
 
 
 @app.get("/api/instruments")
-def instruments(limit: int = Query(default=200, ge=1, le=1000)) -> dict[str, object]:
+def instruments(limit: int = Query(default=1000, ge=1, le=10000)) -> dict[str, object]:
     daily_root = DATA_ROOT / "daily"
     factor_root = DATA_ROOT / "adjustment" / "qfq"
     ids = sorted(path.stem for path in daily_root.glob("*.parquet")) if daily_root.exists() else []
@@ -62,14 +62,22 @@ def instruments(limit: int = Query(default=200, ge=1, le=1000)) -> dict[str, obj
 
 @app.get("/api/operator/queue")
 def operator_queue(
-    limit: int = Query(default=200, ge=1, le=1000),
+    legacy_limit: int | None = Query(
+        default=None,
+        alias="limit",
+        ge=1,
+        le=10000,
+        description="Deprecated compatibility parameter; full initialized local universe is always scanned.",
+    ),
     bars: int = Query(default=420, ge=80, le=1200),
     include_evidence_insufficient: bool = Query(default=True),
     refresh: bool = Query(default=False),
 ) -> dict[str, object]:
+    # M5 Phase 4: the scan/cache universe is canonical and independent from UI
+    # pagination or any legacy presentation limit.
     instrument_ids = discover_local_instruments(
         DATA_ROOT,
-        limit=limit,
+        limit=0,
     )
     expected_trade_date = latest_local_trade_date(
         DATA_ROOT / "catalog.duckdb"
@@ -83,6 +91,15 @@ def operator_queue(
         scales=(3, 5, 8, 13),
         force_refresh=refresh,
     )
+    payload["operator_index"] = {
+        "schema_version": 1,
+        "universe_scope": "all_initialized_local_instruments",
+        "universe_instrument_count": len(instrument_ids),
+        "presentation_does_not_define_universe": True,
+        "legacy_limit_ignored": legacy_limit,
+        "authoritative_evidence": False,
+        "writes_m4_evidence": False,
+    }
     return filter_operator_queue_payload(
         payload,
         include_evidence_insufficient=include_evidence_insufficient,
