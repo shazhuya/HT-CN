@@ -267,10 +267,15 @@ def build_operator_cache_input_identity(
     *,
     data_root: str | Path,
     project_root: str | Path | None = None,
+    analysis_code_identity: AnalysisCodeIdentity | None = None,
 ) -> OperatorCacheInputIdentity:
     data = build_data_input_identity(data_root)
-    analysis_code = build_analysis_code_identity(
-        project_root=project_root,
+    analysis_code = (
+        analysis_code_identity
+        if analysis_code_identity is not None
+        else build_analysis_code_identity(
+            project_root=project_root,
+        )
     )
     material = {
         "contract_version": OPERATOR_INPUT_IDENTITY_CONTRACT_VERSION,
