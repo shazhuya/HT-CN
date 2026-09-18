@@ -28,6 +28,8 @@ REPORT_PATH = ROOT / "artifacts" / "reports" / "m4-qfq-readiness.json"
 FORMAL_PRICE_MODES = {"qfq", "qfq_carry_forward"}
 SAFE_INTERNAL_GAP_MAX_RAW_SESSIONS = 10
 SAFE_INTERNAL_GAP_MAX_RELATIVE_FACTOR_DRIFT = 0.005
+SAFE_HISTORICAL_SATURDAY_FACTOR_DRIFT = 0.05
+SAFE_RAW_PRECLOSE_CONTINUITY_DRIFT = 0.01
 
 
 def parse_args() -> argparse.Namespace:
@@ -169,8 +171,89 @@ def _repair_safe_internal_factor_gaps(
             abs(next_factor - previous_factor)
             / max(abs(midpoint), 1e-12)
         )
-        if relative_drift > SAFE_INTERNAL_GAP_MAX_RELATIVE_FACTOR_DRIFT:
-            continue
+
+        fill_rule = "stable_factor_brackets"
+        allowed_factor_drift = SAFE_INTERNAL_GAP_MAX_RELATIVE_FACTOR_DRIFT
+
+        if relative_drift > allowed_factor_drift:
+            # Early A-share raw histories can contain real Saturday sessions
+            # that adjusted-history providers omit. Do not relax the generic
+            # factor-regime threshold. Instead require raw pre-close continuity
+            # on both sides of the missing Saturday session(s), which provides
+            # independent evidence that no corporate-action regime boundary was
+            # crossed inside the provider-calendar hole.
+            historical_saturday_run = all(
+                stamp.weekday() == 5 and stamp.year <= 1992
+                for stamp in run
+            )
+            if not historical_saturday_run or "pre_close" not in raw.columns:
+                continue
+
+            raw_indexed = raw.copy()
+            raw_indexed["trade_date"] = pd.to_datetime(
+                raw_indexed["trade_date"]
+            ).dt.normalize()
+            raw_indexed = raw_indexed.set_index("trade_date", drop=False)
+
+            continuity_checks: list[float] = []
+            valid_prec_close = True
+            previous_raw_date = previous_date
+            for stamp in run:
+                previous_close = pd.to_numeric(
+                    raw_indexed.loc[previous_raw_date, "close"],
+                    errors="coerce",
+                )
+                missing_pre_close = pd.to_numeric(
+                    raw_indexed.loc[stamp, "pre_close"],
+                    errors="coerce",
+                )
+                if (
+                    pd.isna(previous_close)
+                    or pd.isna(missing_pre_close)
+                    or float(previous_close) <= 0
+                    or float(missing_pre_close) <= 0
+                ):
+                    valid_prec_close = False
+                    break
+                continuity_checks.append(
+                    abs(float(missing_pre_close) - float(previous_close))
+                    / max(abs(float(previous_close)), 1e-12)
+                )
+                previous_raw_date = stamp
+
+            if valid_prec_close:
+                last_close = pd.to_numeric(
+                    raw_indexed.loc[run[-1], "close"],
+                    errors="coerce",
+                )
+                next_pre_close = pd.to_numeric(
+                    raw_indexed.loc[next_date, "pre_close"],
+                    errors="coerce",
+                )
+                if (
+                    pd.isna(last_close)
+                    or pd.isna(next_pre_close)
+                    or float(last_close) <= 0
+                    or float(next_pre_close) <= 0
+                ):
+                    valid_prec_close = False
+                else:
+                    continuity_checks.append(
+                        abs(float(next_pre_close) - float(last_close))
+                        / max(abs(float(last_close)), 1e-12)
+                    )
+
+            if (
+                not valid_prec_close
+                or not continuity_checks
+                or max(continuity_checks)
+                > SAFE_RAW_PRECLOSE_CONTINUITY_DRIFT
+                or relative_drift > SAFE_HISTORICAL_SATURDAY_FACTOR_DRIFT
+            ):
+                continue
+
+            fill_rule = "historical_saturday_raw_preclose_continuity"
+            allowed_factor_drift = SAFE_HISTORICAL_SATURDAY_FACTOR_DRIFT
 
         # Linear interpolation in raw-session index is deterministic and keeps
         # the synthetic values bounded by the two observed factor values.
@@ -199,7 +282,9 @@ def _repair_safe_internal_factor_gaps(
             "previous_factor": previous_factor,
             "next_factor": next_factor,
             "relative_factor_drift": relative_drift,
-            "fill_method": "linear_between_stable_bracketing_factors",
+            "allowed_factor_drift": allowed_factor_drift,
+            "fill_rule": fill_rule,
+            "fill_method": "linear_between_bracketing_factors",
         })
 
     if additions:
