@@ -4,7 +4,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 
 set "M4_REQUIRED_BRANCH=m4/real-a-share-validation-workflow"
-set "M4_MIN_SAFE_COMMIT=c34026755b3b8c491759eaacdb45376d4e1db485"
+set "M4_MIN_SAFE_COMMIT=d29870d3a2ef7b60dec4fd8f0dbef2d7a8f0b5a7"
 
 where git >nul 2>nul
 if errorlevel 1 (
@@ -32,7 +32,7 @@ if /I not "!M4_BRANCH!"=="!M4_REQUIRED_BRANCH!" (
 
 git cat-file -e !M4_MIN_SAFE_COMMIT!^{commit} >nul 2>nul
 if errorlevel 1 (
-  echo [HT-CN M4] ERROR: local checkout does not contain the minimum safe Phase 3.1 prospective-evidence workflow.
+  echo [HT-CN M4] ERROR: local checkout does not contain the minimum safe hosted-CI-green Phase 3.1 prospective-evidence workflow.
   echo Required ancestor: !M4_MIN_SAFE_COMMIT!
   echo Update the local M4 branch before collecting prospective evidence.
   echo No M1 update or authoritative capture was started.
@@ -42,7 +42,7 @@ if errorlevel 1 (
 
 git merge-base --is-ancestor !M4_MIN_SAFE_COMMIT! HEAD >nul 2>nul
 if errorlevel 1 (
-  echo [HT-CN M4] ERROR: current HEAD predates or diverges from the minimum safe Phase 3.1 workflow.
+  echo [HT-CN M4] ERROR: current HEAD predates or diverges from the minimum safe hosted-CI-green Phase 3.1 workflow.
   echo Required ancestor: !M4_MIN_SAFE_COMMIT!
   echo No M1 update or authoritative capture was started.
   pause
@@ -96,7 +96,7 @@ if not exist "data\market\catalog.duckdb" (
 echo ============================================================
 echo HT-CN M4 PROSPECTIVE EVIDENCE CAPTURE
 echo Current closed day only. No historical backfill.
-echo Preflight: frozen branch/checkpoint + clean worktree + frozen capture methodology + frozen outcome engine.
+echo Preflight: hosted-CI-green checkpoint + clean worktree + frozen capture methodology + frozen outcome engine.
 echo One run: M1 update + capture + health + transition + observation + outcome-v2 + handoff bundle.
 echo ============================================================
 echo.
