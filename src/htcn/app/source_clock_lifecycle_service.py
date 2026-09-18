@@ -12,6 +12,7 @@ from htcn.app.a_share_execution_context import (
 from htcn.app.source_aligned_service import SourceAlignedHarmonicService
 from htcn.app.market_context import build_core_market_context
 from htcn.app.sector_context import build_industry_context
+from htcn.app.concept_context import build_concept_context
 from htcn.harmonic.execution import SourceExecutionAudit
 from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.rsi_bamm_confluence import observe_source_execution_for_match
@@ -167,6 +168,12 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             instrument_frame=frame,
             as_of=as_of,
         ).as_payload()
+        analysis["concept_context"] = build_concept_context(
+            catalog_path=catalog_path,
+            instrument_id=instrument_id,
+            instrument_frame=frame,
+            as_of=as_of,
+        ).as_payload()
         for pattern in [*(analysis.get("completed") or []), *(analysis.get("forming") or [])]:
             pattern["a_share_execution_context"] = execution_context
 
@@ -192,6 +199,11 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             "sector_context_may_change_harmonic_identity": False,
             "sector_context_may_change_source_raw_prz": False,
             "sector_context_owns_lifecycle": False,
+            "concept_context_field": "concept_context",
+            "concept_context_role": "multi_membership_theme_relative_strength_evidence_only",
+            "concept_context_may_change_harmonic_identity": False,
+            "concept_context_may_change_source_raw_prz": False,
+            "concept_context_owns_lifecycle": False,
             "daily_event_metadata_table": "security_daily_event",
             "daily_event_complete_required_to_resolve_special_exceptions": True,
             "execution_context_may_change_harmonic_identity": False,
@@ -212,5 +224,7 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             "它们不拥有 lifecycle，也不得改写 identity 或 Source Raw PRZ。"
             " M3 Phase 3.3：行业映射来自可审计成分表，行业强弱/广度/量能由本地 M1 成分股重算；"
             "映射冲突时 fail-safe，不擅自选行业，也不改写谐波身份。"
+            " M3 Phase 3.4：概念/题材天然多对多，完整保留 membership；"
+            "概念排序仅按透明 5 日中位收益展示，不形成综合题材评分。"
         ).strip()
         return analysis

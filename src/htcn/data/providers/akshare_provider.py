@@ -190,6 +190,52 @@ class AkShareProvider:
         ordered = [column for column in columns if column in out.columns]
         return out[ordered].copy()
 
+    concept_membership_source = "akshare_eastmoney_concept"
+
+    def list_concept_boards(self) -> pd.DataFrame:
+        frame = self._ak.stock_board_concept_name_em()
+        columns = ["sector_code", "sector_name", "source"]
+        if frame is None or frame.empty:
+            return pd.DataFrame(columns=columns)
+        code_col = self._column(frame, "板块代码", "sector_code")
+        name_col = self._column(frame, "板块名称", "sector_name")
+        out = frame[[code_col, name_col]].rename(
+            columns={code_col: "sector_code", name_col: "sector_name"}
+        ).copy()
+        out["sector_code"] = out["sector_code"].astype(str).str.strip()
+        out["sector_name"] = out["sector_name"].astype(str).str.strip()
+        out = out[(out["sector_code"] != "") & (out["sector_name"] != "")]
+        out = out.drop_duplicates(["sector_code", "sector_name"]).reset_index(drop=True)
+        out["source"] = self.concept_membership_source
+        return out[columns]
+
+    def get_concept_constituents(self, sector: str) -> pd.DataFrame:
+        frame = self._ak.stock_board_concept_cons_em(symbol=sector)
+        columns = ["instrument_id", "symbol", "name", "source"]
+        if frame is None or frame.empty:
+            return pd.DataFrame(columns=columns)
+        code_col = self._column(frame, "代码", "code", "证券代码")
+        name_col = self._column(frame, "名称", "name", "证券简称")
+        rows: list[dict[str, str]] = []
+        for raw in frame[[code_col, name_col]].itertuples(index=False, name=None):
+            symbol = str(raw[0]).strip()
+            if symbol.endswith(".0"):
+                symbol = symbol[:-2]
+            symbol = symbol.zfill(6)
+            try:
+                instrument_id = instrument_id_from_symbol(symbol)
+            except ValueError:
+                continue
+            if not instrument_id.startswith(("SSE.", "SZSE.")):
+                continue
+            rows.append({
+                "instrument_id": instrument_id,
+                "symbol": symbol,
+                "name": str(raw[1]).strip(),
+                "source": self.concept_membership_source,
+            })
+        return pd.DataFrame.from_records(rows, columns=columns)
+
     industry_membership_source = "akshare_eastmoney_industry"
 
     def list_industry_boards(self) -> pd.DataFrame:
