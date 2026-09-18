@@ -1524,3 +1524,32 @@ Implemented:
 
 D-045 freezes the rule that presentation never defines the scan universe.
 
+## M5 Phase 5 closeout — Daily Close Pipeline green
+
+Validated checkpoint:
+
+`f1b29a02a939160be01e75350373d6fde2af693a`
+
+Actions run #1564:
+
+- overall success；
+- Python 645 passed；
+- Web build success；
+- Playwright 20 passed；
+- frozen methodology diff 0；
+- Outcome Engine diff 0。
+
+Implemented:
+
+- branch-neutral source/data preflight；
+- methodology + Outcome Engine guards before mutation；
+- M1 update + QFQ；
+- independent M5 cache and M4 capture domains；
+- strict M5 product readiness；
+- per-step logs；
+- unified JSON daily report；
+- Windows one-click daily close entry；
+- runtime data/product and data/research excluded from Git source dirtiness。
+
+D-046 freezes one-run convenience without merging product state into research evidence.
+
