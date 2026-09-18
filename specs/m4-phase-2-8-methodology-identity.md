@@ -125,3 +125,22 @@ The additional fingerprint components are:
 
 This is not a migration of existing post-T0 future evidence: none had been committed before
 the v2 methodology freeze. The immutable T0 baseline remains unchanged.
+
+
+## Current supersession — Phase 2.11
+
+Before the first post-T0 future transaction, price-coordinate provenance was added to the
+prospective evidence contract.
+
+The current T1 protocol is therefore:
+
+- committed capture schema v4;
+- methodology contract v3;
+- 37 fingerprint components;
+- exact methodology freeze commit `2b0aa92d292410098d9678a3bfd3102f3df1ed4b`.
+
+The component path set remains the same 37-file conservative set established before T1.
+The content/fingerprint changed because price-basis semantics were added inside already
+fingerprinted components.
+
+No future committed evidence existed before this v3 freeze.
