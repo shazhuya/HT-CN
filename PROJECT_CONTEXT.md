@@ -1428,3 +1428,41 @@ Phase 2 转向 **Operator Delta / 今日变化**：
 
 该变化层属于 product observation，不能冒充 M4 authoritative prospective evidence。
 
+## M5 Phase 2 closeout — Operator Delta green
+
+Phase 2 validated checkpoint:
+
+`791cbdb18322a9fc00e771b9bcb79529d8e63277`
+
+Actions run #1503:
+
+- overall success；
+- Python 619 passed；
+- Web build success；
+- Playwright 19 passed；
+- browser evidence upload success。
+
+Implemented:
+
+- stable trade-date-based product display key；
+- Queue snapshot schema v2；
+- single-as-of integrity；
+- pure Operator Delta comparator；
+- new/disappeared/state/next-key/context changes；
+- current-error disappearance suppression；
+- POST /api/operator/delta；
+- two-snapshot browser localStorage；
+- UI-only evidence-insufficient filtering；
+- “今日变化” panel；
+- Queue/Delta -> single-symbol deep dive。
+
+D-043 boundary:
+
+- product observation only；
+- not authoritative transition；
+- no M4 evidence writes；
+- no outcome-based ranking；
+- no predictive score/alpha/trade instruction。
+
+Frozen M4 methodology and Outcome Engine remain unchanged.
+
