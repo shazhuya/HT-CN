@@ -113,7 +113,7 @@ def test_duplicate_candidate_in_one_snapshot_fails_closed() -> None:
 def test_outcome_snapshot_rejects_prohibited_v1_fields() -> None:
     result = _result()
     result["win_rate"] = 0.8
-    with pytest.raises(ValueError, match="prohibited outcome-v1"):
+    with pytest.raises(ValueError, match="prohibited outcome result"):
         _snapshot(result)
 
 
