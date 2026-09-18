@@ -459,3 +459,40 @@ def test_committed_chain_rejects_methodology_drift(tmp_path) -> None:
         assert "methodology fingerprint drift" in str(exc)
     else:
         raise AssertionError("methodology drift must not mix into one prospective chain")
+
+
+def test_reader_preserves_pre_fingerprint_schema_v1_for_explicit_migration(tmp_path) -> None:
+    import json
+
+    row = _row("legacy-v1")
+    txid = capture_transaction_id(
+        code_head="h",
+        as_of_trade_date="2026-09-18",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        journal_rows=[row],
+        schema_version=1,
+    )
+    stamped = {**row, "capture_transaction_id": txid}
+    payload = {
+        "transaction_id": txid,
+        "code_head": "h",
+        "as_of_trade_date": "2026-09-18",
+        "captured_at_utc": "2026-09-18T09:00:00+00:00",
+        "instrument_count": 55,
+        "successful_instruments": 55,
+        "failed_instruments": 0,
+        "candidate_count": 1,
+        "worktree_clean": True,
+        "journal_rows": [stamped],
+        "status": "committed",
+        "schema_version": 1,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+    }
+    path = tmp_path / f"2026-09-18__{txid}.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    committed = read_committed_captures(tmp_path)
+    assert committed[0]["schema_version"] == 1
+    assert committed[0].get("methodology_fingerprint") is None
