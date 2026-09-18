@@ -9,6 +9,10 @@ from htcn.research.capture_transaction import (
 )
 
 
+TEST_METHODOLOGY_CONTRACT_VERSION = 1
+TEST_METHODOLOGY_FINGERPRINT = "a" * 64
+
+
 def _row(key: str, *, date: str = "2026-09-18", head: str = "h"):
     return {
         "code_head": head,
@@ -45,6 +49,8 @@ def _capture(rows, *, date="2026-09-18", head="h"):
         successful_instruments=55,
         failed_instruments=0,
         worktree_clean=True,
+        methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+        methodology_fingerprint=TEST_METHODOLOGY_FINGERPRINT,
         journal_rows=rows,
     )
 
@@ -62,6 +68,23 @@ def test_transaction_id_is_deterministic_across_capture_time() -> None:
         journal_rows=[_row("b"), _row("a")],
     )
     assert a.transaction_id == b.transaction_id
+
+
+def test_transaction_id_changes_when_methodology_changes() -> None:
+    first = _capture([_row("a")])
+    second = build_committed_capture(
+        code_head="h",
+        as_of_trade_date="2026-09-18",
+        captured_at_utc="2026-09-18T09:00:00+00:00",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        worktree_clean=True,
+        methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+        methodology_fingerprint="b" * 64,
+        journal_rows=[_row("a")],
+    )
+    assert first.transaction_id != second.transaction_id
 
 
 def test_single_file_commit_is_idempotent(tmp_path) -> None:
@@ -399,3 +422,34 @@ def test_transaction_rejects_suspended_row_without_positive_event_source() -> No
         assert "positive daily_event_source" in str(exc)
     else:
         raise AssertionError("suspended row without event evidence must fail")
+
+
+def test_committed_chain_rejects_methodology_drift(tmp_path) -> None:
+    freeze_legacy_baseline(
+        tmp_path,
+        [],
+        baseline_through_trade_date="2026-09-17",
+    )
+    first = _capture(
+        [_row("first", date="2026-09-18")],
+        date="2026-09-18",
+    )
+    commit_capture_transaction(tmp_path, first)
+    changed = build_committed_capture(
+        code_head="h2",
+        as_of_trade_date="2026-09-19",
+        captured_at_utc="2026-09-19T09:00:00+00:00",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        worktree_clean=True,
+        methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+        methodology_fingerprint="b" * 64,
+        journal_rows=[_row("changed", date="2026-09-19", head="h2")],
+    )
+    try:
+        commit_capture_transaction(tmp_path, changed)
+    except ValueError as exc:
+        assert "methodology fingerprint drift" in str(exc)
+    else:
+        raise AssertionError("methodology drift must not mix into one prospective chain")
