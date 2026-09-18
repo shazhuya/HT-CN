@@ -830,3 +830,81 @@ Source 对齐：
 - Carney Volume III：Type-I first PRZ test、Terminal Price Bar、3-5 bars immediate confirmation、38.2%/61.8% automatic objectives；
 - Type-II 是 secondary PRZ retest，且完整 reversal 需要价格与 indicator confirmation；
 - HT-CN 的完整 M1 path、QFQ basis、path hash、5/10/20 secondary windows 属于 A-share research engineering，不冒充 Carney 原文。
+
+## D-037 — Outcome evidence 使用独立 protocol + engine epoch；v2 在第一笔真实 outcome 前取代 v1
+
+**状态：Frozen M4 Phase 3.1 outcome-evidence contract**
+
+在第一笔真实 post-T0 prospective outcome 产生之前，对 D-036 outcome-v1 实现做可执行审计，发现两个必须先收口的问题：
+
+1. v1 的直接 MFE/MAE 差值在 post-terminal price 未越过 Terminal 时理论上可产生负 excursion，而标准 excursion 应是非负幅度；
+2. 只冻结“算什么”的 protocol fingerprint 与“候选怎么产生”的 capture methodology fingerprint 仍不足以证明未来 outcome 使用了同一版 evaluator 实现。
+
+正式决定：
+
+1. `m4-outcome-v1` 保留为有效历史 preregistration，不改写；
+2. 在尚无任何真实 prospective outcome result 时创建 `m4-outcome-v2`，显式 supersede v1；
+3. v2 canonical SHA-256 固定为：
+   `5822b302e11d197682dc4bb6d835fb0a3b2d62fc97f788c7a323ecda2770555b`；
+4. v2 的 MFE/MAE 定义为 nonnegative magnitude，并 zero-floor：
+   - bullish MFE = max(0, max high - terminal)；
+   - bullish MAE = max(0, terminal - min low)；
+   - bearish MFE = max(0, terminal - min low)；
+   - bearish MAE = max(0, max high - terminal)；
+5. v1 validator 保留，历史协议可重放；active protocol 切换为 v2；
+6. outcome evaluator 必须复用：
+   - `observe_source_execution()`
+   - `derive_source_lifecycle()`
+   禁止复制第二套 Terminal / Type-I / Type-II 实现；
+7. outcome path 使用 M1 base + daily_delta logical history 的真实 traded bars；
+8. 5/10/20 traded-bar windows 从 T+1 开始，不包含 Terminal bar；
+9. Terminal 未出现属于 right-censored ongoing，不机械记失败；
+10. basis drift 不自动重基准；跨 basis 价格比较保持 unresolved；
+11. 每个 outcome result 必须保存 canonical `market_path_rows`，不再只保存 path hash；
+12. canonical market path 包含 trade_date + OHLCV + price_basis_id，并保存 SHA-256；
+13. evidence bundle 离开私有 M1 后必须能使用 snapshot OHLCV + frozen enrollment seed 离线重跑 evaluator；
+14. outcome snapshot 升级为 **schema v2**；
+15. snapshot v2 绑定：
+    - outcome protocol ID/fingerprint；
+    - capture methodology fingerprint；
+    - outcome engine contract/fingerprint；
+16. 同 as-of 同事实可幂等；同 as-of fact drift fail closed；
+17. outcome snapshot 禁止 historical backfill；
+18. 同一 outcome evidence chain 禁止混用不同：
+    - outcome protocol；
+    - capture methodology；
+    - outcome engine；
+19. Outcome Engine contract v1 的组件固定为 4 个：
+    - `outcome_protocol.py`
+    - `outcome_evaluator.py`
+    - `outcome_snapshot.py`
+    - `outcome_engine_identity.py`
+20. Outcome Engine v1 exact code anchor：
+    `9cbc0d3d30ac5f0a87748a39788cbee04a44bcc8`；
+21. `m4_outcome_engine_freeze_guard.py` 必须在 M1 update 前检查：
+    - engine version = 1；
+    - component count = 4；
+    - anchor ancestry；
+    - 4 component 相对 anchor 零 diff；
+    - active protocol v2 canonical fingerprint；
+22. outcome-engine guard 失败时：
+    - 不更新私有 M1；
+    - 不创建 authoritative capture；
+    - 不创建 outcome snapshot；
+23. one-click Phase 3.1 minimum-safe workflow checkpoint 固定为：
+    `c34026755b3b8c491759eaacdb45376d4e1db485`；
+24. minimum-safe workflow checkpoint 不取代 capture methodology exact freeze：
+    - capture methodology 仍固定 D-035 / `c774c549...` / 37 components；
+25. minimum-safe workflow checkpoint 也不取代 outcome engine exact freeze：
+    - engine 仍固定 `9cbc0d3d...` / 4 components；
+26. bundle intake 必须进行 semantic recomputation，而不只校验 ZIP SHA；
+27. 即使篡改者重新生成 snapshot ID 与 transport hashes，stored outcome 与 frozen evaluator 重算结果不一致时仍 fail closed；
+28. Type-II price structure 不得写成完整 Carney Type-II reversal proof；
+29. Shark generic Type-I 38.2%/61.8% 不得写成 Shark-specific management target；
+30. outcome-v2 仍不定义 P&L / win-loss / win rate / alpha / ranking；
+31. D-037 冻结时仍没有第一笔真实 post-T0 future capture、真实 outcome cohort 或真实 outcome snapshot，因此该修正不涉及看结果后改规则。
+
+原因：
+
+Prospective validation 不只要冻结“研究问题”，还要冻结“输入坐标系、计算实现和可独立复算的原始路径”。D-037 把 enrollment authority、outcome protocol、outcome engine 与 transport report 四层彻底分开，避免未来代码演进或数据修订悄悄改变旧 cohort 的 outcome 口径。
+
