@@ -84,8 +84,10 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 
 ## One-click private-M1 handoff
 
-- [x] One-click local capture runs capture, health, transition, observation and transport-bundle stages.
-- [x] Final exit code is non-zero if any capture / health / report / bundle gate fails.
+- [x] One-click local capture first runs full M1 smart daily update, then capture, health, transition, observation and transport-bundle stages.
+- [x] M1 update failure skips new authoritative capture instead of accepting stale market data.
+- [x] M1 update log is included in the transport bundle for diagnosis.
+- [x] Final exit code is non-zero if any M1 / capture / health / report / bundle gate fails.
 - [x] Transport bundle contains available frozen baseline, committed transactions and derived reports.
 - [x] Bundle carries SHA-256 file records and current methodology provenance.
 - [x] Bundle is explicitly non-authoritative and never modifies committed evidence.
