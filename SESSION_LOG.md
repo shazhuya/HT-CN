@@ -1324,3 +1324,45 @@ Next:
 - start Daily Close Product Pipeline from the current Phase 8 lineage;
 - selectively port useful code from old divergent daily-close/handoff experiments;
 - explicitly decouple M5 product readiness from M4 strict-QFQ readiness and M4-only guards.
+
+
+## 2026-09-19 — M5 Phase 9 Daily Close Product Pipeline green
+
+Branch:
+`m5/daily-close-product-pipeline`
+
+Validated code checkpoint:
+`dec76022098574537333e8d3abd56bcc3b928a99`
+
+Implemented:
+- product-first daily close pipeline；
+- M1 shared freshness hard prerequisite；
+- context sync best-effort semantics；
+- initial M5 Operator cache before M4 research；
+- M4 preflight/methodology/outcome/QFQ gates restricted to research lane；
+- final non-force M5 cache revalidation after research-side QFQ；
+- final product readiness based on current/single-as-of/persisted/stable input；
+- isolated per-instrument failures with explicit instrument_errors；
+- unbuffered line-by-line subprocess progress + per-step logs；
+- [1/4]..[4/4] context progress markers。
+
+Validation:
+- Actions run #1646 / `35381269831`: success；
+- Python 682 passed；
+- Web build success；
+- Playwright 21 passed；
+- browser evidence upload success。
+
+Freeze audit:
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-050；
+- `specs/m5-phase-9-daily-close-product-pipeline.md`。
+
+Next:
+- start M5 Phase 10 Daily Handoff Bundle v2 from this lineage；
+- do not merge the old divergent handoff branch wholesale；
+- bind the handoff to the exact final Phase 9 product snapshot and input identity；
+- keep the outer handoff transport-only/non-authoritative。
