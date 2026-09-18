@@ -82,8 +82,12 @@ def build_prospective_observation_report(
         baseline_trade_date=baseline,
     )
     if not normalized and not dates:
+        if followup_materialized:
+            raise ValueError(
+                "cohort follow-up evidence cannot exist without captured timeline"
+            )
         return {
-            "schema_version": 1,
+            "schema_version": 2,
             "status": "empty",
             "captured_dates": [],
             "prospective_candidate_count": 0,
@@ -95,6 +99,8 @@ def build_prospective_observation_report(
                 "legacy_pre_manifest_dates": list(timeline.legacy_pre_manifest_dates),
                 "captured_snapshot_index_is_trade_session_index": False,
                 "scanner_absence_is_invalidation": False,
+                "scanner_absent_market_followup_supported": True,
+                "followup_changes_scanner_presence": False,
                 "return_metrics_computed": False,
                 "alpha_inference_allowed": False,
             },
