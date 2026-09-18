@@ -7,6 +7,7 @@ from pathlib import Path
 from htcn.app.operator_queue import discover_local_instruments
 from htcn.app.operator_snapshot import (
     build_or_load_operator_snapshot,
+    evaluate_operator_snapshot_readiness,
     latest_local_trade_date,
 )
 from htcn.app.source_clock_lifecycle_service import (
@@ -45,9 +46,13 @@ def main() -> int:
         force_refresh=bool(args.force),
     )
 
+    ready, readiness_reasons = evaluate_operator_snapshot_readiness(
+        payload
+    )
     report = {
         "schema_version": 1,
-        "status": "ready",
+        "status": "ready" if ready else "not_ready",
+        "readiness_reasons": list(readiness_reasons),
         "instrument_count": payload.get("instrument_count"),
         "analyzed_instrument_count": payload.get(
             "analyzed_instrument_count"
@@ -77,7 +82,7 @@ def main() -> int:
         encoding="utf-8",
     )
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0
+    return 0 if ready else 2
 
 
 if __name__ == "__main__":
