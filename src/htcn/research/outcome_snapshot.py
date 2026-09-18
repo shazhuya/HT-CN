@@ -7,6 +7,10 @@ import os
 from pathlib import Path
 from typing import Any, Iterable
 
+import pandas as pd
+
+from .outcome_evaluator import canonical_market_path_hash
+
 
 OUTCOME_SNAPSHOT_SCHEMA_VERSION = 1
 _PROHIBITED_RESULT_KEYS = {
@@ -121,10 +125,46 @@ def _normalize_results(
             raise ValueError(
                 f"capture methodology fingerprint drift for {key}"
             )
-        _validate_hash(
+        path_hash = _validate_hash(
             item.get("market_path_sha256"),
             label=f"market path hash for {key}",
         )
+        path_rows = item.get("market_path_rows")
+        if not isinstance(path_rows, list) or not path_rows:
+            raise ValueError(
+                f"outcome result missing canonical market_path_rows: {key}"
+            )
+        try:
+            path_frame = pd.DataFrame(path_rows)
+            recomputed_path_hash = canonical_market_path_hash(
+                path_frame,
+                price_basis_id=str(
+                    item.get("current_price_basis_id") or ""
+                ),
+            )
+        except Exception as exc:
+            raise ValueError(
+                f"invalid outcome market path rows for {key}: "
+                f"{type(exc).__name__}: {exc}"
+            ) from exc
+        if recomputed_path_hash != path_hash:
+            raise ValueError(
+                f"outcome market path hash mismatch for {key}"
+            )
+        expected_dates = [
+            str(row.get("trade_date") or "")
+            for row in path_rows
+        ]
+        if item.get("market_path_trade_dates") != expected_dates:
+            raise ValueError(
+                f"outcome market path date list mismatch for {key}"
+            )
+        if int(item.get("market_path_traded_bar_count") or 0) != len(
+            path_rows
+        ):
+            raise ValueError(
+                f"outcome market path bar count mismatch for {key}"
+            )
         prohibited = _walk_keys(item).intersection(
             _PROHIBITED_RESULT_KEYS
         )
