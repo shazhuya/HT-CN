@@ -182,3 +182,21 @@ def test_operator_snapshot_file_contains_contract_and_universe_hash(tmp_path) ->
     assert stored["contract_version"] == OPERATOR_SNAPSHOT_CONTRACT_VERSION
     assert stored["universe_hash"] == operator_universe_hash(["SSE.1"])
     assert stored["authoritative_evidence"] is False
+
+
+
+def test_operator_snapshot_does_not_cache_stale_queue_as_current_date(
+    tmp_path,
+) -> None:
+    service = CountingService(as_of="2026-09-17")
+
+    payload = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+    )
+
+    assert payload["product_cache"]["status"] == "live_not_cached"
+    assert payload["product_cache"]["freshness"] == "stale"
+    assert list(tmp_path.glob("*.json")) == []
