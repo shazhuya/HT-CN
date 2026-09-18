@@ -56,6 +56,7 @@ def build_prospective_observation_report(
     rows: Iterable[dict[str, Any]],
     *,
     manifest_rows: Iterable[dict[str, Any]] | None = None,
+    followup_rows: Iterable[dict[str, Any]] | None = None,
     legacy_baseline_trade_date: str | None = None,
 ) -> dict[str, Any]:
     materialized = [dict(row) for row in rows]
@@ -63,6 +64,11 @@ def build_prospective_observation_report(
         None
         if manifest_rows is None
         else [dict(row) for row in manifest_rows]
+    )
+    followup_materialized = (
+        []
+        if followup_rows is None
+        else [dict(row) for row in followup_rows]
     )
     timeline = resolve_capture_timeline(
         materialized,
@@ -102,6 +108,28 @@ def build_prospective_observation_report(
             if str(row["as_of_trade_date"]) == as_of
         }
 
+    followup_by_date: dict[str, dict[str, dict[str, Any]]] = {
+        as_of: {} for as_of in dates
+    }
+    for row in followup_materialized:
+        as_of = str(row.get("as_of_trade_date") or "")
+        key = str(row.get("candidate_key") or "")
+        if not as_of or not key:
+            raise ValueError("cohort follow-up row missing as_of_trade_date/candidate_key")
+        if as_of not in followup_by_date:
+            raise ValueError(
+                f"cohort follow-up date {as_of} is not in captured timeline"
+            )
+        if key in followup_by_date[as_of]:
+            raise ValueError(
+                f"duplicate cohort follow-up candidate {key} on {as_of}"
+            )
+        if str(row.get("scanner_presence") or "") != "absent":
+            raise ValueError(
+                f"cohort follow-up candidate {key} must be scanner absent"
+            )
+        followup_by_date[as_of][key] = row
+
     enrollment: dict[str, str] = {}
     instrument_by_key: dict[str, str] = {}
     for row in normalized:
@@ -117,6 +145,38 @@ def build_prospective_observation_report(
                     f"{previous} != {value}"
                 )
             enrollment[key] = value
+
+    instrument_by_key_from_followup: dict[str, str] = {}
+    for as_of, items in followup_by_date.items():
+        for key, row in items.items():
+            enrolled = enrollment.get(key)
+            if enrolled is None:
+                raise ValueError(
+                    f"cohort follow-up candidate {key} is not outcome-enrolled"
+                )
+            row_enrollment = str(
+                row.get("outcome_enrollment_trade_date") or ""
+            )
+            if row_enrollment != enrolled:
+                raise ValueError(
+                    f"cohort follow-up enrollment drift for {key}: "
+                    f"{row_enrollment} != {enrolled}"
+                )
+            if as_of <= enrolled:
+                raise ValueError(
+                    f"cohort follow-up date must be after enrollment for {key}"
+                )
+            instrument = str(row.get("instrument_id") or "")
+            if not instrument:
+                raise ValueError(
+                    f"cohort follow-up candidate {key} missing instrument_id"
+                )
+            expected_instrument = instrument_by_key.get(key)
+            if expected_instrument and instrument != expected_instrument:
+                raise ValueError(
+                    f"cohort follow-up instrument drift for {key}"
+                )
+            instrument_by_key_from_followup[key] = instrument
 
     observations: list[ProspectiveObservation] = []
     candidate_summaries: list[dict[str, Any]] = []
@@ -137,17 +197,73 @@ def build_prospective_observation_report(
         present_count = 0
         absent_count = 0
         suspended_count = 0
+        absent_market_followup_count = 0
 
         for captured_index, as_of in enumerate(observation_dates):
             row = by_date[as_of].get(key)
+            followup = followup_by_date[as_of].get(key)
+            if row is not None and followup is not None:
+                raise ValueError(
+                    f"candidate {key} cannot be scanner-present and follow-up-absent "
+                    f"on {as_of}"
+                )
             if row is None:
                 absent_streak += 1
                 absent_count += 1
                 ever_absent = True
                 if first_absent is None:
                     first_absent = as_of
-                observations.append(
-                    ProspectiveObservation(
+                if followup is not None:
+                    absent_market_followup_count += 1
+                    market_status = str(
+                        followup.get("market_observation_status") or "traded"
+                    )
+                    if market_status == "confirmed_full_day_suspended":
+                        suspended_count += 1
+                    observation = ProspectiveObservation(
+                        candidate_key=key,
+                        instrument_id=instrument_by_key[key],
+                        outcome_enrollment_trade_date=enrolled,
+                        observation_trade_date=as_of,
+                        captured_snapshot_index=captured_index,
+                        scanner_presence="absent",
+                        consecutive_absent_snapshots=absent_streak,
+                        pattern_state=None,
+                        source_lifecycle_state=None,
+                        action_state=None,
+                        execution_context_gate=(
+                            None
+                            if followup.get("execution_context_gate") is None
+                            else str(followup.get("execution_context_gate"))
+                        ),
+                        context_integrity_summary=None,
+                        next_key_price=None,
+                        next_key_price_role=None,
+                        source_terminal_trade_date=None,
+                        underlying_last_trade_date=(
+                            None
+                            if followup.get("underlying_last_trade_date") is None
+                            else str(followup.get("underlying_last_trade_date"))
+                        ),
+                        market_observation_status=market_status,
+                        daily_event_source=(
+                            None
+                            if followup.get("daily_event_source") is None
+                            else str(followup.get("daily_event_source"))
+                        ),
+                        daily_event_reason=(
+                            None
+                            if followup.get("daily_event_reason") is None
+                            else str(followup.get("daily_event_reason"))
+                        ),
+                        as_of_open=_float_or_none(followup.get("as_of_open")),
+                        as_of_high=_float_or_none(followup.get("as_of_high")),
+                        as_of_low=_float_or_none(followup.get("as_of_low")),
+                        as_of_close=_float_or_none(followup.get("as_of_close")),
+                        as_of_volume=_float_or_none(followup.get("as_of_volume")),
+                    )
+                else:
+                    observation = ProspectiveObservation(
                         candidate_key=key,
                         instrument_id=instrument_by_key[key],
                         outcome_enrollment_trade_date=enrolled,
@@ -173,7 +289,7 @@ def build_prospective_observation_report(
                         as_of_close=None,
                         as_of_volume=None,
                     )
-                )
+                observations.append(observation)
                 continue
 
             if ever_absent and absent_streak > 0 and first_reappeared is None:
@@ -264,6 +380,9 @@ def build_prospective_observation_report(
             "captured_snapshot_count": len(observation_dates),
             "present_snapshot_count": present_count,
             "absent_snapshot_count": absent_count,
+            "scanner_absent_market_followup_snapshot_count": (
+                absent_market_followup_count
+            ),
             "confirmed_full_day_suspended_snapshot_count": suspended_count,
             "first_scanner_absent_date": first_absent,
             "first_scanner_reappeared_date": first_reappeared,
@@ -284,7 +403,7 @@ def build_prospective_observation_report(
     )
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "no_outcome_cohort" if not enrollment else "observations_available",
         "captured_dates": dates,
         "prospective_candidate_count": len(enrollment),
@@ -301,6 +420,8 @@ def build_prospective_observation_report(
             "legacy_pre_manifest_dates": list(timeline.legacy_pre_manifest_dates),
             "captured_snapshot_index_is_trade_session_index": False,
             "scanner_absence_is_invalidation": False,
+            "scanner_absent_market_followup_supported": True,
+            "followup_changes_scanner_presence": False,
             "confirmed_suspension_is_traded_observation": False,
             "return_metrics_computed": False,
             "profit_threshold_defined": False,
