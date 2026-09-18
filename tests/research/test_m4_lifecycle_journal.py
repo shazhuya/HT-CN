@@ -293,3 +293,87 @@ def test_manifest_baseline_date_prevents_first_later_candidate_becoming_baseline
     assert result["prospective_new_appended"] == 1
     assert payload["enrollment_state"] == "prospective_new"
     assert payload["first_observed_trade_date"] == "2026-09-19"
+
+
+def test_confirmed_suspension_carry_forward_has_no_fake_market_bar() -> None:
+    pattern = _pattern("ABCD")
+    analysis = {
+        "instrument_id": "SSE.600000",
+        "last_trade_date": "2026-09-17",
+        "bars": [
+            {
+                "index": 0,
+                "trade_date": "2026-09-17",
+                "open": 10.0,
+                "high": 10.5,
+                "low": 9.9,
+                "close": 10.4,
+                "volume": 1200,
+            }
+        ],
+        "context_integrity": {"summary_state": "complete"},
+        "completed": [],
+        "forming": [pattern],
+    }
+    rows = entries_from_analysis(
+        analysis,
+        code_head="abc",
+        capture_trade_date="2026-09-18",
+        market_observation_status="confirmed_full_day_suspended",
+        execution_context_gate_override="blocked_suspended",
+        include_latest_bar_facts=False,
+        daily_event_source="akshare_stock_tfp_em",
+        daily_event_reason="重大事项",
+    )
+    row = rows[0]
+    assert row.as_of_trade_date == "2026-09-18"
+    assert row.underlying_last_trade_date == "2026-09-17"
+    assert row.market_observation_status == "confirmed_full_day_suspended"
+    assert row.execution_context_gate == "blocked_suspended"
+    assert row.daily_event_source == "akshare_stock_tfp_em"
+    assert row.as_of_open is None
+    assert row.as_of_high is None
+    assert row.as_of_low is None
+    assert row.as_of_close is None
+    assert row.as_of_volume is None
+
+
+def test_suspension_carry_forward_requires_later_capture_date() -> None:
+    analysis = {
+        "instrument_id": "SSE.600000",
+        "last_trade_date": "2026-09-18",
+        "bars": [],
+        "context_integrity": {"summary_state": "complete"},
+        "completed": [],
+        "forming": [_pattern("ABCD")],
+    }
+    try:
+        entries_from_analysis(
+            analysis,
+            code_head="abc",
+            capture_trade_date="2026-09-18",
+            market_observation_status="confirmed_full_day_suspended",
+            execution_context_gate_override="blocked_suspended",
+            include_latest_bar_facts=False,
+        )
+    except ValueError as exc:
+        assert "requires capture date after underlying last trade date" in str(exc)
+    else:
+        raise AssertionError("same-day suspension carry-forward must fail closed")
+
+
+def test_first_seen_suspension_row_cannot_enter_outcome_cohort() -> None:
+    eligible, reason = prospective_outcome_gate(
+        {
+            "pattern_id": "abcd",
+            "pattern_state": "forming",
+            "source_lifecycle_state": "waiting_terminal",
+            "source_prz_low": 90.0,
+            "source_prz_high": 92.0,
+            "source_terminal_trade_date": None,
+            "market_observation_status": "confirmed_full_day_suspended",
+        },
+        enrollment_state="prospective_new",
+    )
+    assert eligible is False
+    assert reason == "first_observed_not_traded_session"

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 
 from scripts.m4_capture_lifecycle_snapshot import (
+    _confirmed_full_day_suspensions,
     _summary_counter,
     _validate_capture_trade_date,
 )
@@ -48,3 +49,46 @@ def test_capture_trade_date_requires_provider_local_alignment() -> None:
         assert "does not match provider-confirmed" in str(exc)
     else:
         raise AssertionError("stale local trade date must fail closed")
+
+
+def test_confirmed_full_day_suspension_query_excludes_intraday(tmp_path) -> None:
+    import duckdb
+
+    catalog = tmp_path / "catalog.duckdb"
+    with duckdb.connect(str(catalog)) as con:
+        con.execute(
+            """
+            CREATE TABLE security_daily_event (
+                instrument_id VARCHAR,
+                trade_date DATE,
+                trading_status VARCHAR,
+                no_price_limit BOOLEAN,
+                price_limit_pct_override DOUBLE,
+                resolution_complete BOOLEAN,
+                source VARCHAR,
+                reason VARCHAR,
+                updated_at TIMESTAMP
+            )
+            """
+        )
+        con.execute(
+            """
+            INSERT INTO security_daily_event VALUES
+            ('SSE.600000', '2026-09-18', 'suspended', NULL, NULL, FALSE, 'feed', 'full', CURRENT_TIMESTAMP),
+            ('SSE.600001', '2026-09-18', 'intraday_suspended', NULL, NULL, FALSE, 'feed', 'intra', CURRENT_TIMESTAMP),
+            ('SSE.600002', '2026-09-17', 'suspended', NULL, NULL, FALSE, 'feed', 'old', CURRENT_TIMESTAMP)
+            """
+        )
+
+    events = _confirmed_full_day_suspensions(catalog, "2026-09-18")
+    assert set(events) == {"SSE.600000"}
+    assert events["SSE.600000"]["reason"] == "full"
+
+
+def test_confirmed_full_day_suspension_query_allows_optional_missing_table(tmp_path) -> None:
+    import duckdb
+
+    catalog = tmp_path / "catalog.duckdb"
+    with duckdb.connect(str(catalog)):
+        pass
+    assert _confirmed_full_day_suspensions(catalog, "2026-09-18") == {}
