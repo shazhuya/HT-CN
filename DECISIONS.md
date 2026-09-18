@@ -1039,3 +1039,55 @@ D-034 已将正式 prospective evidence 收紧到
 
 正式 prospective validation 已把 price coordinate system 作为 evidence identity 的一部分，就不能允许 acquisition pipeline 在 QFQ factor 尚未建立时直接进入 capture。QFQ readiness 必须成为 raw freshness 与 authoritative capture 之间的显式 fail-closed gate。
 
+## D-040 — QFQ provider-calendar 内部微缺口只允许稳定 regime 下的安全修复
+
+**状态：Frozen M4 acquisition compatibility rule**
+
+第二个用户私有 evidence bundle 显示：
+
+- initialized instruments：55；
+- existing formal QFQ：3；
+- 本轮成功 build/repair：50；
+- formal QFQ ready：53 / 55；
+- failed：2；
+- authoritative capture 未启动；
+- committed capture 仍为 0。
+
+仅剩失败：
+
+1. `SSE.600057`
+   - BaoStock QFQ 缺 `2007-04-24`；
+2. `SZSE.000001`
+   - BaoStock QFQ 缺若干 1991 年周六历史交易日；
+   - 例如 `1991-04-06 / 04-13 / 04-20 / 05-04 / 05-11`。
+
+AkShare 对这两只仍出现 RemoteDisconnected。
+
+正式决定：
+
+1. 不放宽 formal-QFQ requirement；
+2. 不允许任意 forward-fill 历史内部 factor gap；
+3. acquisition 层允许修复 provider-calendar tiny internal gap，但必须同时满足：
+   - gap 被真实 factor observation 前后夹住；
+   - gap <= 10 个 raw trading sessions；
+   - 前后 factor relative drift <= 0.5%；
+4. 修复值采用两侧稳定 factor 的线性插值；
+5. 若前后 factor drift > 0.5%，视为可能跨 corporate-action regime，继续 fail closed；
+6. leading gap 不修；
+7. trailing freshness 不由该规则处理，继续由冻结的 `qfq_carry_forward` 规则拥有；
+8. synthetic row source 标为 `safe_internal_calendar_gap_fill`；
+9. report 必须记录 gap 起止、前后 factor、relative drift 和 fill method；
+10. 该规则只属于 acquisition/data-provider compatibility，不改变 harmonic identity、Source Raw PRZ、Source lifecycle 或 outcome evaluator；
+11. GitHub Actions run #1446 对该版本：
+    - Python deterministic tests：success；
+    - Web build：success；
+    - overall：success；
+12. freeze audit：
+    - capture methodology drift = 0 / 37；
+    - Outcome Engine drift = 0 / 4；
+13. D-040 冻结时仍无任何 post-T0 committed future capture，因此没有重写真实 prospective evidence。
+
+原因：
+
+不同 A-share 历史供应商对早期周六交易和个别历史 session 的覆盖不完全一致。只要缺口处于同一稳定 factor regime，就可以在 acquisition 层做可审计、受限的 calendar-gap repair；但不能跨潜在除权 regime 自动补值。
+
