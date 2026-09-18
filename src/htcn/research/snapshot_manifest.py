@@ -28,6 +28,8 @@ class SnapshotManifestEntry:
     worktree_clean: bool
     status: str
     capture_transaction_id: str | None = None
+    methodology_contract_version: int | None = None
+    methodology_fingerprint: str | None = None
     alpha_inference_allowed: bool = False
     is_trade_instruction: bool = False
 
