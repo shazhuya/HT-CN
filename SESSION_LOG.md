@@ -650,3 +650,21 @@ M1 freshness is now part of the same one-click T1 handoff:
 - a failed M1 update skips the new authoritative capture;
 - the M1 update console output is persisted as `artifacts/reports/m4-m1-update.log`;
 - the log is included in `m4-evidence-bundle.zip`.
+
+
+## M4 T1 preflight hardening / 2026-09-18
+
+Assistant-side only; no user-local QA requested.
+
+Risk found before the first post-T0 real capture:
+a clean worktree alone does not prove that a private-M1 run starts from the frozen M4 T1 protocol. An older but clean checkout could otherwise enter the capture workflow.
+
+Closed:
+- `4a57dbfc188cc3696c0b7d9b162f13c054a500c7`: one-click wrapper now checks the exact M4 branch, minimum safe checkpoint ancestry and clean worktree before any M1 update;
+- `da927140b8e9b4bea31e0fcc1cd8d8b23b371661`: cross-platform static regression freezes the ordering and fail-closed wording of the wrapper preflight;
+- D-029 freezes the private-capture preflight contract.
+
+Methodology boundary:
+the wrapper/test change does not modify harmonic identity, Source Raw PRZ, Source lifecycle, BAMM evidence or prospective enrollment semantics and is intentionally outside the methodology fingerprint set.
+
+D-023 remains unchanged: the user's computer is not a routine test runner. It is used only when private M1 data must be collected.
