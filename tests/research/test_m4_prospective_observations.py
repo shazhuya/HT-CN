@@ -430,3 +430,15 @@ def test_enrolled_followup_missing_price_basis_fails_closed() -> None:
         assert "missing price basis" in str(exc)
     else:
         raise AssertionError("follow-up without price basis must fail closed")
+
+
+
+def test_prospective_observation_contract_is_schema_v4() -> None:
+    report = build_prospective_observation_report([
+        _row("2026-09-17", "baseline"),
+        _row("2026-09-18", "new"),
+    ])
+    assert report["schema_version"] == 4
+    assert report["candidate_summaries"][0]["enrollment_source_clock_seed"][
+        "source_signal_trade_date"
+    ] == "2026-09-16"
