@@ -773,3 +773,45 @@ Closed:
 - D-033 freezes the exact component code anchor.
 
 The user's computer was not used.
+
+
+## M4 Phase 2.11 / QFQ price-basis provenance + methodology v3
+
+Assistant-side only; no user-local QA requested.
+
+Pre-T1 outcome-protocol review exposed a price-coordinate provenance gap:
+
+- formal harmonic analysis uses QFQ continuous prices;
+- raw fallback is explicitly non-formal in `LocalHarmonicService`;
+- M4 journal/follow-up previously did not persist the price basis;
+- D-024 enrollment did not independently require formal QFQ;
+- a later corporate action/QFQ historical rebase could place future OHLC and frozen harmonic
+  price levels on different coordinate systems.
+
+Closed:
+- `faded7f0d459179955bce0805012cff2b95abd08`: deterministic QFQ factor-regime basis ID;
+- `ea14afd3f382f6f8d959e454f0c0c617fc386aee`: journal persists price provenance and enrollment gate requires formal QFQ;
+- `329e1c077007574f88b13b12ded0205c1b789ce5`: scanner-absent follow-up requires formal QFQ provenance;
+- `dc50d9363e7209cf6684e2ee5208bb14b1c16efb`: authoritative full-universe capture fails on non-formal basis;
+- `6327bd445003247efa8482748f141c26c1435123`: committed capture schema v4 activated;
+- `0c741c495ace5ccc95ab8fc4d719494c00415644`: observation panel exposes enrollment/current basis drift;
+- `4c01629ebee0359a62521f34cd39c4843e293747`: enrolled observations fail closed on missing basis, observation schema v3;
+- `ebf35e478d9c8cb547aaf9587aa863008eca420f`: basis-ID stability/change regressions;
+- `31a312008cc77f7c0e059b578f738a4e8518e2e6`: schema-v4 transaction regressions;
+- `2b0aa92d292410098d9678a3bfd3102f3df1ed4b`: methodology contract v3 exact freeze;
+- `2e56a12f77b69253c19ac41cab7cd8cebc780737`: exact freeze guard advanced to v3;
+- `7352eb26369871e7eea33ab05a0d1c83e0f110c9`: one-click T1 wrapper requires the v3 checkpoint;
+- `88ed79a262be01a03865114b8923c4afbe1358d5`: human-readable observation report surfaces basis drift;
+- `0962fc3e58064dec013b64e0fd5c9c2f9b9d35de`: intake surfaces basis drift as future-rebase warning;
+- D-034 and `specs/m4-phase-2-11-price-basis-provenance.md` freeze the contract.
+
+Methodology change scope from v2 anchor `084ddf...` to v3 anchor `2b0aa...` was audited.
+Only seven fingerprint components changed, all within the price-basis/prospective-evidence chain:
+`harmonic_service.py`, `lifecycle_journal.py`, `cohort_followup.py`,
+`capture_transaction.py`, `prospective_observations.py`,
+`m4_capture_lifecycle_snapshot.py`, and `methodology_identity.py`.
+
+No harmonic ratios, Source Raw PRZ source definitions, BAMM, Shark or 5-0 source rules changed.
+
+No post-T0 future committed capture existed before methodology-v3 freeze, so no future evidence
+was migrated or mixed.
