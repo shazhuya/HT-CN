@@ -42,6 +42,10 @@ class LifecycleJournalEntry:
     source_prz_high: float | None
     source_terminal_trade_date: str | None
     eligible_for_validation: bool
+    underlying_last_trade_date: str | None = None
+    market_observation_status: str = "traded"
+    daily_event_source: str | None = None
+    daily_event_reason: str | None = None
     capture_transaction_id: str | None = None
     as_of_open: float | None = None
     as_of_high: float | None = None
@@ -118,9 +122,35 @@ def entries_from_analysis(
     analysis: dict[str, Any],
     *,
     code_head: str,
+    capture_trade_date: str | None = None,
+    market_observation_status: str = "traded",
+    execution_context_gate_override: str | None = None,
+    include_latest_bar_facts: bool = True,
+    daily_event_source: str | None = None,
+    daily_event_reason: str | None = None,
 ) -> list[LifecycleJournalEntry]:
     instrument_id = str(analysis["instrument_id"])
-    as_of = str(analysis["last_trade_date"])
+    underlying_last_trade_date = str(analysis["last_trade_date"])
+    as_of = (
+        underlying_last_trade_date
+        if capture_trade_date is None
+        else str(capture_trade_date)
+    )
+    if as_of < underlying_last_trade_date:
+        raise ValueError(
+            f"capture trade date {as_of} precedes underlying last trade date "
+            f"{underlying_last_trade_date}"
+        )
+    if market_observation_status == "confirmed_full_day_suspended":
+        if as_of <= underlying_last_trade_date:
+            raise ValueError(
+                "confirmed full-day suspension carry-forward requires "
+                "capture date after underlying last trade date"
+            )
+        if include_latest_bar_facts:
+            raise ValueError(
+                "suspension carry-forward must not expose prior bar as current OHLC"
+            )
     integrity = analysis.get("context_integrity") or {}
     integrity_summary = integrity.get("summary_state")
     out: list[LifecycleJournalEntry] = []
@@ -167,8 +197,13 @@ def entries_from_analysis(
                     if lifecycle.get("next_key_price_role") is None
                     else str(lifecycle["next_key_price_role"])
                 ),
-                execution_context_gate=str(
-                    narrative.get("execution_context_gate") or "execution_context_unavailable"
+                execution_context_gate=(
+                    str(execution_context_gate_override)
+                    if execution_context_gate_override is not None
+                    else str(
+                        narrative.get("execution_context_gate")
+                        or "execution_context_unavailable"
+                    )
                 ),
                 context_integrity_summary=(
                     None if integrity_summary is None else str(integrity_summary)
@@ -187,11 +222,35 @@ def entries_from_analysis(
                     analysis, lifecycle.get("source_terminal_bar")
                 ),
                 eligible_for_validation=True,
-                as_of_open=_latest_bar_value(analysis, "open"),
-                as_of_high=_latest_bar_value(analysis, "high"),
-                as_of_low=_latest_bar_value(analysis, "low"),
-                as_of_close=_latest_bar_value(analysis, "close"),
-                as_of_volume=_latest_bar_value(analysis, "volume"),
+                underlying_last_trade_date=underlying_last_trade_date,
+                market_observation_status=market_observation_status,
+                daily_event_source=daily_event_source,
+                daily_event_reason=daily_event_reason,
+                as_of_open=(
+                    _latest_bar_value(analysis, "open")
+                    if include_latest_bar_facts
+                    else None
+                ),
+                as_of_high=(
+                    _latest_bar_value(analysis, "high")
+                    if include_latest_bar_facts
+                    else None
+                ),
+                as_of_low=(
+                    _latest_bar_value(analysis, "low")
+                    if include_latest_bar_facts
+                    else None
+                ),
+                as_of_close=(
+                    _latest_bar_value(analysis, "close")
+                    if include_latest_bar_facts
+                    else None
+                ),
+                as_of_volume=(
+                    _latest_bar_value(analysis, "volume")
+                    if include_latest_bar_facts
+                    else None
+                ),
             )
         )
     return out
@@ -205,6 +264,11 @@ def prospective_outcome_gate(
     """Strict gate for the future prospective outcome cohort."""
     if enrollment_state != "prospective_new":
         return False, "baseline_existing"
+    market_status = str(
+        payload.get("market_observation_status") or "traded"
+    )
+    if market_status != "traded":
+        return False, "first_observed_not_traded_session"
     pattern_id = str(payload.get("pattern_id") or "")
     if pattern_id in OUTCOME_BLOCKED_PATTERN_IDS:
         return False, "pattern_source_fidelity_blocked"
