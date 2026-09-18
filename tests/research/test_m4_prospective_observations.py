@@ -170,3 +170,68 @@ def test_zero_candidate_legacy_t0_does_not_steal_t1_enrollment() -> None:
     summary = report["candidate_summaries"][0]
     assert summary["outcome_enrollment_trade_date"] == "2026-09-18"
     assert summary["captured_snapshot_count"] == 1
+
+
+def test_enrolled_candidate_remains_present_across_confirmed_full_day_suspension() -> None:
+    suspended = _row("2026-09-19", "new")
+    suspended.update({
+        "underlying_last_trade_date": "2026-09-18",
+        "market_observation_status": "confirmed_full_day_suspended",
+        "execution_context_gate": "blocked_suspended",
+        "daily_event_source": "feed",
+        "daily_event_reason": "full-day suspension",
+        "as_of_open": None,
+        "as_of_high": None,
+        "as_of_low": None,
+        "as_of_close": None,
+        "as_of_volume": None,
+    })
+    rows = [
+        _row("2026-09-17", "baseline"),
+        _row("2026-09-18", "new"),
+        suspended,
+    ]
+    report = build_prospective_observation_report(rows)
+    observations = [
+        item
+        for item in report["observations"]
+        if item["candidate_key"] == "new"
+    ]
+    assert [item["scanner_presence"] for item in observations] == [
+        "present",
+        "present",
+    ]
+    suspended_obs = observations[-1]
+    assert suspended_obs["market_observation_status"] == (
+        "confirmed_full_day_suspended"
+    )
+    assert suspended_obs["underlying_last_trade_date"] == "2026-09-18"
+    assert suspended_obs["execution_context_gate"] == "blocked_suspended"
+    assert suspended_obs["as_of_close"] is None
+    summary = report["candidate_summaries"][0]
+    assert summary["confirmed_full_day_suspended_snapshot_count"] == 1
+    assert summary["absent_snapshot_count"] == 0
+    assert report["market_observation_counts"] == {
+        "confirmed_full_day_suspended": 1,
+        "traded": 1,
+    }
+
+
+def test_first_seen_suspended_candidate_is_not_outcome_enrolled() -> None:
+    suspended = _row("2026-09-18", "new")
+    suspended.update({
+        "underlying_last_trade_date": "2026-09-17",
+        "market_observation_status": "confirmed_full_day_suspended",
+        "execution_context_gate": "blocked_suspended",
+        "as_of_open": None,
+        "as_of_high": None,
+        "as_of_low": None,
+        "as_of_close": None,
+        "as_of_volume": None,
+    })
+    report = build_prospective_observation_report([
+        _row("2026-09-17", "baseline"),
+        suspended,
+    ])
+    assert report["prospective_candidate_count"] == 0
+    assert report["status"] == "no_outcome_cohort"

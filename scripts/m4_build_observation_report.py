@@ -39,6 +39,14 @@ def render_markdown(payload: dict[str, Any]) -> str:
     else:
         lines.append("- 当前没有 prospective outcome cohort。")
 
+    lines.extend(["", "## Market observation", ""])
+    market = payload.get("market_observation_counts") or {}
+    if market:
+        for key, value in sorted(market.items()):
+            lines.append(f"- `{key}`：{value}")
+    else:
+        lines.append("- 当前没有 market observation。")
+
     lines.extend(["", "## Lifecycle observations", ""])
     states = payload.get("lifecycle_observation_counts") or {}
     if states:
@@ -54,7 +62,9 @@ def render_markdown(payload: dict[str, Any]) -> str:
             lines.append(
                 f"- `{item.get('candidate_key')}`：enroll={item.get('outcome_enrollment_trade_date')}；"
                 f"captured={item.get('captured_snapshot_count')}；present={item.get('present_snapshot_count')}；"
-                f"absent={item.get('absent_snapshot_count')}；terminal={item.get('first_source_terminal_trade_date')}"
+                f"absent={item.get('absent_snapshot_count')}；"
+                f"suspended={item.get('confirmed_full_day_suspended_snapshot_count', 0)}；"
+                f"terminal={item.get('first_source_terminal_trade_date')}"
             )
     else:
         lines.append("- 无。")
@@ -65,6 +75,8 @@ def render_markdown(payload: dict[str, Any]) -> str:
         "",
         "- captured_snapshot_index 只是实际捕获序号，不是假定完整交易日序号。",
         "- scanner absent 不等于 invalidated。",
+        "- 确认全天停牌 carry-forward 仍是 candidate present，但不是 traded observation。",
+        "- 停牌 carry-forward 不伪造当日 OHLC，也不能作为首次 prospective outcome enrollment。",
         "- 本报告只保留事实 observation 和 milestone。",
         "- 不计算 return / profit / win rate / alpha。",
         "- 不定义盈利阈值或买卖评分。",
