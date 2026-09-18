@@ -213,10 +213,20 @@ def build_or_load_operator_snapshot(
             scales=scales,
         )
 
+    queue_as_of = (
+        None
+        if queue.get("as_of_trade_date") is None
+        else str(queue.get("as_of_trade_date"))
+    )
+    expected_matches = (
+        expected_trade_date is None
+        or queue_as_of == str(expected_trade_date)
+    )
     can_cache = (
         cache_path is not None
         and queue.get("observation_integrity") == "single_as_of"
-        and queue.get("as_of_trade_date") is not None
+        and queue_as_of is not None
+        and expected_matches
     )
     if can_cache:
         stored_payload = {
