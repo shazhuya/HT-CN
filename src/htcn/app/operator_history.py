@@ -581,6 +581,7 @@ def query_operator_history(
     start_trade_date: str | None = None,
     end_trade_date: str | None = None,
     latest_revision_per_day: bool = True,
+    summary_only: bool = False,
     limit: int = 60,
 ) -> dict[str, Any]:
     root = Path(history_root)
@@ -637,10 +638,12 @@ def query_operator_history(
             "previous_recorded_trade_date": record.get(
                 "previous_recorded_trade_date"
             ),
+            "queue_candidate_count": len(queue.get("items") or []),
+            "delta_total_change_count": int(delta.get("change_count") or 0),
             "item_count": len(items),
-            "items": items,
+            "items": [] if summary_only else items,
             "change_count": len(changes),
-            "changes": changes,
+            "changes": [] if summary_only else changes,
             "delta_status": delta.get("status"),
             "comparison_incomplete_instruments": delta.get(
                 "comparison_incomplete_instruments"
@@ -658,6 +661,7 @@ def query_operator_history(
             "start_trade_date": start_trade_date,
             "end_trade_date": end_trade_date,
             "latest_revision_per_day": latest_revision_per_day,
+            "summary_only": summary_only,
             "limit": max(1, int(limit)),
         },
         "observation_count": len(observations),
