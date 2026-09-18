@@ -1555,3 +1555,29 @@ D-046 freezes parallelism as throughput-only:
 - no methodology changes；
 - no M4 evidence writes。
 
+## M5 Phase 6 closeout — Single-Flight Operator Rebuild green
+
+Validated checkpoint:
+
+`ad76b7e62de49f7dbafb6898fbfdd055d096d338`
+
+Actions run #1613:
+
+- overall success；
+- Python 637 passed；
+- Web build success；
+- Playwright 21 passed；
+- browser evidence upload success。
+
+Implemented:
+
+- process-local single-flight rebuild registry；
+- cache-identity keyed owner/follower；
+- cache miss coalescing；
+- force-refresh coalescing；
+- hit-after-race recheck；
+- follower `coalesced_wait` provenance；
+- failure cleanup。
+
+D-047 freezes single-flight as product concurrency coordination only.
+
