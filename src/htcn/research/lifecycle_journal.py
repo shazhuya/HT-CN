@@ -45,6 +45,10 @@ class LifecycleJournalEntry:
     source_prz_high: float | None
     source_terminal_trade_date: str | None
     eligible_for_validation: bool
+    source_signal_trade_date: str | None = None
+    source_signal_clock_basis: str | None = None
+    source_reaction_anchor_label: str | None = None
+    source_reaction_anchor_price: float | None = None
     underlying_last_trade_date: str | None = None
     market_observation_status: str = "traded"
     daily_event_source: str | None = None
@@ -177,6 +181,28 @@ def entries_from_analysis(
 
         source = (pattern.get("prz") or {}).get("source_prz") or {}
         source_available = source.get("available") is True
+        clock = pattern.get("execution_clock")
+        if not isinstance(clock, dict):
+            clock = {}
+        signal_trade_date = _bar_trade_date(
+            analysis,
+            clock.get("signal_bar"),
+        )
+        signal_clock_basis = (
+            None
+            if clock.get("signal_clock_basis") is None
+            else str(clock.get("signal_clock_basis"))
+        )
+        reaction_anchor_label = (
+            None
+            if clock.get("reaction_anchor_label") is None
+            else str(clock.get("reaction_anchor_label"))
+        )
+        reaction_anchor_price = (
+            None
+            if clock.get("reaction_anchor_price") is None
+            else float(clock.get("reaction_anchor_price"))
+        )
         price_mode = str(analysis.get("price_mode") or "unknown")
         price_basis_id = str(analysis.get("price_basis_id") or "")
         formal_price_basis = (
@@ -233,6 +259,10 @@ def entries_from_analysis(
                     analysis, lifecycle.get("source_terminal_bar")
                 ),
                 eligible_for_validation=formal_price_basis,
+                source_signal_trade_date=signal_trade_date,
+                source_signal_clock_basis=signal_clock_basis,
+                source_reaction_anchor_label=reaction_anchor_label,
+                source_reaction_anchor_price=reaction_anchor_price,
                 underlying_last_trade_date=underlying_last_trade_date,
                 market_observation_status=market_observation_status,
                 daily_event_source=daily_event_source,
@@ -277,6 +307,19 @@ def prospective_outcome_gate(
         return False, "baseline_existing"
     if payload.get("eligible_for_validation") is not True:
         return False, "candidate_not_formal_validation_eligible"
+    signal_trade_date = str(payload.get("source_signal_trade_date") or "")
+    signal_clock_basis = str(payload.get("source_signal_clock_basis") or "")
+    reaction_anchor_label = str(payload.get("source_reaction_anchor_label") or "")
+    reaction_anchor_price = payload.get("source_reaction_anchor_price")
+    if (
+        not signal_trade_date
+        or not signal_clock_basis
+        or not reaction_anchor_label
+        or reaction_anchor_price is None
+    ):
+        return False, "source_clock_seed_unresolved"
+    if signal_trade_date > str(payload.get("as_of_trade_date") or signal_trade_date):
+        return False, "source_clock_seed_after_observation"
     price_mode = str(payload.get("price_mode") or "")
     price_basis_id = str(payload.get("price_basis_id") or "")
     if price_mode not in FORMAL_PRICE_MODES or not price_basis_id.startswith("qfq:"):
