@@ -574,3 +574,42 @@ M4 evidence bundle 是非权威运输层，但它必须可靠地把 frozen basel
 原因：
 
 如果直接信任 ZIP 内的 derived reports，就可能出现“transaction 是新的，但 report 是旧的”或“外层 manifest 与内层 authoritative chain 不一致”而未被发现。前瞻研究必须以 immutable authoritative evidence 为唯一事实源，派生报告随时可以重算。
+
+
+
+## D-032 — Outcome-enrolled candidate scanner 缺席后必须继续独立市场 follow-up；methodology contract 升级为 v2
+
+**状态：Frozen M4 cohort-followup / methodology-v2 contract**
+
+M4 的 prospective outcome cohort 一旦正式入组，后续不能因为 scanner 不再返回该 harmonic candidate 就停止观察该证券的真实市场路径。否则最终 outcome 样本会系统性偏向“持续被 scanner 看见”的候选，形成 survivorship / informative-censoring 污染。
+
+正式决定：
+
+1. 已正式 `prospective_outcome_eligible=true` 的 candidate，后续完整 capture 日若 scanner 不再返回该 candidate，仍必须记录独立 `cohort_followup_row`；
+2. follow-up 永远保持 `scanner_presence='absent'`，不得伪装成 candidate 仍存在；
+3. follow-up 不拥有 `source_lifecycle_state`、`action_state`、Source PRZ 或 pattern identity，不延长/恢复 harmonic lifecycle；
+4. traded follow-up 必须来自目标 capture 日真实 bar，`underlying_last_trade_date == as_of_trade_date`，并记录 OHLC/volume；execution gate 固定为 `followup_observation_only`；
+5. confirmed full-day suspension follow-up 必须有正面 suspension evidence，保留 prior underlying trade date，OHLC/volume 必须为 null，execution gate 为 `blocked_suspended`；
+6. schema v3 committed transaction 同时封装 scanner-present `journal_rows` 与 scanner-absent `cohort_followup_rows`；
+7. follow-up rows 进入 deterministic transaction identity；篡改 follow-up 必须改变/破坏 transaction identity；
+8. 对 schema v3，每个 capture 的 follow-up keys 必须严格等于：
+   **prior outcome-enrolled cohort keys − current scanner-present keys**；
+   少一条或多一条均 fail closed；
+9. follow-up candidate 必须在此前已经 outcome-enrolled；instrument identity 与 frozen enrollment date 不得漂移；
+10. previously enrolled instrument 若从 initialized listed universe 消失，在没有明确 listing-end protocol 前 hard fail，不允许静默丢失 follow-up；
+11. prospective observation report 对 scanner-absent follow-up 使用真实 market facts，但 lifecycle/action 保持 null；
+12. scanner absence 仍不等于 invalidated；market follow-up 也不等于 scanner reappearance；
+13. Phase 2 仍不计算 return / MFE / MAE / win rate / alpha；follow-up 只是先把未来 outcome 所需的无偏市场路径保存下来；
+14. methodology contract 从 v1 升级为 **v2**；fingerprint 组件由 32 扩为 **37**，新增：
+    - `capture_transaction.py`
+    - `cohort_followup.py`
+    - `lifecycle_transitions.py`
+    - `prospective_observations.py`
+    - `snapshot_manifest.py`
+15. 第一笔 post-T0 committed capture 尚未产生，因此 v2 升级发生在 prospective evidence chain 启动前，不需要迁移/重写历史 future evidence；
+16. frozen T0（2026-09-17）保持不变，仍只是 baseline inventory；
+17. 私有 T1 一键采集最低安全 checkpoint 提升到 `084ddf649e031e8169a761fd3b8578f73b31b5c2`。
+
+原因：
+
+只记录 scanner 是否仍返回 candidate，不足以支撑未来 outcome 研究。candidate 的 scanner identity 可以消失，但证券的真实价格路径仍然继续。D-032 将“形态存在性”和“入组后市场路径”永久分离，并把这组语义纳入 methodology fingerprint，防止样本积累过程中偷偷改变 censoring / follow-up 规则。
