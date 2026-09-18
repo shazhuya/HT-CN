@@ -621,3 +621,25 @@ Remaining evidence gates are external/forward-looking:
 - first post-T0 fingerprinted real-M1 capture;
 - first strict prospective outcome-enrolled candidate;
 - separately preregistered future outcome protocol before performance inference.
+
+
+### One-click T1 handoff
+
+Before asking for the first post-T0 private-M1 run, the local workflow was reduced to one action:
+
+`运行M4真实A股生命周期快照.bat`
+
+It now runs:
+1. authoritative lifecycle capture;
+2. evidence-chain health;
+3. lifecycle transition report;
+4. prospective observation report;
+5. evidence transport-bundle export.
+
+The handoff artifact is:
+`artifacts/reports/m4-evidence-bundle.zip`.
+
+The ZIP is transport-only and records hashes/provenance. It does not become authoritative
+evidence and never repairs committed evidence. If the authoritative store is corrupt, the
+bundle preserves the problematic files for diagnosis so the user does not need to locate
+multiple JSON files manually.
