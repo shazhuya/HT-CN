@@ -198,8 +198,9 @@ def build_bundle(
         "is_trade_instruction": False,
         "authoritative_evidence_modified": False,
         "interpretation": (
-            "This ZIP is a transport bundle only. Authoritative evidence remains "
-            "the frozen baseline plus immutable committed capture transactions."
+            "This ZIP is a transport bundle only. Enrollment authority remains "
+            "the frozen baseline plus immutable committed capture transactions. "
+            "Outcome snapshots are separate immutable derived research evidence."
         ),
         "files": file_records,
     }
