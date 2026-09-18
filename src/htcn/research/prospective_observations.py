@@ -23,6 +23,9 @@ class ProspectiveObservation:
     action_state: str | None
     execution_context_gate: str | None
     context_integrity_summary: str | None
+    price_mode: str | None
+    price_basis_id: str | None
+    price_basis_matches_enrollment: bool | None
     next_key_price: float | None
     next_key_price_role: str | None
     source_terminal_trade_date: str | None
@@ -137,6 +140,8 @@ def build_prospective_observation_report(
         followup_by_date[as_of][key] = row
 
     enrollment: dict[str, str] = {}
+    enrollment_price_mode: dict[str, str] = {}
+    enrollment_price_basis: dict[str, str] = {}
     instrument_by_key: dict[str, str] = {}
     for row in normalized:
         key = str(row["candidate_key"])
@@ -151,6 +156,27 @@ def build_prospective_observation_report(
                     f"{previous} != {value}"
                 )
             enrollment[key] = value
+            if str(row.get("as_of_trade_date") or "") == value:
+                mode = str(row.get("price_mode") or "")
+                basis = str(row.get("price_basis_id") or "")
+                if not mode or not basis:
+                    raise ValueError(
+                        f"candidate {key} enrollment is missing price basis provenance"
+                    )
+                prior_mode = enrollment_price_mode.get(key)
+                prior_basis = enrollment_price_basis.get(key)
+                if prior_mode is not None and prior_mode != mode:
+                    raise ValueError(
+                        f"candidate {key} enrollment price_mode drift: "
+                        f"{prior_mode} != {mode}"
+                    )
+                if prior_basis is not None and prior_basis != basis:
+                    raise ValueError(
+                        f"candidate {key} enrollment price_basis_id drift: "
+                        f"{prior_basis} != {basis}"
+                    )
+                enrollment_price_mode[key] = mode
+                enrollment_price_basis[key] = basis
 
     instrument_by_key_from_followup: dict[str, str] = {}
     for as_of, items in followup_by_date.items():
@@ -204,6 +230,14 @@ def build_prospective_observation_report(
         absent_count = 0
         suspended_count = 0
         absent_market_followup_count = 0
+        basis_drift_count = 0
+        first_basis_drift_date: str | None = None
+        enrolled_basis = enrollment_price_basis.get(key)
+        enrolled_mode = enrollment_price_mode.get(key)
+        if not enrolled_basis or not enrolled_mode:
+            raise ValueError(
+                f"candidate {key} missing frozen enrollment price basis"
+            )
 
         for captured_index, as_of in enumerate(observation_dates):
             row = by_date[as_of].get(key)
@@ -243,6 +277,21 @@ def build_prospective_observation_report(
                             else str(followup.get("execution_context_gate"))
                         ),
                         context_integrity_summary=None,
+                        price_mode=(
+                            None
+                            if followup.get("price_mode") is None
+                            else str(followup.get("price_mode"))
+                        ),
+                        price_basis_id=(
+                            None
+                            if followup.get("price_basis_id") is None
+                            else str(followup.get("price_basis_id"))
+                        ),
+                        price_basis_matches_enrollment=(
+                            None
+                            if followup.get("price_basis_id") is None
+                            else str(followup.get("price_basis_id")) == enrolled_basis
+                        ),
                         next_key_price=None,
                         next_key_price_role=None,
                         source_terminal_trade_date=None,
@@ -282,6 +331,9 @@ def build_prospective_observation_report(
                         action_state=None,
                         execution_context_gate=None,
                         context_integrity_summary=None,
+                        price_mode=None,
+                        price_basis_id=None,
+                        price_basis_matches_enrollment=None,
                         next_key_price=None,
                         next_key_price_role=None,
                         source_terminal_trade_date=None,
@@ -295,6 +347,12 @@ def build_prospective_observation_report(
                         as_of_close=None,
                         as_of_volume=None,
                     )
+                if (
+                    observation.price_basis_matches_enrollment is False
+                ):
+                    basis_drift_count += 1
+                    if first_basis_drift_date is None:
+                        first_basis_drift_date = as_of
                 observations.append(observation)
                 continue
 
@@ -322,8 +380,7 @@ def build_prospective_observation_report(
             if lifecycle:
                 first_state_date.setdefault(lifecycle, as_of)
 
-            observations.append(
-                ProspectiveObservation(
+            present_observation = ProspectiveObservation(
                     candidate_key=key,
                     instrument_id=instrument_by_key[key],
                     outcome_enrollment_trade_date=enrolled,
@@ -347,6 +404,21 @@ def build_prospective_observation_report(
                         None
                         if row.get("context_integrity_summary") is None
                         else str(row.get("context_integrity_summary"))
+                    ),
+                    price_mode=(
+                        None
+                        if row.get("price_mode") is None
+                        else str(row.get("price_mode"))
+                    ),
+                    price_basis_id=(
+                        None
+                        if row.get("price_basis_id") is None
+                        else str(row.get("price_basis_id"))
+                    ),
+                    price_basis_matches_enrollment=(
+                        None
+                        if row.get("price_basis_id") is None
+                        else str(row.get("price_basis_id")) == enrolled_basis
                     ),
                     next_key_price=_float_or_none(row.get("next_key_price")),
                     next_key_price_role=(
@@ -377,12 +449,21 @@ def build_prospective_observation_report(
                     as_of_close=_float_or_none(row.get("as_of_close")),
                     as_of_volume=_float_or_none(row.get("as_of_volume")),
                 )
-            )
+            if present_observation.price_basis_matches_enrollment is False:
+                basis_drift_count += 1
+                if first_basis_drift_date is None:
+                    first_basis_drift_date = as_of
+            observations.append(present_observation)
 
         candidate_summaries.append({
             "candidate_key": key,
             "instrument_id": instrument_by_key[key],
             "outcome_enrollment_trade_date": enrolled,
+            "enrollment_price_mode": enrolled_mode,
+            "enrollment_price_basis_id": enrolled_basis,
+            "price_basis_drift_snapshot_count": basis_drift_count,
+            "first_price_basis_drift_date": first_basis_drift_date,
+            "price_basis_stable_across_observations": basis_drift_count == 0,
             "captured_snapshot_count": len(observation_dates),
             "present_snapshot_count": present_count,
             "absent_snapshot_count": absent_count,
@@ -428,6 +509,8 @@ def build_prospective_observation_report(
             "scanner_absence_is_invalidation": False,
             "scanner_absent_market_followup_supported": True,
             "followup_changes_scanner_presence": False,
+            "price_basis_drift_is_auto_rebased": False,
+            "price_basis_drift_requires_future_outcome_protocol": True,
             "confirmed_suspension_is_traded_observation": False,
             "return_metrics_computed": False,
             "profit_threshold_defined": False,
