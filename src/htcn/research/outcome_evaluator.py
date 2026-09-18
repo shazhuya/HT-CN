@@ -217,11 +217,9 @@ def _enrollment_seed(
     return dict(seed)
 
 
-def canonical_market_path_hash(
+def canonical_market_path_rows(
     frame: pd.DataFrame,
-    *,
-    price_basis_id: str,
-) -> str:
+) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for row in frame.itertuples(index=False):
         rows.append({
@@ -232,9 +230,17 @@ def canonical_market_path_hash(
             "close": float(row.close),
             "volume": float(row.volume),
         })
+    return rows
+
+
+def canonical_market_path_hash(
+    frame: pd.DataFrame,
+    *,
+    price_basis_id: str,
+) -> str:
     payload = {
         "price_basis_id": str(price_basis_id),
-        "rows": rows,
+        "rows": canonical_market_path_rows(frame),
     }
     return sha256(_canonical_json(payload).encode("utf-8")).hexdigest()
 
@@ -368,6 +374,7 @@ def _base_result(
         "current_price_basis_id": current_price_basis_id,
         "market_path_trade_dates": path_dates,
         "market_path_traded_bar_count": len(path_dates),
+        "market_path_rows": canonical_market_path_rows(market_path),
         "market_path_sha256": canonical_market_path_hash(
             market_path,
             price_basis_id=current_price_basis_id,
