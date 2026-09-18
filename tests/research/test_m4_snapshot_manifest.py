@@ -96,7 +96,11 @@ def test_capture_timeline_allows_legacy_t0_before_manifest_activation() -> None:
 
 
 def test_capture_timeline_keeps_zero_candidate_manifest_date() -> None:
-    journal = [{"as_of_trade_date": "2026-09-17", "code_head": "old"}]
+    journal = [
+        {"as_of_trade_date": "2026-09-17", "code_head": "old"},
+        {"as_of_trade_date": "2026-09-19", "code_head": "h", "candidate_key": "a"},
+        {"as_of_trade_date": "2026-09-19", "code_head": "h", "candidate_key": "b"},
+    ]
     manifest = [
         _manifest_row("2026-09-18", candidates=0),
         _manifest_row("2026-09-19", candidates=2),
