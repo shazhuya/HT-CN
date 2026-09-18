@@ -46,3 +46,17 @@ def test_methodology_identity_fails_closed_on_missing_component(tmp_path) -> Non
         assert "methodology fingerprint source missing" in str(exc)
     else:
         raise AssertionError("missing methodology component must fail closed")
+
+
+def test_methodology_identity_covers_advanced_harmonic_state_files() -> None:
+    required = {
+        "src/htcn/harmonic/five_zero_source.py",
+        "src/htcn/harmonic/indicators.py",
+        "src/htcn/harmonic/lifecycle.py",
+        "src/htcn/harmonic/rsi_bamm.py",
+        "src/htcn/harmonic/rsi_bamm_confluence.py",
+        "src/htcn/harmonic/rsi_bamm_lifecycle.py",
+        "src/htcn/harmonic/source_lifecycle.py",
+        "scripts/m4_capture_lifecycle_snapshot.py",
+    }
+    assert required.issubset(set(METHODOLOGY_RELATIVE_PATHS))
