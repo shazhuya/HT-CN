@@ -26,11 +26,12 @@ set EXIT_CODE=%ERRORLEVEL%
 
 echo.
 if %EXIT_CODE% EQU 0 (
-  echo [HT-CN M4] Snapshot appended successfully.
+  echo [HT-CN M4] Authoritative capture committed and evidence health passed.
 ) else (
-  echo [HT-CN M4] Snapshot failed. Journal was not partially appended.
+  echo [HT-CN M4] Capture did not reach authoritative PASS. Check the report.
 )
-echo Report:  artifacts\reports\m4-lifecycle-snapshot.json
-echo Journal: data\research\m4\lifecycle_journal.jsonl
+echo Report:       artifacts\reports\m4-lifecycle-snapshot.json
+echo Transactions: data\research\m4\captures
+echo Journal mirror: data\research\m4\lifecycle_journal.jsonl
 pause
 exit /b %EXIT_CODE%

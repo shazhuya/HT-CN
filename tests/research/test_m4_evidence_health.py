@@ -118,3 +118,55 @@ def test_empty_frozen_baseline_marker_does_not_block_health(tmp_path) -> None:
     assert health["blocker_count"] == 0
     assert health["frozen_legacy_baseline_present"] is True
     assert health["transition_evidence_chain_ready"] is True
+
+
+def test_corrupt_committed_transaction_becomes_structured_health_blocker(tmp_path) -> None:
+    import json
+    from pathlib import Path
+
+    root = _store(tmp_path)
+    capture_files = list(Path(root).glob("????-??-??__*.json"))
+    assert len(capture_files) == 1
+    path = capture_files[0]
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["worktree_clean"] = False
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    health = build_evidence_chain_health(
+        transaction_root=root,
+        journal_path=tmp_path / "journal.jsonl",
+        manifest_path=tmp_path / "manifest.jsonl",
+    )
+    assert health["status"] == "not_ready"
+    assert health["transition_evidence_chain_ready"] is False
+    assert health["blockers"][0]["code"] == "committed_capture_read_error"
+
+
+def test_missing_frozen_baseline_marker_is_structured_blocker(tmp_path) -> None:
+    root = tmp_path / "captures"
+    root.mkdir()
+    capture = build_committed_capture(
+        code_head="h",
+        as_of_trade_date="2026-09-18",
+        captured_at_utc="t",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        worktree_clean=True,
+        journal_rows=[_row("new", "2026-09-18", "h")],
+    )
+    commit_capture_transaction(root, capture)
+
+    health = build_evidence_chain_health(
+        transaction_root=root,
+        journal_path=tmp_path / "journal.jsonl",
+        manifest_path=tmp_path / "manifest.jsonl",
+    )
+    assert health["status"] == "not_ready"
+    assert any(
+        item["code"] == "frozen_legacy_baseline_missing"
+        for item in health["blockers"]
+    )
+    assert health["mirror_integrity"]["journal_mirror_status"] == (
+        "not_checked_authoritative_blocker"
+    )
