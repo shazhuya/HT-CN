@@ -60,8 +60,8 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 
 ## Methodology provenance — D-028
 
-- [x] New authoritative captures use transaction schema v2.
-- [x] Every v2 capture stores methodology contract version + deterministic SHA-256 fingerprint.
+- [x] Current authoritative captures use transaction schema v3; schema v2 is historical Phase 2.8 provenance.
+- [x] Every fingerprinted capture stores methodology contract version + deterministic SHA-256 fingerprint.
 - [x] Methodology identity participates in the transaction ID.
 - [x] Fingerprint coverage includes candidate identity, ratios, Source PRZ/lifecycle,
   RSI BAMM, Shark/5-0 source handling and prospective-enrollment code.
@@ -69,7 +69,7 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 - [x] One active committed chain may contain only one methodology identity.
 - [x] Current-code methodology mismatch is an evidence-health hard blocker.
 - [x] Pre-fingerprint schema-v1 captures remain readable only for migration audit.
-- [x] A schema-v1 chain cannot silently accept a schema-v2 append.
+- [x] Older schema chains cannot silently accept a schema-v3 append; mixed transaction schemas fail closed.
 - [x] Compatibility manifest and mirror integrity expose/check methodology identity.
 - [x] Transition and prospective-observation reports expose authoritative methodology identity.
 - [x] Frozen T0 is not rewritten merely to attach a new fingerprint.
@@ -78,11 +78,23 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 
 - [x] Production capture path passes methodology identity into `build_committed_capture`.
 - [x] Modified research test fixtures pass methodology identity into committed-capture builders.
-- [x] Methodology fingerprint component tree audit: 32 / 32 paths present.
+- [x] Methodology v2 fingerprint component tree audit: 37 / 37 paths present.
 - [x] Evidence-health reports structured blockers rather than mutating evidence.
 - [x] Project context, decision log, session log and PR description are aligned to Phase 2.8.
 
+## Outcome cohort follow-up — D-032
+
+- [x] Schema v3 stores scanner-present journal rows separately from scanner-absent cohort follow-up rows.
+- [x] Follow-up coverage equals prior outcome-enrolled cohort minus current scanner-present candidates.
+- [x] Missing or extra follow-up rows fail closed.
+- [x] Traded follow-up preserves current-day OHLC/volume without creating lifecycle state.
+- [x] Full-day suspension follow-up preserves event provenance without synthetic OHLC.
+- [x] Prospective observation reports consume follow-up market facts while scanner presence remains absent.
+- [x] Methodology contract v2 fingerprints 37 files, including capture chronology, enrollment normalization and follow-up semantics.
+- [x] No post-T0 fingerprinted future capture existed before methodology-v2 freeze.
+
 ## One-click private-M1 handoff
+
 
 - [x] Local checkout preflight runs before any private M1 update or authoritative capture.
 - [x] Preflight requires the frozen M4 branch, minimum safe checkpoint ancestry and a clean worktree.
