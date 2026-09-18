@@ -65,12 +65,16 @@ def _journal_signature(rows: list[dict[str, Any]]) -> list[tuple[str, str, str]]
     )
 
 
-def _manifest_signature(rows: list[dict[str, Any]]) -> list[tuple[str, int, str]]:
+def _manifest_signature(
+    rows: list[dict[str, Any]],
+) -> list[tuple[str, int, str, str, str]]:
     return sorted(
         (
             str(row.get("as_of_trade_date") or ""),
             int(row.get("candidate_count") or 0),
             str(row.get("capture_transaction_id") or ""),
+            str(row.get("methodology_contract_version") or ""),
+            str(row.get("methodology_fingerprint") or ""),
         )
         for row in rows
     )
