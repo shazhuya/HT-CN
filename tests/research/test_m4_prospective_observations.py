@@ -23,6 +23,10 @@ def _row(date: str, key: str, *, state: str = "waiting_terminal"):
         "eligible_for_validation": True,
         "price_mode": "qfq",
         "price_basis_id": "qfq:" + "1" * 64,
+        "source_signal_trade_date": "2026-09-16",
+        "source_signal_clock_basis": "last_frontier_pivot_confirmed_at=index+scale",
+        "source_reaction_anchor_label": "A",
+        "source_reaction_anchor_price": 100.0,
         "source_prz_low": 90.0,
         "source_prz_high": 92.0,
         "source_terminal_trade_date": None,
@@ -58,6 +62,19 @@ def test_enrolled_candidate_tracks_present_snapshots_and_milestones() -> None:
     assert all(item["scanner_presence"] == "present" for item in observations)
     summary = report["candidate_summaries"][0]
     assert summary["outcome_enrollment_trade_date"] == "2026-09-18"
+    assert summary["enrollment_source_clock_seed"] == {
+        "pattern_id": "abcd",
+        "schema": "ABCD",
+        "direction": "bullish",
+        "scale": 5,
+        "source_lifecycle_state": "waiting_terminal",
+        "source_prz_low": 90.0,
+        "source_prz_high": 92.0,
+        "source_signal_trade_date": "2026-09-16",
+        "source_signal_clock_basis": "last_frontier_pivot_confirmed_at=index+scale",
+        "source_reaction_anchor_label": "A",
+        "source_reaction_anchor_price": 100.0,
+    }
     assert summary["first_source_terminal_trade_date"] == "2026-09-18"
     assert summary["first_lifecycle_state_observed"]["type_i_confirmed"] == "2026-09-19"
 
