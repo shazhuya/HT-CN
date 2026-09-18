@@ -68,6 +68,7 @@ def test_transport_bundle_contains_manifest_and_available_reports(tmp_path) -> N
         assert "reports/m4-m1-update.log" in names
         assert "reports/m4-lifecycle-snapshot.json" in names
         assert "reports/m4-outcome-v1.json" in names
+        assert "protocols/m4-outcome-protocol-v1.json" in names
         manifest = json.loads(
             archive.read("bundle-manifest.json").decode("utf-8")
         )
