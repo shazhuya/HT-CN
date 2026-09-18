@@ -34,6 +34,8 @@ def _row(key: str, date: str, head: str):
         "next_key_price_role": "source_prz_terminal_side",
         "execution_context_gate": "tradable",
         "context_integrity_summary": "complete",
+        "price_mode": "qfq",
+        "price_basis_id": "qfq:" + "1" * 64,
         "source_prz_low": 90.0,
         "source_prz_high": 92.0,
         "source_terminal_trade_date": None,
