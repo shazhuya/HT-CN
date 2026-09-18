@@ -5,6 +5,7 @@ import json
 from htcn.app.operator_snapshot import (
     OPERATOR_SNAPSHOT_CONTRACT_VERSION,
     build_or_load_operator_snapshot,
+    evaluate_operator_snapshot_readiness,
     operator_universe_hash,
 )
 
@@ -200,3 +201,38 @@ def test_operator_snapshot_does_not_cache_stale_queue_as_current_date(
     assert payload["product_cache"]["status"] == "live_not_cached"
     assert payload["product_cache"]["freshness"] == "stale"
     assert list(tmp_path.glob("*.json")) == []
+
+
+
+def test_operator_snapshot_readiness_requires_zero_failures_and_current_cache(
+    tmp_path,
+) -> None:
+    service = CountingService()
+    payload = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+    )
+
+    ready, reasons = evaluate_operator_snapshot_readiness(payload)
+
+    assert ready is True
+    assert reasons == ()
+
+
+def test_operator_snapshot_readiness_rejects_partial_product_handoff() -> None:
+    payload = {
+        "observation_integrity": "single_as_of",
+        "instrument_count": 3,
+        "analyzed_instrument_count": 2,
+        "failed_instrument_count": 1,
+        "as_of_trade_date": "2026-09-18",
+        "product_cache": {"freshness": "current"},
+    }
+
+    ready, reasons = evaluate_operator_snapshot_readiness(payload)
+
+    assert ready is False
+    assert "instrument_failures:1" in reasons
+    assert "analysis_coverage_incomplete:2/3" in reasons
