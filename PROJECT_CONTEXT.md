@@ -1498,3 +1498,29 @@ D-044 freezes the cache as product acceleration only:
 - no M4 writes；
 - no harmonic/PRZ/lifecycle mutation。
 
+## M5 Phase 4 closeout — Full-Universe Operator Index green
+
+Validated checkpoint:
+
+`61bde476e0609d20c4018107e835289ce3c4726b`
+
+Actions run #1543:
+
+- overall success；
+- Python 629 passed；
+- Web build success；
+- Playwright 20 passed；
+- browser evidence upload success。
+
+Implemented:
+
+- full initialized local universe scan/cache；
+- legacy UI limit ignored for scan scope；
+- explicit operator_index provenance；
+- code/pattern/lifecycle/action search；
+- action/lifecycle/pattern/direction filters；
+- local presentation pagination；
+- 10,000-instrument symbol picker。
+
+D-045 freezes the rule that presentation never defines the scan universe.
+
