@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `8833d1d78bc266fc26efff92bd0a89204cb5ec12`
-context_checkpoint_title: `M4 Phase 3.1 code-side closeout: outcome-v2 + hosted CI green`
+context_checkpoint: `106c53da04dab0c3fcc9d03d6b2148106128ff77`
+context_checkpoint_title: `M4 T1 acquisition gate frozen to hosted-CI-green Phase 3.1`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -1139,4 +1139,49 @@ on the user's private M1 checkout after updating to a HEAD containing the Phase 
 `artifacts/reports/m4-evidence-bundle.zip`
 
 After that bundle is supplied, assistant-side intake must independently verify capture authority + prospective enrollment + outcome evidence. D-023 remains active: no routine user-PC QA.
+
+## M4 T1 acquisition gate — D-038
+
+第一次真实 post-T0 private-M1 capture 的本地 minimum-safe gate 已提升。
+
+必须包含的 hosted-CI-green ancestor：
+
+`d29870d3a2ef7b60dec4fd8f0dbef2d7a8f0b5a7`
+
+wrapper/test implementation checkpoint：
+
+`106c53da04dab0c3fcc9d03d6b2148106128ff77`
+
+GitHub Actions run #1414 已验证该 wrapper gate 本身：
+
+- Python deterministic tests：success；
+- Node setup：success；
+- web dependencies：success；
+- Web build：success；
+- M4 Playwright：按现有 M2/M3-only predicate 预期 skip。
+
+freeze audit：
+
+- capture methodology changed components：0 / 37；
+- outcome engine changed components：0 / 4。
+
+这意味着：
+
+- 本地如果还停留在旧 checkout，脚本会在触碰 M1 前直接拒绝；
+- 用户不需要手工判断“这个版本够不够新”；
+- 这不是 methodology version bump；
+- 这不是 Outcome Engine version bump；
+- T1 真正剩下的唯一不可替代动作仍是 private-M1 one-click capture。
+
+### 当前下一步
+
+更新本地 `m4/real-a-share-validation-workflow` 到包含 D-038 gate 的最新版本，保持 worktree clean，然后仅运行一次：
+
+`运行M4真实A股生命周期快照.bat`
+
+成功后只需要保留/上传：
+
+`artifacts/reports/m4-evidence-bundle.zip`
+
+其余验收继续由 assistant 完成。
 
