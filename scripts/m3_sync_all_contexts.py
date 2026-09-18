@@ -144,6 +144,25 @@ def _error(exc: Exception) -> str:
     return f"{type(exc).__name__}: {exc}"
 
 
+def _is_external_source_error(exc: Exception) -> bool:
+    text = _error(exc).lower()
+    markers = (
+        "connectionerror",
+        "remote disconnected",
+        "remotedisconnected",
+        "readtimeout",
+        "connecttimeout",
+        "timed out",
+        "max retries exceeded",
+        "proxyerror",
+        "sslerror",
+        "connection aborted",
+        "name resolution",
+        "temporary failure",
+    )
+    return any(marker in text for marker in markers)
+
+
 def _sync_benchmarks(
     provider: AkShareProvider,
     *,
@@ -211,6 +230,7 @@ def _sync_industry(
     )
     result["membership_refresh_needed"] = refresh
     membership_degraded = False
+    membership_external_unavailable = False
     if refresh:
         try:
             result["membership"] = sync_industry_memberships(
@@ -218,8 +238,13 @@ def _sync_industry(
             )
         except Exception as exc:
             membership_degraded = True
+            membership_external_unavailable = _is_external_source_error(exc)
             result["membership"] = {
-                "status": "refresh_failed_previous_snapshot_preserved",
+                "status": (
+                    "refresh_external_unavailable_previous_snapshot_preserved"
+                    if membership_external_unavailable
+                    else "refresh_failed_previous_snapshot_preserved"
+                ),
                 "error": _error(exc),
             }
     else:
@@ -233,7 +258,11 @@ def _sync_industry(
         result["snapshot_trade_date"] = target.isoformat()
         result["state"] = "degraded" if membership_degraded else "current"
     except Exception as exc:
-        result["state"] = "failed"
+        result["state"] = (
+            "external_unavailable"
+            if membership_external_unavailable
+            else "failed"
+        )
         result["snapshot_error"] = _error(exc)
     return result
 
@@ -254,6 +283,7 @@ def _sync_concepts(
     )
     result["membership_refresh_needed"] = refresh
     membership_degraded = False
+    membership_external_unavailable = False
     if refresh:
         try:
             result["membership"] = sync_concept_memberships(
@@ -264,8 +294,13 @@ def _sync_concepts(
             )
         except Exception as exc:
             membership_degraded = True
+            membership_external_unavailable = _is_external_source_error(exc)
             result["membership"] = {
-                "status": "refresh_failed_previous_snapshot_preserved",
+                "status": (
+                    "refresh_external_unavailable_previous_snapshot_preserved"
+                    if membership_external_unavailable
+                    else "refresh_failed_previous_snapshot_preserved"
+                ),
                 "error": _error(exc),
             }
     else:
@@ -279,7 +314,11 @@ def _sync_concepts(
         result["snapshot_trade_date"] = target.isoformat()
         result["state"] = "degraded" if membership_degraded else "current"
     except Exception as exc:
-        result["state"] = "failed"
+        result["state"] = (
+            "external_unavailable"
+            if membership_external_unavailable
+            else "failed"
+        )
         result["snapshot_error"] = _error(exc)
     return result
 
