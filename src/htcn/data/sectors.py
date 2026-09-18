@@ -275,19 +275,31 @@ def _read_local_market_window(
 ) -> pd.DataFrame:
     root = Path(data_root)
     parts: list[str] = []
-    for directory, priority in ((root / "daily", 0), (root / "daily_delta", 1)):
-        if directory.exists() and any(directory.glob("*.parquet")):
+    with duckdb.connect() as con:
+        for directory, priority in ((root / "daily", 0), (root / "daily_delta", 1)):
+            if not directory.exists() or not any(directory.glob("*.parquet")):
+                continue
             glob = (directory / "*.parquet").as_posix().replace("'", "''")
+            schema = {
+                str(row[0])
+                for row in con.execute(
+                    f"DESCRIBE SELECT * FROM read_parquet('{glob}', union_by_name=true)"
+                ).fetchall()
+            }
+            pct_expr = (
+                "pct_change"
+                if "pct_change" in schema
+                else "CAST(NULL AS DOUBLE) AS pct_change"
+            )
             parts.append(f"""
                 SELECT instrument_id, CAST(trade_date AS DATE) AS trade_date,
-                       close, volume, pct_change, {priority} AS source_priority
+                       close, volume, {pct_expr}, {priority} AS source_priority
                 FROM read_parquet('{glob}', union_by_name=true)
                 WHERE CAST(trade_date AS DATE) BETWEEN DATE '{start.isoformat()}'
                                                    AND DATE '{end.isoformat()}'
             """)
-    if not parts:
-        return pd.DataFrame()
-    with duckdb.connect() as con:
+        if not parts:
+            return pd.DataFrame()
         frame = con.execute(" UNION ALL ".join(parts)).df()
     if frame.empty:
         return frame
@@ -298,7 +310,6 @@ def _read_local_market_window(
         .drop(columns=["source_priority"])
         .reset_index(drop=True)
     )
-
 
 def _compound(values: list[float]) -> float:
     product = 1.0
@@ -318,24 +329,6 @@ def _metrics(
         .set_index("trade_date") if not bars.empty else pd.DataFrame()
     )
 
-    def horizon(sessions: int) -> float | None:
-        window = trade_days[-sessions:]
-        if len(window) < sessions:
-            return None
-        if list_date is not None and list_date > window[0].date():
-            return None
-        values: list[float] = []
-        for day in window:
-            if isinstance(by_date, pd.DataFrame) and not by_date.empty and day in by_date.index:
-                value = by_date.loc[day, "pct_change"]
-                if isinstance(value, pd.Series):
-                    value = value.iloc[-1]
-                numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
-                values.append(0.0 if pd.isna(numeric) else float(numeric))
-            else:
-                values.append(0.0)
-        return _compound(values)
-
     closes = pd.Series(index=pd.DatetimeIndex(trade_days), dtype=float)
     volumes = pd.Series(index=pd.DatetimeIndex(trade_days), dtype=float)
     if isinstance(by_date, pd.DataFrame) and not by_date.empty:
@@ -348,6 +341,47 @@ def _metrics(
                     pd.Series([row.get("volume")]), errors="coerce"
                 ).iloc[0]
     closes = closes.ffill()
+
+    def horizon(sessions: int) -> float | None:
+        window = trade_days[-sessions:]
+        if len(window) < sessions:
+            return None
+        if list_date is not None and list_date > window[0].date():
+            return None
+
+        pct_values: list[float] = []
+        pct_complete_for_observed_bars = True
+        for day in window:
+            if isinstance(by_date, pd.DataFrame) and not by_date.empty and day in by_date.index:
+                value = by_date.loc[day, "pct_change"] if "pct_change" in by_date.columns else None
+                if isinstance(value, pd.Series):
+                    value = value.iloc[-1]
+                numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
+                if pd.isna(numeric):
+                    pct_complete_for_observed_bars = False
+                    break
+                pct_values.append(float(numeric))
+            else:
+                # A listed constituent with no bar on a market session is treated as
+                # unchanged for that session (for example a full-day suspension).
+                pct_values.append(0.0)
+        if pct_complete_for_observed_bars:
+            return _compound(pct_values)
+
+        # Some old/failover parquet sets do not carry pct_change. Fall back to a
+        # transparent local close-to-close return rather than inventing zero returns.
+        if len(trade_days) <= sessions:
+            return None
+        start_day = trade_days[-sessions - 1]
+        end_day = trade_days[-1]
+        if list_date is not None and list_date > start_day.date():
+            return None
+        start_close = closes.loc[start_day]
+        end_close = closes.loc[end_day]
+        if pd.isna(start_close) or pd.isna(end_close) or float(start_close) <= 0:
+            return None
+        return 100.0 * (float(end_close) / float(start_close) - 1.0)
+
     above = None
     last20 = closes.iloc[-20:]
     if len(last20) == 20 and not last20.isna().any():
@@ -366,7 +400,6 @@ def _metrics(
         "above_ma20": above,
         "volume_ratio_20": volume_ratio,
     }
-
 
 def _avg(values: list[float]) -> float | None:
     return None if not values else float(pd.Series(values, dtype=float).mean())
