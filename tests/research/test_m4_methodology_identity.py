@@ -68,8 +68,8 @@ def test_methodology_identity_covers_advanced_harmonic_state_files() -> None:
 
 
 
-def test_methodology_v2_covers_prospective_evidence_semantics() -> None:
-    assert METHODOLOGY_CONTRACT_VERSION == 2
+def test_methodology_v3_covers_prospective_evidence_semantics() -> None:
+    assert METHODOLOGY_CONTRACT_VERSION == 3
     assert len(METHODOLOGY_RELATIVE_PATHS) == 37
     required = {
         "src/htcn/research/capture_transaction.py",
