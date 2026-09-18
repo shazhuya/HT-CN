@@ -396,3 +396,31 @@ Implementation fix commit: `d28215bbae682169a8ac47ddf48399bfdf50d05a`.
 
 ### 下一步唯一主任务
 在用户真实 M1 数据上生成 M4 T0 prospective snapshot。
+
+
+## M4 Phase 1.4 / 2026-09-18
+
+User corrected workflow: assistant must not use the user's PC as a routine test runner. D-023 is frozen.
+
+Assistant-side review of uploaded T0:
+- snapshot status pass;
+- 55/55 instruments successful;
+- 87 unique candidates;
+- single HEAD / single as-of date;
+- no 5-0;
+- no alpha inference / trade instruction;
+- 11 rows already had a Source Terminal date before T0;
+- therefore T0 is baseline inventory, not from-formation prospective evidence.
+
+Implementation:
+- `43822e3e441850d0b0e79320cec14542b5187377`: baseline_existing vs prospective_new enrollment;
+- `506f38be16199346eced18f94702c905067b3b95`: factual transition engine;
+- `3b2975a86aede8ae1597de8c2dcc5e2466b2d154`: scanner reappearance identity preservation;
+- `3c1fc9f2fc25b44b32f87a3ce6c92b3a90405f35`: derived transition report;
+- `d84de859af666b25e2c623ebfc736805d31e89b0`: prospective outcome eligibility isolated from generic validation;
+- `4096e19ceb586df0a48d144cb09b07dc7b85ca1c`: transition report exposes outcome-eligible row count.
+
+Current T0 normalization:
+- baseline_existing = 87;
+- prospective_outcome_eligible = 0;
+- no transition/outcome claim is permitted yet.

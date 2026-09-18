@@ -79,3 +79,35 @@ Do not infer:
 - buy/sell ranking;
 
 until a separately frozen statistical protocol exists and enough prospective observations accumulate.
+
+
+## Cohort enrollment
+
+T0 is a baseline inventory.
+
+- candidates present at T0 are `baseline_existing`;
+- candidates first seen after T0 are `prospective_new`;
+- only `prospective_new` rows are `prospective_outcome_eligible=true`;
+- baseline rows may be used for structural continuity and observability, but not future outcome-rate estimation;
+- legacy T0 rows without enrollment fields are normalized as baseline automatically.
+
+## Transition semantics
+
+The derived transition layer is factual, not ranked.
+
+Allowed transition kinds:
+
+- `baseline_observed`;
+- `new_candidate`;
+- `persisted_same_state`;
+- `lifecycle_changed`;
+- `action_changed_only`;
+- `scanner_disappeared`;
+- `scanner_reappeared`.
+
+Important boundaries:
+
+- scanner disappearance is **not** invalidation;
+- no linear lifecycle ranking is used because Type-I failure / reaction-only / Type-II branches are not one ordinal ladder;
+- reappearing candidates keep their original cohort and first-observed date;
+- the append-only journal remains source-of-truth; transition reports are derived and disposable.

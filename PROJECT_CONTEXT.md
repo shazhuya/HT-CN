@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `43822e3e441850d0b0e79320cec14542b5187377`
-context_checkpoint_title: `M4 Phase 1.1: baseline-vs-prospective enrollment and local-machine-minimization policy`
+context_checkpoint: `4096e19ceb586df0a48d144cb09b07dc7b85ca1c`
+context_checkpoint_title: `M4 Phase 1.4: baseline/prospective cohort isolation and factual transition engine`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -510,17 +510,26 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M4 Phase 1 — 生成第一份真实 prospective 生命周期快照并建立 transition baseline。**
+**M4 Phase 1 — T0 基线质量审计完成，等待下一真实交易日的最小数据采集。**
 
-执行顺序：
+当前已完成且无需用户本机重复测试：
 
-1. 用户本机切换到 `m4/real-a-share-validation-workflow`；
-2. 运行 `运行M4真实A股生命周期快照.bat`；
-3. 核查全部 initialized SSE/SZSE 是否同一最新交易日、零失败；
-4. 第一日 journal 作为 T0 **baseline inventory**；T0 已存在候选标记 baseline_existing，不冒充从 formation 开始的 prospective 样本；
-5. T0 之后首次出现的 candidate 才标记 prospective_new；
-6. 第二个真实交易日开始，建立 candidate lifecycle transition 对比；
-6. 在至少积累若干真实交易日之前，不把状态频数解释成胜率/alpha。
+1. T0 87 个候选全部归类为 `baseline_existing`；
+2. T0 `prospective_outcome_eligible=0`，不会进入未来胜率/收益 outcome cohort；
+3. lifecycle transition engine 已支持：
+   - baseline_observed；
+   - new_candidate；
+   - persisted_same_state；
+   - lifecycle_changed；
+   - action_changed_only；
+   - scanner_disappeared；
+   - scanner_reappeared；
+4. scanner disappearance 不等于 invalidated；
+5. 不使用线性 lifecycle rank；
+6. legacy T0 journal 自动兼容，不要求用户重新生成；
+7. transition report 从 append-only journal 派生，不维护第二份可漂移状态数据库。
+
+下一步只在出现**新的真实交易日私有 M1 数据**时需要一次最小本地 snapshot 采集；在此之前，assistant 不再要求用户本机执行 QA / Python / Web / Playwright。
 
 
 ## 固定 Source / Product 边界
