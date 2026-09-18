@@ -495,3 +495,32 @@ M4 前瞻证据不能只依赖 `code_head` 判断方法是否相同。普通文�
 - pre-fingerprint schema-v1 explicit migration regression；
 - evidence-health current-vs-chain mismatch hard blocker；
 - compatibility manifest methodology drift detection / repair regression。
+
+
+## D-029 — 私有 M1 前瞻采集必须在更新数据前通过本地 checkout preflight
+
+**状态：Frozen M4 private-capture preflight contract**
+
+用户电脑只用于 assistant 无法访问的私有 M1 数据采集，不承担常规测试。第一次及后续 prospective capture 在触碰 M1 数据前，必须先证明本地 checkout 满足冻结协议。
+
+正式决定：
+
+1. `运行M4真实A股生命周期快照.bat` 在任何 M1 update 前执行 preflight；
+2. 必须位于 `m4/real-a-share-validation-workflow`；
+3. 当前 HEAD 必须包含最低安全 checkpoint `3bd0c236d5f1318caf0b6125f9f99ef1f113e0af`；
+4. detached HEAD、错误分支、缺少最低 checkpoint 或与冻结协议分叉均 fail closed；
+5. worktree 必须 clean，dirty/untracked 改动在 M1 update 前阻断；
+6. preflight 失败时不得运行 M1 update，不得写 authoritative capture；
+7. 该规则只保护采集入口与 provenance，不修改 harmonic identity、Source Raw PRZ、Source lifecycle、BAMM 或 outcome enrollment 语义；
+8. 用户本机仍不作为常规 QA runner；除私有 M1 数据不可替代外，测试/审计由 assistant 侧完成。
+
+原因：
+
+M4 的第一批真实 prospective evidence 一旦写入 immutable transaction chain，就不应由过旧、错误分支或本地修改过的 checkout 启动。仅检查 capture 时的 `worktree_clean` 不足以证明用户启动前所处协议版本正确，因此入口必须先 fail closed。
+
+验证方式：
+
+- wrapper static contract regression；
+- branch/checkpoint preflight 位于 M1 update 之前；
+- dirty-worktree preflight 位于 M1 update 之前；
+- failure path 明确声明未启动 M1 update / authoritative capture。
