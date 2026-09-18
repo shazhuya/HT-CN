@@ -253,3 +253,15 @@
 - Formal action-state vocabulary is waiting / reaction_observation / execution_evaluation / evidence_insufficient.
 - Context cannot vote on or override source lifecycle; execution feasibility is reported separately.
 - PR stays Draft until user-local real-M1 acceptance and context-sync evidence are observed.
+
+
+## M3 Phase 4.4 / 2026-09-18
+
+- `7a60bbbba9effe525b1ffb217aa1458ea37b0ba5`: fixed context-sync success literal / exit-code mismatch.
+- `63fa707d78b1d796d5c1174a1dafa3c4ba5b8a94`: acceptance, metadata, product and context reports now stamp exact git HEAD.
+- `a1525389f088257563a88c1f26558ad98b0b0967`: machine-readable PR readiness evaluator + merge-readiness and final-closeout Windows entrypoints.
+- `9f95560b3d44b5eb70c4f40cc3d5e9c72471d285`: human-readable Chinese readiness report added.
+- Readiness hard-blocks stale evidence from old commits.
+- Context partial failure is blocker; fail-safe degraded refresh is visible warning.
+- Positive-evidence-only suspension coverage remains a known warning and does not masquerade as complete-market evidence.
+- Code-side Phase 4.4 closeout is complete; user-local real-M1 evidence remains to be generated before PR #12 can leave Draft.

@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `9326ca7fdb0cacf20d08a987a3d447ada17f9621`
-context_checkpoint_title: `M3 Phase 4.3: action-state narrative, product contract, real-M1 acceptance and execution feasibility gate`
+context_checkpoint: `9f95560b3d44b5eb70c4f40cc3d5e9c72471d285`
+context_checkpoint_title: `M3 Phase 4.4: machine-readable real-M1 acceptance and PR readiness closeout`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -315,6 +315,36 @@ Decision Narrative 现在统一回答：
 
 selected-pattern browser gate 已冻结：从一个候选切换到另一个候选时，Decision Narrative 必须同步切换到该 pattern 自己的 source lifecycle / next key price，禁止残留前一个候选的状态。
 
+
+## M3 Phase 4.4 — Acceptance Evidence / Real-M1 Closeout
+
+验收不再依赖人工解释零散日志。当前正式证据链：
+
+- `m3-workbench-acceptance.json`；
+- `m3-metadata-tradability-smoke.json`；
+- `m3-product-contract-smoke.json`；
+- `m3-context-sync-summary.json`。
+
+四份报告全部带 `code_head`；任何旧 commit 报告都是 hard blocker。
+
+新增：
+
+- `scripts/m3_pr_readiness.py`；
+- `运行M3合并就绪检查.bat`；
+- `运行M3最终收口.bat`；
+- `m3-pr-readiness.json`；
+- `m3-pr-readiness.md`。
+
+Ready 判定区分 blocker / warning：
+
+硬阻断包括 deterministic acceptance 失败、真实 MAIN/STAR/CHINEXT parquet 缺失、product contract issue、无成功真实分析、context 结构性 failure、证据来自旧 HEAD。
+
+warning 包括 positive-evidence-only 停牌源、可 fail-safe 保留旧快照的 context degraded、真实小样本恰好没有谐波候选等。
+
+`运行M3最终收口.bat` 一次执行：工作台严格验收 → 四层真实同步 → 当前 HEAD Ready/Not Ready。即使前一步失败，也继续生成最终 blocker 报告。
+
+`m3_sync_all_contexts.py` 已修复成功状态名与退出码不一致问题；`all_steps_completed` 现在真实返回 0。
+
 ## 当前 CI 基础设施异常
 
 M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异常：
@@ -339,15 +369,15 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 4.4 — Acceptance Evidence / Real-M1 Closeout。**
+**M3 Phase 4.4 — 用户本机真实收口证据。**
 
-优先级：
+代码侧收口工具已经完成，下一步不再新增产品逻辑：
 
-1. 用户本机运行 `运行M3工作台验收.bat`，获取真实 M1 metadata + product-contract + Playwright 结果；
-2. 单独运行 `运行M3上下文数据同步.bat`，确认四层数据源在真实 catalog 上的 coverage / freshness；
-3. 对真实样本检查 Decision Narrative 与 Source Clock overlay 是否有布局拥挤或语义重复；
-4. 若 deterministic acceptance 全绿且真实 context sync 无结构性错误，再将 PR #12 从 Draft 推到 Ready；
-5. 在此之前不新增新的 harmonic pattern family，也不解除 5-0 / Alternate Bat 的既有边界。
+1. 在当前 HEAD 运行 `运行M3最终收口.bat`；
+2. 读取 `artifacts/reports/m3-pr-readiness.md`；
+3. 若 `pr_ready=false`，只处理 blocker，不因 warning 破坏已冻结 Source/Product 边界；
+4. 若 `pr_ready=true`，再将 PR #12 从 Draft 推进到 Ready；
+5. PR Ready 前不新增 pattern family、不解除 5-0 quarantine / Alternate Bat fail-closed。
 
 
 ## 固定 Source / Product 边界
