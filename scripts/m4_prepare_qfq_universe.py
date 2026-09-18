@@ -26,6 +26,8 @@ DATA_ROOT = ROOT / "data" / "market"
 CATALOG_PATH = DATA_ROOT / "catalog.duckdb"
 REPORT_PATH = ROOT / "artifacts" / "reports" / "m4-qfq-readiness.json"
 FORMAL_PRICE_MODES = {"qfq", "qfq_carry_forward"}
+SAFE_INTERNAL_GAP_MAX_RAW_SESSIONS = 10
+SAFE_INTERNAL_GAP_MAX_RELATIVE_FACTOR_DRIFT = 0.005
 
 
 def parse_args() -> argparse.Namespace:
@@ -66,6 +68,154 @@ def _instrument_ids(catalog: Path) -> list[str]:
             """
         ).fetchall()
     return [str(row[0]) for row in rows]
+
+
+def _repair_safe_internal_factor_gaps(
+    raw: pd.DataFrame,
+    factors: pd.DataFrame,
+) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
+    """Fill tiny provider-calendar holes without crossing factor regime jumps.
+
+    QFQ factors are expected to be locally stable between corporate-action
+    regime changes. Some providers omit historical sessions (notably early
+    Saturday trading) even when raw history contains them. We only synthesize
+    missing *internal* raw-session factors when:
+      - the gap is bracketed on both sides by real factor observations;
+      - the missing run is short;
+      - the bracketing factor levels differ by <= 0.5%.
+
+    Leading gaps, trailing gaps, long holes, or factor-regime jumps remain
+    fail-closed. Trailing freshness remains owned by qfq_carry_forward.
+    """
+    if raw.empty or factors.empty:
+        return factors.copy(), []
+
+    raw_order = (
+        pd.to_datetime(raw["trade_date"])
+        .dt.normalize()
+        .drop_duplicates()
+        .sort_values()
+        .tolist()
+    )
+    out = factors.copy()
+    out["trade_date"] = pd.to_datetime(out["trade_date"]).dt.normalize()
+    out = out.sort_values("trade_date").reset_index(drop=True)
+
+    factor_by_date = {
+        pd.Timestamp(row.trade_date).normalize(): float(row.price_factor)
+        for row in out.itertuples(index=False)
+    }
+    max_factor_date = max(factor_by_date)
+    candidate_missing = [
+        pd.Timestamp(stamp).normalize()
+        for stamp in raw_order
+        if pd.Timestamp(stamp).normalize() <= max_factor_date
+        and pd.Timestamp(stamp).normalize() not in factor_by_date
+    ]
+    if not candidate_missing:
+        return out, []
+
+    raw_position = {
+        pd.Timestamp(stamp).normalize(): index
+        for index, stamp in enumerate(raw_order)
+    }
+    missing_set = set(candidate_missing)
+    runs: list[list[pd.Timestamp]] = []
+    current: list[pd.Timestamp] = []
+    previous_position: int | None = None
+    for stamp in candidate_missing:
+        position = raw_position[stamp]
+        if (
+            current
+            and previous_position is not None
+            and position != previous_position + 1
+        ):
+            runs.append(current)
+            current = []
+        current.append(stamp)
+        previous_position = position
+    if current:
+        runs.append(current)
+
+    additions: list[dict[str, Any]] = []
+    audit: list[dict[str, Any]] = []
+    instrument_id = str(out.iloc[0]["instrument_id"])
+    mode = str(out.iloc[0].get("mode", "qfq"))
+
+    for run in runs:
+        first_position = raw_position[run[0]]
+        last_position = raw_position[run[-1]]
+        if len(run) > SAFE_INTERNAL_GAP_MAX_RAW_SESSIONS:
+            continue
+        if first_position <= 0 or last_position >= len(raw_order) - 1:
+            continue
+
+        previous_date = pd.Timestamp(
+            raw_order[first_position - 1]
+        ).normalize()
+        next_date = pd.Timestamp(
+            raw_order[last_position + 1]
+        ).normalize()
+        if (
+            previous_date not in factor_by_date
+            or next_date not in factor_by_date
+        ):
+            continue
+
+        previous_factor = float(factor_by_date[previous_date])
+        next_factor = float(factor_by_date[next_date])
+        midpoint = (previous_factor + next_factor) / 2.0
+        relative_drift = (
+            abs(next_factor - previous_factor)
+            / max(abs(midpoint), 1e-12)
+        )
+        if relative_drift > SAFE_INTERNAL_GAP_MAX_RELATIVE_FACTOR_DRIFT:
+            continue
+
+        # Linear interpolation in raw-session index is deterministic and keeps
+        # the synthetic values bounded by the two observed factor values.
+        steps = len(run) + 1
+        for offset, stamp in enumerate(run, start=1):
+            weight = offset / steps
+            factor = (
+                previous_factor * (1.0 - weight)
+                + next_factor * weight
+            )
+            additions.append({
+                "instrument_id": instrument_id,
+                "trade_date": stamp,
+                "price_factor": factor,
+                "mode": mode,
+                "source": "safe_internal_calendar_gap_fill",
+            })
+            factor_by_date[stamp] = factor
+
+        audit.append({
+            "gap_start_trade_date": run[0].date().isoformat(),
+            "gap_end_trade_date": run[-1].date().isoformat(),
+            "gap_raw_session_count": len(run),
+            "previous_factor_trade_date": previous_date.date().isoformat(),
+            "next_factor_trade_date": next_date.date().isoformat(),
+            "previous_factor": previous_factor,
+            "next_factor": next_factor,
+            "relative_factor_drift": relative_drift,
+            "fill_method": "linear_between_stable_bracketing_factors",
+        })
+
+    if additions:
+        out = pd.concat(
+            [out, pd.DataFrame(additions)],
+            ignore_index=True,
+        )
+        out = (
+            out.drop_duplicates(
+                ["instrument_id", "trade_date"],
+                keep="last",
+            )
+            .sort_values("trade_date")
+            .reset_index(drop=True)
+        )
+    return out, audit
 
 
 def _strict_factor_candidate(
@@ -149,7 +299,7 @@ def _fetch_candidate(
     raw: pd.DataFrame,
     provider: Any,
     retries: int,
-) -> tuple[pd.DataFrame, str, int]:
+) -> tuple[pd.DataFrame, str, int, list[dict[str, Any]]]:
     start: date = pd.Timestamp(raw["trade_date"].min()).date()
     end: date = pd.Timestamp(raw["trade_date"].max()).date()
     fetched = fetch_adjusted_history(
@@ -168,10 +318,14 @@ def _fetch_candidate(
         mode="qfq",
         source=fetched.source,
     )
+    factors, gap_repairs = _repair_safe_internal_factor_gaps(
+        raw,
+        factors,
+    )
     valid, reason = _strict_factor_candidate(raw, factors)
     if not valid:
         raise RuntimeError(reason)
-    return factors, fetched.source, fetched.attempts
+    return factors, fetched.source, fetched.attempts, gap_repairs
 
 
 def run(
@@ -260,7 +414,7 @@ def run(
                 flush=True,
             )
             try:
-                factors, source, attempts = _fetch_candidate(
+                factors, source, attempts, gap_repairs = _fetch_candidate(
                     instrument_id=instrument_id,
                     raw=raw,
                     provider=provider,
@@ -288,6 +442,11 @@ def run(
                     "source": source,
                     "attempts": attempts,
                     "factor_rows": len(factors),
+                    "safe_internal_gap_repairs": gap_repairs,
+                    "safe_internal_gap_repair_count": sum(
+                        int(item["gap_raw_session_count"])
+                        for item in gap_repairs
+                    ),
                     "price_mode": final_mode,
                     "price_basis_id": final_basis,
                     "warning": final_warning,
