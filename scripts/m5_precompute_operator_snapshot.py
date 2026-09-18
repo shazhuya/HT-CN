@@ -27,6 +27,7 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--bars", type=int, default=420)
     parser.add_argument("--force", action="store_true")
+    parser.add_argument("--workers", type=int, default=4)
     args = parser.parse_args()
 
     instrument_ids = discover_local_instruments(
@@ -35,6 +36,27 @@ def main() -> int:
     )
     expected = latest_local_trade_date(DATA_ROOT / "catalog.duckdb")
     service = M3SourceClockHarmonicService(DATA_ROOT)
+
+    def progress(
+        completed: int,
+        total: int,
+        instrument_id: str,
+        ok: bool,
+    ) -> None:
+        if (
+            completed == 1
+            or completed == total
+            or completed % 25 == 0
+            or not ok
+        ):
+            status = "OK" if ok else "FAILED"
+            print(
+                f"[HT-CN M5] {completed}/{total} "
+                f"{status} {instrument_id}",
+                flush=True,
+            )
+
+    workers = max(1, min(16, int(args.workers)))
     payload = build_or_load_operator_snapshot(
         service,
         instrument_ids,
@@ -43,6 +65,9 @@ def main() -> int:
         bars=int(args.bars),
         scales=(3, 5, 8, 13),
         force_refresh=bool(args.force),
+        max_workers=workers,
+        service_factory=lambda: M3SourceClockHarmonicService(DATA_ROOT),
+        progress_callback=progress,
     )
 
     report = {
@@ -61,6 +86,7 @@ def main() -> int:
             "observation_integrity"
         ),
         "product_cache": payload.get("product_cache"),
+        "build_execution": payload.get("build_execution"),
         "authoritative_evidence": False,
         "writes_m4_evidence": False,
         "is_trade_instruction": False,
