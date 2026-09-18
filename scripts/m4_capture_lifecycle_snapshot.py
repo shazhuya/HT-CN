@@ -12,6 +12,13 @@ import duckdb
 
 from htcn.app.evidence_identity import read_code_identity
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
+from htcn.data.providers import (
+    AkShareProvider,
+    AkShareSinaProvider,
+    BaoStockProvider,
+    FailoverProvider,
+)
+from htcn.data.trading_clock import latest_closed_trade_clock
 from htcn.research.capture_transaction import (
     build_committed_capture,
     commit_capture_transaction,
@@ -30,6 +37,27 @@ from htcn.research.snapshot_manifest import (
     append_snapshot_manifest,
     read_snapshot_manifest,
 )
+
+
+def _calendar_provider() -> FailoverProvider:
+    return FailoverProvider(
+        AkShareProvider(),
+        FailoverProvider(AkShareSinaProvider(), BaoStockProvider()),
+    )
+
+
+def _validate_capture_trade_date(
+    *,
+    local_trade_date: str,
+    provider_trade_date: str,
+) -> str:
+    if local_trade_date != provider_trade_date:
+        raise RuntimeError(
+            "local M1 trade calendar does not match provider-confirmed "
+            f"latest closed trade day: local={local_trade_date} "
+            f"provider={provider_trade_date}"
+        )
+    return provider_trade_date
 
 
 def _expected_trade_date(catalog: Path) -> str:
@@ -98,7 +126,35 @@ def run(
         result["errors"].append({"scope": "catalog", "error": f"missing {catalog}"})
         return result
 
-    expected = _expected_trade_date(catalog)
+    local_trade_date = _expected_trade_date(catalog)
+    try:
+        clock = latest_closed_trade_clock(_calendar_provider())
+    except Exception as exc:
+        result["errors"].append({
+            "scope": "provider_closed_trade_clock",
+            "error": f"{type(exc).__name__}: {exc}",
+        })
+        result["status"] = "failed_provider_closed_trade_clock"
+        return result
+
+    provider_trade_date = clock.target.isoformat()
+    result["provider_expected_trade_date"] = provider_trade_date
+    result["local_trade_calendar_latest"] = local_trade_date
+    result["calendar_source"] = clock.calendar_source
+    result["same_day_closed"] = clock.same_day_closed
+    try:
+        expected = _validate_capture_trade_date(
+            local_trade_date=local_trade_date,
+            provider_trade_date=provider_trade_date,
+        )
+    except RuntimeError as exc:
+        result["errors"].append({
+            "scope": "market_data_freshness",
+            "error": str(exc),
+        })
+        result["status"] = "failed_market_data_freshness"
+        return result
+
     all_instruments = _instrument_ids(catalog)
     instruments = all_instruments
     diagnostic_partial_universe = max_symbols > 0
