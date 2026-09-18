@@ -14,7 +14,7 @@ def _completed(returncode: int = 0, stdout: str = "") -> subprocess.CompletedPro
     )
 
 
-def test_freeze_guard_contract_is_v2_with_37_components(monkeypatch) -> None:
+def test_freeze_guard_contract_is_v3_with_37_components(monkeypatch) -> None:
     calls: list[tuple[str, ...]] = []
 
     def fake_git(*args: str):
@@ -29,7 +29,7 @@ def test_freeze_guard_contract_is_v2_with_37_components(monkeypatch) -> None:
     payload = guard.build_freeze_guard()
 
     assert payload["status"] == "frozen_match"
-    assert payload["methodology_contract_version"] == 2
+    assert payload["methodology_contract_version"] == 3
     assert payload["methodology_component_count"] == 37
     assert payload["changed_methodology_components"] == []
     assert any(call[0] == "merge-base" for call in calls)
