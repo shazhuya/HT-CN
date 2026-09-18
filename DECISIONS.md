@@ -524,3 +524,26 @@ M4 的第一批真实 prospective evidence 一旦写入 immutable transaction ch
 - branch/checkpoint preflight 位于 M1 update 之前；
 - dirty-worktree preflight 位于 M1 update 之前；
 - failure path 明确声明未启动 M1 update / authoritative capture。
+
+
+## D-030 — Evidence bundle 必须先验证再原子发布，blocked evidence 仍可诊断传输
+
+**状态：Frozen M4 transport-integrity contract**
+
+M4 evidence bundle 是非权威运输层，但它必须可靠地把 frozen baseline、immutable captures 与 derived reports 交给 assistant。运输层损坏不能被误认为 evidence failure，也不能覆盖掉一个原本完好的 bundle。
+
+正式决定：
+
+1. bundle manifest 对每个成员记录 `size_bytes` 与 SHA-256；
+2. verifier 必须拒绝重复成员、未列入 manifest 的额外成员、不安全路径、缺失成员、size/SHA mismatch；
+3. verifier 必须检查 `alpha_inference_allowed=false`、`is_trade_instruction=false`、`authoritative_evidence_modified=false`；
+4. `transport_bundle_ready` 不得同时携带 evidence-health blocker 或 committed-capture read error；
+5. `evidence_health_blocked` 可以是**运输完整**的诊断包：它通过 transport integrity，但明确产生 warning，不被解释为 evidence ready；
+6. exporter 先写临时 ZIP，先验证临时 ZIP；只有验证通过才原子替换正式 `m4-evidence-bundle.zip`；
+7. 原子替换后再验证正式路径，防止发布阶段发生不可见变化；
+8. bundle verifier 不修改 authoritative evidence，不修复 transaction，不参与 harmonic methodology fingerprint；
+9. 用户无需额外执行验证动作；必要的私有 M1 一键采集流程内部完成 bundle 生成与验证，上传后 assistant 也可独立复验。
+
+原因：
+
+运输层不是权威证据，但如果运输层无法证明自身完整性，assistant 无法可靠地区分“原始 evidence 有问题”和“ZIP 在交接过程中损坏”。先验证临时包再原子发布，可以在不增加用户操作的前提下把这两类故障分离。
