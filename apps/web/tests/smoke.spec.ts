@@ -55,7 +55,7 @@ const analysis = {
 
 test('HT-CN M3 fixture workbench renders lifecycle navigation and harmonic chart', async ({ page }) => {
   await page.route('**/api/health', async (route) => {
-    await route.fulfill({ json: { status: 'ok', service: 'ht-cn-api', version: '0.2.0' } })
+    await route.fulfill({ json: { status: 'ok', service: 'ht-cn-api', version: '0.3.0' } })
   })
   await page.route('**/api/instruments?**', async (route) => {
     await route.fulfill({ json: { count: 1, items: [{ instrument_id: 'SSE.688256', has_qfq_factor: true }] } })
@@ -73,7 +73,8 @@ test('HT-CN M3 fixture workbench renders lifecycle navigation and harmonic chart
   await expect(page.getByRole('heading', { name: '现在在哪 · 先看哪 · 到了再看哪' })).toBeVisible()
   await expect(page.getByText('几何已完成 · 执行时钟未接入')).toBeVisible()
   await expect(page.getByText(/不能把 D Pivot 直接等同于执行完成/)).toBeVisible()
-  await expect(page.getByText(/后验 T1\/T2 只用于研究与审计，不作为实时买卖信号/)).toBeVisible()
+  await expect(page.getByText(/当前 payload 尚未提供 canonical source_lifecycle/)).toBeVisible()
+  await expect(page.getByText(/不得把后验 D 时钟误认成实时执行时钟/)).toBeVisible()
   await expect(page.getByLabel('harmonic-chart')).toBeVisible()
   await expect(page.getByText('98.7')).toBeVisible()
   await expect(page.getByText('0.618')).toBeVisible()

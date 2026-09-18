@@ -51,10 +51,10 @@ async function findLiveCandidate(request: import('@playwright/test').APIRequestC
       return { instrumentId, analysis }
     }
   }
-  throw new Error('No live local QFQ instrument with at least 80 bars was available for M2 visual acceptance')
+  throw new Error('No live local QFQ instrument with at least 80 bars was available for M3 visual acceptance')
 }
 
-test('HT-CN M2 live local QFQ workbench renders real repository data', async ({ page, request }) => {
+test('HT-CN M3 live local QFQ workbench renders real repository data', async ({ page, request }) => {
   const { instrumentId, analysis } = await findLiveCandidate(request)
 
   // Forming is live/frontier semantics: each pivot scale contributes at most one XABC node set.
@@ -64,7 +64,7 @@ test('HT-CN M2 live local QFQ workbench renders real repository data', async ({ 
 
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'A 股谐波研究与辅助决策系统' })).toBeVisible()
-  await expect(page.getByText(/API 0\.2\.0/)).toBeVisible()
+  await expect(page.getByText(/API 0\.3\.0/)).toBeVisible()
 
   const symbolInput = page.locator('input[list="instrument-list"]')
   await symbolInput.fill(instrumentId)

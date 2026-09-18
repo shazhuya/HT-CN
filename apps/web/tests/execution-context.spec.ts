@@ -131,5 +131,7 @@ test('A-share execution context is separate, auditable, and does not replace sou
   await expect(context.getByText(/不会创建、修复或否定谐波身份/)).toBeVisible()
 
   const compass = page.getByTestId('lifecycle-compass')
-  await expect(compass.getByText('PRZ 内/曾进入 · 等待 Source T-Bar')).toBeVisible()
+  await expect(compass.getByText('Source Clock 证据')).toBeVisible()
+  await expect(page.getByTestId('source-clock-state').getByText('waiting_terminal')).toBeVisible()
+  await expect(compass.getByText(/历史 reaction_audit 不覆盖 canonical source lifecycle/)).toBeVisible()
 })
