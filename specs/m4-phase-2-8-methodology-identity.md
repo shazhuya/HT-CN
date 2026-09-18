@@ -144,3 +144,20 @@ The content/fingerprint changed because price-basis semantics were added inside 
 fingerprinted components.
 
 No future committed evidence existed before this v3 freeze.
+
+
+## Current supersession — Phase 2.12
+
+The current pre-T1 methodology identity is now:
+
+- committed capture schema v5;
+- prospective observation schema v4;
+- methodology contract v4;
+- 37 fingerprint components;
+- exact methodology freeze commit `c774c54928c33361952bf1a612a8555633449625`.
+
+The path set remains unchanged. The methodology fingerprint changed because the already
+fingerprinted prospective evidence files now freeze the Source-clock reconstruction seed required
+to avoid scanner-survivorship censoring.
+
+No post-T0 future committed evidence existed before this v4 freeze.
