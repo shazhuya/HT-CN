@@ -8,6 +8,8 @@ from typing import Any
 import json
 import zipfile
 
+import pandas as pd
+
 from .capture_transaction import (
     committed_capture_view,
     committed_followup_view,
@@ -18,6 +20,9 @@ from .capture_transaction import (
 )
 from .evidence_bundle import verify_evidence_bundle
 from .lifecycle_transitions import build_transition_report
+from .outcome_evaluator import evaluate_candidate_outcome
+from .outcome_protocol import load_outcome_protocol_v1
+from .outcome_snapshot import read_outcome_snapshots
 from .prospective_observations import build_prospective_observation_report
 from .snapshot_manifest import resolve_capture_timeline
 
@@ -68,6 +73,64 @@ def _write_authoritative_tree(
         else:
             continue
         target.write_bytes(archive.read(name))
+
+
+def _write_outcome_tree(
+    archive: zipfile.ZipFile,
+    root: Path,
+) -> None:
+    outcomes = root / "outcomes"
+    outcomes.mkdir(parents=True, exist_ok=True)
+    for info in archive.infolist():
+        name = info.filename
+        if not (
+            name.startswith("outcomes/")
+            and name.endswith(".json")
+        ):
+            continue
+        target = outcomes / Path(name).name
+        target.write_bytes(archive.read(name))
+
+
+def _observation_panel_through(
+    *,
+    baseline_rows: list[dict[str, Any]],
+    baseline_through: str | None,
+    committed: list[dict[str, Any]],
+    outcome_as_of_trade_date: str,
+) -> dict[str, Any]:
+    selected = [
+        item
+        for item in committed
+        if str(item.get("as_of_trade_date") or "")
+        <= outcome_as_of_trade_date
+    ]
+    if not selected:
+        return {
+            "schema_version": 4,
+            "status": "no_outcome_cohort",
+            "candidate_summaries": [],
+            "observations": [],
+        }
+    journal_rows, manifest_rows = committed_capture_view(
+        legacy_journal_rows=baseline_rows,
+        capture_rows=selected,
+    )
+    followup_rows = committed_followup_view(selected)
+    return build_prospective_observation_report(
+        journal_rows,
+        manifest_rows=manifest_rows,
+        followup_rows=followup_rows,
+        legacy_baseline_trade_date=baseline_through,
+    )
+
+
+def _outcome_result_without_transport_warning(
+    value: dict[str, Any],
+) -> dict[str, Any]:
+    out = dict(value)
+    out.pop("market_data_warning", None)
+    return out
 
 
 def _report_fields_match(
@@ -127,9 +190,15 @@ def audit_evidence_bundle(
         with zipfile.ZipFile(bundle_path, "r") as archive, TemporaryDirectory() as tmp:
             temp_root = Path(tmp)
             _write_authoritative_tree(archive, temp_root)
+            _write_outcome_tree(archive, temp_root)
             transaction_root = temp_root / "captures"
+            outcome_root = temp_root / "outcomes"
 
             committed = read_committed_captures(transaction_root)
+            outcome_snapshots = read_outcome_snapshots(outcome_root)
+            outcome_protocol, outcome_protocol_identity = (
+                load_outcome_protocol_v1()
+            )
             baseline_present = frozen_legacy_baseline_present(transaction_root)
             baseline_rows = read_frozen_legacy_baseline(transaction_root)
             baseline_through = frozen_legacy_baseline_through_date(transaction_root)
@@ -315,6 +384,211 @@ def audit_evidence_bundle(
                 ):
                     blockers.append("observation_report_methodology_version_drift")
 
+            manifest_outcome_error = str(
+                manifest.get("outcome_snapshot_read_error") or ""
+            )
+            if manifest_outcome_error:
+                blockers.append("bundle_outcome_snapshot_read_error")
+
+            manifest_outcome_count = int(
+                manifest.get("outcome_snapshot_count") or 0
+            )
+            if manifest_outcome_count != len(outcome_snapshots):
+                blockers.append("bundle_outcome_snapshot_count_drift")
+
+            latest_outcome = (
+                None if not outcome_snapshots else outcome_snapshots[-1]
+            )
+            if latest_outcome is not None:
+                if (
+                    manifest.get("latest_outcome_as_of_trade_date")
+                    != latest_outcome.get("outcome_as_of_trade_date")
+                ):
+                    blockers.append("bundle_latest_outcome_date_drift")
+                if (
+                    manifest.get("latest_outcome_snapshot_id")
+                    != latest_outcome.get("snapshot_id")
+                ):
+                    blockers.append("bundle_latest_outcome_id_drift")
+
+            outcome_status_counts: Counter[str] = Counter()
+            outcome_result_count = 0
+            for snapshot in outcome_snapshots:
+                snapshot_as_of = str(
+                    snapshot.get("outcome_as_of_trade_date") or ""
+                )
+                if not snapshot_as_of:
+                    blockers.append("outcome_snapshot_missing_as_of")
+                    continue
+                if (
+                    str(snapshot.get("outcome_protocol_id") or "")
+                    != outcome_protocol_identity.protocol_id
+                ):
+                    blockers.append(
+                        "outcome_snapshot_protocol_id_drift"
+                    )
+                if (
+                    str(
+                        snapshot.get(
+                            "outcome_protocol_fingerprint"
+                        ) or ""
+                    )
+                    != outcome_protocol_identity.fingerprint
+                ):
+                    blockers.append(
+                        "outcome_snapshot_protocol_fingerprint_drift"
+                    )
+                if (
+                    str(
+                        snapshot.get(
+                            "capture_methodology_fingerprint"
+                        ) or ""
+                    )
+                    != str(chain_methodology_fingerprint or "")
+                ):
+                    blockers.append(
+                        "outcome_snapshot_methodology_drift"
+                    )
+
+                panel_as_of = _observation_panel_through(
+                    baseline_rows=baseline_rows,
+                    baseline_through=baseline_through,
+                    committed=committed,
+                    outcome_as_of_trade_date=snapshot_as_of,
+                )
+                summaries_as_of = {
+                    str(item.get("candidate_key") or ""): dict(item)
+                    for item in panel_as_of.get(
+                        "candidate_summaries"
+                    ) or []
+                    if item.get("candidate_key")
+                }
+                stored_results = {
+                    str(item.get("candidate_key") or ""): dict(item)
+                    for item in snapshot.get("results") or []
+                    if item.get("candidate_key")
+                }
+                if set(stored_results) != set(summaries_as_of):
+                    blockers.append(
+                        "outcome_snapshot_candidate_set_drift:"
+                        + snapshot_as_of
+                    )
+                    continue
+
+                for candidate_key in sorted(stored_results):
+                    stored = stored_results[candidate_key]
+                    path_rows = stored.get("market_path_rows")
+                    if not isinstance(path_rows, list) or not path_rows:
+                        blockers.append(
+                            "outcome_snapshot_missing_market_path:"
+                            + candidate_key
+                        )
+                        continue
+                    try:
+                        recomputed = evaluate_candidate_outcome(
+                            summaries_as_of[candidate_key],
+                            pd.DataFrame(path_rows),
+                            outcome_as_of_trade_date=snapshot_as_of,
+                            current_price_mode=str(
+                                stored.get("current_price_mode") or ""
+                            ),
+                            current_price_basis_id=str(
+                                stored.get("current_price_basis_id") or ""
+                            ),
+                            methodology_fingerprint=str(
+                                chain_methodology_fingerprint or ""
+                            ),
+                            protocol=outcome_protocol,
+                        )
+                    except Exception as exc:
+                        blockers.append(
+                            "outcome_result_recompute_error:"
+                            + candidate_key
+                            + ":"
+                            + type(exc).__name__
+                            + ":"
+                            + str(exc)
+                        )
+                        continue
+
+                    if (
+                        _outcome_result_without_transport_warning(stored)
+                        != recomputed
+                    ):
+                        blockers.append(
+                            "outcome_result_recompute_drift:"
+                            + candidate_key
+                        )
+                    outcome_status_counts[
+                        str(stored.get("status") or "unknown")
+                    ] += 1
+                    outcome_result_count += 1
+
+            latest_cohort_keys = {
+                str(item.get("candidate_key") or "")
+                for item in observation.get("candidate_summaries") or []
+                if item.get("candidate_key")
+            }
+            if latest_cohort_keys and latest_outcome is None:
+                blockers.append(
+                    "outcome_snapshot_missing_for_enrolled_cohort"
+                )
+            if latest_outcome is not None and committed:
+                if (
+                    str(latest_outcome.get("outcome_as_of_trade_date") or "")
+                    < str(committed[-1].get("as_of_trade_date") or "")
+                ):
+                    blockers.append(
+                        "latest_outcome_predates_latest_capture"
+                    )
+
+            included_outcome = _json_member(
+                archive,
+                "reports/m4-outcome-v1.json",
+            )
+            if included_outcome is None:
+                warnings.append("outcome_report_missing")
+            elif latest_outcome is not None:
+                expected_report_fields = {
+                    "status": "ready",
+                    "outcome_as_of_trade_date": latest_outcome.get(
+                        "outcome_as_of_trade_date"
+                    ),
+                    "outcome_protocol_id": outcome_protocol_identity.protocol_id,
+                    "outcome_protocol_fingerprint": (
+                        outcome_protocol_identity.fingerprint
+                    ),
+                    "capture_methodology_fingerprint": (
+                        chain_methodology_fingerprint
+                    ),
+                    "candidate_count": len(
+                        latest_outcome.get("results") or []
+                    ),
+                    "outcome_snapshot_id": latest_outcome.get(
+                        "snapshot_id"
+                    ),
+                    "results": latest_outcome.get("results") or [],
+                }
+                report_drift = [
+                    field
+                    for field, expected in expected_report_fields.items()
+                    if included_outcome.get(field) != expected
+                ]
+                if report_drift:
+                    blockers.append(
+                        "outcome_report_drift:"
+                        + ",".join(sorted(report_drift))
+                    )
+            elif latest_cohort_keys:
+                blockers.append(
+                    "outcome_report_present_without_required_snapshot"
+                )
+            elif included_outcome.get("status") not in {
+                "no_outcome_cohort",
+                "no_authoritative_future_capture",
+            }:
+                blockers.append("outcome_report_status_drift")
+
             all_rows = [dict(row) for row in transition.get("normalized_rows") or []]
             latest_trade_date = transition.get("latest_trade_date")
             latest_rows = [
@@ -399,6 +673,27 @@ def audit_evidence_bundle(
                 "price_basis_drift_candidate_keys": basis_drift_keys,
                 "cohort_followup_row_count": len(followup_rows),
                 "confirmed_full_day_suspended_row_count": len(suspension_rows),
+                "outcome_protocol_id": outcome_protocol_identity.protocol_id,
+                "outcome_protocol_fingerprint": (
+                    outcome_protocol_identity.fingerprint
+                ),
+                "outcome_snapshot_count": len(outcome_snapshots),
+                "latest_outcome_as_of_trade_date": (
+                    None
+                    if latest_outcome is None
+                    else latest_outcome.get(
+                        "outcome_as_of_trade_date"
+                    )
+                ),
+                "latest_outcome_snapshot_id": (
+                    None
+                    if latest_outcome is None
+                    else latest_outcome.get("snapshot_id")
+                ),
+                "outcome_result_count": outcome_result_count,
+                "outcome_status_counts": dict(
+                    sorted(outcome_status_counts.items())
+                ),
             })
 
             if committed:
