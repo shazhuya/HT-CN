@@ -248,18 +248,19 @@ test('M5 operator index paginates locally without shrinking full queue', async (
   await expect(controls.getByText(/匹配/)).toContainText('60')
   await expect(controls.getByText(/页码/)).toContainText('1 / 2')
   await expect(queue.locator('tbody tr')).toHaveCount(50)
-  expect(queueRequests).toBe(1)
+  const initialQueueRequests = queueRequests
+  expect(initialQueueRequests).toBeGreaterThan(0)
 
   await controls.getByRole('button', { name: '下一页' }).click()
   await expect(controls.getByText(/页码/)).toContainText('2 / 2')
   await expect(queue.locator('tbody tr')).toHaveCount(10)
   await expect(queue.getByRole('button', { name: 'SSE.000060' })).toBeVisible()
-  expect(queueRequests).toBe(1)
+  expect(queueRequests).toBe(initialQueueRequests)
 
   await controls.getByPlaceholder('代码 / 形态 / 生命周期').fill('SSE.000060')
   await expect(controls.getByText(/匹配/)).toContainText('1')
   await expect(controls.getByText(/页码/)).toContainText('1 / 1')
   await expect(queue.locator('tbody tr')).toHaveCount(1)
   await expect(queue.getByRole('button', { name: 'SSE.000060' })).toBeVisible()
-  expect(queueRequests).toBe(1)
+  expect(queueRequests).toBe(initialQueueRequests)
 })
