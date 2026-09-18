@@ -23,6 +23,67 @@ DATA_ROOT = ROOT / "data" / "market"
 CACHE_ROOT = ROOT / "data" / "product" / "m5" / "operator_queue"
 REPORT_PATH = ROOT / "artifacts" / "reports" / "m5-operator-snapshot.json"
 
+PERSISTED_CACHE_STATUSES = {
+    "hit",
+    "hit_after_race",
+    "hit_after_process_wait",
+    "rebuilt",
+    "rebuilt_force",
+    "coalesced_wait",
+}
+
+
+def evaluate_precompute_readiness(
+    payload: dict,
+    *,
+    expected_trade_date: str | None,
+) -> dict:
+    instrument_count = int(payload.get("instrument_count") or 0)
+    analyzed = int(payload.get("analyzed_instrument_count") or 0)
+    failed = int(payload.get("failed_instrument_count") or 0)
+    cache = dict(payload.get("product_cache") or {})
+    reasons: list[str] = []
+
+    if instrument_count <= 0:
+        reasons.append("empty_initialized_universe")
+    if analyzed <= 0:
+        reasons.append("no_successful_instrument_analysis")
+    if analyzed + failed != instrument_count:
+        reasons.append("instrument_attempt_coverage_mismatch")
+    if payload.get("observation_integrity") != "single_as_of":
+        reasons.append("queue_not_single_as_of")
+    if expected_trade_date is None:
+        reasons.append("expected_trade_date_unresolved")
+    elif str(payload.get("as_of_trade_date") or "") != str(expected_trade_date):
+        reasons.append("queue_trade_date_not_expected")
+    if cache.get("freshness") != "current":
+        reasons.append("product_cache_not_current")
+    if str(cache.get("status") or "") not in PERSISTED_CACHE_STATUSES:
+        reasons.append("product_cache_not_persisted")
+    if cache.get("input_identity_stable_during_build") is not True:
+        reasons.append("input_identity_not_stable")
+
+    ready = not reasons
+    status = (
+        "ready_with_instrument_failures"
+        if ready and failed > 0
+        else "ready"
+        if ready
+        else "not_ready"
+    )
+    return {
+        "status": status,
+        "product_ready": ready,
+        "instrument_count": instrument_count,
+        "analyzed_instrument_count": analyzed,
+        "failed_instrument_count": failed,
+        "instrument_attempt_coverage_complete": (
+            analyzed + failed == instrument_count
+        ),
+        "instrument_failures_are_isolated": True,
+        "readiness_blockers": reasons,
+    }
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(
@@ -87,9 +148,13 @@ def main() -> int:
         progress_callback=progress,
     )
 
+    readiness = evaluate_precompute_readiness(
+        payload,
+        expected_trade_date=expected,
+    )
     report = {
-        "schema_version": 1,
-        "status": "ready",
+        "schema_version": 2,
+        **readiness,
         "instrument_count": payload.get("instrument_count"),
         "analyzed_instrument_count": payload.get(
             "analyzed_instrument_count"
@@ -121,7 +186,7 @@ def main() -> int:
         encoding="utf-8",
     )
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0
+    return 0 if report["product_ready"] else 2
 
 
 if __name__ == "__main__":
