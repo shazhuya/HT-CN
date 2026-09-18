@@ -43,6 +43,7 @@ def main() -> int:
         recent = query_operator_history(
             history_root=HISTORY_ROOT,
             latest_revision_per_day=True,
+            summary_only=True,
             limit=5,
         )
         payload = {
