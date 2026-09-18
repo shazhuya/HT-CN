@@ -13,6 +13,10 @@ from htcn.research.capture_transaction import read_committed_captures
 from htcn.research.evidence_bundle import verify_evidence_bundle
 from htcn.research.evidence_health import build_evidence_chain_health
 from htcn.research.methodology_identity import build_methodology_identity
+from htcn.research.outcome_engine_identity import (
+    build_outcome_engine_identity,
+)
+from htcn.research.outcome_protocol import load_outcome_protocol
 from htcn.research.outcome_snapshot import read_outcome_snapshots
 
 
@@ -51,6 +55,8 @@ def build_bundle(
 ) -> dict[str, Any]:
     identity = read_code_identity()
     methodology = build_methodology_identity()
+    outcome_engine = build_outcome_engine_identity()
+    _, active_outcome_protocol = load_outcome_protocol()
     health = build_evidence_chain_health(
         transaction_root=transaction_root,
         journal_path=journal_path,
@@ -188,6 +194,14 @@ def build_bundle(
         "worktree_clean": identity.worktree_clean,
         "methodology_contract_version": methodology.contract_version,
         "methodology_fingerprint": methodology.fingerprint,
+        "active_outcome_protocol_id": active_outcome_protocol.protocol_id,
+        "active_outcome_protocol_fingerprint": (
+            active_outcome_protocol.fingerprint
+        ),
+        "current_outcome_engine_contract_version": (
+            outcome_engine.contract_version
+        ),
+        "current_outcome_engine_fingerprint": outcome_engine.fingerprint,
         "committed_capture_count": len(committed),
         "latest_committed_capture_date": (
             None
@@ -214,6 +228,20 @@ def build_bundle(
             None
             if not outcome_snapshots
             else outcome_snapshots[-1].get("snapshot_id")
+        ),
+        "latest_outcome_engine_contract_version": (
+            None
+            if not outcome_snapshots
+            else outcome_snapshots[-1].get(
+                "outcome_engine_contract_version"
+            )
+        ),
+        "latest_outcome_engine_fingerprint": (
+            None
+            if not outcome_snapshots
+            else outcome_snapshots[-1].get(
+                "outcome_engine_fingerprint"
+            )
         ),
         "outcome_snapshot_read_error": outcome_snapshot_read_error,
         "alpha_inference_allowed": False,
