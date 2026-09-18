@@ -49,6 +49,12 @@ STEP_SPECS: dict[str, DailyCloseStep] = {
         "m5-daily-operator-cache-finalize.log",
         "m5_product",
     ),
+    "m5_operator_history": DailyCloseStep(
+        "m5_operator_history",
+        ("scripts/m5_record_operator_history.py",),
+        "m5-daily-operator-history.log",
+        "m5_product_history",
+    ),
     "m4_methodology_guard": DailyCloseStep(
         "m4_methodology_guard",
         ("scripts/m4_methodology_freeze_guard.py",),
@@ -311,9 +317,30 @@ def execute_daily_close_steps(
             final_code,
         )
     else:
+        final_code = 1
         results["m5_operator_cache_finalize"] = _skipped(
             "m5_operator_cache_finalize",
             "m1_update_failed",
+        )
+
+    # Phase 11 records only the final, post-research product snapshot.
+    # History is product observation, not a readiness prerequisite: a history
+    # write/query failure must not rewrite an otherwise valid M5 product.
+    if market_data_ready and final_code == 0:
+        history_step = STEP_SPECS["m5_operator_history"]
+        history_code = int(run_step(history_step))
+        results["m5_operator_history"] = _ran(
+            history_step,
+            history_code,
+        )
+    else:
+        results["m5_operator_history"] = _skipped(
+            "m5_operator_history",
+            (
+                "m5_final_product_not_ready"
+                if market_data_ready
+                else "m1_update_failed"
+            ),
         )
 
     return build_daily_close_summary(results)
@@ -338,6 +365,10 @@ def build_daily_close_summary(
     m5_product_ready = (
         market_data_ready
         and passed("m5_operator_cache_finalize")
+    )
+    m5_history_ready = (
+        m5_product_ready
+        and passed("m5_operator_history")
     )
     m4_research_ready = (
         market_data_ready
@@ -381,6 +412,10 @@ def build_daily_close_summary(
         "m5_context_degraded_but_product_allowed": (
             m5_product_ready and not m5_context_refresh_ready
         ),
+        "m5_history_ready": m5_history_ready,
+        "m5_history_degraded_but_product_allowed": (
+            m5_product_ready and not m5_history_ready
+        ),
         "m4_research_ready": m4_research_ready,
         "research_degraded_does_not_block_product_exit": True,
         "steps": {
@@ -392,6 +427,11 @@ def build_daily_close_summary(
             "m5_product_requires_m4_guards": False,
             "m5_product_requires_context_sync_success": False,
             "m5_final_cache_revalidation_after_m4": True,
+            "m5_history_runs_only_after_final_cache": True,
+            "m5_history_required_for_product_ready": False,
+            "m5_history_is_authoritative_evidence": False,
+            "m5_history_writes_m4_evidence": False,
+            "m5_history_uses_historical_outcome_for_ranking": False,
             "m5_cache_is_authoritative_evidence": False,
             "m5_cache_writes_m4_evidence": False,
             "m4_evidence_owned_by_authoritative_capture_chain": True,
