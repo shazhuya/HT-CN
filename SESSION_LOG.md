@@ -1118,3 +1118,15 @@ Validation:
 
 Next local run is resumable and should skip the 53 already formal-ready instruments.
 
+## 2026-09-18 — Third private bundle: QFQ 54/55
+
+- transport bundle integrity verified;
+- formal QFQ readiness reached 54/55;
+- SSE.600057 safe internal gap repair succeeded;
+- only SZSE.000001 remained blocked by 1991 historical Saturday provider-calendar gaps;
+- no authoritative T1 committed.
+
+D-041 added a historical-Saturday-only repair path requiring raw pre-close continuity plus <=5% bracketing factor drift.
+
+CI run #1459 passed. Freeze audit remained 0/37 methodology drift and 0/4 Outcome Engine drift.
+
