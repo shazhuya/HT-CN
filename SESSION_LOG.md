@@ -1155,3 +1155,24 @@ Validation:
 
 Next: M5 Phase 2 Operator Delta / daily change view, remaining strictly product-only and non-authoritative.
 
+## 2026-09-19 — M5 Phase 2 Operator Delta green
+
+Implemented daily product-observation comparison:
+- stable date-based display identity;
+- Queue schema v2 as-of integrity;
+- new/disappeared/state/next-key/context changes;
+- failed-instrument disappearance suppression;
+- pure delta API;
+- browser two-snapshot storage;
+- product-only change UI.
+
+Validation:
+- Actions run #1503 success;
+- Python 619 passed;
+- Playwright 19 passed;
+- Web build success;
+- frozen methodology diff 0;
+- Outcome Engine diff 0.
+
+D-043 freezes Operator Delta as product observation only, never M4 authoritative evidence.
+
