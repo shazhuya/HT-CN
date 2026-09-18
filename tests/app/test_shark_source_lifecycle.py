@@ -70,8 +70,8 @@ def test_forming_shark_gets_source_clock_and_lifecycle_from_b_anchor() -> None:
     assert management["target_50_bc"] == pytest.approx(96.88 + 0.50 * (124.0 - 96.88))
     assert management["target_618_bc"] == pytest.approx(96.88 + 0.618 * (124.0 - 96.88))
     assert management["reciprocal_abcd"] == pytest.approx(96.88 + (124.0 - 110.0))
-    assert management["initial_target"] == pytest.approx(management["reciprocal_abcd"])
-    assert management["initial_target_basis"] == "reciprocal_abcd"
+    assert management["initial_target"] == pytest.approx(management["target_50_bc"])
+    assert management["initial_target_basis"] == "50_percent"
 
 
 def test_completed_shark_source_clock_uses_b_not_a_as_type_i_span_anchor() -> None:
