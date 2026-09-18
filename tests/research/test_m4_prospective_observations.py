@@ -106,3 +106,52 @@ def test_observation_schema_does_not_compute_return_or_profit_fields() -> None:
     assert "return_pct" not in observation
     assert "profit" not in observation
     assert report["interpretation"]["profit_threshold_defined"] is False
+
+
+def _manifest(date: str, *, head: str = "h", candidates: int = 1):
+    return {
+        "code_head": head,
+        "as_of_trade_date": date,
+        "captured_at_utc": "2026-09-18T00:00:00+00:00",
+        "instrument_count": 55,
+        "successful_instruments": 55,
+        "failed_instruments": 0,
+        "candidate_count": candidates,
+        "worktree_clean": True,
+        "status": "pass",
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+    }
+
+
+def test_manifest_zero_candidate_date_becomes_absent_observation() -> None:
+    rows = [
+        _row("2026-09-17", "baseline"),
+        _row("2026-09-18", "new"),
+        _row("2026-09-20", "new", state="type_i_confirmed"),
+    ]
+    manifest = [
+        _manifest("2026-09-18", candidates=1),
+        _manifest("2026-09-19", candidates=0),
+        _manifest("2026-09-20", candidates=1),
+    ]
+    report = build_prospective_observation_report(
+        rows,
+        manifest_rows=manifest,
+    )
+    observations = [
+        item for item in report["observations"] if item["candidate_key"] == "new"
+    ]
+    assert [item["observation_trade_date"] for item in observations] == [
+        "2026-09-18",
+        "2026-09-19",
+        "2026-09-20",
+    ]
+    assert [item["scanner_presence"] for item in observations] == [
+        "present",
+        "absent",
+        "present",
+    ]
+    assert report["interpretation"]["capture_timeline_source"] == (
+        "manifest_plus_legacy_journal"
+    )

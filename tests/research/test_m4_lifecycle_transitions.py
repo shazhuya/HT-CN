@@ -207,3 +207,28 @@ def test_prospective_new_can_enroll_when_source_becomes_resolved_pre_terminal() 
     assert first["outcome_enrollment_trade_date"] is None
     assert second["prospective_outcome_eligible"] is True
     assert second["outcome_enrollment_trade_date"] == "2026-09-19"
+
+
+def test_explicit_capture_timeline_records_zero_candidate_gap() -> None:
+    rows = [
+        _row("2026-09-17", "a", lifecycle="waiting_terminal"),
+        _row("2026-09-19", "a", lifecycle="type_i_early_reaction"),
+    ]
+    transitions = build_transitions(
+        rows,
+        captured_dates=["2026-09-17", "2026-09-18", "2026-09-19"],
+    )
+    disappeared = next(
+        item
+        for item in transitions
+        if item.candidate_key == "a"
+        and item.to_trade_date == "2026-09-18"
+    )
+    reappeared = next(
+        item
+        for item in transitions
+        if item.candidate_key == "a"
+        and item.to_trade_date == "2026-09-19"
+    )
+    assert disappeared.transition_kind == "scanner_disappeared"
+    assert reappeared.transition_kind == "scanner_reappeared"

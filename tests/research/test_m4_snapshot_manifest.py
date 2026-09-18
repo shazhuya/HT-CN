@@ -2,6 +2,7 @@ from htcn.research.snapshot_manifest import (
     SnapshotManifestEntry,
     append_snapshot_manifest,
     read_snapshot_manifest,
+    resolve_capture_timeline,
 )
 
 
@@ -66,3 +67,54 @@ def test_manifest_forbids_historical_backfill(tmp_path) -> None:
         assert "forbids backfill" in str(exc)
     else:
         raise AssertionError("manifest backfill must fail closed")
+
+
+def _manifest_row(date: str, *, head: str = "h", candidates: int = 1):
+    return _entry(date, head=head, candidates=candidates).as_payload()
+
+
+def test_capture_timeline_allows_legacy_t0_before_manifest_activation() -> None:
+    journal = [
+        {"as_of_trade_date": "2026-09-17", "code_head": "old"},
+        {"as_of_trade_date": "2026-09-18", "code_head": "h"},
+    ]
+    manifest = [_manifest_row("2026-09-18", head="h")]
+    timeline = resolve_capture_timeline(journal, manifest)
+    assert timeline.dates == ("2026-09-17", "2026-09-18")
+    assert timeline.source == "manifest_plus_legacy_journal"
+    assert timeline.legacy_pre_manifest_dates == ("2026-09-17",)
+
+
+def test_capture_timeline_keeps_zero_candidate_manifest_date() -> None:
+    journal = [{"as_of_trade_date": "2026-09-17", "code_head": "old"}]
+    manifest = [
+        _manifest_row("2026-09-18", candidates=0),
+        _manifest_row("2026-09-19", candidates=2),
+    ]
+    timeline = resolve_capture_timeline(journal, manifest)
+    assert timeline.dates == ("2026-09-17", "2026-09-18", "2026-09-19")
+
+
+def test_capture_timeline_rejects_journal_date_missing_manifest_after_activation() -> None:
+    journal = [
+        {"as_of_trade_date": "2026-09-17", "code_head": "old"},
+        {"as_of_trade_date": "2026-09-19", "code_head": "h"},
+    ]
+    manifest = [_manifest_row("2026-09-18", candidates=0)]
+    try:
+        resolve_capture_timeline(journal, manifest)
+    except ValueError as exc:
+        assert "missing required snapshot manifest" in str(exc)
+    else:
+        raise AssertionError("post-activation journal date without manifest must fail")
+
+
+def test_capture_timeline_rejects_manifest_journal_head_mismatch() -> None:
+    journal = [{"as_of_trade_date": "2026-09-18", "code_head": "h1"}]
+    manifest = [_manifest_row("2026-09-18", head="h2")]
+    try:
+        resolve_capture_timeline(journal, manifest)
+    except ValueError as exc:
+        assert "code-head mismatch" in str(exc)
+    else:
+        raise AssertionError("manifest/journal head mismatch must fail")
