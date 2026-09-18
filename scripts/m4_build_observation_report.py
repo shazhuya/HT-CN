@@ -9,6 +9,7 @@ from typing import Any
 from htcn.research.capture_transaction import (
     committed_capture_view,
     read_committed_captures,
+    read_frozen_legacy_baseline,
 )
 from htcn.research.lifecycle_journal import read_journal
 from htcn.research.prospective_observations import build_prospective_observation_report
@@ -92,17 +93,21 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    legacy_rows = read_journal(Path(args.journal))
     transaction_root = Path(args.transaction_root)
     committed = read_committed_captures(transaction_root)
     if committed:
+        frozen_baseline = read_frozen_legacy_baseline(transaction_root)
+        if not frozen_baseline:
+            raise RuntimeError(
+                "committed capture transactions exist but frozen legacy baseline is missing"
+            )
         rows, manifest_rows = committed_capture_view(
-            legacy_journal_rows=legacy_rows,
+            legacy_journal_rows=frozen_baseline,
             capture_rows=committed,
         )
-        evidence_source = "committed_capture_transactions"
+        evidence_source = "frozen_baseline_plus_committed_transactions"
     else:
-        rows = legacy_rows
+        rows = read_journal(Path(args.journal))
         manifest_path = Path(args.manifest)
         manifest_rows = (
             read_snapshot_manifest(manifest_path)

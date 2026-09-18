@@ -14,8 +14,10 @@ from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 from htcn.research.capture_transaction import (
     build_committed_capture,
     commit_capture_transaction,
+    freeze_legacy_baseline,
+    read_committed_captures,
 )
-from htcn.research.lifecycle_journal import append_entries, entries_from_analysis
+from htcn.research.lifecycle_journal import append_entries, entries_from_analysis, read_journal
 from htcn.research.snapshot_manifest import (
     SnapshotManifestEntry,
     append_snapshot_manifest,
@@ -137,6 +139,14 @@ def run(
     if result["errors"]:
         result["status"] = "failed_no_journal_append"
         return result
+
+    existing_committed = read_committed_captures(transaction_root)
+    if not existing_committed:
+        legacy_rows = read_journal(journal_path)
+        result["legacy_baseline_freeze"] = freeze_legacy_baseline(
+            transaction_root,
+            legacy_rows,
+        )
 
     committed_capture = build_committed_capture(
         code_head=str(identity.head),
