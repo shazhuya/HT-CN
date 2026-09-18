@@ -8,6 +8,7 @@ from typing import Any
 
 from .capture_transaction import (
     committed_capture_view,
+    frozen_legacy_baseline_through_date,
     read_committed_captures,
     read_frozen_legacy_baseline,
 )
@@ -81,7 +82,8 @@ def authoritative_mirror_payloads(
     if not committed:
         return [], [], 0
     baseline = read_frozen_legacy_baseline(transaction_root)
-    if not baseline:
+    baseline_through = frozen_legacy_baseline_through_date(transaction_root)
+    if not baseline and baseline_through is None:
         raise RuntimeError(
             "committed transactions exist but frozen legacy baseline is missing"
         )

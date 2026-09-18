@@ -56,12 +56,19 @@ def read_snapshot_manifest(path: str | Path) -> list[dict[str, Any]]:
 def resolve_capture_timeline(
     journal_rows: list[dict[str, Any]],
     manifest_rows: list[dict[str, Any]] | None = None,
+    *,
+    legacy_baseline_trade_date: str | None = None,
 ) -> CaptureTimeline:
     journal_dates = sorted({
         str(row.get("as_of_trade_date"))
         for row in journal_rows
         if row.get("as_of_trade_date")
     })
+    explicit_legacy_date = (
+        None
+        if legacy_baseline_trade_date is None
+        else str(legacy_baseline_trade_date)
+    )
     journal_heads_by_date: dict[str, set[str]] = {}
     journal_count_by_date: dict[str, int] = {}
     for row in journal_rows:
@@ -80,10 +87,11 @@ def resolve_capture_timeline(
 
     manifest = list(manifest_rows or [])
     if not manifest:
+        dates = sorted(set(journal_dates) | ({explicit_legacy_date} if explicit_legacy_date else set()))
         return CaptureTimeline(
-            dates=tuple(journal_dates),
+            dates=tuple(dates),
             source="journal_fallback",
-            legacy_pre_manifest_dates=tuple(journal_dates),
+            legacy_pre_manifest_dates=tuple(dates),
         )
 
     manifest_by_date: dict[str, dict[str, Any]] = {}
@@ -110,7 +118,10 @@ def resolve_capture_timeline(
 
     manifest_dates = sorted(manifest_by_date)
     first_manifest = manifest_dates[0]
-    legacy = tuple(value for value in journal_dates if value < first_manifest)
+    legacy_values = {value for value in journal_dates if value < first_manifest}
+    if explicit_legacy_date and explicit_legacy_date < first_manifest:
+        legacy_values.add(explicit_legacy_date)
+    legacy = tuple(sorted(legacy_values))
     for as_of in journal_dates:
         if as_of >= first_manifest and as_of not in manifest_by_date:
             raise ValueError(
@@ -145,7 +156,10 @@ def resolve_capture_timeline(
                     "but journal has no rows"
                 )
 
-    dates = tuple(sorted(set(journal_dates) | set(manifest_dates)))
+    all_dates = set(journal_dates) | set(manifest_dates)
+    if explicit_legacy_date:
+        all_dates.add(explicit_legacy_date)
+    dates = tuple(sorted(all_dates))
     return CaptureTimeline(
         dates=dates,
         source=("manifest" if not legacy else "manifest_plus_legacy_journal"),

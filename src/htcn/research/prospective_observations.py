@@ -52,6 +52,7 @@ def build_prospective_observation_report(
     rows: Iterable[dict[str, Any]],
     *,
     manifest_rows: Iterable[dict[str, Any]] | None = None,
+    legacy_baseline_trade_date: str | None = None,
 ) -> dict[str, Any]:
     materialized = [dict(row) for row in rows]
     manifest_materialized = (
@@ -62,6 +63,7 @@ def build_prospective_observation_report(
     timeline = resolve_capture_timeline(
         materialized,
         manifest_materialized,
+        legacy_baseline_trade_date=legacy_baseline_trade_date,
     )
     dates = list(timeline.dates)
     baseline = dates[0] if dates else None
