@@ -145,6 +145,51 @@ class AkShareProvider:
         ordered = [column for column in columns if column in out.columns]
         return out[ordered].copy()
 
+    def get_index_daily(
+        self,
+        symbol: str,
+        start: date,
+        end: date,
+    ) -> pd.DataFrame:
+        """Return one China A-share index daily series in HT-CN benchmark schema."""
+        frame = self._ak.index_zh_a_hist(
+            symbol=symbol,
+            period="daily",
+            start_date=start.strftime("%Y%m%d"),
+            end_date=end.strftime("%Y%m%d"),
+        )
+        columns = [
+            "trade_date",
+            "open",
+            "high",
+            "low",
+            "close",
+            "pct_change",
+            "source",
+        ]
+        if frame is None or frame.empty:
+            return pd.DataFrame(columns=columns)
+        mapping = {
+            self._column(frame, "日期", "date"): "trade_date",
+            self._column(frame, "开盘", "open"): "open",
+            self._column(frame, "最高", "high"): "high",
+            self._column(frame, "最低", "low"): "low",
+            self._column(frame, "收盘", "close"): "close",
+        }
+        for candidate in ("涨跌幅", "pct_change"):
+            if candidate in frame.columns:
+                mapping[candidate] = "pct_change"
+                break
+        out = frame.rename(columns=mapping)[list(dict.fromkeys(mapping.values()))].copy()
+        out["trade_date"] = pd.to_datetime(out["trade_date"], errors="raise").dt.normalize()
+        for column in ("open", "high", "low", "close"):
+            out[column] = pd.to_numeric(out[column], errors="raise")
+        if "pct_change" in out.columns:
+            out["pct_change"] = pd.to_numeric(out["pct_change"], errors="coerce")
+        out["source"] = "akshare_index_zh_a_hist"
+        ordered = [column for column in columns if column in out.columns]
+        return out[ordered].copy()
+
     event_source = "akshare_stock_tfp_em"
 
     def get_daily_trading_events(self, trade_date: date) -> list[SecurityDailyEventRecord]:

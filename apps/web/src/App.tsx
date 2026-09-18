@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import HarmonicChart, { Bar, Pattern } from './HarmonicChart'
 import TypeIT5Evidence, { TypeIT5Event } from './TypeIT5Evidence'
 import AShareExecutionContext, { AShareExecutionContextPayload } from './AShareExecutionContext'
+import MarketContext, { MarketContextPayload } from './MarketContext'
 
 type Health = {
   status: string
@@ -29,6 +30,7 @@ type Analysis = {
   pivot_counts: Record<string, number>
   type_i_t5_events?: TypeIT5Event[]
   a_share_execution_context?: AShareExecutionContextPayload
+  market_context?: MarketContextPayload
   engine_note: string
 }
 
@@ -249,6 +251,7 @@ export default function App() {
           {analysis.warning && <div className="warning-card">{analysis.warning}</div>}
 
           <AShareExecutionContext context={analysis.a_share_execution_context} />
+          <MarketContext context={analysis.market_context} />
           <TypeIT5Evidence events={analysis.type_i_t5_events ?? []} />
 
           <section className="workspace">

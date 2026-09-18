@@ -10,6 +10,7 @@ from htcn.app.a_share_execution_context import (
     load_security_metadata,
 )
 from htcn.app.source_aligned_service import SourceAlignedHarmonicService
+from htcn.app.market_context import build_core_market_context
 from htcn.harmonic.execution import SourceExecutionAudit
 from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.rsi_bamm_confluence import observe_source_execution_for_match
@@ -155,6 +156,10 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             daily_event=daily_event,
         ).as_payload()
         analysis["a_share_execution_context"] = execution_context
+        analysis["market_context"] = build_core_market_context(
+            frame,
+            benchmark_root=self.data_root / "benchmarks",
+        ).as_payload()
         for pattern in [*(analysis.get("completed") or []), *(analysis.get("forming") or [])]:
             pattern["a_share_execution_context"] = execution_context
 
@@ -170,6 +175,11 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             "bamm_role": "evidence_only",
             "a_share_execution_context_field": "a_share_execution_context",
             "a_share_execution_context_role": "tradability_and_volatility_context_only",
+            "market_context_field": "market_context",
+            "market_context_role": "benchmark_and_relative_strength_evidence_only",
+            "market_context_may_change_harmonic_identity": False,
+            "market_context_may_change_source_raw_prz": False,
+            "market_context_owns_lifecycle": False,
             "daily_event_metadata_table": "security_daily_event",
             "daily_event_complete_required_to_resolve_special_exceptions": True,
             "execution_context_may_change_harmonic_identity": False,
@@ -186,5 +196,7 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             "该上下文只能解释可交易性与波动风险，禁止改写 harmonic identity 或 Source Raw PRZ。"
             " M3 Phase 3.1：当日停复牌/无涨跌幅/特殊限制只接受显式 daily-event metadata；"
             "缺失或不完整时继续 fail-safe，禁止把板块规则冒充当日精确制度。"
+            " M3 Phase 3.2：科创50/创业板/沪深300/上证指数只作为市场与相对强弱证据；"
+            "它们不拥有 lifecycle，也不得改写 identity 或 Source Raw PRZ。"
         ).strip()
         return analysis
