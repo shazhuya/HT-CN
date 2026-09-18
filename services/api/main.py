@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from htcn.app.harmonic_service import DatasetNotFoundError
 from htcn.app.operator_delta import build_operator_delta
+from htcn.app.operator_history import query_operator_history
 from htcn.app.operator_input_identity import (
     build_analysis_code_identity,
     build_operator_cache_input_identity,
@@ -30,6 +31,7 @@ from htcn.research.type_i_live_evidence import build_type_i_t5_events
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
 OPERATOR_CACHE_ROOT = ROOT / "data" / "product" / "m5" / "operator_queue"
+OPERATOR_HISTORY_ROOT = ROOT / "data" / "product" / "m5" / "operator_history"
 OPERATOR_ANALYSIS_CODE_IDENTITY = build_analysis_code_identity(
     project_root=ROOT,
 )
@@ -142,6 +144,34 @@ def operator_queue(
         payload,
         include_evidence_insufficient=include_evidence_insufficient,
     )
+
+@app.get("/api/operator/history")
+def operator_history(
+    instrument_id: str | None = Query(default=None),
+    display_key: str | None = Query(default=None),
+    start_trade_date: str | None = Query(default=None),
+    end_trade_date: str | None = Query(default=None),
+    all_revisions: bool = Query(default=False),
+    summary_only: bool = Query(default=True),
+    limit: int = Query(default=60, ge=1, le=3650),
+) -> dict[str, object]:
+    try:
+        return query_operator_history(
+            history_root=OPERATOR_HISTORY_ROOT,
+            instrument_id=instrument_id,
+            display_key=display_key,
+            start_trade_date=start_trade_date,
+            end_trade_date=end_trade_date,
+            latest_revision_per_day=not all_revisions,
+            summary_only=summary_only,
+            limit=limit,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"operator history integrity error: {exc}",
+        ) from exc
+
 
 @app.post("/api/operator/delta")
 def operator_delta(
