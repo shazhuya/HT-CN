@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import pandas as pd
 
-from scripts.m4_prepare_qfq_universe import _strict_factor_candidate
+from scripts.m4_prepare_qfq_universe import (
+    _repair_safe_internal_factor_gaps,
+    _strict_factor_candidate,
+)
 
 
 def _raw(days: int = 20) -> pd.DataFrame:
@@ -69,3 +72,51 @@ def test_strict_qfq_candidate_rejects_nonpositive_factor() -> None:
     ready, reason = _strict_factor_candidate(raw, factors)
     assert ready is False
     assert reason == "non_positive_factor"
+
+
+
+def test_safe_internal_gap_repair_fills_stable_bracketed_session() -> None:
+    raw = _raw(20)
+    keep = [index for index in range(20) if index != 10]
+    factors = _factors(raw, keep)
+    factors.loc[factors.index < 10, "price_factor"] = 1.0000
+    factors.loc[factors.index >= 10, "price_factor"] = 1.0004
+
+    repaired, audit = _repair_safe_internal_factor_gaps(raw, factors)
+
+    assert len(repaired) == len(raw)
+    assert len(audit) == 1
+    assert audit[0]["gap_raw_session_count"] == 1
+    assert audit[0]["relative_factor_drift"] < 0.005
+    ready, reason = _strict_factor_candidate(raw, repaired)
+    assert ready is True
+    assert reason == "strict_factor_candidate_ready"
+
+
+def test_safe_internal_gap_repair_refuses_factor_regime_jump() -> None:
+    raw = _raw(20)
+    keep = [index for index in range(20) if index != 10]
+    factors = _factors(raw, keep)
+    factors.loc[factors.index < 10, "price_factor"] = 1.0
+    factors.loc[factors.index >= 10, "price_factor"] = 0.9
+
+    repaired, audit = _repair_safe_internal_factor_gaps(raw, factors)
+
+    assert len(repaired) == len(factors)
+    assert audit == []
+    ready, reason = _strict_factor_candidate(raw, repaired)
+    assert ready is False
+    assert reason.startswith("historical_factor_gap:")
+
+
+def test_safe_internal_gap_repair_does_not_fill_trailing_freshness_gap() -> None:
+    raw = _raw(20)
+    factors = _factors(raw, list(range(19)))
+
+    repaired, audit = _repair_safe_internal_factor_gaps(raw, factors)
+
+    assert len(repaired) == 19
+    assert audit == []
+    ready, reason = _strict_factor_candidate(raw, repaired)
+    assert ready is True
+    assert reason == "strict_factor_candidate_ready"
