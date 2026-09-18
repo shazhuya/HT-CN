@@ -162,6 +162,7 @@ def main() -> int:
         "failed_instrument_count": payload.get(
             "failed_instrument_count"
         ),
+        "instrument_errors": list(payload.get("errors") or []),
         "candidate_count": payload.get("candidate_count"),
         "as_of_trade_date": payload.get("as_of_trade_date"),
         "observation_integrity": payload.get(

@@ -438,6 +438,16 @@ def main() -> int:
         ),
     }
 
+    print(
+        "[HT-CN M3 CONTEXT] "
+        f"target={target.isoformat()} expected={expected_target.isoformat()} "
+        f"market_freshness={layers['market_data_freshness']['state']}",
+        flush=True,
+    )
+    print(
+        "[HT-CN M3 CONTEXT] [1/4] syncing execution events...",
+        flush=True,
+    )
     try:
         count = sync_daily_trading_events(
             catalog_path=catalog, provider=provider, trade_date=target
@@ -450,8 +460,21 @@ def main() -> int:
     except Exception as exc:
         layers["execution_event"] = {"state": "failed", "error": _error(exc)}
 
+    print(
+        "[HT-CN M3 CONTEXT] [2/4] syncing core benchmarks...",
+        flush=True,
+    )
     layers["market"] = _sync_benchmarks(
         provider, root=data_root / "benchmarks", target=target
+    )
+    print(
+        "[HT-CN M3 CONTEXT] "
+        f"[2/4] benchmarks state={layers['market'].get('state')}",
+        flush=True,
+    )
+    print(
+        "[HT-CN M3 CONTEXT] [3/4] syncing industry context...",
+        flush=True,
     )
     layers["industry"] = _sync_industry(
         provider,
@@ -461,6 +484,15 @@ def main() -> int:
         today=today,
         refresh_days=max(args.membership_refresh_days, 0),
     )
+    print(
+        "[HT-CN M3 CONTEXT] "
+        f"[3/4] industry state={layers['industry'].get('state')}",
+        flush=True,
+    )
+    print(
+        "[HT-CN M3 CONTEXT] [4/4] syncing concept context...",
+        flush=True,
+    )
     layers["concept"] = _sync_concepts(
         provider,
         catalog=catalog,
@@ -469,6 +501,12 @@ def main() -> int:
         today=today,
         refresh_days=max(args.membership_refresh_days, 0),
         workers=max(1, min(args.concept_workers, 16)),
+    )
+
+    print(
+        "[HT-CN M3 CONTEXT] "
+        f"[4/4] concept state={layers['concept'].get('state')}",
+        flush=True,
     )
 
     states = {
