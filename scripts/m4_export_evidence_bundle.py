@@ -65,17 +65,27 @@ def build_bundle(
 
     members: list[dict[str, Any]] = []
 
-    outcome_protocol_path = Path(
-        "research/m4-outcome-protocol-v1.json"
-    )
-    if outcome_protocol_path.is_file():
-        members.append(
-            _member(
-                outcome_protocol_path,
-                arcname="protocols/m4-outcome-protocol-v1.json",
-                required=True,
+    for protocol_name, required in (
+        ("m4-outcome-protocol-v1.json", False),
+        ("m4-outcome-protocol-v2.json", True),
+    ):
+        outcome_protocol_path = Path("research") / protocol_name
+        if outcome_protocol_path.is_file():
+            members.append(
+                _member(
+                    outcome_protocol_path,
+                    arcname=f"protocols/{protocol_name}",
+                    required=required,
+                )
             )
-        )
+        elif required:
+            members.append(
+                _member(
+                    outcome_protocol_path,
+                    arcname=f"protocols/{protocol_name}",
+                    required=True,
+                )
+            )
 
     outcome_snapshot_read_error: str | None = None
     outcome_snapshots: list[dict[str, Any]] = []
@@ -127,8 +137,8 @@ def build_bundle(
         "m4-lifecycle-transitions.md",
         "m4-prospective-observations.json",
         "m4-prospective-observations.md",
-        "m4-outcome-v1.json",
-        "m4-outcome-v1.md",
+        "m4-outcome-v2.json",
+        "m4-outcome-v2.md",
     )
     for name in report_names:
         path = reports_root / name
