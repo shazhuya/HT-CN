@@ -87,6 +87,15 @@ const queuePayload = {
     },
   ],
   errors: [],
+  operator_index: {
+    schema_version: 1,
+    universe_scope: 'all_initialized_local_instruments',
+    universe_instrument_count: 2,
+    presentation_does_not_define_universe: true,
+    legacy_limit_ignored: null,
+    authoritative_evidence: false,
+    writes_m4_evidence: false,
+  },
   product_cache: {
     schema_version: 1,
     contract_version: 1,
@@ -146,6 +155,7 @@ test('M5 operator queue renders workflow buckets and selects an instrument', asy
   await expect(queueBody.getByText('接近 Source PRZ', { exact: true })).toBeVisible()
   await expect(queue.getByText('12.34')).toBeVisible()
   await expect(queue.getByText('25.67')).toBeVisible()
+  await expect(queue.getByText('扫描范围：完整本地初始化 universe')).toBeVisible()
   await expect(queue.getByText(/Queue cache：/)).toBeVisible()
   await expect(queue.getByText('hit', { exact: true })).toBeVisible()
 
@@ -155,4 +165,101 @@ test('M5 operator queue renders workflow buckets and selects an instrument', asy
 
   await queue.getByRole('button', { name: 'SSE.600000' }).click()
   await expect(page.getByLabel('analysis-controls').locator('input[list="instrument-list"]')).toHaveValue('SSE.600000')
+})
+
+
+test('M5 operator index paginates locally without shrinking full queue', async ({ page }) => {
+  const items = Array.from({ length: 60 }, (_, index) => {
+    const suffix = String(index + 1).padStart(6, '0')
+    return {
+      display_key: `SSE.${suffix}:bat:XABCD:bullish:S5:2026-09-01-2026-09-02-2026-09-03-2026-09-04`,
+      instrument_id: `SSE.${suffix}`,
+      last_trade_date: '2026-09-18',
+      price_mode: 'qfq',
+      warning: null,
+      pattern_id: 'bat',
+      schema: 'XABCD',
+      direction: 'bullish',
+      scale: 5,
+      pattern_state: 'forming',
+      action_state: 'waiting',
+      workflow_bucket_order: 2,
+      lifecycle_state: 'approaching_source_prz',
+      state_reason: 'source backed',
+      current_position: '接近 Source PRZ',
+      first_watch: '看 Source PRZ 入场边界',
+      next_watch: '进入后再看 Terminal',
+      upgrade_blocker: '未进入 Source PRZ',
+      next_key_price: 100 + index,
+      next_key_price_role: 'source_prz_entry_edge',
+      execution_context_gate: 'tradable',
+      context_cautions: [],
+      source_prz_low: 95,
+      source_prz_high: 100,
+      bars_since_terminal: null,
+    }
+  })
+
+  const payload = {
+    ...queuePayload,
+    instrument_count: 60,
+    analyzed_instrument_count: 60,
+    candidate_count: 60,
+    candidate_instrument_count: 60,
+    action_state_counts: { waiting: 60 },
+    lifecycle_state_counts: { approaching_source_prz: 60 },
+    items,
+    operator_index: {
+      ...queuePayload.operator_index,
+      universe_instrument_count: 60,
+    },
+  }
+
+  await page.route('**/api/health', async (route) => {
+    await route.fulfill({
+      json: { status: 'ok', service: 'ht-cn-api', version: '0.4.0' },
+    })
+  })
+  await page.route('**/api/instruments?**', async (route) => {
+    await route.fulfill({
+      json: {
+        count: 60,
+        items: items.map((item) => ({
+          instrument_id: item.instrument_id,
+          has_qfq_factor: true,
+        })),
+      },
+    })
+  })
+
+  let queueRequests = 0
+  await page.route('**/api/operator/queue?**', async (route) => {
+    queueRequests += 1
+    const url = new URL(route.request().url())
+    expect(url.searchParams.has('limit')).toBe(false)
+    await route.fulfill({ json: payload })
+  })
+
+  await page.goto('/')
+
+  const queue = page.getByLabel('operator-queue')
+  const controls = page.getByLabel('operator-index-controls')
+  await expect(queue.getByText('60 只标的')).toBeVisible()
+  await expect(controls.getByText(/匹配/)).toContainText('60')
+  await expect(controls.getByText(/页码/)).toContainText('1 / 2')
+  await expect(queue.locator('tbody tr')).toHaveCount(50)
+  expect(queueRequests).toBe(1)
+
+  await controls.getByRole('button', { name: '下一页' }).click()
+  await expect(controls.getByText(/页码/)).toContainText('2 / 2')
+  await expect(queue.locator('tbody tr')).toHaveCount(10)
+  await expect(queue.getByRole('button', { name: 'SSE.000060' })).toBeVisible()
+  expect(queueRequests).toBe(1)
+
+  await controls.getByPlaceholder('代码 / 形态 / 生命周期').fill('SSE.000060')
+  await expect(controls.getByText(/匹配/)).toContainText('1')
+  await expect(controls.getByText(/页码/)).toContainText('1 / 1')
+  await expect(queue.locator('tbody tr')).toHaveCount(1)
+  await expect(queue.getByRole('button', { name: 'SSE.000060' })).toBeVisible()
+  expect(queueRequests).toBe(1)
 })
