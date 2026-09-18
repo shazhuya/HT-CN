@@ -50,6 +50,8 @@ def _group_by_date(rows: Iterable[dict[str, Any]]) -> dict[str, list[dict[str, A
 
 def _normalize_enrollment(
     rows: Iterable[dict[str, Any]],
+    *,
+    baseline_trade_date: str | None = None,
 ) -> list[dict[str, Any]]:
     materialized = [dict(row) for row in rows]
     if not materialized:
@@ -57,7 +59,11 @@ def _normalize_enrollment(
 
     grouped = _group_by_date(materialized)
     dates = sorted(grouped)
-    baseline_date = dates[0]
+    baseline_date = dates[0] if baseline_trade_date is None else str(baseline_trade_date)
+    if baseline_date > dates[0]:
+        raise ValueError(
+            f"baseline trade date {baseline_date} is after first journal date {dates[0]}"
+        )
     first_seen: dict[str, str] = {}
     cohort: dict[str, str] = {}
     outcome_enrollment: dict[str, str] = {}
@@ -124,9 +130,16 @@ def _normalize_enrollment(
     return normalized
 
 
-def normalize_journal_rows(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+def normalize_journal_rows(
+    rows: Iterable[dict[str, Any]],
+    *,
+    baseline_trade_date: str | None = None,
+) -> list[dict[str, Any]]:
     """Public normalized view used by downstream M4 derived reports."""
-    return _normalize_enrollment(rows)
+    return _normalize_enrollment(
+        rows,
+        baseline_trade_date=baseline_trade_date,
+    )
 
 
 def _transition_kind(
@@ -147,13 +160,29 @@ def _transition_kind(
 
 def build_transitions(
     rows: Iterable[dict[str, Any]],
+    *,
+    captured_dates: Iterable[str] | None = None,
 ) -> list[LifecycleTransition]:
-    normalized = _normalize_enrollment(rows)
-    if not normalized:
+    materialized = [dict(row) for row in rows]
+    explicit_dates = (
+        sorted({str(value) for value in captured_dates})
+        if captured_dates is not None
+        else None
+    )
+    baseline = explicit_dates[0] if explicit_dates else None
+    normalized = _normalize_enrollment(
+        materialized,
+        baseline_trade_date=baseline,
+    )
+    if not normalized and not explicit_dates:
         return []
 
-    grouped = _group_by_date(normalized)
-    dates = sorted(grouped)
+    grouped = _group_by_date(normalized) if normalized else {}
+    dates = explicit_dates if explicit_dates is not None else sorted(grouped)
+    journal_dates = set(grouped)
+    if not journal_dates.issubset(set(dates)):
+        missing = sorted(journal_dates - set(dates))
+        raise ValueError(f"captured timeline missing journal dates: {missing}")
     transitions: list[LifecycleTransition] = []
 
     previous_by_key: dict[str, dict[str, Any]] = {}
@@ -163,7 +192,7 @@ def build_transitions(
     for as_of in dates:
         current_by_key = {
             str(row["candidate_key"]): row
-            for row in grouped[as_of]
+            for row in grouped.get(as_of, [])
         }
 
         if previous_date is None:
@@ -294,11 +323,29 @@ def build_transitions(
 
 def build_transition_report(
     rows: Iterable[dict[str, Any]],
+    *,
+    captured_dates: Iterable[str] | None = None,
 ) -> dict[str, Any]:
-    normalized = _normalize_enrollment(rows)
+    materialized = [dict(row) for row in rows]
+    explicit_dates = (
+        sorted({str(value) for value in captured_dates})
+        if captured_dates is not None
+        else None
+    )
+    baseline = explicit_dates[0] if explicit_dates else None
+    normalized = _normalize_enrollment(
+        materialized,
+        baseline_trade_date=baseline,
+    )
     grouped = _group_by_date(normalized) if normalized else {}
-    dates = sorted(grouped)
-    transitions = build_transitions(normalized)
+    dates = explicit_dates if explicit_dates is not None else sorted(grouped)
+    if not set(grouped).issubset(set(dates)):
+        missing = sorted(set(grouped) - set(dates))
+        raise ValueError(f"captured timeline missing journal dates: {missing}")
+    transitions = build_transitions(
+        normalized,
+        captured_dates=dates,
+    )
 
     cohort_counts = Counter(
         str(row.get("enrollment_state"))
@@ -347,6 +394,7 @@ def build_transition_report(
         "normalized_rows": normalized,
         "transitions": [item.as_payload() for item in transitions],
         "interpretation": {
+            "captured_timeline_provided": captured_dates is not None,
             "scanner_disappeared_is_invalidated": False,
             "linear_lifecycle_ranking_used": False,
             "alpha_inference_allowed": False,
