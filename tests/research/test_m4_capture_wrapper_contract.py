@@ -37,3 +37,22 @@ def test_capture_wrapper_fails_closed_before_authoritative_capture() -> None:
     assert "scripts\\m4_capture_lifecycle_snapshot.py" in text
     assert "methodology components differ from the frozen T1 protocol" in text
     assert "m4-methodology-freeze-guard.json" in text
+
+
+
+def test_capture_wrapper_runs_outcome_only_after_capture_health_observation() -> None:
+    text = _wrapper_text()
+    outcome = text.index("scripts\\m4_build_outcome_report.py")
+    bundle = text.index("scripts\\m4_export_evidence_bundle.py")
+    assert text.index('if "!CAPTURE_EXIT!"=="0"') < outcome
+    assert text.index('if "!HEALTH_EXIT!"=="0"') < outcome
+    assert text.index('if "!OBSERVATION_EXIT!"=="0"') < outcome
+    assert outcome < bundle
+    assert "no new outcome snapshot will be attempted" in text
+
+
+def test_capture_wrapper_treats_outcome_as_final_gate() -> None:
+    text = _wrapper_text()
+    assert 'if not "!OUTCOME_EXIT!"=="0" set "FINAL_EXIT=1"' in text
+    assert "m4-outcome-v1.json" in text
+    assert "data\\research\\m4\\outcomes" in text
