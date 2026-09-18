@@ -587,7 +587,7 @@ def _followup(
     }
 
 
-def test_schema_v3_requires_followup_for_prior_enrolled_scanner_absence(tmp_path) -> None:
+def test_schema_v4_requires_followup_for_prior_enrolled_scanner_absence(tmp_path) -> None:
     freeze_legacy_baseline(
         tmp_path,
         [],
@@ -620,11 +620,11 @@ def test_schema_v3_requires_followup_for_prior_enrolled_scanner_absence(tmp_path
         assert "enrolled" in str(exc)
     else:
         raise AssertionError(
-            "schema v3 must fail closed when prior enrolled absent candidate lacks follow-up"
+            "schema v4 must fail closed when prior enrolled absent candidate lacks follow-up"
         )
 
 
-def test_schema_v3_accepts_complete_followup_for_prior_enrolled_absence(tmp_path) -> None:
+def test_schema_v4_accepts_complete_followup_for_prior_enrolled_absence(tmp_path) -> None:
     freeze_legacy_baseline(
         tmp_path,
         [],
@@ -657,3 +657,91 @@ def test_schema_v3_accepts_complete_followup_for_prior_enrolled_absence(tmp_path
     captures = read_committed_captures(tmp_path)
     assert captures[-1]["cohort_followup_count"] == 1
     assert captures[-1]["cohort_followup_rows"][0]["scanner_presence"] == "absent"
+
+
+
+def test_new_committed_capture_uses_schema_v4() -> None:
+    capture = _capture([_row("v4")])
+    assert capture.schema_version == 4
+
+
+def test_schema_v4_rejects_missing_price_basis() -> None:
+    row = _row("missing-basis")
+    row.pop("price_basis_id")
+    try:
+        _capture([row])
+    except ValueError as exc:
+        assert "invalid QFQ price_basis_id" in str(exc)
+    else:
+        raise AssertionError("schema v4 must require price_basis_id")
+
+
+def test_schema_v4_rejects_raw_price_mode() -> None:
+    row = _row("raw")
+    row["price_mode"] = "raw"
+    row["price_basis_id"] = "raw"
+    try:
+        _capture([row])
+    except ValueError as exc:
+        assert "formal QFQ price_mode required" in str(exc)
+    else:
+        raise AssertionError("schema v4 must reject raw fallback rows")
+
+
+def test_schema_v3_is_readable_but_cannot_continue_as_v4(tmp_path) -> None:
+    import json
+
+    freeze_legacy_baseline(
+        tmp_path,
+        [],
+        baseline_through_trade_date="2026-09-17",
+    )
+    row = _row("legacy-v3")
+    txid = capture_transaction_id(
+        code_head="h",
+        as_of_trade_date="2026-09-18",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        journal_rows=[row],
+        methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+        methodology_fingerprint=TEST_METHODOLOGY_FINGERPRINT,
+        schema_version=3,
+    )
+    payload = {
+        "transaction_id": txid,
+        "code_head": "h",
+        "as_of_trade_date": "2026-09-18",
+        "captured_at_utc": "2026-09-18T09:00:00+00:00",
+        "instrument_count": 55,
+        "successful_instruments": 55,
+        "failed_instruments": 0,
+        "candidate_count": 1,
+        "cohort_followup_count": 0,
+        "worktree_clean": True,
+        "methodology_contract_version": TEST_METHODOLOGY_CONTRACT_VERSION,
+        "methodology_fingerprint": TEST_METHODOLOGY_FINGERPRINT,
+        "journal_rows": [{**row, "capture_transaction_id": txid}],
+        "cohort_followup_rows": [],
+        "status": "committed",
+        "schema_version": 3,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+    }
+    (tmp_path / f"2026-09-18__{txid}.json").write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
+    assert read_committed_captures(tmp_path)[0]["schema_version"] == 3
+
+    next_capture = _capture(
+        [_row("v4", date="2026-09-19", head="h2")],
+        date="2026-09-19",
+        head="h2",
+    )
+    try:
+        commit_capture_transaction(tmp_path, next_capture)
+    except ValueError as exc:
+        assert "schema drift across active chain" in str(exc)
+    else:
+        raise AssertionError("v3 chain must not silently accept v4 append")
