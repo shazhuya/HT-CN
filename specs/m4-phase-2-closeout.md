@@ -82,6 +82,15 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 - [x] Evidence-health reports structured blockers rather than mutating evidence.
 - [x] Project context, decision log, session log and PR description are aligned to Phase 2.8.
 
+## One-click private-M1 handoff
+
+- [x] One-click local capture runs capture, health, transition, observation and transport-bundle stages.
+- [x] Final exit code is non-zero if any capture / health / report / bundle gate fails.
+- [x] Transport bundle contains available frozen baseline, committed transactions and derived reports.
+- [x] Bundle carries SHA-256 file records and current methodology provenance.
+- [x] Bundle is explicitly non-authoritative and never modifies committed evidence.
+- [x] Corrupt authoritative files are preserved in the bundle for diagnosis rather than silently repaired.
+
 ## External execution gates still open
 
 - [ ] GitHub-hosted deterministic Python/Web job observed with real steps and logs.
