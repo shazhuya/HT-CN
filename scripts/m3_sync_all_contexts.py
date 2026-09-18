@@ -293,7 +293,7 @@ def main() -> int:
         if isinstance(value, dict)
     }
     overall = (
-        "complete"
+        "all_steps_completed"
         if states.issubset({"current", "partial_positive_evidence"})
         else "degraded"
         if "failed" not in states
