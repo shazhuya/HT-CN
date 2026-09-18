@@ -94,3 +94,27 @@ def test_legacy_only_health_does_not_claim_transaction_readiness(tmp_path) -> No
     assert health["status"] == "legacy_only"
     assert health["transition_evidence_chain_ready"] is False
     assert health["interpretation"]["uses_score"] is False
+
+
+def test_empty_frozen_baseline_marker_does_not_block_health(tmp_path) -> None:
+    root = tmp_path / "captures"
+    freeze_legacy_baseline(root, [])
+    capture = build_committed_capture(
+        code_head="h",
+        as_of_trade_date="2026-09-18",
+        captured_at_utc="t",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        worktree_clean=True,
+        journal_rows=[_row("new", "2026-09-18", "h")],
+    )
+    commit_capture_transaction(root, capture)
+    health = build_evidence_chain_health(
+        transaction_root=root,
+        journal_path=tmp_path / "journal.jsonl",
+        manifest_path=tmp_path / "manifest.jsonl",
+    )
+    assert health["blocker_count"] == 0
+    assert health["frozen_legacy_baseline_present"] is True
+    assert health["transition_evidence_chain_ready"] is True
