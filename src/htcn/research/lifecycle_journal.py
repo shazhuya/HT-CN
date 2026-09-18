@@ -42,6 +42,11 @@ class LifecycleJournalEntry:
     source_prz_high: float | None
     source_terminal_trade_date: str | None
     eligible_for_validation: bool
+    as_of_open: float | None = None
+    as_of_high: float | None = None
+    as_of_low: float | None = None
+    as_of_close: float | None = None
+    as_of_volume: float | None = None
     enrollment_state: str = "pending_append_classification"
     first_observed_trade_date: str | None = None
     prospective_outcome_eligible: bool = False
@@ -93,6 +98,19 @@ def _bar_trade_date(analysis: dict[str, Any], bar_index: object) -> str | None:
             value = bar.get("trade_date")
             return None if value is None else str(value)
     return None
+
+
+def _latest_bar_value(analysis: dict[str, Any], field: str) -> float | None:
+    bars = analysis.get("bars") or []
+    if not bars:
+        return None
+    value = bars[-1].get(field)
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def entries_from_analysis(
@@ -168,6 +186,11 @@ def entries_from_analysis(
                     analysis, lifecycle.get("source_terminal_bar")
                 ),
                 eligible_for_validation=True,
+                as_of_open=_latest_bar_value(analysis, "open"),
+                as_of_high=_latest_bar_value(analysis, "high"),
+                as_of_low=_latest_bar_value(analysis, "low"),
+                as_of_close=_latest_bar_value(analysis, "close"),
+                as_of_volume=_latest_bar_value(analysis, "volume"),
             )
         )
     return out
