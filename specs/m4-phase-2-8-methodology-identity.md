@@ -99,3 +99,29 @@ It does not establish:
 - buy/sell ranking.
 
 Those require a separately frozen future outcome protocol.
+
+
+## Current supersession — Phase 2.10
+
+Phase 2.8 originally introduced transaction schema v2 and methodology contract v1 before
+any post-T0 fingerprinted future capture existed.
+
+Before the first real T1 capture, Phase 2.10 expanded the frozen prospective evidence
+semantics to cover scanner-absent outcome-cohort follow-up and capture chronology.
+
+Current T1 protocol therefore uses:
+
+- committed capture schema v3;
+- methodology contract v2;
+- 37 fingerprint components.
+
+The additional fingerprint components are:
+
+- `src/htcn/research/capture_transaction.py`;
+- `src/htcn/research/cohort_followup.py`;
+- `src/htcn/research/lifecycle_transitions.py`;
+- `src/htcn/research/prospective_observations.py`;
+- `src/htcn/research/snapshot_manifest.py`.
+
+This is not a migration of existing post-T0 future evidence: none had been committed before
+the v2 methodology freeze. The immutable T0 baseline remains unchanged.
