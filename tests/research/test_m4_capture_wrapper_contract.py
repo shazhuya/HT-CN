@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WRAPPER = ROOT / "运行M4真实A股生命周期快照.bat"
-MIN_SAFE_COMMIT = "c774c54928c33361952bf1a612a8555633449625"
+MIN_SAFE_COMMIT = "c34026755b3b8c491759eaacdb45376d4e1db485"
 REQUIRED_BRANCH = "m4/real-a-share-validation-workflow"
 
 
