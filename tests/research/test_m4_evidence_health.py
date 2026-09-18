@@ -117,6 +117,7 @@ def test_empty_frozen_baseline_marker_does_not_block_health(tmp_path) -> None:
         successful_instruments=55,
         failed_instruments=0,
         worktree_clean=True,
+        **_methodology_kwargs(),
         journal_rows=[_row("new", "2026-09-18", "h")],
     )
     commit_capture_transaction(root, capture)
@@ -163,6 +164,7 @@ def test_missing_frozen_baseline_marker_is_structured_blocker(tmp_path) -> None:
         successful_instruments=55,
         failed_instruments=0,
         worktree_clean=True,
+        **_methodology_kwargs(),
         journal_rows=[_row("new", "2026-09-18", "h")],
     )
     commit_capture_transaction(root, capture)
