@@ -6,7 +6,13 @@ from htcn.research.snapshot_manifest import (
 )
 
 
-def _entry(date: str, *, head: str = "h", candidates: int = 2):
+def _entry(
+    date: str,
+    *,
+    head: str = "h",
+    candidates: int = 2,
+    methodology_fingerprint: str | None = None,
+):
     return SnapshotManifestEntry(
         code_head=head,
         as_of_trade_date=date,
@@ -17,6 +23,10 @@ def _entry(date: str, *, head: str = "h", candidates: int = 2):
         candidate_count=candidates,
         worktree_clean=True,
         status="pass",
+        methodology_contract_version=(
+            1 if methodology_fingerprint is not None else None
+        ),
+        methodology_fingerprint=methodology_fingerprint,
     )
 
 
@@ -149,3 +159,20 @@ def test_explicit_zero_candidate_legacy_date_is_kept_before_manifest() -> None:
     )
     assert timeline.dates == ("2026-09-17", "2026-09-18")
     assert timeline.legacy_pre_manifest_dates == ("2026-09-17",)
+
+
+def test_manifest_forbids_same_day_methodology_drift(tmp_path) -> None:
+    path = tmp_path / "manifest.jsonl"
+    append_snapshot_manifest(
+        path,
+        _entry("2026-09-18", methodology_fingerprint="a" * 64),
+    )
+    try:
+        append_snapshot_manifest(
+            path,
+            _entry("2026-09-18", methodology_fingerprint="b" * 64),
+        )
+    except ValueError as exc:
+        assert "same-day rerun changed capture facts" in str(exc)
+    else:
+        raise AssertionError("same-day methodology drift must fail closed")
