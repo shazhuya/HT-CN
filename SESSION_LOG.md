@@ -1195,3 +1195,19 @@ Validation:
 
 D-044 freezes product cache as acceleration only, never M4 evidence.
 
+## 2026-09-19 — M5 Phase 4 Full-Universe Operator Index green
+
+Implemented:
+- complete initialized-universe scan independent from UI limit;
+- operator_index provenance;
+- full instrument picker;
+- search/filter/pagination over the complete product snapshot.
+
+Validation:
+- run #1543 success;
+- Python 629 passed;
+- Web build success;
+- Playwright 20 passed.
+
+D-045 freezes scan completeness independently from presentation.
+
