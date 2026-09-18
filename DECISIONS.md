@@ -908,3 +908,54 @@ Source 对齐：
 
 Prospective validation 不只要冻结“研究问题”，还要冻结“输入坐标系、计算实现和可独立复算的原始路径”。D-037 把 enrollment authority、outcome protocol、outcome engine 与 transport report 四层彻底分开，避免未来代码演进或数据修订悄悄改变旧 cohort 的 outcome 口径。
 
+## D-038 — 首次真实 T1 私有采集必须包含 hosted-CI-green checkpoint
+
+**状态：Frozen M4 T1 acquisition safety gate**
+
+在 Phase 3.1 hosted CI 恢复后，真实 runner 依次暴露并修复了：
+
+- stale test-contract / fixture 不一致；
+- outcome protocol bundle filename mapping 错误。
+
+最终 hosted-CI-green checkpoint 为：
+
+`d29870d3a2ef7b60dec4fd8f0dbef2d7a8f0b5a7`
+
+该 checkpoint 已证明：
+
+- Python deterministic suite：590 passed；
+- Node / npm install：pass；
+- Web build：pass；
+- capture methodology 自 `c774c549...` 起 37/37 component 零漂移；
+- Outcome Engine 自 `9cbc0d3d...` 起 4/4 component 零漂移。
+
+正式决定：
+
+1. 第一次真实 post-T0 T1 私有 M1 capture，不得从早于
+   `d29870d3a2ef7b60dec4fd8f0dbef2d7a8f0b5a7`
+   的 checkout 启动；
+2. `运行M4真实A股生命周期快照.bat` 的
+   `M4_MIN_SAFE_COMMIT` 提升到上述 checkpoint；
+3. 本地 checkout 若不包含该 ancestor：
+   - 在 M1 update 前 fail closed；
+   - 不创建 authoritative capture；
+   - 不创建 outcome snapshot；
+4. 该 minimum-safe checkpoint 只是**采集流程/transport/testing 安全门**，
+   不成为 harmonic methodology authority；
+5. capture methodology exact freeze 仍由 D-035：
+   `c774c54928c33361952bf1a612a8555633449625`
+   + 37 components 单独拥有；
+6. Outcome Engine exact freeze 仍由 D-037：
+   `9cbc0d3d30ac5f0a87748a39788cbee04a44bcc8`
+   + 4 components 单独拥有；
+7. 后续若只修改 documentation / test / transport / local-wrapper，
+   不得因此宣称 methodology 或 Outcome Engine 新版本；
+8. D-023 继续有效：用户电脑只承担不可替代的私有 M1 capture，
+   不作为常规测试机；
+9. D-038 冻结时仍无 post-T0 real future capture，
+   因此该 gate 不涉及任何 outcome 观察后调参。
+
+原因：
+
+第一次真正进入 prospective evidence chain 的本地运行，应至少包含已经被真实 hosted CI 验证过的完整 Phase 3.1 transport/intake 修复。仅依赖更早的功能 checkpoint 会允许不同本地 checkout 产生不同质量的 handoff evidence，即使 harmonic methodology 本身未漂移。
+
