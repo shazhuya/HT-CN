@@ -545,7 +545,24 @@ def _validate_followup_chain(
             str(row.get("candidate_key") or "")
             for row in capture.get("journal_rows") or []
         }
-        for followup in capture.get("cohort_followup_rows") or []:
+        followup_rows = [
+            dict(row) for row in capture.get("cohort_followup_rows") or []
+        ]
+        followup_keys = {
+            str(row.get("candidate_key") or "")
+            for row in followup_rows
+        }
+        expected_followup_keys = set(prior_cohort) - present_keys
+        if int(capture.get("schema_version") or 0) >= 3:
+            if followup_keys != expected_followup_keys:
+                missing = sorted(expected_followup_keys - followup_keys)
+                extra = sorted(followup_keys - expected_followup_keys)
+                raise ValueError(
+                    "cohort follow-up coverage mismatch on "
+                    f"{as_of}: missing={missing} extra={extra}"
+                )
+
+        for followup in followup_rows:
             key = str(followup.get("candidate_key") or "")
             expected = prior_cohort.get(key)
             if expected is None:
