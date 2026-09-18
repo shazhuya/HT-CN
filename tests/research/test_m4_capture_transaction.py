@@ -550,3 +550,106 @@ def test_v1_chain_blocks_v2_append_without_explicit_migration(tmp_path) -> None:
         raise AssertionError(
             "pre-fingerprint v1 chain must require explicit migration before v2 append"
         )
+
+
+
+def _followup(
+    key: str,
+    *,
+    date: str = "2026-09-19",
+    head: str = "h2",
+    enrollment: str = "2026-09-18",
+):
+    return {
+        "code_head": head,
+        "instrument_id": "SSE.600000",
+        "as_of_trade_date": date,
+        "candidate_key": key,
+        "outcome_enrollment_trade_date": enrollment,
+        "scanner_presence": "absent",
+        "underlying_last_trade_date": date,
+        "market_observation_status": "traded",
+        "execution_context_gate": "followup_observation_only",
+        "daily_event_source": None,
+        "daily_event_reason": None,
+        "as_of_open": 100.0,
+        "as_of_high": 103.0,
+        "as_of_low": 99.0,
+        "as_of_close": 102.0,
+        "as_of_volume": 1234.0,
+        "evidence_only": True,
+        "is_trade_instruction": False,
+        "alpha_inference_allowed": False,
+    }
+
+
+def test_schema_v3_requires_followup_for_prior_enrolled_scanner_absence(tmp_path) -> None:
+    freeze_legacy_baseline(
+        tmp_path,
+        [],
+        baseline_through_trade_date="2026-09-17",
+    )
+    first = _capture(
+        [_row("enrolled", date="2026-09-18", head="h")],
+        date="2026-09-18",
+        head="h",
+    )
+    commit_capture_transaction(tmp_path, first)
+
+    missing = build_committed_capture(
+        code_head="h2",
+        as_of_trade_date="2026-09-19",
+        captured_at_utc="2026-09-19T09:00:00+00:00",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        worktree_clean=True,
+        methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+        methodology_fingerprint=TEST_METHODOLOGY_FINGERPRINT,
+        journal_rows=[],
+        cohort_followup_rows=[],
+    )
+    try:
+        commit_capture_transaction(tmp_path, missing)
+    except ValueError as exc:
+        assert "cohort follow-up coverage mismatch" in str(exc)
+        assert "enrolled" in str(exc)
+    else:
+        raise AssertionError(
+            "schema v3 must fail closed when prior enrolled absent candidate lacks follow-up"
+        )
+
+
+def test_schema_v3_accepts_complete_followup_for_prior_enrolled_absence(tmp_path) -> None:
+    freeze_legacy_baseline(
+        tmp_path,
+        [],
+        baseline_through_trade_date="2026-09-17",
+    )
+    first = _capture(
+        [_row("enrolled", date="2026-09-18", head="h")],
+        date="2026-09-18",
+        head="h",
+    )
+    commit_capture_transaction(tmp_path, first)
+
+    second = build_committed_capture(
+        code_head="h2",
+        as_of_trade_date="2026-09-19",
+        captured_at_utc="2026-09-19T09:00:00+00:00",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        worktree_clean=True,
+        methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+        methodology_fingerprint=TEST_METHODOLOGY_FINGERPRINT,
+        journal_rows=[],
+        cohort_followup_rows=[
+            _followup("enrolled", date="2026-09-19", head="h2")
+        ],
+    )
+    result = commit_capture_transaction(tmp_path, second)
+    assert result["status"] == "committed"
+    captures = read_committed_captures(tmp_path)
+    assert captures[-1]["cohort_followup_count"] == 1
+    assert captures[-1]["cohort_followup_rows"][0]["scanner_presence"] == "absent"
