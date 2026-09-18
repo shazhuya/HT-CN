@@ -1366,3 +1366,54 @@ Next:
 - do not merge the old divergent handoff branch wholesale；
 - bind the handoff to the exact final Phase 9 product snapshot and input identity；
 - keep the outer handoff transport-only/non-authoritative。
+
+
+## 2026-09-19 — M5 Phase 10 Daily Handoff Bundle v2 green
+
+Branch:
+`m5/daily-handoff-bundle-v2`
+
+Validated code checkpoint:
+`99e3bf7aba1e656601bdcf4831d4b215eede4e8d`
+
+Implementation:
+- added `src/htcn/app/daily_handoff.py`；
+- added exact binding to the final Phase 9 Operator cache path instead of latest-file scanning；
+- cross-validates final M5 report, cache contract v2, trade date, single-as-of state and full input identity；
+- confines product cache path to the canonical Operator cache root；
+- uses portable repository-relative paths in the handoff manifest；
+- supports optional previous product snapshot as context only；
+- embeds current M4 evidence only when research-ready and verified；
+- may embed a separately verified existing M4 evidence bundle when research is degraded, without promoting it to current research success；
+- outer ZIP is always transport-only/non-authoritative；
+- per-member size/SHA-256 + exact archive membership verification；
+- nested M4 verification；
+- atomic ZIP write with verify-before-replace and verify-after-replace；
+- verifier independently parses pipeline/M5 report/current snapshot and cross-checks ready/date/identity；
+- added `daily_handoff_runner` with a separate transport report；
+- records pipeline report SHA before/after and refuses output/report/pipeline path collisions；
+- transport failure does not rewrite Phase 9 readiness；
+- added `scripts/m5_build_daily_handoff.py`；
+- added `运行HT-CN每日交接包.bat`。
+
+Validation:
+- draft PR #22 created only to expose PR-triggered hosted CI；
+- Actions run #1665 / `35382676878`: success；
+- Python 699 passed；
+- Web build success；
+- Playwright 21 passed；
+- browser evidence upload success。
+
+Freeze audit:
+- Phase 9 governance checkpoint → Phase 10 code checkpoint changed 7 files；
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-051；
+- `specs/m5-phase-10-daily-handoff-bundle-v2.md`。
+
+Next:
+- keep PR #22 draft/unmerged unless later integration policy explicitly changes；
+- start the next M5 product phase from the Phase 10 governance lineage；
+- preferred next boundary: Daily Operator History / Change Journal v1, product observation only, still isolated from M4 authoritative prospective evidence and prohibited from outcome-based ranking。
