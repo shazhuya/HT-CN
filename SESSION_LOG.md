@@ -1211,3 +1211,15 @@ Validation:
 
 D-045 freezes scan completeness independently from presentation.
 
+## 2026-09-19 — M5 Phase 5 parallel operator build green
+
+Implemented bounded full-universe parallel product build with thread-local M3 service instances.
+
+Validation:
+- run #1601 success;
+- Python 634 passed;
+- Web build success;
+- Playwright 21 passed.
+
+D-046 freezes worker concurrency as throughput-only and non-authoritative.
+
