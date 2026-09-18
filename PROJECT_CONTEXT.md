@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `5c1ca3e2238b22acef949c1d7c630c04eb8c866f`
-context_checkpoint_title: `M4 Phase 2 closeout + one-click evidence handoff`
+context_checkpoint: `5e6c747f7dc2f2b4d8b3515b0e1d5eb1d9902055`
+context_checkpoint_title: `M4 T1 one-click M1-update + evidence-bundle gate`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -776,7 +776,9 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 - production capture 与已修改 research fixtures 均已传入 methodology identity；
 - schema-v1 只保留 migration readability，不能静默续接 schema-v2；
 - Phase 2 现在是 **structurally ready for first fingerprinted future capture**；
-- `运行M4真实A股生命周期快照.bat` 已收敛为一次运行完成 capture → health → transition → observation → evidence bundle；
+- `运行M4真实A股生命周期快照.bat` 已收敛为一次运行完成 M1 智能日更 → capture → health → transition → observation → evidence bundle；
+- M1 日更失败时禁止尝试新 authoritative capture，防止 stale market data 进入 T1；
+- M1 更新日志自动进入 evidence bundle；
 - 单一交接文件：`artifacts/reports/m4-evidence-bundle.zip`；
 - bundle 只是运输层；即使 authoritative evidence 损坏也原样打包诊断，不会修复/改写权威证据；
 - 该 ready 只指证据架构，不是 alpha / 胜率 / 盈利验证。
