@@ -15,6 +15,7 @@ from htcn.data.providers import AkShareProvider, AkShareSinaProvider, BaoStockPr
 from htcn.data.store import ParquetDailyStore
 from htcn.data.sync import sync_daily
 from htcn.data.trading_events import sync_daily_trading_events
+from htcn.data.trading_clock import latest_closed_trade_clock
 from htcn.data.universe import SUPPORTED_INITIAL_DAILY_PREFIXES
 
 
@@ -47,15 +48,8 @@ def latest_closed_trade_dates(
     *,
     now: datetime | None = None,
 ) -> tuple[date, date | None, bool]:
-    sh_now = now.astimezone(SHANGHAI_TZ) if now is not None else datetime.now(SHANGHAI_TZ)
-    after_cutoff = sh_now.timetz().replace(tzinfo=None) >= POST_CLOSE_CUTOFF
-    candidate = sh_now.date() if after_cutoff else sh_now.date() - timedelta(days=1)
-    days = sorted(set(provider.get_trade_calendar(candidate - timedelta(days=30), candidate)))
-    if not days:
-        raise RuntimeError(f"no trading day found before {candidate}")
-    target = days[-1]
-    previous = days[-2] if len(days) >= 2 else None
-    return target, previous, after_cutoff and target == sh_now.date()
+    clock = latest_closed_trade_clock(provider, now=now)
+    return clock.target, clock.previous, clock.same_day_closed
 
 
 def _normalize_last_date(value: object) -> date | None:
@@ -85,6 +79,11 @@ def main() -> int:
     provider = build_provider()
 
     target, previous_trade_day, allow_snapshot = latest_closed_trade_dates(provider)
+    calendar_source = str(provider.last_provider or provider.name)
+    catalog.record_trade_calendar(
+        [day for day in (previous_trade_day, target) if day is not None],
+        source=calendar_source,
+    )
     print(
         f"[HT-CN M1 DAILY] Latest closed A-share day: {target}; "
         f"bulk_snapshot={'YES' if allow_snapshot else 'NO'}",
