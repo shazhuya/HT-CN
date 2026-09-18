@@ -257,3 +257,30 @@ def build_or_load_operator_snapshot(
         cache_path=cache_path if can_cache else None,
         generated_at_utc=generated_at,
     )
+
+
+def evaluate_operator_snapshot_readiness(
+    payload: dict[str, Any],
+) -> tuple[bool, tuple[str, ...]]:
+    """Return whether a daily product snapshot is complete enough for handoff."""
+    reasons: list[str] = []
+    if payload.get("observation_integrity") != "single_as_of":
+        reasons.append("observation_integrity_not_single_as_of")
+    instrument_count = int(payload.get("instrument_count") or 0)
+    analyzed_count = int(payload.get("analyzed_instrument_count") or 0)
+    failed_count = int(payload.get("failed_instrument_count") or 0)
+    if failed_count != 0:
+        reasons.append(f"instrument_failures:{failed_count}")
+    if analyzed_count != instrument_count:
+        reasons.append(
+            f"analysis_coverage_incomplete:{analyzed_count}/{instrument_count}"
+        )
+    cache = payload.get("product_cache") or {}
+    if cache.get("freshness") != "current":
+        reasons.append(
+            f"cache_freshness:{cache.get('freshness') or 'missing'}"
+        )
+    if not payload.get("as_of_trade_date"):
+        reasons.append("as_of_trade_date_missing")
+    return (not reasons, tuple(reasons))
+
