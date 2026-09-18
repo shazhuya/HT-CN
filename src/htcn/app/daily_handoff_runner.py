@@ -71,6 +71,13 @@ def run_daily_handoff_bundle(
         report_path = repo / report_path
     report_path = report_path.resolve()
 
+    if report_path == pipeline_path:
+        raise ValueError("handoff report path must not replace pipeline report")
+    if output_path == pipeline_path:
+        raise ValueError("handoff output path must not replace pipeline report")
+    if output_path == report_path:
+        raise ValueError("handoff output and report paths must be distinct")
+
     generated_at = datetime.now(timezone.utc).isoformat()
     pipeline_payload: dict[str, Any] | None = None
     before_hash: str | None = None
