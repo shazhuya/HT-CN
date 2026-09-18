@@ -239,3 +239,37 @@ def build_operator_queue(
         "items": items,
         "errors": errors,
     }
+
+
+def filter_operator_queue_payload(
+    payload: dict[str, Any],
+    *,
+    include_evidence_insufficient: bool,
+) -> dict[str, Any]:
+    """Return a presentation-only filtered copy without changing snapshot identity."""
+    if include_evidence_insufficient:
+        return dict(payload)
+
+    out = dict(payload)
+    items = [
+        dict(item)
+        for item in (payload.get("items") or [])
+        if str(item.get("action_state") or "") != "evidence_insufficient"
+    ]
+    out["items"] = items
+    out["candidate_count"] = len(items)
+    out["candidate_instrument_count"] = len({
+        str(item.get("instrument_id") or "")
+        for item in items
+        if item.get("instrument_id")
+    })
+    out["action_state_counts"] = dict(sorted(Counter(
+        str(item.get("action_state") or "")
+        for item in items
+    ).items()))
+    out["lifecycle_state_counts"] = dict(sorted(Counter(
+        str(item.get("lifecycle_state") or "")
+        for item in items
+    ).items()))
+    return out
+
