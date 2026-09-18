@@ -42,6 +42,12 @@ echo QA exit=%QA_EXIT% / Context exit=%CONTEXT_EXIT% / Ready exit=%READY_EXIT%
 echo 工作台：artifacts\reports\m3-workbench-acceptance.json
 echo 上下文：artifacts\reports\m3-context-sync-summary.json
 echo 就绪报告：artifacts\reports\m3-pr-readiness.json
+echo 中文报告：artifacts\reports\m3-pr-readiness.md
 echo ============================================================
+if %READY_EXIT% EQU 0 (
+  echo [HT-CN M3 CLOSEOUT] READY：没有硬阻断；请查看 warning 和固定边界。
+) else (
+  echo [HT-CN M3 CLOSEOUT] NOT READY：请先处理 m3-pr-readiness.md 中的硬阻断。
+)
 pause
 exit /b %READY_EXIT%

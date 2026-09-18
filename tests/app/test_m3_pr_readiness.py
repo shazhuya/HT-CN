@@ -1,4 +1,4 @@
-from scripts.m3_pr_readiness import evaluate
+from scripts.m3_pr_readiness import evaluate, render_markdown
 
 
 HEAD = "abc123"
@@ -110,3 +110,18 @@ def test_no_real_pattern_is_warning_not_false_contract_failure() -> None:
     )
     assert result["pr_ready"] is True
     assert any(item["code"] == "real_m1_no_pattern_observed" for item in result["warnings"])
+
+
+def test_human_readable_report_exposes_ready_and_findings() -> None:
+    result = evaluate(
+        current_head=HEAD,
+        workbench=_workbench(),
+        metadata=_metadata(),
+        product=_product(),
+        context=_context(),
+    )
+    rendered = render_markdown(result)
+    assert "READY（有已知警告）" in rendered
+    assert "硬阻断" in rendered
+    assert "警告" in rendered
+    assert "Daily event" in rendered

@@ -260,6 +260,55 @@ def evaluate(
     }
 
 
+def render_markdown(payload: dict[str, Any]) -> str:
+    status = str(payload.get("status") or "not_ready")
+    title = {
+        "ready": "READY",
+        "ready_with_warnings": "READY（有已知警告）",
+        "not_ready": "NOT READY",
+    }.get(status, status)
+
+    lines = [
+        "# HT-CN M3 合并就绪报告",
+        "",
+        f"- 当前 HEAD：`{payload.get('code_head')}`",
+        f"- 判定：**{title}**",
+        f"- 硬阻断：{payload.get('blocker_count', 0)}",
+        f"- 警告：{payload.get('warning_count', 0)}",
+        "",
+        "## 硬阻断",
+        "",
+    ]
+    blockers = list(payload.get("blockers") or [])
+    if blockers:
+        for item in blockers:
+            lines.append(f"- **{item.get('code')}**：{item.get('detail')}")
+    else:
+        lines.append("- 无。")
+
+    lines.extend(["", "## 警告", ""])
+    warnings = list(payload.get("warnings") or [])
+    if warnings:
+        for item in warnings:
+            lines.append(f"- **{item.get('code')}**：{item.get('detail')}")
+    else:
+        lines.append("- 无。")
+
+    lines.extend(["", "## 当前固定边界", ""])
+    for item in payload.get("known_boundaries") or []:
+        lines.append(f"- {item}")
+
+    lines.extend([
+        "",
+        "## 判定含义",
+        "",
+        "这里的 READY 只表示 **M3 当前代码与真实 M1 验收证据满足合并就绪条件**。",
+        "它不是投资评分、胜率结论，也不代表任何交易执行许可。",
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="HT-CN M3 PR readiness closeout")
     parser.add_argument(
@@ -297,8 +346,11 @@ def main() -> int:
         json.dumps(payload, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    markdown_output = output.with_suffix(".md")
+    markdown_output.write_text(render_markdown(payload), encoding="utf-8")
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     print(f"\n[M3] PR readiness report: {output}")
+    print(f"[M3] human-readable report: {markdown_output}")
     return 0 if payload["pr_ready"] else 1
 
 
