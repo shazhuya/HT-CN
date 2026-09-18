@@ -71,3 +71,10 @@ def test_capture_wrapper_runs_outcome_engine_freeze_guard_before_m1() -> None:
         "outcome engine or active outcome protocol differs"
         in text
     )
+
+
+
+def test_capture_wrapper_avoids_cmd_caret_revision_suffix() -> None:
+    text = _wrapper_text()
+    assert "git cat-file -e !M4_MIN_SAFE_COMMIT! >nul 2>nul" in text
+    assert "!M4_MIN_SAFE_COMMIT!^{commit}" not in text
