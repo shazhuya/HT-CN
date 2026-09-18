@@ -1602,3 +1602,93 @@ M5 已经进入全 universe、并行、缓存和 single-flight 的实战产品�
 原因：
 
 每日交接包的价值在于把“这次收盘流水线实际得到的最终产品状态”可靠搬走，而不是再做一次“哪个文件看起来最新”的推断。Phase 7 已把 input identity 纳入产品缓存，Phase 9 又在 M4 research/QFQ 后执行最终 revalidation；因此 Phase 10 只能精确绑定那一个最终结果。与此同时，运输层的失败不应倒灌到产品/研究语义。D-051 把 exact binding、portable verification、M4 authority isolation 与 transport-failure isolation 一次冻结。
+
+
+## D-052 — Daily Operator History 必须是 append-only 产品观察链，记录最终产品状态且与 M4 authority 永久隔离
+
+**状态：Frozen M5 Phase 11 daily operator history boundary**
+
+正式决定：
+
+1. M5 Daily Operator History 是 product observation journal，不是 M4 authoritative prospective evidence；
+2. history 只能在 Phase 9 final non-force Operator cache revalidation 成功后写入；
+3. history 只记录最终 product state，不记录 initial cache 或 M4/QFQ 可能改变产品 input identity 前的中间态；
+4. history failure 只影响 `m5_history_ready`，不得把已成立的 `m5_product_ready=true` 改为 false；
+5. history failure 不得改写或重新解释 `m4_research_ready`；
+6. append 前必须验证最终 `m5-operator-snapshot.json`：
+   - schema v2；
+   - product_ready=true；
+   - single-as-of；
+   - persisted cache；
+   - freshness=current；
+   - stable input identity；
+   - as-of / expected / queue trade date 一致；
+   - report identity 与 cache identity 一致；
+7. exact product snapshot 必须限制在 `data/product/m5/operator_queue/`，并满足 snapshot schema v1 / contract v2；
+8. snapshot trade date / input identity / queue integrity 必须与最终 report 一致；
+9. snapshot 继续声明 authoritative_evidence=false / writes_m4_evidence=false；
+10. observation identity 使用 SHA-256 绑定：
+    - trade date；
+    - source generated-at；
+    - Operator Input Identity fingerprint；
+    - final M5 report SHA-256；
+    - exact snapshot SHA-256；
+    - canonical Queue SHA-256；
+11. 完全相同 observation 重跑必须幂等，不新增重复文件；
+12. history 物理结构固定为：
+    `data/product/m5/operator_history/<trade_date>/<observation_id>.json`；
+13. history 永久采用 append-only，不允许覆盖已有 observation；
+14. 同一交易日 source/input identity 真变化时必须追加 revision，而不是覆盖上一 revision；
+15. 同日 revision ordinal 必须连续 1..N；
+16. incoming source generated-at 早于已存在的同日最新 revision 时必须拒绝；
+17. 已存在较新 trade date 后，禁止对更早 trade date 做历史 backfill；
+18. history append 使用跨进程 OS advisory lock 串行化；
+19. 每条 history record 必须自包含完整 Queue snapshot，不依赖未来仍保留 cache 文件才能查询；
+20. 跨日 Delta baseline 固定使用“上一已记录交易日的最新有效 revision”，不得使用同日上一 revision 冒充跨日变化；
+21. 首个 history 日 delta status 固定为 `baseline_no_previous_observation`；
+22. Phase 2 的 current-analysis-error disappearance suppression 继续生效；当前分析失败不得被误记为候选消失；
+23. 每条 record 必须保存 `record_integrity_sha256`；
+24. 每条 record 必须保存 `previous_same_day_observation_id`；
+25. 每条 record 必须保存 `previous_recorded_trade_date` 与 `previous_observation_id`；
+26. history load/query 必须 fail closed 验证：
+    - record schema/contract；
+    - Queue hash；
+    - observation id；
+    - record self-integrity hash；
+    - 文件名与 observation id；
+    - 目录名与 trade date；
+    - revision ordinal 连续性；
+    - same-day revision link；
+    - previous trade-date link；
+    - previous observation 必须是上一已记录交易日的最新 revision；
+27. observation/revision/baseline 文件删除、篡改或断链时，不允许返回“部分看似正常”的 history，必须报告 `operator_history_integrity_failure`；
+28. query 默认每交易日只返回最新 revision；审计时可显式请求全部 revisions；
+29. query 支持 instrument / display key / start-end date / summary-only / limit；
+30. GET `/api/operator/history` 只暴露 product history；integrity failure 必须显式返回错误，不得静默跳过坏记录；
+31. Workbench“跨日产品观察历史”与 Phase 2 browser-local “今日变化”是两个不同产品层，不能混成 authority；
+32. CLI / BAT / API / UI 都必须显式声明该 history：
+    - 不是 M4 evidence；
+    - 不用于胜率统计；
+    - 不用于 alpha；
+    - 不用于 predictive ranking；
+    - 不输出 trade instruction；
+33. Phase 11 不拥有 lifecycle，不修改 harmonic identity / Source Raw PRZ；
+34. Phase 11 不写 M4 evidence；
+35. runtime history 位于已 Git-ignore 的 `data/product/**`；
+36. validated code checkpoint：
+    `504cc063d93e999dcbac1b131e14f475beacd4d0`；
+37. Hosted CI run `35384764795` / #1699：
+    - overall success；
+    - Python 718 passed；
+    - Web build success；
+    - Playwright 22 passed；
+    - browser evidence upload success；
+38. 首轮 run `35384383540` / #1693 的 browser failure 来自新增 history test locator 同时命中两个日期卡片；原有 21 Playwright 全过，属于测试 strict-mode ambiguity，不是产品逻辑失败；
+39. locator 已在 `b49d1468a243f0a129def63b6ee3984170d1ceb8` 收窄到 latest-day card；
+40. draft PR #23 只是 hosted-CI / diff audit carrier，不代表已合并；
+41. M4 capture methodology drift：0 / 37；
+42. Outcome Engine drift：0 / 4。
+
+原因：
+
+Phase 2 已能回答“今天相对上一快照变了什么”，但浏览器 localStorage 不能承担长期、可审计的跨日产品历史。Phase 11 将每天最终产品状态保存为 append-only observation，并让同日 input-identity 更新形成 revision 而非覆盖；同时用 hash 和链关系对删除/篡改 fail closed。它提升的是产品复盘与可追溯性，不获得 M4 的研究证据权力，也不允许从历史观察直接推导胜率、alpha 或交易排序。
