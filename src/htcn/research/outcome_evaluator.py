@@ -12,6 +12,7 @@ from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
 from htcn.harmonic.source_lifecycle import derive_source_lifecycle
 
+from .outcome_engine_identity import build_outcome_engine_identity
 from .outcome_protocol import (
     canonical_outcome_protocol_fingerprint,
     load_outcome_protocol,
@@ -338,6 +339,7 @@ def _base_result(
     market_path: pd.DataFrame,
 ) -> dict[str, Any]:
     protocol_identity = validate_outcome_protocol(protocol)
+    engine_identity = build_outcome_engine_identity()
     candidate_key = str(candidate_summary.get("candidate_key") or "")
     instrument_id = str(candidate_summary.get("instrument_id") or "")
     enrolled = str(
@@ -368,6 +370,8 @@ def _base_result(
         "capture_methodology_fingerprint": methodology_fingerprint,
         "outcome_protocol_id": protocol_identity.protocol_id,
         "outcome_protocol_fingerprint": protocol_identity.fingerprint,
+        "outcome_engine_contract_version": engine_identity.contract_version,
+        "outcome_engine_fingerprint": engine_identity.fingerprint,
         "enrollment_price_mode": candidate_summary.get(
             "enrollment_price_mode"
         ),
