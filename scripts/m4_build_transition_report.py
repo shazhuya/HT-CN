@@ -6,6 +6,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from htcn.research.capture_transaction import (
+    committed_capture_view,
+    read_committed_captures,
+)
 from htcn.research.lifecycle_journal import read_journal
 from htcn.research.lifecycle_transitions import build_transition_report
 from htcn.research.snapshot_manifest import read_snapshot_manifest, resolve_capture_timeline
@@ -86,27 +90,44 @@ def main() -> int:
         default="data/research/m4/snapshot_manifest.jsonl",
     )
     parser.add_argument(
+        "--transaction-root",
+        default="data/research/m4/captures",
+    )
+    parser.add_argument(
         "--output",
         default="artifacts/reports/m4-lifecycle-transitions.json",
     )
     args = parser.parse_args()
 
-    rows = read_journal(Path(args.journal))
-    manifest_path = Path(args.manifest)
-    manifest_rows = (
-        read_snapshot_manifest(manifest_path)
-        if manifest_path.exists()
-        else []
-    )
+    legacy_rows = read_journal(Path(args.journal))
+    transaction_root = Path(args.transaction_root)
+    committed = read_committed_captures(transaction_root)
+    if committed:
+        rows, manifest_rows = committed_capture_view(
+            legacy_journal_rows=legacy_rows,
+            capture_rows=committed,
+        )
+        evidence_source = "committed_capture_transactions"
+    else:
+        rows = legacy_rows
+        manifest_path = Path(args.manifest)
+        manifest_rows = (
+            read_snapshot_manifest(manifest_path)
+            if manifest_path.exists()
+            else []
+        )
+        evidence_source = "legacy_journal_manifest"
     timeline = resolve_capture_timeline(rows, manifest_rows)
     payload = build_transition_report(
         rows,
         captured_dates=timeline.dates,
     )
     payload["capture_timeline"] = timeline.as_payload()
+    payload["evidence_source"] = evidence_source
     payload["generated_at_utc"] = datetime.now(timezone.utc).isoformat()
     payload["journal_path"] = str(args.journal)
     payload["manifest_path"] = str(args.manifest)
+    payload["transaction_root"] = str(args.transaction_root)
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
