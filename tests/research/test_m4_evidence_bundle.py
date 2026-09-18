@@ -205,6 +205,7 @@ def _write_intake_bundle(
     tamper_capture_after_commit: bool = False,
     include_drifted_transition: bool = False,
     include_health_blocker: bool = False,
+    bundle_status: str = "transport_bundle_ready",
 ) -> None:
     root = path.parent / "intake-captures"
     root.mkdir()
@@ -275,7 +276,7 @@ def _write_intake_bundle(
     ]
     manifest = {
         "schema_version": 1,
-        "status": "transport_bundle_ready",
+        "status": bundle_status,
         "code_head": "abc123",
         "worktree_clean": True,
         "methodology_contract_version": 1,
@@ -360,3 +361,18 @@ def test_intake_rejects_included_evidence_health_blocker(tmp_path: Path) -> None
     result = audit_evidence_bundle(path, expected_baseline_trade_date="2026-09-17")
     assert result.status == "not_ready"
     assert "evidence_health_report_has_blockers" in result.blockers
+
+
+
+def test_intake_treats_health_blocked_bundle_as_not_ready(tmp_path: Path) -> None:
+    path = tmp_path / "t1.zip"
+    _write_intake_bundle(
+        path,
+        bundle_status="evidence_health_blocked",
+    )
+    result = audit_evidence_bundle(
+        path,
+        expected_baseline_trade_date="2026-09-17",
+    )
+    assert result.status == "not_ready"
+    assert "bundle_evidence_health_blocked" in result.blockers
