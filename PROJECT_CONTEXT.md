@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `ab5f1d9b94d1be7a692d064c76175bba64cb4aad`
-context_checkpoint_title: `M4 Phase 2.4: manifest-authoritative transition and prospective observation facts`
+context_checkpoint: `b803a2f723b2d6d3b97bd2f60fdc67cb44a1a1f7`
+context_checkpoint_title: `M4 Phase 2.5: atomic committed-capture evidence chain`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -612,6 +612,55 @@ D-025 冻结 manifest-authoritative capture chronology：
 - legacy T0 可在 manifest 激活前保留；
 - transition/observation 统一使用同一 capture timeline resolver。
 
+## M4 Phase 2.5 — Atomic Capture Transactions
+
+D-026 已冻结。
+
+未来 capture 正式证据链：
+
+```
+frozen legacy T0 baseline
+        +
+immutable committed capture transactions
+        ↓
+authoritative transition / observation view
+```
+
+兼容镜像：
+
+- `lifecycle_journal.jsonl`
+- `snapshot_manifest.jsonl`
+
+只用于兼容/人工检查，不再是 transaction 激活后的权威下游输入。
+
+核心规则：
+
+- deterministic transaction ID 不含 wall-clock capture time；
+- candidate rows 在 transaction identity 中 canonical-sort；
+- committed JSON 单文件 temp + fsync + os.replace；
+- .tmp 不读取；
+- first future transaction 前冻结旧 T0；
+- future transaction 必须晚于 frozen T0 cutoff；
+- transaction dates append-only / no backfill；
+- same-date fact drift fail closed；
+- same facts rerun idempotent；
+- transaction file / row-id tamper fail closed；
+- full instrument coverage required；
+- downstream reports 在 transaction 存在时不读取 live compatibility mirrors。
+
+Assistant-side executable validation 已完成：
+
+- core transaction module compile / execution smoke：PASS；
+- same facts + different capture time：PASS；
+- frozen baseline immutable/idempotent：PASS；
+- T0 overwrite rejection：PASS；
+- T1 commit + rerun：PASS；
+- T2 commit：PASS；
+- T2 后历史 T1 backfill rejection：PASS；
+- temp partial ignored：PASS。
+
+GitHub-hosted Actions 仍为 runner-allocation anomaly：最新 run #914 deterministic-tests 为 steps=null / logs=null，因此不计入通过或失败证据。
+
 ## 本机调用规则 — D-023
 
 用户电脑不是 HT-CN 常规测试环境。
@@ -623,24 +672,19 @@ D-025 冻结 manifest-authoritative capture chronology：
 
 ## 下一步唯一主任务
 
-**M4 Phase 2 — assistant 侧协议自验与 T0 派生报告收口。**
+**M4 Phase 2.6 — transaction/mirror recovery tooling + current T0 derived closeout。**
 
-无需新的用户本机动作。
+仍不需要用户本机执行 QA。
 
-接下来 assistant 继续：
+assistant 侧下一批：
 
-1. 对 T0 上传文件生成正式 baseline audit / transition / observation 三份派生报告；
-2. 用 synthetic T0/T1/T2/T3 场景跑通：
-   - new candidate；
-   - zero-candidate full capture；
-   - disappearance；
-   - reappearance；
-   - delayed Source PRZ resolution；
-   - Source Terminal no-backdating；
-3. 检查新 manifest / observation schema 是否存在性能或状态漂移漏洞；
-4. 完成 PR #13 Phase 2 checkpoint。
+1. 增加 compatibility mirror repair/rebuild，只允许从 frozen baseline + committed transactions 派生；
+2. repair 不得改动 committed capture；
+3. 为 transaction store 增加 integrity summary / repair-needed 状态；
+4. 对用户已上传 T0 生成正式 baseline audit / transition / prospective-observation closeout；
+5. PR #13 继续保持 Draft，直到 Phase 2 evidence layer 完成 assistant-side gates。
 
-只有新的真实交易日私有 M1 snapshot 本身无法由 assistant 获取时，才需要一次最小数据采集；不要求用户运行 QA。
+新的真实交易日只有在 assistant 无法访问私有 M1 snapshot 时，才需要最小数据采集；其余测试继续由 assistant 自行完成。
 
 
 ## 固定 Source / Product 边界

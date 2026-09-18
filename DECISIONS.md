@@ -374,3 +374,45 @@ M4 的 lifecycle journal 只记录 candidate 行，因此不能单独证明某�
 - manifest/journal candidate-count cross-check；
 - post-activation missing-manifest fail-closed；
 - zero-candidate gap -> scanner_disappeared -> scanner_reappeared regression。
+
+
+## D-026 — Committed capture transaction 是 M4 Phase 2.5 之后的权威证据单元
+
+**状态：Frozen M4 atomic-evidence contract**
+
+从 Phase 2.5 起，未来 M4 snapshot 不再把 lifecycle journal 与 snapshot manifest 的两次独立 append 当作正式原子证据。
+
+正式决定：
+
+1. 每个完整 capture 先构造一个 deterministic `transaction_id`；
+2. transaction identity 由 code head、as-of date、完整 instrument coverage 与 canonical candidate facts 决定，不由 capture wall-clock time 决定；
+3. 一次 capture 的 journal rows 与 capture metadata 被封装进单个 immutable committed-capture JSON；
+4. committed capture 使用 temp file + flush + fsync + `os.replace` 原子落盘；
+5. 只有最终 committed JSON 才是正式 future evidence；临时文件与 compatibility mirror 不进入 transition / observation；
+6. 第一次 future transaction 前，将旧 T0 journal 原子冻结成 immutable legacy baseline；
+7. future reports 正式读取：
+   **frozen legacy baseline + committed capture transactions**；
+8. lifecycle_journal.jsonl 与 snapshot_manifest.jsonl 从此是兼容/人工检查镜像；镜像缺失、半写或损坏不得改变已经 committed 的正式证据；
+9. 同一交易日只能存在一个 committed transaction；
+10. 相同事实、不同 capture 时间的重跑必须幂等；
+11. 同日事实漂移、transaction 文件改名、transaction-id/row-id 篡改、instrument coverage 不完整全部 fail closed；
+12. transaction 日期必须严格晚于 frozen legacy baseline cutoff；
+13. committed transactions 禁止历史 backfill；
+14. transaction store 激活后，不允许用新代码重新生成/覆盖 frozen T0。
+
+原因：
+
+两个独立 JSONL append 无法获得真正跨文件原子性。单一 immutable transaction file 可以把“完整 capture 是否存在”缩成一个原子文件事实，并允许兼容镜像在中断后自行恢复，而不污染正式研究时间轴。
+
+验证方式：
+
+- deterministic transaction-id test；
+- same-facts/different-capture-time idempotency；
+- zero-candidate committed capture；
+- temp partial-file ignored；
+- frozen baseline immutability；
+- same-day fact drift rejection；
+- baseline-day overwrite rejection；
+- committed-transaction backfill rejection；
+- transaction filename / row transaction-id tamper rejection；
+- frozen baseline + committed captures coexistence。

@@ -476,3 +476,33 @@ Assistant-only implementation; no user-local QA.
 
 Synthetic assistant-side scenario verified:
 legacy T0 -> T1 prospective-new -> T2 full capture with zero candidates -> T3 scanner reappearance / Type-I observation, with cohort identity preserved and no invalidation inference.
+
+
+## M4 Phase 2.5 / atomic capture transactions
+
+Problem found during self-review:
+journal append followed by manifest append is not a true cross-file atomic commit. Process interruption could leave a half-complete compatibility snapshot.
+
+Implemented:
+- `2e2750c82ef9d3b0c265de445fadd0c1bf13d5d2`: immutable atomic committed-capture transaction store;
+- `4710545e7bb28405ba62565fc4423f6d4c713b46`: capture pipeline transaction-first;
+- `dfd8560135c171ad901234d122d90d76737e660a`: reports consume committed transactions;
+- `4f1bfa74feaa401447a4e95fe42dcc090bd88b4f`: freeze legacy baseline / capture-time-independent idempotency;
+- `658e1b69133ead315e98fa66ea03eb424a39742b`: reports use frozen baseline + transactions, not live mirrors;
+- `5b3395db3a3b0a4ebcc06c2bf20c39b864c27446`: transaction integrity/tamper hardening;
+- `50e832f1a7f33fc3d57e74db4cd344f19bfc0d7a`: fix baseline JSON being scanned as transaction;
+- `d1fee7d40efc2a7db32f6077585fd533c61f6d71`: monotonic transaction chronology after frozen baseline;
+- `b803a2f723b2d6d3b97bd2f60fdc67cb44a1a1f7`: preserve legacy cutoff even when baseline candidate count is zero.
+
+Assistant-side Python execution:
+- transaction core syntax/execution: PASS;
+- temp partial ignored: PASS;
+- same facts/different capture time: PASS;
+- frozen baseline idempotent/immutable: PASS;
+- frozen T0 overwrite blocked: PASS;
+- T1/T2 forward commits: PASS;
+- historical backfill after newer transaction: PASS.
+
+Hosted CI:
+- run #914 completed failure with deterministic-tests steps=null/logs=null;
+- same known runner-allocation failure, not code execution.
