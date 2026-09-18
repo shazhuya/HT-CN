@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `a08a601568342ca9049923f0b5ee156d8dd96eb8`
-context_checkpoint_title: `M3 Phase 3.5: concept/theme context, no-backdating, freshness and unified context integrity`
+context_checkpoint: `9326ca7fdb0cacf20d08a987a3d447ada17f9621`
+context_checkpoint_title: `M3 Phase 4.3: action-state narrative, product contract, real-M1 acceptance and execution feasibility gate`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -238,6 +238,83 @@ no-backdating：行业/概念 `mapping_observed_on > analysis.as_of` 时返回 `
 
 当前 AKShare 源码已核实行业/概念成分接口均接受 `BKxxxx` 板块代码。
 
+
+## M3 Phase 4 — Action-State Narrative / Product Orchestration
+
+Phase 4 已把 canonical Source lifecycle 组织成唯一实战导航，但仍不输出买卖指令或综合评分。
+
+冻结四类 action state：
+
+- `waiting`：等待 Source gate；
+- `reaction_observation`：T-Bar 后 Type-I 反应观察；
+- `execution_evaluation`：source lifecycle 已进入可做执行层评估的阶段；
+- `evidence_insufficient`：Source PRZ / Source clock 等证据不足。
+
+固定关系：
+
+- action state 只由 `source_lifecycle.state` 决定；
+- execution / market / industry / concept / BAMM 只能形成约束或注意项；
+- context 再强也不能把 `waiting_terminal` 升级成 `execution_evaluation`；
+- narrative 不拥有 lifecycle，不改 harmonic identity / Source Raw PRZ。
+
+Decision Narrative 现在统一回答：
+
+1. 现在在哪；
+2. 先看什么；
+3. 到了再看什么；
+4. 什么条件不能升级；
+5. 下一关键价和角色；
+6. execution context gate；
+7. 非 current context 注意项。
+
+执行可行性与 lifecycle 分离：
+
+- `tradable`；
+- `blocked_suspended`；
+- `tradability_unresolved`；
+- `execution_unresolved / stale / missing / future_observation`。
+
+例如 lifecycle 可以是 `type_i_confirmed -> execution_evaluation`，但当日停牌时 execution gate 明确显示 `blocked_suspended`，不把停牌错误写成 lifecycle 失败。
+
+## M3 Phase 4.1 — Product Contract + Real M1 Acceptance
+
+已新增 `htcn.app.product_contract`，逐 pattern 审计：
+
+- narrative lifecycle state == canonical source lifecycle；
+- action state 可由 lifecycle 确定性重建；
+- next key price / role 一致；
+- pattern execution context copy == top-level execution context；
+- 非 current context 全部进入 narrative cautions；
+- narrative 边界 flag 必须为 false；
+- 5-0 保持 quarantine。
+
+真实 M1 smoke：`scripts/m3_product_contract_smoke.py`。
+
+正式 `运行M3工作台验收.bat` 已升级为：
+
+1. 全量 Python regression；
+2. TypeScript + Web build；
+3. 真实 M1 metadata / tradability 严格只读 smoke；
+4. 真实 M1 product contract smoke；
+5. 本地 API + Workbench；
+6. 全量 Playwright。
+
+正式验收要求代表性 MAIN / STAR / CHINEXT parquet 可真实读取；早期迁移时期的 `security_master_pass_parquet_unavailable` 不再被正式验收接受。
+
+联网行业/概念刷新仍独立运行 `运行M3上下文数据同步.bat`，不和确定性代码验收混在一起。
+
+## M3 Phase 4.2 — UI Consolidation
+
+正式 source-driven pattern 的 UI 已收敛：
+
+- `DecisionNarrative` 是唯一“现在 / 先看 / 下一步 / 升级阻断”导航；
+- `LifecycleCompass` 在 source-driven 路径降级为紧凑 **Source Clock 证据条**；
+- Source 证据条只显示 canonical state、PRZ/PEZ 边界、Signal、PRZ Entry、T-Bar、T+1、T1/T2、Type-II、BAMM；
+- historical / retrospective compatibility 路径继续保留旧诊断 UI；
+- A 股 execution card 已去重，顶层只显示一次。
+
+selected-pattern browser gate 已冻结：从一个候选切换到另一个候选时，Decision Narrative 必须同步切换到该 pattern 自己的 source lifecycle / next key price，禁止残留前一个候选的状态。
+
 ## 当前 CI 基础设施异常
 
 M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异常：
@@ -262,15 +339,15 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 4 — Product Decision Narrative / Action-State Orchestration。**
+**M3 Phase 4.4 — Acceptance Evidence / Real-M1 Closeout。**
 
-在不生成黑箱评分、不替用户做交易执行的前提下，把已经冻结的证据层组织成实战工作流：
+优先级：
 
-1. lifecycle 仍是唯一“形态现在在哪”的主时钟；
-2. execution / market / industry / concept 只改变“可执行性、环境解释和注意事项”，不改变 harmonic identity；
-3. 输出“现在先看什么 → 下一关键价/状态 → 什么证据会使路径失效 → 哪些 context 当前不可用”；
-4. 明确区分 **等待 / 反应观察 / 执行评估 / 证据不足**，禁止压成买卖评分；
-5. 在真实 M1 catalog 上跑 `运行M3上下文数据同步.bat` + 工作台 smoke 后，再决定 PR #12 是否进入 Ready。
+1. 用户本机运行 `运行M3工作台验收.bat`，获取真实 M1 metadata + product-contract + Playwright 结果；
+2. 单独运行 `运行M3上下文数据同步.bat`，确认四层数据源在真实 catalog 上的 coverage / freshness；
+3. 对真实样本检查 Decision Narrative 与 Source Clock overlay 是否有布局拥挤或语义重复；
+4. 若 deterministic acceptance 全绿且真实 context sync 无结构性错误，再将 PR #12 从 Draft 推到 Ready；
+5. 在此之前不新增新的 harmonic pattern family，也不解除 5-0 / Alternate Bat 的既有边界。
 
 
 ## 固定 Source / Product 边界

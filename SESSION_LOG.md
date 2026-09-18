@@ -239,3 +239,17 @@
 - Membership older than the default seven-day refresh horizon is surfaced as stale even when a current local aggregate snapshot exists.
 - `运行M3上下文数据同步.bat` now performs execution-event, core benchmark, industry and concept sync in one pass and writes a combined machine-readable report.
 - Current implementation checkpoint before docs commit: `a08a601568342ca9049923f0b5ee156d8dd96eb8`.
+
+
+## M3 Phase 4.1-4.3 / 2026-09-18
+
+- `4c7110c5ed11a98a6730fbdd1ade0b442f2c0c97`: product payload contract auditor.
+- `12032dc56ad68beeede7930d9878aede45ef8220`: real-M1 product-contract smoke + upgraded one-click acceptance.
+- `dcdcd8e5c1099f5892ad8fdec565c7dd43ae7d00`: selected-pattern narrative browser consistency gate + Phase-4 spec.
+- `a8d94554da20e50f8a7e3c82c0f97fec38517539`: source-driven LifecycleCompass consolidated into Source Clock evidence strip.
+- `0eb48487564fdbdbb2db7eb181f0ebde1b61580c`: formal acceptance now requires readable real parquet histories.
+- `12e853581970b0d259acb35a5beaecdb1ff19e63`: lifecycle action state separated from execution feasibility gate.
+- `9326ca7fdb0cacf20d08a987a3d447ada17f9621`: product-contract fixtures and browser execution-gate assertion aligned.
+- Formal action-state vocabulary is waiting / reaction_observation / execution_evaluation / evidence_insufficient.
+- Context cannot vote on or override source lifecycle; execution feasibility is reported separately.
+- PR stays Draft until user-local real-M1 acceptance and context-sync evidence are observed.
