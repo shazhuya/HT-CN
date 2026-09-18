@@ -304,3 +304,41 @@ HT-CN 后续开发默认不得把用户电脑当作常规测试机。
 - 每个需要用户本机动作的任务必须能明确说明其不可替代的本地依赖；
 - 普通代码提交不得默认附带“请用户运行完整测试”；
 - 本地 snapshot 一旦上传，后续处理必须在 assistant 环境完成。
+
+
+## D-024 — Prospective outcome cohort 采用严格 pre-terminal enrollment gate
+
+**状态：Frozen M4 outcome-enrollment contract**
+
+`prospective_new` 只表示 candidate 在 T0 之后首次出现，不自动等于可以进入未来胜率/收益 outcome cohort。
+
+正式 outcome enrollment 必须同时满足：
+
+1. candidate 属于 `prospective_new`；
+2. 首次达到 outcome eligibility 时 geometry 仍为 `forming`；
+3. canonical Source lifecycle 处于 terminal 之前：
+   - `approaching_source_prz`；
+   - `entered_source_prz`；
+   - `waiting_terminal`；
+4. Source Raw PRZ 已解决且 low <= high；
+5. Source Terminal 尚未在该记录之前发生；
+6. 5-0 不允许进入；
+7. Alternate Bat 在 source conflict 解除前不允许进入。
+
+如果 candidate 在首次出现时 Source PRZ 尚未解决，可以继续保留为 `prospective_new` observability evidence；只有后续在 terminal 之前首次满足上述条件的交易日，才冻结 `outcome_enrollment_trade_date`。
+
+一旦 candidate 正式进入 prospective outcome cohort，后续 lifecycle 即使进入 terminal / Type-I / Type-II / invalidated，cohort membership 继续保留，用于真实前瞻路径追踪。
+
+T0 的 `baseline_existing` 永久 `prospective_outcome_eligible=false`，不能因为后续继续出现而升级成 outcome cohort。
+
+原因：
+
+只按“首次在 T0 后出现”入组仍可能把 late-discovered completed geometry、Source clock unavailable、Source PRZ unresolved 或 Alternate Bat fail-closed 候选错误纳入 outcome 统计，重新引入 hindsight / source-fidelity 污染。
+
+验证方式：
+
+- Alternate Bat outcome gate regression；
+- completed-at-first-observation regression；
+- unresolved -> later resolved pre-terminal enrollment regression；
+- baseline never-upgrades regression；
+- outcome enrollment date persistence regression。

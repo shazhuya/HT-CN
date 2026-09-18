@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `4096e19ceb586df0a48d144cb09b07dc7b85ca1c`
-context_checkpoint_title: `M4 Phase 1.4: baseline/prospective cohort isolation and factual transition engine`
+context_checkpoint: `704bf2f6032608ab2e710fe4805ba2127c69f3ac`
+context_checkpoint_title: `M4 Phase 1.6: strict outcome enrollment and audited T0 baseline`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -499,6 +499,70 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 - standard XABCD per-pattern AB=CD hard-gate refinement 仍可后续 source-backed refinement，但当前不应打断 M3 lifecycle 产品迁移；
 - BSE 继续 deferred。
 
+## M4 Phase 1.6 — T0 Baseline Audit
+
+用户上传的真实 T0 snapshot/journal 已由 assistant 离线完整审计，不要求用户重复运行。
+
+真实 T0：
+
+- trade date：2026-09-17；
+- initialized instruments：55；
+- successful：55；
+- failed：0；
+- candidates：87；
+- candidate-bearing instruments：44；
+- zero-candidate initialized instruments：11；
+- unique candidate keys：87；
+- hard blockers：0；
+- warnings：6；
+- `transition_ready=true`；
+- `prospective_outcome_ready=false`。
+
+候选结构：
+
+- standalone AB=CD：56（64.4%）；
+- Shark：15；
+- Crab：7；
+- Bat：4；
+- Alternate Bat：4；
+- Gartley：1；
+- bullish：39；
+- bearish：48；
+- scale 3/5/8/13 = 25/14/18/30。
+
+Lifecycle：
+
+- approaching_source_prz：50；
+- waiting_terminal：13；
+- source_clock_unavailable：9；
+- source_prz_unresolved：4；
+- reversal_evidence：4；
+- type_i_confirmed：3；
+- type_i_failed：2；
+- type_i_early_reaction：1；
+- t_plus_1：1。
+
+真实 warnings：
+
+1. AB=CD 占 64.4%，总样本不能解释成 shape-balanced；
+2. 87/87 execution gate 为 `execution_unresolved`；
+3. 87/87 context integrity 为 `issues_present`；
+4. 4 个 Alternate Bat 仅作为 fail-closed observability evidence；
+5. 11 个 T0 候选已存在 Source Terminal 历史，其中 5 个超过 20 天，最老 583 天；
+6. 13 个候选存在 Source observability gap（9 source_clock_unavailable + 4 source_prz_unresolved）。
+
+内部一致性审计全部通过：
+
+- lifecycle -> action state：0 mismatch；
+- lifecycle -> next-key role：0 mismatch；
+- Source PRZ contract：0 error；
+- Source Terminal date contract：0 error；
+- 5-0 / Alternate Bat / alpha / trade-instruction boundary：0 violation；
+- snapshot 与 journal 的 head/date/count/lifecycle/action/schema 完全一致。
+
+M4 outcome enrollment 已由 D-024 收紧：
+`prospective_new` 不自动 outcome-eligible；必须在 terminal 前、forming、Source PRZ resolved 且不触碰冻结 source-fidelity 边界。
+
 ## 本机调用规则 — D-023
 
 用户电脑不是 HT-CN 常规测试环境。
@@ -510,26 +574,23 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M4 Phase 1 — T0 基线质量审计完成，等待下一真实交易日的最小数据采集。**
+**M4 Phase 2 — 在不需要新本地数据的前提下，完成 T1 transition 分析协议与 outcome-observation schema。**
 
-当前已完成且无需用户本机重复测试：
+当前 T0 已正式通过结构 gate：
 
-1. T0 87 个候选全部归类为 `baseline_existing`；
-2. T0 `prospective_outcome_eligible=0`，不会进入未来胜率/收益 outcome cohort；
-3. lifecycle transition engine 已支持：
-   - baseline_observed；
-   - new_candidate；
-   - persisted_same_state；
-   - lifecycle_changed；
-   - action_changed_only；
-   - scanner_disappeared；
-   - scanner_reappeared；
-4. scanner disappearance 不等于 invalidated；
-5. 不使用线性 lifecycle rank；
-6. legacy T0 journal 自动兼容，不要求用户重新生成；
-7. transition report 从 append-only journal 派生，不维护第二份可漂移状态数据库。
+- transition-ready；
+- outcome-not-ready；
+- baseline 不进入 prospective outcome cohort。
 
-下一步只在出现**新的真实交易日私有 M1 数据**时需要一次最小本地 snapshot 采集；在此之前，assistant 不再要求用户本机执行 QA / Python / Web / Playwright。
+下一步 assistant 侧继续完成：
+
+1. 冻结 T1 transition comparison protocol；
+2. 定义 prospective outcome observation 的事实字段（不定义胜率/评分）；
+3. 定义 scanner disappearance / reappearance 与 lifecycle observation 的组合语义；
+4. 定义最小持有/观察窗口的“记录方式”，但不提前规定盈利阈值；
+5. 完成 synthetic / prefix-safe 回归。
+
+只有新的真实交易日私有 M1 snapshot 本身无法由 assistant 获取时，才需要一次最小本地数据采集；此前不调用用户电脑。
 
 
 ## 固定 Source / Product 边界

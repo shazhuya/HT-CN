@@ -111,3 +111,37 @@ Important boundaries:
 - no linear lifecycle ranking is used because Type-I failure / reaction-only / Type-II branches are not one ordinal ladder;
 - reappearing candidates keep their original cohort and first-observed date;
 - the append-only journal remains source-of-truth; transition reports are derived and disposable.
+
+
+## Strict outcome enrollment
+
+`prospective_new` and `prospective_outcome_eligible` are deliberately different.
+
+A candidate may enter the future outcome cohort only when it is:
+
+- first observed after T0;
+- still `forming`;
+- in a pre-terminal Source lifecycle state;
+- backed by a resolved Source Raw PRZ;
+- not yet Source-terminal;
+- not 5-0;
+- not Alternate Bat while its source conflict remains fail-closed.
+
+A candidate first seen unresolved may enroll later if it becomes source-resolved before terminal. The first eligible date becomes `outcome_enrollment_trade_date` and remains frozen.
+
+## T0 quality gate
+
+T0 audit validates:
+
+- one code head / one as-of date;
+- unique candidate keys;
+- snapshot/journal count agreement;
+- full instrument capture;
+- lifecycle/action mapping;
+- next-key role mapping;
+- Source PRZ field consistency;
+- Source Terminal date consistency;
+- source-fidelity boundaries;
+- explicit pattern concentration and observability warnings.
+
+The T0 gate may return transition-ready while outcome-not-ready. This is intentional.

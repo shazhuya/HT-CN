@@ -424,3 +424,31 @@ Current T0 normalization:
 - baseline_existing = 87;
 - prospective_outcome_eligible = 0;
 - no transition/outcome claim is permitted yet.
+
+
+## M4 Phase 1.5-1.6 / 2026-09-18
+
+Assistant-side T0 quality audit and outcome-cohort hardening:
+
+- `d014c4f424390edd21a219bfc54061aa4068260e`: strict prospective outcome gate at journal append;
+- `c645d0405e643e024ca7504a162037292d8b712a`: transition normalization uses same outcome gate;
+- `d672de8288a972046cb3d1ca8a4cb0d41d9009d8`: regression coverage for Alternate Bat / pre-terminal enrollment / delayed resolution;
+- `ed1552abbe5694fe8c786460372c972c2a754e2d`: T0 baseline audit engine;
+- `7518749476b97bc0315b0f15510a6d4594a006a5`: derived JSON/Markdown T0 audit report;
+- `f0bc64b8b8aabaa4981c565207d7afd1b2854ce4`: strict snapshot-journal cross-file/maturity gate;
+- `880f81b700b54f15ccc42344f30f6f3eadcfe9b2`: audit regression fixtures aligned;
+- `704bf2f6032608ab2e710fe4805ba2127c69f3ac`: linear-time outcome-enrollment normalization.
+
+Actual uploaded T0 audit:
+- 87 rows / 87 unique keys;
+- 55/55 instrument capture pass;
+- 0 structural blocker;
+- 6 explicit warnings;
+- transition_ready=true;
+- prospective_outcome_ready=false;
+- AB=CD concentration 56/87 = 64.4%;
+- 11 rows already post-terminal at T0; oldest terminal age 583 days;
+- 13 source-observability-gap rows;
+- all action/next-key/PRZ/terminal/source-fidelity contracts internally consistent.
+
+D-024 freezes strict outcome enrollment: prospective_new alone is insufficient.
