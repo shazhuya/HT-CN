@@ -9,10 +9,7 @@ from typing import Any
 import zipfile
 
 from htcn.app.evidence_identity import read_code_identity
-from htcn.research.capture_transaction import (
-    frozen_legacy_baseline_present,
-    read_committed_captures,
-)
+from htcn.research.capture_transaction import read_committed_captures
 from htcn.research.evidence_health import build_evidence_chain_health
 from htcn.research.methodology_identity import build_methodology_identity
 
@@ -56,12 +53,17 @@ def build_bundle(
         journal_path=journal_path,
         manifest_path=manifest_path,
     )
-    committed = read_committed_captures(transaction_root)
+    committed_read_error: str | None = None
+    try:
+        committed = read_committed_captures(transaction_root)
+    except Exception as exc:
+        committed = []
+        committed_read_error = f"{type(exc).__name__}: {exc}"
 
     members: list[dict[str, Any]] = []
 
     baseline = transaction_root / "legacy_baseline.json"
-    if frozen_legacy_baseline_present(transaction_root):
+    if baseline.is_file():
         members.append(
             _member(
                 baseline,
@@ -149,6 +151,7 @@ def build_bundle(
         ),
         "evidence_health_status": health.get("status"),
         "evidence_health_blocker_count": health.get("blocker_count"),
+        "committed_capture_read_error": committed_read_error,
         "alpha_inference_allowed": False,
         "is_trade_instruction": False,
         "authoritative_evidence_modified": False,
