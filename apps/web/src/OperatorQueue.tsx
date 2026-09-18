@@ -58,6 +58,18 @@ type OperatorQueuePayload = {
   lifecycle_state_counts: Record<string, number>
   items: OperatorQueueItem[]
   errors: { instrument_id: string; error: string }[]
+  product_cache?: {
+    schema_version: number
+    contract_version: number
+    status: string
+    expected_local_trade_date: string | null
+    queue_as_of_trade_date: string | null
+    freshness: string
+    cache_path: string | null
+    generated_at_utc: string | null
+    authoritative_evidence: boolean
+    writes_m4_evidence: boolean
+  }
 }
 
 type Props = {
@@ -241,13 +253,14 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
     }
   }, [compareSnapshots])
 
-  const load = useCallback(() => {
+  const load = useCallback((forceRefresh = false) => {
     setLoading(true)
     setError(null)
     const query = new URLSearchParams({
       limit: '500',
       bars: '420',
       include_evidence_insufficient: 'true',
+      refresh: forceRefresh ? 'true' : 'false',
     })
     fetch(`${apiBase}/api/operator/queue?${query.toString()}`)
       .then(async (response) => {
@@ -263,7 +276,7 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
   }, [apiBase, observeSnapshot])
 
   useEffect(() => {
-    load()
+    load(false)
   }, [load])
 
   const visibleItems = useMemo(() => {
@@ -311,7 +324,7 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
             />
             显示证据不足
           </label>
-          <button onClick={load} disabled={loading}>
+          <button onClick={() => load(true)} disabled={loading}>
             {loading ? '刷新中…' : '刷新队列'}
           </button>
         </div>
@@ -321,6 +334,21 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
 
       {payload && (
         <>
+          {payload.product_cache && (
+            <div className="operator-queue__cache">
+              <span>
+                Queue cache：<strong>{payload.product_cache.status}</strong>
+              </span>
+              <span>
+                数据日期：{payload.product_cache.queue_as_of_trade_date ?? '—'}
+              </span>
+              <span>
+                freshness：{payload.product_cache.freshness}
+              </span>
+              <span>产品缓存，不是 M4 evidence</span>
+            </div>
+          )}
+
           <div className="operator-queue__summary">
             <div><span>本地标的</span><strong>{payload.instrument_count}</strong></div>
             <div><span>分析成功</span><strong>{payload.analyzed_instrument_count}</strong></div>
