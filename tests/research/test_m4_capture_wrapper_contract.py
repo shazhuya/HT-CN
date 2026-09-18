@@ -78,3 +78,17 @@ def test_capture_wrapper_avoids_cmd_caret_revision_suffix() -> None:
     text = _wrapper_text()
     assert "git cat-file -e !M4_MIN_SAFE_COMMIT! >nul 2>nul" in text
     assert "!M4_MIN_SAFE_COMMIT!^{commit}" not in text
+
+
+
+def test_capture_wrapper_runs_strict_qfq_readiness_before_capture() -> None:
+    text = _wrapper_text()
+    m1 = text.index("scripts\\m1_daily_update.py")
+    qfq = text.index("scripts\\m4_prepare_qfq_universe.py")
+    capture = text.index("scripts\\m4_capture_lifecycle_snapshot.py")
+    assert m1 < qfq < capture
+    assert 'if "!M1_EXIT!"=="0" if "!QFQ_EXIT!"=="0"' in text
+    assert 'if not "!QFQ_EXIT!"=="0" set "FINAL_EXIT=1"' in text
+    assert "m4-qfq-readiness.json" in text
+    assert "m4-qfq-readiness.log" in text
+    assert "M1/QFQ readiness did not pass" in text
