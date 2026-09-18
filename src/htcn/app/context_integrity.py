@@ -87,10 +87,26 @@ def build_context_integrity(
     layers: list[ContextLayerIntegrity] = []
 
     execution = execution_context or {}
-    if execution.get("bse_deferred"):
+    if not execution_context:
+        layers.append(ContextLayerIntegrity(
+            "execution", "missing", None, None, None,
+            "A股执行上下文 payload 缺失。"
+        ))
+    elif execution.get("bse_deferred"):
         layers.append(ContextLayerIntegrity(
             "execution", "missing", as_of_trade_date, None, None,
             "北交所执行规则当前 deferred。"
+        ))
+    elif _parse(execution.get("as_of_trade_date")) is not None and as_of is not None and _parse(execution.get("as_of_trade_date")) != as_of:
+        execution_date = _parse(execution.get("as_of_trade_date"))
+        assert execution_date is not None
+        layers.append(ContextLayerIntegrity(
+            "execution",
+            "future_observation" if execution_date > as_of else "stale",
+            execution_date.isoformat(),
+            execution.get("daily_event_source") or execution.get("metadata_source"),
+            None,
+            "执行上下文交易日与分析交易日不一致。"
         ))
     elif execution.get("special_event_exceptions_unresolved"):
         layers.append(ContextLayerIntegrity(
