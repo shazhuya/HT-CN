@@ -707,3 +707,47 @@ The intake engine:
 - never computes performance or trading signals.
 
 D-031 and `specs/m4-phase-2-9-evidence-intake.md` freeze this contract.
+
+
+## M4 Phase 2.10 / scanner-absent cohort follow-up + methodology v2
+
+Assistant-side only; no user-local QA requested.
+
+Problem found before first real T1:
+an outcome-enrolled candidate may disappear from the harmonic scanner while the underlying
+security continues trading. The prior observation panel represented scanner absence but
+did not preserve a separate real market path, creating future survivorship/informative-
+censoring risk.
+
+Initial schema-v3 chain already present on branch:
+- `fd47882115de0f7e0e7e889396f4b32fe74f4598`: define outcome cohort follow-up observations;
+- `92b7ce0d1c5d973fbb6a89e3e7be282e3f8551e1`: bind follow-up facts into capture transactions;
+- `695b96f8e5773031bcfda4027aca3ca82bfe24ae`: validate follow-up against prior enrolled cohort;
+- `a16d1dc13eff5f64bde6395e210cf8379363bbc3`: persist follow-up for enrolled scanner-absent candidates;
+- `4bd35e12d49ec7b5caa1d9251177e770fc7258eb`: expose follow-up count in snapshot manifest;
+- `244f65638cfd51ee2d3dffa9db5be9832ecadb02`: include follow-up count in mirror integrity.
+
+Assistant audit then found two incomplete links:
+1. schema-v3 validation checked supplied follow-up rows but did not require complete coverage;
+2. prospective-observation/report/intake code did not consume `cohort_followup_rows`.
+
+Closed:
+- `d8b467c5abf9480c13184fca3da8e167732ff145`: require exact follow-up coverage;
+- `d59acce2418df114b4938ca4dbbb85b29b6a643e`: observation panel consumes scanner-absent market follow-up;
+- `53b6f0172a14a31cba1c5667cc6e2257a6b7fb4a`: observation report wires follow-up evidence;
+- `ca31cd7edcb3025f2375e46764662d82eee49e76`: intake recomputes with follow-up evidence;
+- `d35f2de126e940011f444487aa15f682f53fae8b`: complete-follow-up transaction regressions;
+- `7fd0c4e743e30f588bc227b02f47acf551b335fb`: scanner-absent traded/suspended observation regressions;
+- `e5c9698851403b115b99648ec1c1b67dd16a9929`: observation schema v2 follow-up boundary;
+- `5ec91257b39c46e9e219b21438a1d0b54803b3e9`: intake compares complete transition/observation payloads;
+- `084ddf649e031e8169a761fd3b8578f73b31b5c2`: methodology contract v2, 37 fingerprint components;
+- `82f432eb13532223b7ded754820de1fa2f3f6219`: freeze methodology-v2 coverage regression;
+- `1b29d452e3827b2507dccd75ea34678c0ee50800`: T1 local minimum-safe checkpoint advanced to methodology v2;
+- D-032 and `specs/m4-phase-2-10-cohort-followup.md` freeze the contract.
+
+Interpretation:
+follow-up preserves the underlying market path only. It never turns scanner absence into
+scanner presence, lifecycle continuity, invalidation, or a trade signal.
+
+No post-T0 fingerprinted committed capture existed before this methodology-v2 freeze, so
+no future evidence required migration or rewriting.
