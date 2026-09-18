@@ -21,7 +21,7 @@ from .capture_transaction import (
 from .evidence_bundle import verify_evidence_bundle
 from .lifecycle_transitions import build_transition_report
 from .outcome_evaluator import evaluate_candidate_outcome
-from .outcome_protocol import load_outcome_protocol_v1
+from .outcome_protocol import load_outcome_protocol, load_outcome_protocol_v2
 from .outcome_snapshot import read_outcome_snapshots
 from .prospective_observations import build_prospective_observation_report
 from .snapshot_manifest import resolve_capture_timeline
@@ -196,8 +196,8 @@ def audit_evidence_bundle(
 
             committed = read_committed_captures(transaction_root)
             outcome_snapshots = read_outcome_snapshots(outcome_root)
-            outcome_protocol, outcome_protocol_identity = (
-                load_outcome_protocol_v1()
+            active_outcome_protocol, active_outcome_identity = (
+                load_outcome_protocol_v2()
             )
             baseline_present = frozen_legacy_baseline_present(transaction_root)
             baseline_rows = read_frozen_legacy_baseline(transaction_root)
@@ -384,13 +384,13 @@ def audit_evidence_bundle(
                 ):
                     blockers.append("observation_report_methodology_version_drift")
 
-            bundled_outcome_protocol = _json_member(
+            bundled_active_protocol = _json_member(
                 archive,
-                "protocols/m4-outcome-protocol-v1.json",
+                "protocols/m4-outcome-protocol-v2.json",
             )
-            if bundled_outcome_protocol is None:
+            if bundled_active_protocol is None:
                 blockers.append("outcome_protocol_bundle_member_missing")
-            elif bundled_outcome_protocol != outcome_protocol:
+            elif bundled_active_protocol != active_outcome_protocol:
                 blockers.append("outcome_protocol_bundle_member_drift")
 
             manifest_outcome_error = str(
@@ -429,12 +429,36 @@ def audit_evidence_bundle(
                 if not snapshot_as_of:
                     blockers.append("outcome_snapshot_missing_as_of")
                     continue
-                if (
-                    str(snapshot.get("outcome_protocol_id") or "")
-                    != outcome_protocol_identity.protocol_id
-                ):
+                snapshot_protocol_id = str(
+                    snapshot.get("outcome_protocol_id") or ""
+                )
+                try:
+                    snapshot_protocol, snapshot_protocol_identity = (
+                        load_outcome_protocol(snapshot_protocol_id)
+                    )
+                except Exception as exc:
                     blockers.append(
-                        "outcome_snapshot_protocol_id_drift"
+                        "outcome_snapshot_protocol_unavailable:"
+                        + snapshot_protocol_id
+                        + ":"
+                        + type(exc).__name__
+                        + ":"
+                        + str(exc)
+                    )
+                    continue
+                bundled_snapshot_protocol = _json_member(
+                    archive,
+                    f"protocols/{snapshot_protocol_id}.json",
+                )
+                if bundled_snapshot_protocol is None:
+                    blockers.append(
+                        "outcome_snapshot_protocol_member_missing:"
+                        + snapshot_protocol_id
+                    )
+                elif bundled_snapshot_protocol != snapshot_protocol:
+                    blockers.append(
+                        "outcome_snapshot_protocol_member_drift:"
+                        + snapshot_protocol_id
                     )
                 if (
                     str(
@@ -442,7 +466,7 @@ def audit_evidence_bundle(
                             "outcome_protocol_fingerprint"
                         ) or ""
                     )
-                    != outcome_protocol_identity.fingerprint
+                    != snapshot_protocol_identity.fingerprint
                 ):
                     blockers.append(
                         "outcome_snapshot_protocol_fingerprint_drift"
@@ -507,7 +531,7 @@ def audit_evidence_bundle(
                             methodology_fingerprint=str(
                                 chain_methodology_fingerprint or ""
                             ),
-                            protocol=outcome_protocol,
+                            protocol=snapshot_protocol,
                         )
                     except Exception as exc:
                         blockers.append(
@@ -553,7 +577,7 @@ def audit_evidence_bundle(
 
             included_outcome = _json_member(
                 archive,
-                "reports/m4-outcome-v1.json",
+                "reports/m4-outcome-v2.json",
             )
             if included_outcome is None:
                 warnings.append("outcome_report_missing")
@@ -563,9 +587,9 @@ def audit_evidence_bundle(
                     "outcome_as_of_trade_date": latest_outcome.get(
                         "outcome_as_of_trade_date"
                     ),
-                    "outcome_protocol_id": outcome_protocol_identity.protocol_id,
+                    "outcome_protocol_id": active_outcome_identity.protocol_id,
                     "outcome_protocol_fingerprint": (
-                        outcome_protocol_identity.fingerprint
+                        active_outcome_identity.fingerprint
                     ),
                     "capture_methodology_fingerprint": (
                         chain_methodology_fingerprint
@@ -682,9 +706,9 @@ def audit_evidence_bundle(
                 "price_basis_drift_candidate_keys": basis_drift_keys,
                 "cohort_followup_row_count": len(followup_rows),
                 "confirmed_full_day_suspended_row_count": len(suspension_rows),
-                "outcome_protocol_id": outcome_protocol_identity.protocol_id,
+                "outcome_protocol_id": active_outcome_identity.protocol_id,
                 "outcome_protocol_fingerprint": (
-                    outcome_protocol_identity.fingerprint
+                    active_outcome_identity.fingerprint
                 ),
                 "outcome_snapshot_count": len(outcome_snapshots),
                 "latest_outcome_as_of_trade_date": (
