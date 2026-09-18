@@ -774,3 +774,64 @@ def test_schema_v5_allows_seedless_non_enrollment_row() -> None:
         row[field] = None
     capture = _capture([row])
     assert capture.schema_version == 5
+
+
+
+def test_schema_v4_is_readable_but_cannot_continue_as_v5(tmp_path) -> None:
+    import json
+
+    freeze_legacy_baseline(
+        tmp_path,
+        [],
+        baseline_through_trade_date="2026-09-17",
+    )
+    row = _row("legacy-v4")
+    txid = capture_transaction_id(
+        code_head="h",
+        as_of_trade_date="2026-09-18",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        journal_rows=[row],
+        cohort_followup_rows=[],
+        methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+        methodology_fingerprint=TEST_METHODOLOGY_FINGERPRINT,
+        schema_version=4,
+    )
+    payload = {
+        "transaction_id": txid,
+        "code_head": "h",
+        "as_of_trade_date": "2026-09-18",
+        "captured_at_utc": "2026-09-18T09:00:00+00:00",
+        "instrument_count": 55,
+        "successful_instruments": 55,
+        "failed_instruments": 0,
+        "candidate_count": 1,
+        "cohort_followup_count": 0,
+        "worktree_clean": True,
+        "methodology_contract_version": TEST_METHODOLOGY_CONTRACT_VERSION,
+        "methodology_fingerprint": TEST_METHODOLOGY_FINGERPRINT,
+        "journal_rows": [{**row, "capture_transaction_id": txid}],
+        "cohort_followup_rows": [],
+        "status": "committed",
+        "schema_version": 4,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+    }
+    (tmp_path / f"2026-09-18__{txid}.json").write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
+    assert read_committed_captures(tmp_path)[0]["schema_version"] == 4
+
+    next_capture = _capture(
+        [_row("v5", date="2026-09-19", head="h2")],
+        date="2026-09-19",
+        head="h2",
+    )
+    try:
+        commit_capture_transaction(tmp_path, next_capture)
+    except ValueError as exc:
+        assert "schema drift across active chain" in str(exc)
+    else:
+        raise AssertionError("v4 chain must not silently accept v5 append")
