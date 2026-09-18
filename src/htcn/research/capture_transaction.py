@@ -184,7 +184,30 @@ def commit_capture_transaction(
     target_root.mkdir(parents=True, exist_ok=True)
     final_path = target_root / _capture_filename(capture)
 
-    same_date = sorted(target_root.glob(f"{capture.as_of_trade_date}__*.json"))
+    existing_paths = sorted(target_root.glob("????-??-??__*.json"))
+    existing_dates = [path.name.split("__", 1)[0] for path in existing_paths]
+    if existing_dates and capture.as_of_trade_date < max(existing_dates):
+        raise ValueError(
+            f"capture transaction forbids backfill: {capture.as_of_trade_date} < {max(existing_dates)}"
+        )
+
+    baseline_path = _legacy_baseline_path(target_root)
+    if baseline_path.exists():
+        baseline_payload = json.loads(baseline_path.read_text(encoding="utf-8"))
+        baseline_through = str(
+            baseline_payload.get("baseline_through_trade_date") or ""
+        )
+        if baseline_through and capture.as_of_trade_date <= baseline_through:
+            raise ValueError(
+                f"capture transaction must be after frozen legacy baseline: "
+                f"{capture.as_of_trade_date} <= {baseline_through}"
+            )
+
+    same_date = [
+        path
+        for path in existing_paths
+        if path.name.startswith(f"{capture.as_of_trade_date}__")
+    ]
     for path in same_date:
         if path.name == final_path.name:
             existing = json.loads(path.read_text(encoding="utf-8"))
@@ -347,6 +370,8 @@ def _legacy_baseline_id(rows: Iterable[dict[str, Any]]) -> str:
 def freeze_legacy_baseline(
     root: str | Path,
     rows: Iterable[dict[str, Any]],
+    *,
+    baseline_through_trade_date: str | None = None,
 ) -> dict[str, Any]:
     target_root = Path(root)
     target_root.mkdir(parents=True, exist_ok=True)
@@ -357,11 +382,28 @@ def freeze_legacy_baseline(
             str(row.get("candidate_key") or ""),
         )
     )
-    baseline_id = _legacy_baseline_id(materialized)
+    inferred_dates = sorted({
+        str(row.get("as_of_trade_date"))
+        for row in materialized
+        if row.get("as_of_trade_date")
+    })
+    baseline_through = (
+        str(baseline_through_trade_date)
+        if baseline_through_trade_date is not None
+        else (inferred_dates[-1] if inferred_dates else None)
+    )
+    identity_payload = {
+        "journal_rows": materialized,
+        "baseline_through_trade_date": baseline_through,
+    }
+    baseline_id = sha256(
+        _canonical_json(identity_payload).encode("utf-8")
+    ).hexdigest()[:24]
     payload = {
         "schema_version": 1,
         "status": "frozen_legacy_baseline",
         "baseline_id": baseline_id,
+        "baseline_through_trade_date": baseline_through,
         "row_count": len(materialized),
         "journal_rows": materialized,
         "alpha_inference_allowed": False,
@@ -399,7 +441,20 @@ def read_frozen_legacy_baseline(root: str | Path) -> list[dict[str, Any]]:
     if payload.get("status") != "frozen_legacy_baseline":
         raise ValueError("legacy baseline status is invalid")
     rows = [dict(row) for row in payload.get("journal_rows") or []]
-    expected = _legacy_baseline_id(rows)
+    baseline_through = payload.get("baseline_through_trade_date")
+    identity_payload = {
+        "journal_rows": sorted(
+            rows,
+            key=lambda row: (
+                str(row.get("as_of_trade_date") or ""),
+                str(row.get("candidate_key") or ""),
+            ),
+        ),
+        "baseline_through_trade_date": baseline_through,
+    }
+    expected = sha256(
+        _canonical_json(identity_payload).encode("utf-8")
+    ).hexdigest()[:24]
     if str(payload.get("baseline_id") or "") != expected:
         raise ValueError("legacy baseline identity mismatch")
     if int(payload.get("row_count") or 0) != len(rows):
@@ -409,3 +464,15 @@ def read_frozen_legacy_baseline(root: str | Path) -> list[dict[str, Any]]:
     if payload.get("is_trade_instruction") is not False:
         raise ValueError("legacy baseline unexpectedly permits trade instruction")
     return rows
+
+
+
+def frozen_legacy_baseline_through_date(root: str | Path) -> str | None:
+    path = _legacy_baseline_path(root)
+    if not path.exists():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("status") != "frozen_legacy_baseline":
+        raise ValueError("legacy baseline status is invalid")
+    value = payload.get("baseline_through_trade_date")
+    return None if value is None else str(value)
