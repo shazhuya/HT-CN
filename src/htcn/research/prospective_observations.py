@@ -136,6 +136,7 @@ def build_prospective_observation_report(
         first_state_date: dict[str, str] = {}
         present_count = 0
         absent_count = 0
+        suspended_count = 0
 
         for captured_index, as_of in enumerate(observation_dates):
             row = by_date[as_of].get(key)
@@ -179,6 +180,11 @@ def build_prospective_observation_report(
                 first_reappeared = as_of
             absent_streak = 0
             present_count += 1
+            market_status = str(
+                row.get("market_observation_status") or "traded"
+            )
+            if market_status == "confirmed_full_day_suspended":
+                suspended_count += 1
 
             terminal_raw = row.get("source_terminal_trade_date")
             terminal = None if terminal_raw is None else str(terminal_raw)
@@ -232,9 +238,7 @@ def build_prospective_observation_report(
                         if row.get("underlying_last_trade_date") is None
                         else str(row.get("underlying_last_trade_date"))
                     ),
-                    market_observation_status=str(
-                        row.get("market_observation_status") or "traded"
-                    ),
+                    market_observation_status=market_status,
                     daily_event_source=(
                         None
                         if row.get("daily_event_source") is None
@@ -260,6 +264,7 @@ def build_prospective_observation_report(
             "captured_snapshot_count": len(observation_dates),
             "present_snapshot_count": present_count,
             "absent_snapshot_count": absent_count,
+            "confirmed_full_day_suspended_snapshot_count": suspended_count,
             "first_scanner_absent_date": first_absent,
             "first_scanner_reappeared_date": first_reappeared,
             "first_source_terminal_trade_date": first_terminal,
