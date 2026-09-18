@@ -1283,3 +1283,43 @@ HT-CN 实战工作台未来必须面对几百到几千只 A 股。重复全 univ
 
 当 HT-CN 从几十只标的扩展到全 A 股后，任何由 UI limit 决定 scan universe 的设计都会产生静默漏扫。D-045 将“扫描完整性”与“展示性能”彻底分离。
 
+## D-046 — M5 并行构建只能优化吞吐，禁止改变 Queue 语义或共享未知 service 实例
+
+**状态：Frozen M5 Phase 5 parallel-build boundary**
+
+正式决定：
+
+1. Operator Queue 允许使用有界线程池加速完整 universe build；
+2. 默认 workers=4；
+3. `HTCN_OPERATOR_WORKERS` 仅允许 1..16；
+4. 只有提供 service_factory 时才允许 parallel mode；
+5. parallel worker 必须使用线程本地独立 M3 service；
+6. 不允许多个线程直接共享一个未知状态的 M3 service 实例；
+7. 请求 parallel 但缺 service_factory 时必须自动回退 sequential；
+8. 并发完成顺序不得拥有 Queue 排序语义；
+9. Queue 最终排序仍由 frozen workflow bucket + instrument + deterministic display key 决定；
+10. parallel / sequential 对相同输入必须产生相同 candidate/state 语义；
+11. 单 instrument failure 继续隔离，不能中断其他标的；
+12. progress callback 只用于产品观测，异常不得影响 build；
+13. cache hit 不得创建 worker service；
+14. worker count 不进入 candidate identity；
+15. worker count 不进入 cache identity；
+16. worker count 不进入 Operator Delta identity；
+17. precompute 永远覆盖完整初始化 universe，删除 subset limit；
+18. build_execution 永久声明：
+    - changes_queue_semantics=false
+    - authoritative_evidence=false
+    - writes_m4_evidence=false；
+19. Phase 5 不修改 harmonic identity / Source Raw PRZ / lifecycle；
+20. Phase 5 不写 M4 evidence；
+21. Hosted CI run #1601：
+    - overall success
+    - Python 634 passed
+    - Web build success
+    - Playwright 21 passed
+    - browser evidence upload success。
+
+原因：
+
+全 A 股首次日内构建需要吞吐优化，但任何性能优化都不能获得修改研究语义的权力。D-046 将并发严格限定在 product execution layer。
+
