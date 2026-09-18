@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `99e3bf7aba1e656601bdcf4831d4b215eede4e8d`
-context_checkpoint_title: `M5 Phase 10 Daily Handoff Bundle v2 green`
+context_checkpoint: `504cc063d93e999dcbac1b131e14f475beacd4d0`
+context_checkpoint_title: `M5 Phase 11 Daily Operator History / Change Journal v1 green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -13,30 +13,33 @@ repository: `shazhuya/HT-CN`
 
 正式 `main` 仍以 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration** 为已合并基线；M4 prospective evidence 与 M5 只读产品层继续在独立分支演进。
 
-当前实际开发现场已经完成 **M5 Phase 8 — Cross-Process Operator Rebuild Coordination**：
+当前实际开发现场已经完成 **M5 Phase 11 — Daily Operator History / Change Journal v1**：
 
-- 当前分支：`m5/cross-process-operator-rebuild`
-- Phase 8 validated code checkpoint：`08f51e28f60840cfb6a85b85fbceb091c9392825`
-- hosted CI：run `35380339931` / #1641，overall success
-- Python：658 passed
+- 当前分支：`m5/daily-operator-history`
+- Phase 11 validated code checkpoint：`504cc063d93e999dcbac1b131e14f475beacd4d0`
+- hosted CI：run `35384764795` / #1699，overall success
+- Python：718 passed
 - Web build：success
-- Playwright：21 passed
+- Playwright：22 passed
 - browser evidence upload：success
 - M4 capture methodology drift：0 / 37
 - Outcome Engine drift：0 / 4
 
-M5 Phase 1–8 当前主线：
+M5 Phase 1–11 当前主线：
 
 1. Daily Operator Queue；
-2. Operator Delta；
+2. Operator Delta / 今日变化；
 3. Daily Operator Cache；
 4. Full-Universe Operator Index；
 5. bounded parallel build；
 6. process-local single-flight；
 7. cache input identity（数据 + 分析代码身份）；
-8. filesystem advisory cache-slot lock，协调 API / precompute 等独立进程的同一 cache-slot rebuild。
+8. filesystem advisory cache-slot lock；
+9. Daily Close Product Pipeline；
+10. Daily Handoff Bundle v2；
+11. append-only Daily Operator History / Change Journal，支持同日 revision、跨日 Delta、hash/chain 完整性和 Workbench/API 查询。
 
-M5 仍是**只读实战产品层**，不拥有 harmonic identity、Source Raw PRZ 或 lifecycle，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。
+M5 仍是**只读实战产品层**，不拥有 harmonic identity、Source Raw PRZ 或 lifecycle，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 11 的历史只代表产品观察，不是 authoritative transition。
 
 ## 正式 main 基线 — M3
 
@@ -1783,3 +1786,76 @@ Governance:
 ### 下一步
 
 Phase 10 已解决“每日结果如何可靠交接/搬运”。下一阶段应继续留在 M5 产品主线，优先做 **Daily Operator History / Change Journal v1**：把每天 final Operator snapshot 的产品级变化长期留档并提供跨日检索，但仍必须与 M4 authoritative prospective evidence 隔离。禁止用该 history 直接生成胜率/alpha/预测排序。
+
+
+## M5 Phase 11 — Daily Operator History / Change Journal v1
+
+Current branch:
+`m5/daily-operator-history`
+
+Validated code checkpoint:
+`504cc063d93e999dcbac1b131e14f475beacd4d0`
+
+Hosted validation:
+- draft PR #23 is only a CI/diff carrier；
+- final code CI run `35384764795` / #1699：success；
+- Python 718 passed；
+- Web build success；
+- Playwright 22 passed；
+- browser evidence upload success。
+
+Frozen implementation:
+- history is written only after Phase 9 final cache revalidation；
+- a history failure never rewrites an otherwise valid `m5_product_ready` or M4 research result；
+- append source is the exact final M5 report/snapshot, validated for current/single-as-of/persisted/stable input identity；
+- observation id binds trade date, source generated-at, input identity, final report SHA, product snapshot SHA and canonical Queue SHA；
+- storage is append-only under `data/product/m5/operator_history/<trade_date>/<observation_id>.json`；
+- exact rerun is idempotent；
+- same-day changed input/source appends a new revision instead of overwriting；
+- older same-day revision and historical backfill are forbidden；
+- append is cross-process serialized by OS advisory lock；
+- each record contains a self-contained Queue snapshot；
+- cross-day Delta baseline is the latest revision of the previous recorded trade date；
+- current instrument-analysis errors retain Phase 2 disappearance suppression；
+- each record has a self-integrity SHA；
+- same-day revision links and previous-trade-date links are explicit；
+- missing/tampered/deleted records break the chain and queries fail closed with `operator_history_integrity_failure`；
+- default query returns the latest revision per day；all revisions remain auditable；
+- GET `/api/operator/history` supports instrument/display-key/date/revision/summary filters；
+- Workbench adds **跨日产品观察历史** alongside the existing browser-local **今日变化**；
+- CLI: `scripts/m5_query_operator_history.py`；
+- recorder: `scripts/m5_record_operator_history.py`；
+- one-click query: `运行HT-CN历史变化查询.bat`；
+- daily report: `artifacts/reports/m5-operator-history.json`；
+- CI now includes `apps/web/tests/operator-history.spec.ts`。
+
+Boundary:
+- product observation only；
+- authoritative_transition=false；
+- authoritative_evidence=false；
+- writes_m4_evidence=false；
+- historical_outcome_used_for_ranking=false；
+- predictive_score_used=false；
+- alpha_inference_allowed=false；
+- is_trade_instruction=false；
+- no harmonic identity / Source Raw PRZ / lifecycle mutation。
+
+Development note:
+- run #1693 exposed only an ambiguous Playwright locator in the new history test; the existing 21 browser gates passed；
+- locator was scoped to the latest-day card in `b49d1468a243f0a129def63b6ee3984170d1ceb8`；
+- run #1695 then passed 715 Python + 22 Playwright；
+- chain hardening increased final regression to 718 Python, with run #1699 fully green。
+
+Freeze audit:
+- M4 capture methodology: 0 / 37 changed；
+- Outcome Engine: 0 / 4 changed。
+
+Governance:
+- D-052；
+- `specs/m5-phase-11-daily-operator-history.md`。
+
+### 下一步
+
+Phase 11 已建立可靠的跨日产品观察底座。下一阶段优先进入 **M5 Phase 12 — Daily Review Digest / Change Triage v1**：基于已冻结的 product history，把“新出现 / 消失 / lifecycle / action / next-key / context 变化”整理成每日复盘摘要与可钻取工作流。
+
+Phase 12 仍只能做透明的变化归类和复盘导航，不得把历史 observation 转换为胜率、alpha、预测评分或买卖排序。若后续需要把 Phase 11 history 带入每日交接包，应通过新的 versioned handoff contract 实现，不修改 Phase 10 已冻结的 v2 语义。
