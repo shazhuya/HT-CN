@@ -5,7 +5,7 @@ from hashlib import sha256
 from pathlib import Path
 
 
-METHODOLOGY_CONTRACT_VERSION = 1
+METHODOLOGY_CONTRACT_VERSION = 2
 
 # Conservative file-level fingerprint for anything that can change candidate identity,
 # Source Raw PRZ, canonical Source lifecycle, action-state interpretation, or M4
@@ -40,8 +40,13 @@ METHODOLOGY_RELATIVE_PATHS: tuple[str, ...] = (
     "src/htcn/harmonic/source_lifecycle.py",
     "src/htcn/harmonic/source_prz.py",
     "src/htcn/harmonic/source_prz_evidence.py",
+    "src/htcn/research/capture_transaction.py",
+    "src/htcn/research/cohort_followup.py",
     "src/htcn/research/lifecycle_journal.py",
+    "src/htcn/research/lifecycle_transitions.py",
     "src/htcn/research/methodology_identity.py",
+    "src/htcn/research/prospective_observations.py",
+    "src/htcn/research/snapshot_manifest.py",
     "scripts/m4_capture_lifecycle_snapshot.py",
 )
 
