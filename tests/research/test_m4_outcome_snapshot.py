@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+import pandas as pd
 import pytest
 
+from htcn.research.outcome_evaluator import canonical_market_path_hash
 from htcn.research.outcome_snapshot import (
     build_outcome_snapshot,
     commit_outcome_snapshot,
@@ -19,8 +21,20 @@ def _result(
     *,
     candidate: str = "candidate-a",
     as_of: str = "2026-09-28",
-    path_hash: str = "c" * 64,
+    close: float = 100.0,
 ) -> dict:
+    rows = [{
+        "trade_date": "2026-09-28",
+        "open": 99.0,
+        "high": 101.0,
+        "low": 98.0,
+        "close": close,
+        "volume": 1000.0,
+    }]
+    path_hash = canonical_market_path_hash(
+        pd.DataFrame(rows),
+        price_basis_id="qfq:" + "1" * 64,
+    )
     return {
         "schema_version": 1,
         "candidate_key": candidate,
@@ -30,6 +44,10 @@ def _result(
         "capture_methodology_fingerprint": METHOD,
         "outcome_protocol_id": "m4-outcome-v1",
         "outcome_protocol_fingerprint": PROTOCOL,
+        "current_price_basis_id": "qfq:" + "1" * 64,
+        "market_path_trade_dates": ["2026-09-28"],
+        "market_path_traded_bar_count": 1,
+        "market_path_rows": rows,
         "market_path_sha256": path_hash,
         "status": "right_censored_ongoing",
         "source_events": {},
@@ -40,7 +58,6 @@ def _result(
             "alpha_inference_allowed": False,
         },
     }
-
 
 def _snapshot(*results: dict):
     return build_outcome_snapshot(
@@ -54,12 +71,12 @@ def _snapshot(*results: dict):
 
 def test_outcome_snapshot_is_deterministic_under_candidate_order() -> None:
     first = _snapshot(
-        _result(candidate="b", path_hash="d" * 64),
-        _result(candidate="a", path_hash="e" * 64),
+        _result(candidate="b", close=100.0),
+        _result(candidate="a", close=101.0),
     )
     second = _snapshot(
-        _result(candidate="a", path_hash="e" * 64),
-        _result(candidate="b", path_hash="d" * 64),
+        _result(candidate="a", close=101.0),
+        _result(candidate="b", close=100.0),
     )
     assert first.snapshot_id == second.snapshot_id
 
@@ -76,10 +93,10 @@ def test_outcome_snapshot_commit_is_atomic_and_idempotent(tmp_path) -> None:
 
 
 def test_same_as_of_changed_market_path_fails_closed(tmp_path) -> None:
-    first = _snapshot(_result(path_hash="c" * 64))
+    first = _snapshot(_result(close=100.0))
     commit_outcome_snapshot(tmp_path, first)
 
-    changed = _snapshot(_result(path_hash="d" * 64))
+    changed = _snapshot(_result(close=100.5))
     with pytest.raises(ValueError, match="outcome data drift"):
         commit_outcome_snapshot(tmp_path, changed)
 
@@ -114,7 +131,7 @@ def test_tampered_snapshot_id_is_detected(tmp_path) -> None:
     committed = commit_outcome_snapshot(tmp_path, snapshot)
     path = tmp_path / committed["path"].split("/")[-1]
     payload = json.loads(path.read_text(encoding="utf-8"))
-    payload["results"][0]["market_path_sha256"] = "f" * 64
+    payload["results"][0]["market_path_rows"][0]["close"] = 100.5
     path.write_text(json.dumps(payload), encoding="utf-8")
 
     with pytest.raises(ValueError, match="snapshot id mismatch"):
