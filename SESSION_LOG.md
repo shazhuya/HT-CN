@@ -1130,3 +1130,28 @@ D-041 added a historical-Saturday-only repair path requiring raw pre-close conti
 
 CI run #1459 passed. Freeze audit remained 0/37 methodology drift and 0/4 Outcome Engine drift.
 
+## 2026-09-18 — M5 Phase 1 Operator Queue green
+
+Created independent branch `m5/a-share-operator-workbench` and draft PR #14 stacked on M4.
+
+Implemented:
+- read-only operator queue service;
+- `GET /api/operator/queue`;
+- API 0.4.0;
+- homepage daily queue;
+- workflow-state ordering only;
+- next-key/watch/blocker/context fields;
+- queue-to-single-symbol selection;
+- Python contract tests;
+- M5 Playwright CI gate.
+
+Validation:
+- run #1485 success;
+- Python success;
+- Web build success;
+- browser acceptance success;
+- frozen M4 methodology diff 0;
+- Outcome Engine diff 0.
+
+Next: M5 Phase 2 Operator Delta / daily change view, remaining strictly product-only and non-authoritative.
+
