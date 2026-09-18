@@ -1466,3 +1466,35 @@ D-043 boundary:
 
 Frozen M4 methodology and Outcome Engine remain unchanged.
 
+## M5 Phase 3 closeout — Daily Operator Snapshot Cache green
+
+Validated checkpoint:
+
+`3f666c53fa4856eb5ef973e27679583ffa604435`
+
+Actions run #1525:
+
+- overall success；
+- Python 628 passed；
+- Web build success；
+- Playwright 19 passed；
+- browser evidence upload success。
+
+Implemented:
+
+- daily full-Queue product cache；
+- trade-date/bars/scales/universe-hash/contract cache identity；
+- atomic writes；
+- cache hit；
+- force refresh；
+- stale Queue current-date cache rejection；
+- automatic invalidation on universe/date/contract change；
+- presentation-only filters；
+- UI cache provenance；
+- `scripts/m5_precompute_operator_snapshot.py`。
+
+D-044 freezes the cache as product acceleration only:
+- not authoritative evidence；
+- no M4 writes；
+- no harmonic/PRZ/lifecycle mutation。
+
