@@ -1337,3 +1337,38 @@ Validation:
 
 Next local run should reuse 54 already-ready instruments and only attempt SZSE.000001 before entering authoritative T1 capture.
 
+## M5 Phase 1 — A股实战工作台 / Daily Operator Queue
+
+M5 已从 M4 evidence branch 独立：
+
+`m5/a-share-operator-workbench`
+
+目标不是继续改 harmonic engine，而是把已经冻结的 Source lifecycle / Decision Narrative 组织成日常可用的全市场工作流。
+
+已实现：
+
+- `src/htcn/app/operator_queue.py`
+- `GET /api/operator/queue`
+- API version 0.4.0
+- 首页“今日观察队列”
+- action-state workflow buckets
+- next key price / role
+- first_watch / next_watch / upgrade_blocker
+- execution gate / context cautions
+- Queue -> 单票输入框联动
+- Python operator queue tests
+- Playwright operator queue acceptance
+- M5 branch browser CI gate
+
+D-042 永久边界：
+
+- read-only over existing lifecycle；
+- no predictive score；
+- no historical outcome ranking；
+- no alpha；
+- no trade instruction；
+- no identity/PRZ/lifecycle mutation；
+- no writes into M4 evidence store。
+
+M4 继续独立积累 prospective evidence；M5 不再因单一历史 provider-calendar 边角问题停止产品主线。
+
