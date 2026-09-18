@@ -278,6 +278,11 @@ def test_same_day_changed_snapshot_appends_revision_without_overwrite(
     assert second["revision_ordinal"] == 2
     assert first["observation_id"] != second["observation_id"]
     assert len(list(_history(tmp_path).glob("2026-09-18/*.json"))) == 2
+    second_record = json.loads(
+        (tmp_path / second["record_path"]).read_text(encoding="utf-8")
+    )
+    assert second_record["previous_same_day_observation_id"] == first["observation_id"]
+    assert len(second_record["record_integrity_sha256"]) == 64
 
 
 def test_older_same_day_revision_is_rejected(tmp_path: Path) -> None:
@@ -405,3 +410,76 @@ def test_query_can_expose_all_same_day_revisions(tmp_path: Path) -> None:
     )
     assert payload["observation_count"] == 2
     assert [x["revision_ordinal"] for x in payload["observations"]] == [2, 1]
+
+
+def test_missing_same_day_revision_breaks_history_integrity(
+    tmp_path: Path,
+) -> None:
+    report = _prepare_source(
+        tmp_path,
+        trade_date="2026-09-18",
+        generated_at="2026-09-18T08:00:00+00:00",
+        fingerprint=FP_A,
+        items=[_item()],
+    )
+    first = append_operator_history(root=tmp_path, report_path=report)
+    report = _prepare_source(
+        tmp_path,
+        trade_date="2026-09-18",
+        generated_at="2026-09-18T09:00:00+00:00",
+        fingerprint=FP_B,
+        items=[_item(lifecycle="t_plus_1")],
+    )
+    append_operator_history(root=tmp_path, report_path=report)
+
+    (tmp_path / first["record_path"]).unlink()
+
+    with pytest.raises(RuntimeError, match="operator_history_integrity_failure"):
+        query_operator_history(history_root=_history(tmp_path))
+
+
+def test_missing_previous_trade_date_baseline_breaks_chain(
+    tmp_path: Path,
+) -> None:
+    report = _prepare_source(
+        tmp_path,
+        trade_date="2026-09-17",
+        generated_at="2026-09-17T08:00:00+00:00",
+        fingerprint=FP_A,
+        items=[_item()],
+    )
+    previous = append_operator_history(root=tmp_path, report_path=report)
+    report = _prepare_source(
+        tmp_path,
+        trade_date="2026-09-18",
+        generated_at="2026-09-18T08:00:00+00:00",
+        fingerprint=FP_B,
+        items=[_item(lifecycle="t_plus_1")],
+    )
+    append_operator_history(root=tmp_path, report_path=report)
+
+    (tmp_path / previous["record_path"]).unlink()
+
+    with pytest.raises(RuntimeError, match="previous_observation_missing"):
+        query_operator_history(history_root=_history(tmp_path))
+
+
+def test_history_link_tampering_is_detected_by_record_hash(
+    tmp_path: Path,
+) -> None:
+    report = _prepare_source(
+        tmp_path,
+        trade_date="2026-09-18",
+        generated_at="2026-09-18T08:00:00+00:00",
+        fingerprint=FP_A,
+        items=[_item()],
+    )
+    appended = append_operator_history(root=tmp_path, report_path=report)
+    record_path = tmp_path / appended["record_path"]
+    payload = json.loads(record_path.read_text(encoding="utf-8"))
+    payload["previous_observation_id"] = "f" * 64
+    _write_json(record_path, payload)
+
+    checked = verify_operator_history_record(record_path)
+    assert checked["status"] == "invalid"
+    assert "history_record_integrity_mismatch" in checked["errors"]
