@@ -1223,3 +1223,15 @@ Validation:
 
 D-046 freezes worker concurrency as throughput-only and non-authoritative.
 
+## 2026-09-19 — M5 Phase 6 single-flight green
+
+Implemented process-local single-flight coalescing for identical Operator rebuild identities.
+
+Validation:
+- run #1613 success;
+- Python 637 passed;
+- Web build success;
+- Playwright 21 passed.
+
+D-047 freezes single-flight as product execution coordination only.
+
