@@ -148,7 +148,7 @@ export default function App() {
       .then(setHealth)
       .catch((err: Error) => setError(err.message))
 
-    fetch(`${API}/api/instruments?limit=500`)
+    fetch(`${API}/api/instruments?limit=10000`)
       .then((response) => response.json())
       .then((payload: { items?: InstrumentRow[] }) => setInstruments(payload.items ?? []))
       .catch(() => undefined)
