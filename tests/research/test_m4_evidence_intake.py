@@ -17,7 +17,7 @@ from htcn.research.capture_transaction import (
 from htcn.research.evidence_intake import audit_evidence_bundle
 from htcn.research.methodology_identity import build_methodology_identity
 from htcn.research.outcome_evaluator import evaluate_candidate_outcome
-from htcn.research.outcome_protocol import load_outcome_protocol_v1
+from htcn.research.outcome_protocol import load_outcome_protocol
 from htcn.research.outcome_snapshot import (
     build_outcome_snapshot,
     commit_outcome_snapshot,
@@ -301,7 +301,7 @@ def _write_offline_recomputable_outcome_bundle(
             "volume": 1000.0,
         },
     ])
-    protocol, protocol_identity = load_outcome_protocol_v1()
+    protocol, protocol_identity = load_outcome_protocol()
     result = evaluate_candidate_outcome(
         summary,
         market,
