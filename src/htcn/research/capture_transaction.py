@@ -133,6 +133,7 @@ def build_committed_capture(
     journal_rows: Iterable[dict[str, Any]],
 ) -> CommittedCapture:
     rows = [dict(row) for row in journal_rows]
+    rows.sort(key=lambda row: str(row.get("candidate_key") or ""))
     if not code_head:
         raise ValueError("capture transaction requires code_head")
     if not as_of_trade_date:
@@ -187,7 +188,20 @@ def commit_capture_transaction(
     for path in same_date:
         if path.name == final_path.name:
             existing = json.loads(path.read_text(encoding="utf-8"))
-            if existing != capture.as_payload():
+            existing_txid = str(existing.get("transaction_id") or "")
+            if existing_txid != capture.transaction_id:
+                raise ValueError(
+                    f"committed capture transaction-id drift for {capture.as_of_trade_date}"
+                )
+            existing_identity = capture_transaction_id(
+                code_head=str(existing.get("code_head") or ""),
+                as_of_trade_date=str(existing.get("as_of_trade_date") or ""),
+                instrument_count=int(existing.get("instrument_count") or 0),
+                successful_instruments=int(existing.get("successful_instruments") or 0),
+                failed_instruments=int(existing.get("failed_instruments") or 0),
+                journal_rows=existing.get("journal_rows") or [],
+            )
+            if existing_identity != capture.transaction_id:
                 raise ValueError(
                     f"committed capture payload drift for {capture.as_of_trade_date}"
                 )
@@ -292,3 +306,85 @@ def committed_capture_view(
             "is_trade_instruction": False,
         })
     return journal_rows, manifest_rows
+
+
+def _legacy_baseline_path(root: str | Path) -> Path:
+    return Path(root) / "legacy_baseline.json"
+
+
+def _legacy_baseline_id(rows: Iterable[dict[str, Any]]) -> str:
+    materialized = [dict(row) for row in rows]
+    materialized.sort(
+        key=lambda row: (
+            str(row.get("as_of_trade_date") or ""),
+            str(row.get("candidate_key") or ""),
+        )
+    )
+    return sha256(_canonical_json(materialized).encode("utf-8")).hexdigest()[:24]
+
+
+def freeze_legacy_baseline(
+    root: str | Path,
+    rows: Iterable[dict[str, Any]],
+) -> dict[str, Any]:
+    target_root = Path(root)
+    target_root.mkdir(parents=True, exist_ok=True)
+    materialized = [dict(row) for row in rows]
+    materialized.sort(
+        key=lambda row: (
+            str(row.get("as_of_trade_date") or ""),
+            str(row.get("candidate_key") or ""),
+        )
+    )
+    baseline_id = _legacy_baseline_id(materialized)
+    payload = {
+        "schema_version": 1,
+        "status": "frozen_legacy_baseline",
+        "baseline_id": baseline_id,
+        "row_count": len(materialized),
+        "journal_rows": materialized,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+    }
+    final_path = _legacy_baseline_path(target_root)
+    if final_path.exists():
+        existing = json.loads(final_path.read_text(encoding="utf-8"))
+        if str(existing.get("baseline_id") or "") != baseline_id:
+            raise ValueError("legacy baseline is already frozen with different evidence")
+        return {
+            "status": "already_frozen",
+            "baseline_id": baseline_id,
+            "path": str(final_path),
+        }
+    tmp_path = target_root / ".legacy_baseline.json.tmp"
+    encoded = (_canonical_json(payload) + "\n").encode("utf-8")
+    with tmp_path.open("wb") as handle:
+        handle.write(encoded)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(tmp_path, final_path)
+    return {
+        "status": "frozen",
+        "baseline_id": baseline_id,
+        "path": str(final_path),
+    }
+
+
+def read_frozen_legacy_baseline(root: str | Path) -> list[dict[str, Any]]:
+    path = _legacy_baseline_path(root)
+    if not path.exists():
+        return []
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("status") != "frozen_legacy_baseline":
+        raise ValueError("legacy baseline status is invalid")
+    rows = [dict(row) for row in payload.get("journal_rows") or []]
+    expected = _legacy_baseline_id(rows)
+    if str(payload.get("baseline_id") or "") != expected:
+        raise ValueError("legacy baseline identity mismatch")
+    if int(payload.get("row_count") or 0) != len(rows):
+        raise ValueError("legacy baseline row_count mismatch")
+    if payload.get("alpha_inference_allowed") is not False:
+        raise ValueError("legacy baseline unexpectedly permits alpha inference")
+    if payload.get("is_trade_instruction") is not False:
+        raise ValueError("legacy baseline unexpectedly permits trade instruction")
+    return rows
