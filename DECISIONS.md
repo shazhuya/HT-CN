@@ -959,3 +959,83 @@ Prospective validation 不只要冻结“研究问题”，还要冻结“输入
 
 第一次真正进入 prospective evidence chain 的本地运行，应至少包含已经被真实 hosted CI 验证过的完整 Phase 3.1 transport/intake 修复。仅依赖更早的功能 checkpoint 会允许不同本地 checkout 产生不同质量的 handoff evidence，即使 harmonic methodology 本身未漂移。
 
+## D-039 — 第一次正式 T1 capture 前必须先完成 strict full-universe QFQ readiness
+
+**状态：Frozen M4 acquisition-data readiness gate**
+
+首个用户私有 M4 evidence bundle（code head
+`276de795cbbf13c33d7aca563e225b02ece5f0c0`）暴露出一个 acquisition-pipeline 缺口：
+
+- M1 raw daily update：55 / 55 初始化标的更新成功；
+- bulk snapshot 网络请求失败后，slow-path historical repair 55 / 55 成功；
+- formal capture：仅 3 / 55 通过；
+- 52 / 55 被正式 QFQ gate 拒绝；
+- 通过的 3 个标的恰好是历史 QFQ pilot：
+  - SSE.600519
+  - SSE.688256
+  - SZSE.300820
+- 失败原因统一为：
+  `formal prospective capture requires QFQ price basis: mode=raw basis=raw`；
+- authoritative capture 未提交；
+- journal/manifest 未追加 T1；
+- committed_capture_count = 0；
+- outcome_snapshot_count = 0；
+- T0 legacy baseline evidence 未被改写。
+
+根因：
+
+D-034 已将正式 prospective evidence 收紧到
+`qfq / qfq_carry_forward` price basis，但原 one-click acquisition chain 只负责 raw daily update，没有在正式 capture 前把 QFQ factor layer 从历史 3-symbol pilot 扩到当前 initialized universe。
+
+正式决定：
+
+1. one-click M4 acquisition 新增独立 strict-QFQ readiness stage；
+2. 顺序固定为：
+   - M1 raw update；
+   - strict formal-QFQ universe readiness；
+   - authoritative lifecycle capture；
+3. 正式 capture 只有在 initialized listed SSE/SZSE 全部可提供
+   `qfq` 或 `qfq_carry_forward`
+   且 basis ID 为 `qfq:...` 时才允许启动；
+4. 已有 formal QFQ view 直接复用，不重复联网；
+5. 仅对：
+   - factor 缺失；
+   - factor 历史内部缺口；
+   - formal QFQ view 无法形成；
+   的标的进行 build/repair；
+6. build/repair provider 顺序：
+   - AkShare adjusted history；
+   - BaoStock adjusted history fallback；
+7. 新建 factor candidate 必须满足：
+   - price_factor finite；
+   - price_factor > 0；
+   - raw/factor overlap >= 95%；
+   - factor 起点不晚于 raw 起点；
+   - latest factor date 之前不存在 raw trading-date 内部缺口；
+8. factor 最新日期之后的少量 raw 日期继续由已经冻结的
+   `qfq_carry_forward` 规则处理；
+9. factor 文件按 instrument 独立落盘，因此网络中断后可续跑，不重做已经 formal-ready 的标的；
+10. 任一 initialized instrument 最终仍不是 formal QFQ：
+    - QFQ stage 非零退出；
+    - authoritative capture 不启动；
+    - 旧 evidence 不覆盖；
+11. QFQ readiness 诊断写入：
+    - `artifacts/reports/m4-qfq-readiness.json`
+    - `artifacts/reports/m4-qfq-readiness.log`
+12. handoff bundle 包含上述 QFQ 诊断；
+13. strict QFQ preparation 是 acquisition/data provisioning gate，不拥有 harmonic identity；
+14. capture methodology contract 仍为 v4 / 37 components；
+15. Outcome Engine 仍为 v1 / 4 components；
+16. 新增 QFQ acquisition stage 后审计：
+    - methodology drift = 0 / 37；
+    - Outcome Engine drift = 0 / 4；
+17. GitHub Actions run #1431 对该版本：
+    - Python deterministic tests：success；
+    - Web build：success；
+    - overall：success；
+18. D-039 冻结时仍无真实 post-T0 committed future capture，因此该修复没有修改任何已观察 outcome。
+
+原因：
+
+正式 prospective validation 已把 price coordinate system 作为 evidence identity 的一部分，就不能允许 acquisition pipeline 在 QFQ factor 尚未建立时直接进入 capture。QFQ readiness 必须成为 raw freshness 与 authoritative capture 之间的显式 fail-closed gate。
+
