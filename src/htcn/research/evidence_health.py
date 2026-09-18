@@ -10,6 +10,7 @@ from .capture_transaction import (
     read_committed_captures,
     read_frozen_legacy_baseline,
 )
+from .methodology_identity import build_methodology_identity
 from .mirror_recovery import inspect_compatibility_mirrors
 
 
@@ -52,6 +53,16 @@ def build_evidence_chain_health(
     def finding(code: str, severity: str, detail: str) -> None:
         findings.append(EvidenceHealthFinding(code, severity, detail))
 
+    current_methodology = None
+    try:
+        current_methodology = build_methodology_identity()
+    except Exception as exc:
+        finding(
+            "current_methodology_identity_error",
+            "blocker",
+            _error(exc),
+        )
+
     try:
         committed = read_committed_captures(root)
     except Exception as exc:
@@ -74,6 +85,19 @@ def build_evidence_chain_health(
             "latest_committed_capture_date": None,
             "zero_candidate_capture_dates": [],
             "total_committed_candidate_rows": None,
+            "authoritative_methodology_contract_version": None,
+            "authoritative_methodology_fingerprint": None,
+            "current_methodology_contract_version": (
+                None
+                if current_methodology is None
+                else current_methodology.contract_version
+            ),
+            "current_methodology_fingerprint": (
+                None
+                if current_methodology is None
+                else current_methodology.fingerprint
+            ),
+            "current_methodology_matches_authoritative_chain": None,
             "mirror_integrity": _unavailable_mirror_state(
                 "not_checked_authoritative_blocker"
             ),
@@ -121,6 +145,19 @@ def build_evidence_chain_health(
             "earliest_committed_capture_date": None,
             "latest_committed_capture_date": None,
             "total_committed_candidate_rows": 0,
+            "authoritative_methodology_contract_version": None,
+            "authoritative_methodology_fingerprint": None,
+            "current_methodology_contract_version": (
+                None
+                if current_methodology is None
+                else current_methodology.contract_version
+            ),
+            "current_methodology_fingerprint": (
+                None
+                if current_methodology is None
+                else current_methodology.fingerprint
+            ),
+            "current_methodology_matches_authoritative_chain": None,
             "mirror_integrity": {
                 "journal_mirror_status": "transaction_store_not_active",
                 "manifest_mirror_status": "transaction_store_not_active",
@@ -144,6 +181,44 @@ def build_evidence_chain_health(
             "blocker",
             "Committed transactions exist but frozen legacy baseline marker is missing.",
         )
+
+    authoritative_methodology_contract_version: int | None = None
+    authoritative_methodology_fingerprint: str | None = None
+    method_pairs = {
+        (
+            item.get("methodology_contract_version"),
+            str(item.get("methodology_fingerprint") or ""),
+        )
+        for item in committed
+    }
+    if len(method_pairs) != 1:
+        finding(
+            "committed_methodology_identity_ambiguous",
+            "blocker",
+            "Committed capture chain does not resolve to one methodology identity.",
+        )
+    else:
+        method_version, method_fingerprint = next(iter(method_pairs))
+        if method_version is None or not method_fingerprint:
+            finding(
+                "committed_methodology_identity_missing",
+                "blocker",
+                "Committed capture predates mandatory methodology identity; explicit migration is required.",
+            )
+        else:
+            authoritative_methodology_contract_version = int(method_version)
+            authoritative_methodology_fingerprint = method_fingerprint
+            if current_methodology is not None and (
+                current_methodology.contract_version
+                != authoritative_methodology_contract_version
+                or current_methodology.fingerprint
+                != authoritative_methodology_fingerprint
+            ):
+                finding(
+                    "current_methodology_differs_from_committed_chain",
+                    "blocker",
+                    "Current core methodology fingerprint differs from the authoritative committed capture chain.",
+                )
 
     dates = [str(item["as_of_trade_date"]) for item in committed]
     if dates != sorted(dates) or len(dates) != len(set(dates)):
@@ -229,6 +304,33 @@ def build_evidence_chain_health(
         "latest_committed_capture_date": dates[-1] if dates else None,
         "zero_candidate_capture_dates": zero_candidate_dates,
         "total_committed_candidate_rows": total_rows,
+        "authoritative_methodology_contract_version": (
+            authoritative_methodology_contract_version
+        ),
+        "authoritative_methodology_fingerprint": (
+            authoritative_methodology_fingerprint
+        ),
+        "current_methodology_contract_version": (
+            None
+            if current_methodology is None
+            else current_methodology.contract_version
+        ),
+        "current_methodology_fingerprint": (
+            None
+            if current_methodology is None
+            else current_methodology.fingerprint
+        ),
+        "current_methodology_matches_authoritative_chain": (
+            None
+            if current_methodology is None
+            or authoritative_methodology_fingerprint is None
+            else (
+                current_methodology.contract_version
+                == authoritative_methodology_contract_version
+                and current_methodology.fingerprint
+                == authoritative_methodology_fingerprint
+            )
+        ),
         "mirror_integrity": mirror_payload,
         "blocker_count": len(blockers),
         "warning_count": len(warnings),
