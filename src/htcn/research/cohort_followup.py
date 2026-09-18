@@ -17,6 +17,8 @@ class CohortFollowupObservation:
     underlying_last_trade_date: str | None
     market_observation_status: str
     execution_context_gate: str
+    price_mode: str
+    price_basis_id: str
     daily_event_source: str | None = None
     daily_event_reason: str | None = None
     capture_transaction_id: str | None = None
@@ -61,6 +63,15 @@ def followup_from_analysis(
     instrument_id = str(analysis["instrument_id"])
     underlying_last_trade_date = str(analysis["last_trade_date"])
     as_of = str(capture_trade_date)
+    price_mode = str(analysis.get("price_mode") or "")
+    price_basis_id = str(analysis.get("price_basis_id") or "")
+    if (
+        price_mode not in {"qfq", "qfq_carry_forward"}
+        or not price_basis_id.startswith("qfq:")
+    ):
+        raise ValueError(
+            "cohort follow-up requires formal QFQ price basis"
+        )
 
     if market_observation_status == "traded":
         if underlying_last_trade_date != as_of:
@@ -101,6 +112,8 @@ def followup_from_analysis(
         underlying_last_trade_date=underlying_last_trade_date,
         market_observation_status=market_observation_status,
         execution_context_gate=execution_gate,
+        price_mode=price_mode,
+        price_basis_id=price_basis_id,
         daily_event_source=daily_event_source,
         daily_event_reason=daily_event_reason,
         as_of_open=(
