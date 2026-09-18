@@ -28,6 +28,7 @@ from htcn.research.capture_transaction import (
 )
 from htcn.research.evidence_health import build_evidence_chain_health
 from htcn.research.lifecycle_journal import append_entries, entries_from_analysis, read_journal
+from htcn.research.methodology_identity import build_methodology_identity
 from htcn.research.mirror_recovery import (
     inspect_compatibility_mirrors,
     repair_compatibility_mirrors,
@@ -227,6 +228,18 @@ def run(
     if identity.head is None:
         result["errors"].append({"scope": "code_identity", "error": "git HEAD unavailable"})
         return result
+
+    try:
+        methodology_identity = build_methodology_identity()
+    except Exception as exc:
+        result["errors"].append({
+            "scope": "methodology_identity",
+            "error": f"{type(exc).__name__}: {exc}",
+        })
+        result["status"] = "failed_methodology_identity"
+        return result
+    result["methodology_identity"] = methodology_identity.as_payload()
+
     if not catalog.exists():
         result["errors"].append({"scope": "catalog", "error": f"missing {catalog}"})
         return result
@@ -412,6 +425,8 @@ def run(
         successful_instruments=successful,
         failed_instruments=len(instruments) - successful,
         worktree_clean=identity.worktree_clean,
+        methodology_contract_version=methodology_identity.contract_version,
+        methodology_fingerprint=methodology_identity.fingerprint,
         journal_rows=[entry.as_payload() for entry in all_entries],
     )
     result["capture_transaction"] = commit_capture_transaction(
