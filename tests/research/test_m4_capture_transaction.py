@@ -145,6 +145,8 @@ def test_transaction_rejects_partial_instrument_coverage() -> None:
             successful_instruments=54,
             failed_instruments=1,
             worktree_clean=True,
+            methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+            methodology_fingerprint=TEST_METHODOLOGY_FINGERPRINT,
             journal_rows=[],
         )
     except ValueError as exc:
