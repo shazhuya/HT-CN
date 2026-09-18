@@ -613,3 +613,31 @@ M4 的 prospective outcome cohort 一旦正式入组，后续不能因为 scanne
 原因：
 
 只记录 scanner 是否仍返回 candidate，不足以支撑未来 outcome 研究。candidate 的 scanner identity 可以消失，但证券的真实价格路径仍然继续。D-032 将“形态存在性”和“入组后市场路径”永久分离，并把这组语义纳入 methodology fingerprint，防止样本积累过程中偷偷改变 censoring / follow-up 规则。
+
+
+
+## D-033 — 第一笔 T1 前 methodology v2 采用精确组件代码冻结，不只检查 ancestry
+
+**状态：Frozen M4 pre-T1 methodology code-freeze contract**
+
+methodology contract v2 / 37 个组件已经在提交 `084ddf649e031e8169a761fd3b8578f73b31b5c2` 完成冻结。仅要求当前 HEAD “包含这个提交”仍不够，因为后续提交仍可能修改 methodology 组件后继续通过 ancestry 检查。
+
+正式决定：
+
+1. 当前 T1 methodology freeze commit 固定为 `084ddf649e031e8169a761fd3b8578f73b31b5c2`；
+2. 第一笔以及后续同一 methodology epoch 的私有 M1 authoritative capture 前，必须运行 `m4_methodology_freeze_guard.py`；
+3. guard 必须验证 methodology contract version = 2；
+4. guard 必须验证 fingerprint component count = 37；
+5. frozen commit 必须是当前 HEAD 的 ancestor；
+6. 37 个 component path 必须全部存在；
+7. `git diff 084ddf... HEAD -- <37 methodology paths>` 必须为空；
+8. 任一 methodology component 在冻结点之后发生任何改动，都必须在 M1 update 之前 fail closed；
+9. guard 失败时不得更新私有 M1、不得创建 authoritative transaction；
+10. guard JSON 作为非权威 provenance report 随 `m4-evidence-bundle.zip` 交接；
+11. docs/tests/intake/transport 等明确不在 37 个 methodology component 内的改动可以继续，不触发 methodology drift；
+12. 若未来确需修改 methodology component，必须显式开启新的 methodology decision/epoch；不得仅提高 minimum-safe commit 来绕过冻结；
+13. 当前从 freeze commit 到 D-033 冻结时的仓库差异已审计，37 个 methodology component 改动数为 0。
+
+原因：
+
+methodology fingerprint 可以在 transaction 生成时记录“实际用了哪套规则”，但第一笔 future capture 之前还没有旧 transaction 可供 current-vs-chain 比较。D-033 增加一个**事前冻结锚点**，确保第一笔 T1 本身就是经过审计的 methodology v2，而不是某个后来悄悄修改过的版本。
