@@ -1323,3 +1323,42 @@ HT-CN 实战工作台未来必须面对几百到几千只 A 股。重复全 univ
 
 全 A 股首次日内构建需要吞吐优化，但任何性能优化都不能获得修改研究语义的权力。D-046 将并发严格限定在 product execution layer。
 
+## D-047 — 同一 Operator cache identity 的并发 rebuild 必须 single-flight 合并
+
+**状态：Frozen M5 Phase 6 concurrency boundary**
+
+正式决定：
+
+1. 同一 Operator cache identity 同时只允许一个 rebuild owner；
+2. identity 绑定：
+   - cache root
+   - expected trade date
+   - bars
+   - scales
+   - universe hash
+   - cache contract version；
+3. worker count 不进入 single-flight identity；
+4. follower 不得再次运行 full-universe scan；
+5. follower 必须等待并复用 owner result；
+6. follower status 固定为 `coalesced_wait`；
+7. follower 必须记录 `coalesced_from_status`；
+8. 普通 valid cache hit 不进入 single-flight；
+9. 非-force owner 获得 ownership 后必须再次检查 cache，防止 race 重算；
+10. 同时的 force refresh 也必须 coalesce；
+11. single-flight scope 仅为 `process_local_cache_identity`；
+12. D-047 不声称提供跨进程或分布式锁；
+13. owner failure 后 registry 必须清理，禁止永久锁死；
+14. single-flight 不拥有 Queue semantics；
+15. single-flight 不修改 harmonic identity / Source Raw PRZ / lifecycle；
+16. single-flight 不写 M4 evidence；
+17. Hosted CI run #1613：
+    - overall success
+    - Python 637 passed
+    - Web build success
+    - Playwright 21 passed
+    - browser evidence upload success。
+
+原因：
+
+全 A 股 daily cache miss 的成本较高。React 双请求或多客户端并发如果触发重复 full-universe build，会把 CPU / IO 负担成倍放大。D-047 将重复请求合并，但不赋予协调层任何研究语义。
+
