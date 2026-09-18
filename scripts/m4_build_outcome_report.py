@@ -19,7 +19,7 @@ from htcn.research.capture_transaction import (
     read_frozen_legacy_baseline,
 )
 from htcn.research.outcome_evaluator import evaluate_candidate_outcome
-from htcn.research.outcome_protocol import load_outcome_protocol_v1
+from htcn.research.outcome_protocol import load_outcome_protocol
 from htcn.research.outcome_snapshot import (
     build_outcome_snapshot,
     commit_outcome_snapshot,
@@ -93,7 +93,7 @@ def _continuous_market_path(
 
 def render_markdown(payload: dict[str, Any]) -> str:
     lines = [
-        "# HT-CN M4 Outcome Protocol v1 报告",
+        "# HT-CN M4 Outcome Protocol v2 报告",
         "",
         f"- 状态：**{payload.get('status')}**",
         f"- Outcome as-of：{payload.get('outcome_as_of_trade_date')}",
@@ -161,7 +161,7 @@ def run(
     outcome_root: Path,
     outcome_as_of_trade_date: str | None = None,
 ) -> dict[str, Any]:
-    protocol, protocol_identity = load_outcome_protocol_v1()
+    protocol, protocol_identity = load_outcome_protocol()
     payload: dict[str, Any] = {
         "schema_version": 1,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -332,7 +332,7 @@ def run(
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Build preregistered M4 outcome-v1 facts from authoritative "
+            "Build preregistered M4 outcome-v2 facts from authoritative "
             "prospective cohort + local M1 logical daily history."
         )
     )
@@ -348,7 +348,7 @@ def main() -> int:
     parser.add_argument("--as-of", default=None)
     parser.add_argument(
         "--output",
-        default="artifacts/reports/m4-outcome-v1.json",
+        default="artifacts/reports/m4-outcome-v2.json",
     )
     args = parser.parse_args()
 
@@ -374,7 +374,7 @@ def main() -> int:
         encoding="utf-8",
     )
     print(json.dumps(payload, ensure_ascii=False, indent=2))
-    print(f"\n[M4] outcome-v1 report: {output}")
+    print(f"\n[M4] outcome-v2 report: {output}")
     return 0 if payload["status"] in {
         "ready",
         "no_outcome_cohort",
