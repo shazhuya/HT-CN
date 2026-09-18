@@ -8,6 +8,7 @@ from typing import Any
 
 from htcn.research.capture_transaction import (
     committed_capture_view,
+    committed_followup_view,
     frozen_legacy_baseline_present,
     frozen_legacy_baseline_through_date,
     read_committed_captures,
@@ -64,6 +65,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
                 f"- `{item.get('candidate_key')}`：enroll={item.get('outcome_enrollment_trade_date')}；"
                 f"captured={item.get('captured_snapshot_count')}；present={item.get('present_snapshot_count')}；"
                 f"absent={item.get('absent_snapshot_count')}；"
+                f"absent-followup={item.get('scanner_absent_market_followup_snapshot_count', 0)}；"
                 f"suspended={item.get('confirmed_full_day_suspended_snapshot_count', 0)}；"
                 f"terminal={item.get('first_source_terminal_trade_date')}"
             )
@@ -76,6 +78,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         "",
         "- captured_snapshot_index 只是实际捕获序号，不是假定完整交易日序号。",
         "- scanner absent 不等于 invalidated。",
+        "- 已入组候选 scanner absent 后可继续记录独立 market follow-up，但不会被伪装成 scanner present 或继续拥有 lifecycle。",
         "- 确认全天停牌 carry-forward 仍是 candidate present，但不是 traded observation。",
         "- 停牌 carry-forward 不伪造当日 OHLC，也不能作为首次 prospective outcome enrollment。",
         "- 本报告只保留事实 observation 和 milestone。",
@@ -121,6 +124,7 @@ def main() -> int:
             legacy_journal_rows=frozen_baseline,
             capture_rows=committed,
         )
+        followup_rows = committed_followup_view(committed)
         evidence_source = "frozen_baseline_plus_committed_transactions"
     else:
         rows = read_journal(Path(args.journal))
@@ -130,10 +134,12 @@ def main() -> int:
             if manifest_path.exists()
             else []
         )
+        followup_rows = []
         evidence_source = "legacy_journal_manifest"
     payload = build_prospective_observation_report(
         rows,
         manifest_rows=manifest_rows,
+        followup_rows=followup_rows,
         legacy_baseline_trade_date=(
             baseline_through if committed else None
         ),
