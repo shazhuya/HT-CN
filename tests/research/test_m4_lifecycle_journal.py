@@ -5,6 +5,7 @@ from htcn.research.lifecycle_journal import (
     append_entries,
     candidate_key,
     entries_from_analysis,
+    prospective_outcome_gate,
 )
 
 
@@ -191,3 +192,51 @@ def test_legacy_t0_row_without_enrollment_fields_is_treated_as_baseline(tmp_path
     latest = payloads[-1]
     assert latest["enrollment_state"] == "baseline_existing"
     assert latest["first_observed_trade_date"] == "2026-09-18"
+
+
+def test_prospective_outcome_gate_blocks_alternate_bat() -> None:
+    eligible, reason = prospective_outcome_gate(
+        {
+            "pattern_id": "alternate_bat",
+            "pattern_state": "forming",
+            "source_lifecycle_state": "waiting_terminal",
+            "source_prz_low": 90.0,
+            "source_prz_high": 92.0,
+            "source_terminal_trade_date": None,
+        },
+        enrollment_state="prospective_new",
+    )
+    assert eligible is False
+    assert reason == "pattern_source_fidelity_blocked"
+
+
+def test_prospective_outcome_gate_requires_pre_terminal_forming_state() -> None:
+    eligible, reason = prospective_outcome_gate(
+        {
+            "pattern_id": "abcd",
+            "pattern_state": "completed",
+            "source_lifecycle_state": "type_i_confirmed",
+            "source_prz_low": 90.0,
+            "source_prz_high": 92.0,
+            "source_terminal_trade_date": "2026-09-18",
+        },
+        enrollment_state="prospective_new",
+    )
+    assert eligible is False
+    assert reason == "first_observed_not_forming"
+
+
+def test_prospective_outcome_gate_allows_resolved_pre_terminal_candidate() -> None:
+    eligible, reason = prospective_outcome_gate(
+        {
+            "pattern_id": "abcd",
+            "pattern_state": "forming",
+            "source_lifecycle_state": "waiting_terminal",
+            "source_prz_low": 90.0,
+            "source_prz_high": 92.0,
+            "source_terminal_trade_date": None,
+        },
+        enrollment_state="prospective_new",
+    )
+    assert eligible is True
+    assert reason == "prospective_new_pre_terminal_source_resolved"

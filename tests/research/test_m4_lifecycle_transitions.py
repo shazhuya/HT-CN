@@ -21,12 +21,16 @@ def _row(
         "as_of_trade_date": date,
         "candidate_key": key,
         "pattern_id": "abcd",
+        "pattern_state": "forming",
         "schema": "ABCD",
         "direction": "bullish",
         "scale": 5,
         "source_lifecycle_state": lifecycle,
         "action_state": action,
         "next_key_price": 100.0,
+        "source_prz_low": 90.0,
+        "source_prz_high": 92.0,
+        "source_terminal_trade_date": None,
     }
     if enrollment is not None:
         row["enrollment_state"] = enrollment
@@ -157,3 +161,49 @@ def test_candidate_reappearing_after_gap_is_not_new_candidate() -> None:
     assert reappeared.from_trade_date == "2026-09-17"
     assert reappeared.from_lifecycle_state == "waiting_terminal"
     assert reappeared.to_lifecycle_state == "type_i_early_reaction"
+
+
+def test_prospective_new_unresolved_candidate_stays_outcome_ineligible() -> None:
+    rows = [
+        _row("2026-09-17", "baseline"),
+        {
+            **_row("2026-09-18", "new-unresolved"),
+            "pattern_id": "alternate_bat",
+            "source_lifecycle_state": "source_prz_unresolved",
+            "source_prz_low": None,
+            "source_prz_high": None,
+        },
+    ]
+    report = build_transition_report(rows)
+    assert report["prospective_outcome_eligible_row_count"] == 0
+    normalized = {
+        (item["candidate_key"], item["as_of_trade_date"]): item
+        for item in report["normalized_rows"]
+    }
+    assert normalized[("new-unresolved", "2026-09-18")][
+        "outcome_eligibility_reason"
+    ] == "pattern_source_fidelity_blocked"
+
+
+def test_prospective_new_can_enroll_when_source_becomes_resolved_pre_terminal() -> None:
+    rows = [
+        _row("2026-09-17", "baseline"),
+        {
+            **_row("2026-09-18", "new"),
+            "source_lifecycle_state": "source_prz_unresolved",
+            "source_prz_low": None,
+            "source_prz_high": None,
+        },
+        _row("2026-09-19", "new", lifecycle="waiting_terminal"),
+    ]
+    report = build_transition_report(rows)
+    normalized = {
+        (item["candidate_key"], item["as_of_trade_date"]): item
+        for item in report["normalized_rows"]
+    }
+    first = normalized[("new", "2026-09-18")]
+    second = normalized[("new", "2026-09-19")]
+    assert first["prospective_outcome_eligible"] is False
+    assert first["outcome_enrollment_trade_date"] is None
+    assert second["prospective_outcome_eligible"] is True
+    assert second["outcome_enrollment_trade_date"] == "2026-09-19"
