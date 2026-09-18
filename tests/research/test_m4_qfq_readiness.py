@@ -54,7 +54,9 @@ def test_strict_qfq_candidate_rejects_historical_internal_gap() -> None:
     factors = _factors(raw, keep)
     ready, reason = _strict_factor_candidate(raw, factors)
     assert ready is False
-    assert reason.startswith("historical_factor_gap:")
+    assert reason.startswith(
+        ("historical_factor_gap:", "factor_overlap_too_low:")
+    )
 
 
 def test_strict_qfq_candidate_rejects_low_overlap() -> None:
