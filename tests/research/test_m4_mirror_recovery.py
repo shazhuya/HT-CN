@@ -106,3 +106,36 @@ def test_transaction_store_inactive_does_not_rewrite_legacy_files(tmp_path) -> N
     )
     assert result["status"] == "not_applicable"
     assert journal.read_text(encoding="utf-8") == "legacy\n"
+
+
+def test_manifest_methodology_drift_requires_repair(tmp_path) -> None:
+    import json
+
+    root = tmp_path / "captures"
+    _activate_store(root)
+    journal = tmp_path / "journal.jsonl"
+    manifest = tmp_path / "manifest.jsonl"
+    repair_compatibility_mirrors(
+        transaction_root=root,
+        journal_path=journal,
+        manifest_path=manifest,
+    )
+    rows = [
+        json.loads(line)
+        for line in manifest.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    tx_rows = [row for row in rows if row.get("capture_transaction_id")]
+    assert len(tx_rows) == 1
+    tx_rows[0]["methodology_fingerprint"] = "b" * 64
+    manifest.write_text(
+        "\n".join(json.dumps(row) for row in rows) + "\n",
+        encoding="utf-8",
+    )
+    integrity = inspect_compatibility_mirrors(
+        transaction_root=root,
+        journal_path=journal,
+        manifest_path=manifest,
+    )
+    assert integrity.manifest_mirror_status == "drift"
+    assert integrity.repair_needed is True
