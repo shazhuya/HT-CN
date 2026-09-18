@@ -20,6 +20,8 @@ artifacts/**
 data/**/*.parquet
 data/**/*.duckdb
 data/**/*.db
+data/product/**
+data/research/**
 artifacts/screenshots/*
 artifacts/debug/*
 artifacts/reports/*
