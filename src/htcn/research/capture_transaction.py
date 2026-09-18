@@ -10,9 +10,9 @@ from typing import Any, Iterable
 from .cohort_followup import enrolled_outcome_cohort
 
 
-CAPTURE_TRANSACTION_SCHEMA_VERSION = 3
+CAPTURE_TRANSACTION_SCHEMA_VERSION = 4
 LEGACY_BASELINE_SCHEMA_VERSION = 1
-SUPPORTED_CAPTURE_TRANSACTION_SCHEMA_VERSIONS = (1, 2, 3)
+SUPPORTED_CAPTURE_TRANSACTION_SCHEMA_VERSIONS = (1, 2, 3, 4)
 
 
 @dataclass(frozen=True, slots=True)
@@ -157,6 +157,24 @@ def _validate_methodology_identity(
         int(fingerprint, 16)
     except ValueError as exc:
         raise ValueError(f"invalid methodology fingerprint encoding: {source}") from exc
+
+
+
+def _validate_price_basis(
+    row: dict[str, Any],
+    *,
+    source: str,
+) -> None:
+    mode = str(row.get("price_mode") or "")
+    basis = str(row.get("price_basis_id") or "")
+    if mode not in {"qfq", "qfq_carry_forward"}:
+        raise ValueError(f"formal QFQ price_mode required: {source}")
+    if not basis.startswith("qfq:") or len(basis) != 68:
+        raise ValueError(f"invalid QFQ price_basis_id: {source}")
+    try:
+        int(basis[4:], 16)
+    except ValueError as exc:
+        raise ValueError(f"invalid QFQ price_basis_id encoding: {source}") from exc
 
 
 def _validate_market_observation_row(
@@ -352,6 +370,12 @@ def _validate_committed_payload(
         as_of_trade_date=as_of,
         journal_rows=rows,
     )
+    if schema_version >= 4:
+        for row in rows:
+            _validate_price_basis(
+                row,
+                source=f"{source}:journal:{row.get('candidate_key')}",
+            )
     if int(payload.get("candidate_count") or 0) != len(rows):
         raise ValueError(f"capture transaction candidate_count mismatch: {source}")
     if schema_version >= 3:
@@ -361,6 +385,12 @@ def _validate_committed_payload(
             journal_rows=rows,
             followup_rows=followups,
         )
+        if schema_version >= 4:
+            for row in followups:
+                _validate_price_basis(
+                    row,
+                    source=f"{source}:followup:{row.get('candidate_key')}",
+                )
         if int(payload.get("cohort_followup_count") or 0) != len(followups):
             raise ValueError(
                 f"capture transaction cohort_followup_count mismatch: {source}"
@@ -468,6 +498,16 @@ def build_committed_capture(
         as_of_trade_date=as_of_trade_date,
         journal_rows=rows,
     )
+    for row in rows:
+        _validate_price_basis(
+            row,
+            source=f"build_committed_capture:journal:{row.get('candidate_key')}",
+        )
+    for row in followups:
+        _validate_price_basis(
+            row,
+            source=f"build_committed_capture:followup:{row.get('candidate_key')}",
+        )
     _validate_followup_rows(
         code_head=code_head,
         as_of_trade_date=as_of_trade_date,
