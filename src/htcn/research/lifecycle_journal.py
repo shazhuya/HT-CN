@@ -6,6 +6,14 @@ import json
 from typing import Any, Iterable
 
 
+OUTCOME_PRE_TERMINAL_STATES = {
+    "approaching_source_prz",
+    "entered_source_prz",
+    "waiting_terminal",
+}
+OUTCOME_BLOCKED_PATTERN_IDS = {"alternate_bat", "five_zero"}
+
+
 ANCHOR_LABELS: dict[str, tuple[str, ...]] = {
     "XABCD": ("X", "A", "B", "C"),
     "ABCD": ("A", "B", "C"),
@@ -37,6 +45,8 @@ class LifecycleJournalEntry:
     enrollment_state: str = "pending_append_classification"
     first_observed_trade_date: str | None = None
     prospective_outcome_eligible: bool = False
+    outcome_enrollment_trade_date: str | None = None
+    outcome_eligibility_reason: str = "not_evaluated"
     evidence_only: bool = True
     is_trade_instruction: bool = False
     alpha_inference_allowed: bool = False
@@ -163,6 +173,33 @@ def entries_from_analysis(
     return out
 
 
+def prospective_outcome_gate(
+    payload: dict[str, Any],
+    *,
+    enrollment_state: str,
+) -> tuple[bool, str]:
+    """Strict gate for the future prospective outcome cohort."""
+    if enrollment_state != "prospective_new":
+        return False, "baseline_existing"
+    pattern_id = str(payload.get("pattern_id") or "")
+    if pattern_id in OUTCOME_BLOCKED_PATTERN_IDS:
+        return False, "pattern_source_fidelity_blocked"
+    if str(payload.get("pattern_state") or "") != "forming":
+        return False, "first_observed_not_forming"
+    state = str(payload.get("source_lifecycle_state") or "")
+    if state not in OUTCOME_PRE_TERMINAL_STATES:
+        return False, "first_observed_not_pre_terminal"
+    if payload.get("source_terminal_trade_date") is not None:
+        return False, "source_terminal_already_observed"
+    low = payload.get("source_prz_low")
+    high = payload.get("source_prz_high")
+    if low is None or high is None:
+        return False, "source_prz_unresolved"
+    if float(low) > float(high):
+        return False, "source_prz_invalid"
+    return True, "prospective_new_pre_terminal_source_resolved"
+
+
 def read_journal(path: str | Path) -> list[dict[str, Any]]:
     target = Path(path)
     if not target.exists():
@@ -257,9 +294,32 @@ def append_entries(
         payload = entry.as_payload()
         payload["first_observed_trade_date"] = first_observed
         payload["enrollment_state"] = enrollment_state
-        payload["prospective_outcome_eligible"] = (
-            enrollment_state == "prospective_new"
+
+        prior_outcome_dates = sorted(
+            str(row.get("outcome_enrollment_trade_date"))
+            for row in prior
+            if row.get("outcome_enrollment_trade_date")
         )
+        if enrollment_state == "baseline_existing":
+            outcome_eligible = False
+            outcome_reason = "baseline_existing"
+            outcome_enrollment_date = None
+        elif prior_outcome_dates:
+            outcome_eligible = True
+            outcome_reason = "prospective_outcome_cohort_already_enrolled"
+            outcome_enrollment_date = prior_outcome_dates[0]
+        else:
+            outcome_eligible, outcome_reason = prospective_outcome_gate(
+                payload,
+                enrollment_state=enrollment_state,
+            )
+            outcome_enrollment_date = (
+                entry.as_of_trade_date if outcome_eligible else None
+            )
+
+        payload["prospective_outcome_eligible"] = outcome_eligible
+        payload["outcome_eligibility_reason"] = outcome_reason
+        payload["outcome_enrollment_trade_date"] = outcome_enrollment_date
         payloads.append(payload)
         prior_by_candidate.setdefault(entry.candidate_key, []).append(payload)
 
