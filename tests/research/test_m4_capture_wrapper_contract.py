@@ -92,3 +92,11 @@ def test_capture_wrapper_runs_strict_qfq_readiness_before_capture() -> None:
     assert "m4-qfq-readiness.json" in text
     assert "m4-qfq-readiness.log" in text
     assert "M1/QFQ readiness did not pass" in text
+
+
+
+def test_capture_wrapper_streams_qfq_progress_live() -> None:
+    text = _wrapper_text()
+    assert "Tee-Object -FilePath 'artifacts\\reports\\m4-qfq-readiness.log'" in text
+    assert "scripts\\m4_prepare_qfq_universe.py" in text
+    assert "> \"artifacts\\reports\\m4-qfq-readiness.log\" 2>&1" not in text
