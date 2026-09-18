@@ -87,6 +87,18 @@ const queuePayload = {
     },
   ],
   errors: [],
+  product_cache: {
+    schema_version: 1,
+    contract_version: 1,
+    status: 'hit',
+    expected_local_trade_date: '2026-09-18',
+    queue_as_of_trade_date: '2026-09-18',
+    freshness: 'current',
+    cache_path: 'data/product/m5/operator_queue/test.json',
+    generated_at_utc: '2026-09-18T08:00:00+00:00',
+    authoritative_evidence: false,
+    writes_m4_evidence: false,
+  },
 }
 
 test('M5 operator queue renders workflow buckets and selects an instrument', async ({ page }) => {
@@ -104,8 +116,20 @@ test('M5 operator queue renders workflow buckets and selects an instrument', asy
       },
     })
   })
+  let forceRefreshSeen = false
   await page.route('**/api/operator/queue?**', async (route) => {
-    await route.fulfill({ json: queuePayload })
+    const url = new URL(route.request().url())
+    const forceRefresh = url.searchParams.get('refresh') === 'true'
+    if (forceRefresh) forceRefreshSeen = true
+    await route.fulfill({
+      json: {
+        ...queuePayload,
+        product_cache: {
+          ...queuePayload.product_cache,
+          status: forceRefresh ? 'rebuilt_force' : 'hit',
+        },
+      },
+    })
   })
 
   await page.goto('/')
@@ -121,6 +145,12 @@ test('M5 operator queue renders workflow buckets and selects an instrument', asy
   await expect(queue.getByText('接近 Source PRZ')).toBeVisible()
   await expect(queue.getByText('12.34')).toBeVisible()
   await expect(queue.getByText('25.67')).toBeVisible()
+  await expect(queue.getByText(/Queue cache：/)).toBeVisible()
+  await expect(queue.getByText('hit', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: '刷新队列' }).click()
+  await expect.poll(() => forceRefreshSeen).toBe(true)
+  await expect(queue.getByText('rebuilt_force', { exact: true })).toBeVisible()
 
   await queue.getByRole('button', { name: 'SSE.600000' }).click()
   await expect(page.getByLabel('analysis-controls').locator('input[list="instrument-list"]')).toHaveValue('SSE.600000')
