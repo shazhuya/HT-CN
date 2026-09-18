@@ -97,42 +97,53 @@ echo ============================================================
 echo HT-CN M4 PROSPECTIVE EVIDENCE CAPTURE
 echo Current closed day only. No historical backfill.
 echo Preflight: hosted-CI-green checkpoint + clean worktree + frozen capture methodology + frozen outcome engine.
-echo One run: M1 update + capture + health + transition + observation + outcome-v2 + handoff bundle.
+echo One run: M1 update + strict QFQ readiness + capture + health + transition + observation + outcome-v2 + handoff bundle.
 echo ============================================================
 echo.
 
-echo [1/7] M1 smart daily update...
+echo [1/8] M1 smart daily update...
 .venv\Scripts\python.exe scripts\m1_daily_update.py --limit 0 --sleep 0.05 > "artifacts\reports\m4-m1-update.log" 2>&1
 set "M1_EXIT=!ERRORLEVEL!"
 type "artifacts\reports\m4-m1-update.log"
 
 echo.
-echo [2/7] Authoritative lifecycle capture...
+echo [2/8] Strict formal-QFQ universe readiness...
 if "!M1_EXIT!"=="0" (
+  .venv\Scripts\python.exe scripts\m4_prepare_qfq_universe.py --retries 1 --sleep 0.05 > "artifacts\reports\m4-qfq-readiness.log" 2>&1
+  set "QFQ_EXIT=!ERRORLEVEL!"
+  type "artifacts\reports\m4-qfq-readiness.log"
+) else (
+  echo [HT-CN M4] SKIP: M1 update did not pass; QFQ readiness was not attempted.
+  set "QFQ_EXIT=1"
+)
+
+echo.
+echo [3/8] Authoritative lifecycle capture...
+if "!M1_EXIT!"=="0" if "!QFQ_EXIT!"=="0" (
   .venv\Scripts\python.exe scripts\m4_capture_lifecycle_snapshot.py
   set "CAPTURE_EXIT=!ERRORLEVEL!"
 ) else (
-  echo [HT-CN M4] SKIP: M1 update did not pass; no new authoritative capture will be attempted.
+  echo [HT-CN M4] SKIP: M1/QFQ readiness did not pass; no new authoritative capture will be attempted.
   set "CAPTURE_EXIT=1"
 )
 
 echo.
-echo [3/7] Evidence-chain health...
+echo [4/8] Evidence-chain health...
 .venv\Scripts\python.exe scripts\m4_evidence_health.py
 set "HEALTH_EXIT=!ERRORLEVEL!"
 
 echo.
-echo [4/7] Lifecycle transition report...
+echo [5/8] Lifecycle transition report...
 .venv\Scripts\python.exe scripts\m4_build_transition_report.py
 set "TRANSITION_EXIT=!ERRORLEVEL!"
 
 echo.
-echo [5/7] Prospective observation report...
+echo [6/8] Prospective observation report...
 .venv\Scripts\python.exe scripts\m4_build_observation_report.py
 set "OBSERVATION_EXIT=!ERRORLEVEL!"
 
 echo.
-echo [6/7] Preregistered outcome-v2 report...
+echo [7/8] Preregistered outcome-v2 report...
 if "!CAPTURE_EXIT!"=="0" if "!HEALTH_EXIT!"=="0" if "!OBSERVATION_EXIT!"=="0" (
   .venv\Scripts\python.exe scripts\m4_build_outcome_report.py
   set "OUTCOME_EXIT=!ERRORLEVEL!"
@@ -142,12 +153,13 @@ if "!CAPTURE_EXIT!"=="0" if "!HEALTH_EXIT!"=="0" if "!OBSERVATION_EXIT!"=="0" (
 )
 
 echo.
-echo [7/7] Evidence handoff bundle...
+echo [8/8] Evidence handoff bundle...
 .venv\Scripts\python.exe scripts\m4_export_evidence_bundle.py
 set "BUNDLE_EXIT=!ERRORLEVEL!"
 
 set "FINAL_EXIT=0"
 if not "!M1_EXIT!"=="0" set "FINAL_EXIT=1"
+if not "!QFQ_EXIT!"=="0" set "FINAL_EXIT=1"
 if not "!CAPTURE_EXIT!"=="0" set "FINAL_EXIT=1"
 if not "!HEALTH_EXIT!"=="0" set "FINAL_EXIT=1"
 if not "!TRANSITION_EXIT!"=="0" set "FINAL_EXIT=1"
@@ -158,7 +170,7 @@ if not "!BUNDLE_EXIT!"=="0" set "FINAL_EXIT=1"
 echo.
 echo ============================================================
 echo HT-CN M4 CAPTURE SUMMARY
-echo m1=!M1_EXIT! capture=!CAPTURE_EXIT! health=!HEALTH_EXIT! transition=!TRANSITION_EXIT! observation=!OBSERVATION_EXIT! outcome=!OUTCOME_EXIT! bundle=!BUNDLE_EXIT!
+echo m1=!M1_EXIT! qfq=!QFQ_EXIT! capture=!CAPTURE_EXIT! health=!HEALTH_EXIT! transition=!TRANSITION_EXIT! observation=!OBSERVATION_EXIT! outcome=!OUTCOME_EXIT! bundle=!BUNDLE_EXIT!
 echo ============================================================
 
 if "!FINAL_EXIT!"=="0" (
@@ -171,6 +183,8 @@ echo.
 echo Methodology:  artifacts\reports\m4-methodology-freeze-guard.json
 echo Outcome guard: artifacts\reports\m4-outcome-engine-freeze-guard.json
 echo M1 log:       artifacts\reports\m4-m1-update.log
+echo QFQ report:    artifacts\reports\m4-qfq-readiness.json
+echo QFQ log:       artifacts\reports\m4-qfq-readiness.log
 echo Snapshot:     artifacts\reports\m4-lifecycle-snapshot.json
 echo Health:       artifacts\reports\m4-evidence-health.json
 echo Transitions:  artifacts\reports\m4-lifecycle-transitions.json
