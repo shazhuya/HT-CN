@@ -65,15 +65,24 @@ def discover_local_instruments(
 
 
 def _display_key(instrument_id: str, pattern: dict[str, Any]) -> str:
+    """Stable product identity for comparing queue observations.
+
+    Trade dates are preferred because rolling a fixed-size chart window can
+    renumber bar indexes even when the underlying harmonic candidate is the
+    same. This key is product-only and does not replace M4 candidate identity.
+    """
     points = pattern.get("points") or []
-    point_signature = "-".join(
-        str(point.get("index"))
-        for point in points
-        if point.get("index") is not None
-    )
+    signature_parts: list[str] = []
+    for point in points:
+        trade_date = str(point.get("trade_date") or "").strip()
+        if trade_date:
+            signature_parts.append(trade_date)
+        elif point.get("index") is not None:
+            signature_parts.append(f"i{point.get('index')}")
+    point_signature = "-".join(signature_parts)
     return (
         f"{instrument_id}:{pattern.get('pattern_id')}:{pattern.get('schema')}:"
-        f"S{pattern.get('scale')}:{point_signature}"
+        f"{pattern.get('direction')}:S{pattern.get('scale')}:{point_signature}"
     )
 
 
@@ -152,6 +161,7 @@ def build_operator_queue(
     items: list[dict[str, Any]] = []
     errors: list[dict[str, str]] = []
     analyzed = 0
+    observed_trade_dates: set[str] = set()
 
     instrument_list = [str(value) for value in instrument_ids]
     for instrument_id in instrument_list:
@@ -162,6 +172,11 @@ def build_operator_queue(
                 scales=scales,
             )
             analyzed += 1
+            last_trade_date = str(
+                analysis.get("last_trade_date") or ""
+            ).strip()
+            if last_trade_date:
+                observed_trade_dates.add(last_trade_date)
             for pattern in _primary_patterns(analysis):
                 item = _queue_item(
                     instrument_id=instrument_id,
@@ -196,9 +211,24 @@ def build_operator_queue(
         str(item["instrument_id"]) for item in items
     })
 
+    sorted_trade_dates = sorted(observed_trade_dates)
+    as_of_trade_date = (
+        sorted_trade_dates[0]
+        if len(sorted_trade_dates) == 1
+        else None
+    )
+    observation_integrity = (
+        "single_as_of"
+        if len(sorted_trade_dates) == 1
+        else ("empty" if not sorted_trade_dates else "mixed_as_of")
+    )
+
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "contract": OperatorQueueContract().as_payload(),
+        "as_of_trade_date": as_of_trade_date,
+        "observed_trade_dates": sorted_trade_dates,
+        "observation_integrity": observation_integrity,
         "instrument_count": len(instrument_list),
         "analyzed_instrument_count": analyzed,
         "failed_instrument_count": len(errors),
