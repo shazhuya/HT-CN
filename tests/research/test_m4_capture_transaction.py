@@ -32,6 +32,10 @@ def _row(key: str, *, date: str = "2026-09-18", head: str = "h"):
         "context_integrity_summary": "complete",
         "price_mode": "qfq",
         "price_basis_id": "qfq:" + "1" * 64,
+        "source_signal_trade_date": "2026-09-16",
+        "source_signal_clock_basis": "last_frontier_pivot_confirmed_at=index+scale",
+        "source_reaction_anchor_label": "A",
+        "source_reaction_anchor_price": 100.0,
         "source_prz_low": 90.0,
         "source_prz_high": 92.0,
         "source_terminal_trade_date": None,
@@ -660,12 +664,12 @@ def test_schema_v4_accepts_complete_followup_for_prior_enrolled_absence(tmp_path
 
 
 
-def test_new_committed_capture_uses_schema_v4() -> None:
+def test_new_committed_capture_uses_schema_v5() -> None:
     capture = _capture([_row("v4")])
-    assert capture.schema_version == 4
+    assert capture.schema_version == 5
 
 
-def test_schema_v4_rejects_missing_price_basis() -> None:
+def test_schema_v5_rejects_missing_price_basis() -> None:
     row = _row("missing-basis")
     row.pop("price_basis_id")
     try:
@@ -673,10 +677,10 @@ def test_schema_v4_rejects_missing_price_basis() -> None:
     except ValueError as exc:
         assert "invalid QFQ price_basis_id" in str(exc)
     else:
-        raise AssertionError("schema v4 must require price_basis_id")
+        raise AssertionError("schema v5 must require price_basis_id")
 
 
-def test_schema_v4_rejects_raw_price_mode() -> None:
+def test_schema_v5_rejects_raw_price_mode() -> None:
     row = _row("raw")
     row["price_mode"] = "raw"
     row["price_basis_id"] = "raw"
@@ -685,7 +689,7 @@ def test_schema_v4_rejects_raw_price_mode() -> None:
     except ValueError as exc:
         assert "formal QFQ price_mode required" in str(exc)
     else:
-        raise AssertionError("schema v4 must reject raw fallback rows")
+        raise AssertionError("schema v5 must reject raw fallback rows")
 
 
 def test_schema_v3_is_readable_but_cannot_continue_as_v4(tmp_path) -> None:
@@ -745,3 +749,28 @@ def test_schema_v3_is_readable_but_cannot_continue_as_v4(tmp_path) -> None:
         assert "schema drift across active chain" in str(exc)
     else:
         raise AssertionError("v3 chain must not silently accept v4 append")
+
+
+
+def test_schema_v5_rejects_partial_source_clock_seed() -> None:
+    row = _row("partial-seed")
+    row["source_reaction_anchor_price"] = None
+    try:
+        _capture([row])
+    except ValueError as exc:
+        assert "partial source-clock seed" in str(exc)
+    else:
+        raise AssertionError("schema v5 must reject partial source-clock seed")
+
+
+def test_schema_v5_allows_seedless_non_enrollment_row() -> None:
+    row = _row("seedless")
+    for field in (
+        "source_signal_trade_date",
+        "source_signal_clock_basis",
+        "source_reaction_anchor_label",
+        "source_reaction_anchor_price",
+    ):
+        row[field] = None
+    capture = _capture([row])
+    assert capture.schema_version == 5
