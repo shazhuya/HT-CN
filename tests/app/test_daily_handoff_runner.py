@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+
+import pytest
 from pathlib import Path
 
 from htcn.app.daily_handoff_runner import run_daily_handoff_bundle
@@ -97,3 +99,21 @@ def test_missing_pipeline_writes_separate_failure_report(tmp_path: Path) -> None
     assert payload["pipeline_report_unchanged"] is False
     assert "FileNotFoundError" in str(payload["error"])
     assert report_path.is_file()
+
+
+def test_runner_refuses_artifact_paths_that_can_overwrite_pipeline(
+    tmp_path: Path,
+) -> None:
+    pipeline_path = tmp_path / "pipeline.json"
+    _write_pipeline(pipeline_path, product_ready=True)
+    before = pipeline_path.read_bytes()
+
+    with pytest.raises(ValueError, match="must not replace pipeline report"):
+        run_daily_handoff_bundle(
+            root=tmp_path,
+            pipeline_report=pipeline_path,
+            output=tmp_path / "handoff.zip",
+            report=pipeline_path,
+        )
+
+    assert pipeline_path.read_bytes() == before
