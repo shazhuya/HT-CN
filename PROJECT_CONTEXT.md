@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `1f16341a009bfef23d70de35618656e7d6fe23a4`
-context_checkpoint_title: `M4 first-bundle diagnosis: strict full-universe QFQ readiness gate`
+context_checkpoint: `d6fc4972674456a5047e9115f2a9be1ad3b543ce`
+context_checkpoint_title: `M4 QFQ readiness 53/55; safe internal provider-calendar gap repair frozen`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -1258,4 +1258,62 @@ Freeze audit：
 下一次首次 QFQ expansion 可能需要对约 52 个缺 factor 标的进行网络拉取，因此会比普通日更慢；这是一次性/resumable 工作。完成后后续已有 formal-ready 标的不会重复抓取。
 
 仍然不需要用户手工运行 `m2_qfq_expand.py`、pytest 或其他脚本。
+
+## M4 second private bundle — D-040
+
+第二个 `m4-evidence-bundle.zip` 已完成 assistant-side audit。
+
+Transport：
+
+- ZIP members：15；
+- manifest-listed members：14；
+- size/SHA-256 mismatches：0；
+- worktree_clean=true。
+
+QFQ readiness：
+
+- initialized：55；
+- already formal-ready：3；
+- newly built/repaired：50；
+- formal-ready after：53；
+- failed：2；
+- provider builds：BaoStock QFQ 50。
+
+仅剩失败：
+
+- `SSE.600057`：BaoStock adjusted history 缺 2007-04-24；
+- `SZSE.000001`：BaoStock adjusted history 缺若干 1991 historical Saturday sessions；
+- AkShare 对两只仍 RemoteDisconnected。
+
+因此 authoritative capture 在 QFQ stage 后被阻断：
+
+- committed_capture_count=0；
+- outcome_snapshot_count=0；
+- transition 仍为 2026-09-17 T0 baseline-only；
+- prospective_outcome_cohort=0。
+
+注意：bundle 中的 `m4-lifecycle-snapshot.json` 是上一次 failed capture 的旧诊断 artifact；本轮 QFQ stage 在 capture 之前停止，所以没有新 lifecycle snapshot。这不构成 authoritative evidence。
+
+D-040 修复：
+
+- tiny internal provider-calendar factor gaps 可在稳定 factor regime 下安全补齐；
+- gap <=10 raw sessions；
+- bracketing factor relative drift <=0.5%；
+- 超阈值继续 fail closed；
+- leading gaps 不补；
+- trailing gap 仍由 qfq_carry_forward 管；
+- synthetic rows 可审计标注 source。
+
+GitHub Actions run #1446：
+
+- overall success；
+- Python success；
+- Web build success。
+
+Freeze audit：
+
+- capture methodology：0/37 drift；
+- Outcome Engine：0/4 drift。
+
+下一次本地运行预计只需要重新处理剩余 2 个缺 factor 标的；已完成的 53 个会直接 READY，不重复整批下载。
 
