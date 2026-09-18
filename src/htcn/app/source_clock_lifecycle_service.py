@@ -11,6 +11,7 @@ from htcn.app.a_share_execution_context import (
 )
 from htcn.app.source_aligned_service import SourceAlignedHarmonicService
 from htcn.app.market_context import build_core_market_context
+from htcn.app.sector_context import build_industry_context
 from htcn.harmonic.execution import SourceExecutionAudit
 from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.rsi_bamm_confluence import observe_source_execution_for_match
@@ -160,6 +161,12 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             frame,
             benchmark_root=self.data_root / "benchmarks",
         ).as_payload()
+        analysis["sector_context"] = build_industry_context(
+            catalog_path=catalog_path,
+            instrument_id=instrument_id,
+            instrument_frame=frame,
+            as_of=as_of,
+        ).as_payload()
         for pattern in [*(analysis.get("completed") or []), *(analysis.get("forming") or [])]:
             pattern["a_share_execution_context"] = execution_context
 
@@ -180,6 +187,11 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             "market_context_may_change_harmonic_identity": False,
             "market_context_may_change_source_raw_prz": False,
             "market_context_owns_lifecycle": False,
+            "sector_context_field": "sector_context",
+            "sector_context_role": "industry_breadth_and_relative_strength_evidence_only",
+            "sector_context_may_change_harmonic_identity": False,
+            "sector_context_may_change_source_raw_prz": False,
+            "sector_context_owns_lifecycle": False,
             "daily_event_metadata_table": "security_daily_event",
             "daily_event_complete_required_to_resolve_special_exceptions": True,
             "execution_context_may_change_harmonic_identity": False,
@@ -198,5 +210,7 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             "缺失或不完整时继续 fail-safe，禁止把板块规则冒充当日精确制度。"
             " M3 Phase 3.2：科创50/创业板/沪深300/上证指数只作为市场与相对强弱证据；"
             "它们不拥有 lifecycle，也不得改写 identity 或 Source Raw PRZ。"
+            " M3 Phase 3.3：行业映射来自可审计成分表，行业强弱/广度/量能由本地 M1 成分股重算；"
+            "映射冲突时 fail-safe，不擅自选行业，也不改写谐波身份。"
         ).strip()
         return analysis
