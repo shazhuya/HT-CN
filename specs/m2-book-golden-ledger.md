@@ -125,6 +125,9 @@ execution clock. A historical D/C pivot is not automatically a Terminal Price Ba
 
 ### Terminal Price Bar
 
+HT-CN names the observable source-clock instance the **Source Terminal Price Bar**. It is not the
+same thing as a retrospective geometry D/C pivot.
+
 Volume Three's official Terminal Price Bar is the bar that tests the final/terminal side of the
 entire Source Raw PRZ. Merely overlapping part of the PRZ is entry into the zone, not completion.
 Execution assessment begins after the Terminal Price Bar at T-Bar+1.

@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import HarmonicChart, { Bar, Pattern } from './HarmonicChart'
 import TypeIT5Evidence, { TypeIT5Event } from './TypeIT5Evidence'
+import AShareExecutionContext, { AShareExecutionContextPayload } from './AShareExecutionContext'
+import MarketContext, { MarketContextPayload } from './MarketContext'
+import SectorContext, { IndustryContextPayload } from './SectorContext'
+import ConceptContext, { ConceptContextPayload } from './ConceptContext'
+import ContextIntegrity, { ContextIntegrityPayload } from './ContextIntegrity'
+import DecisionNarrative from './DecisionNarrative'
 
 type Health = {
   status: string
@@ -27,6 +33,11 @@ type Analysis = {
   forming: Pattern[]
   pivot_counts: Record<string, number>
   type_i_t5_events?: TypeIT5Event[]
+  a_share_execution_context?: AShareExecutionContextPayload
+  market_context?: MarketContextPayload
+  sector_context?: IndustryContextPayload
+  concept_context?: ConceptContextPayload
+  context_integrity?: ContextIntegrityPayload
   engine_note: string
 }
 
@@ -246,7 +257,13 @@ export default function App() {
 
           {analysis.warning && <div className="warning-card">{analysis.warning}</div>}
 
+          <ContextIntegrity context={analysis.context_integrity} />
+          <AShareExecutionContext context={analysis.a_share_execution_context} />
+          <MarketContext context={analysis.market_context} />
+          <SectorContext context={analysis.sector_context} />
+          <ConceptContext context={analysis.concept_context} />
           <TypeIT5Evidence events={analysis.type_i_t5_events ?? []} />
+          <DecisionNarrative narrative={selectedPattern?.decision_narrative} />
 
           <section className="workspace">
             <div className="chart-panel">

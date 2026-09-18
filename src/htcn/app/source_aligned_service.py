@@ -309,7 +309,7 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
         frame: pd.DataFrame,
     ) -> dict[str, Any] | None:
         schema = str(pattern.get("schema"))
-        if schema not in {"XABCD", "ABCD"}:
+        if schema not in {"XABCD", "ABCD", "0XABC"}:
             return None
         points = list(pattern.get("points") or [])
         if not points:
@@ -331,8 +331,12 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
                 },
             }
 
-        a_point = next((point for point in points if point.get("label") == "A"), None)
-        if a_point is None:
+        reaction_anchor_label = "B" if schema == "0XABC" else "A"
+        reaction_anchor = next(
+            (point for point in points if point.get("label") == reaction_anchor_label),
+            None,
+        )
+        if reaction_anchor is None:
             return None
         prz = cls._rebuild_prz_from_payload(pattern)
         audit = observe_source_execution(
@@ -340,7 +344,7 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             signal_bar=signal_bar,
             direction=PatternDirection(str(pattern["direction"])),
             prz=prz,
-            reaction_anchor_price=float(a_point["price"]),
+            reaction_anchor_price=float(reaction_anchor["price"]),
             observation_end_bar=len(frame) - 1,
         )
         clock = audit.as_payload()
@@ -349,6 +353,8 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
                 "signal_clock_basis": "last_frontier_pivot_confirmed_at=index+scale",
                 "frontier_pivot_index": int(frontier["index"]),
                 "confirmation_lag_bars": scale,
+                "reaction_anchor_label": reaction_anchor_label,
+                "reaction_anchor_price": float(reaction_anchor["price"]),
                 "retrospective_d_clock_used": False,
                 "pez": {
                     "available": audit.pez_low is not None and audit.pez_high is not None,
@@ -362,6 +368,60 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
                 },
             }
         )
+        if schema == "0XABC":
+            a_point = next((point for point in points if point.get("label") == "A"), None)
+            b_point = next((point for point in points if point.get("label") == "B"), None)
+            clock["type_i_target_semantics"] = (
+                "generic_type_i_reaction_confirmation_only_not_shark_management_target"
+            )
+            if audit.terminal_price is None or a_point is None or b_point is None:
+                clock["shark_management"] = {
+                    "status": "waiting_for_source_terminal_bar",
+                    "initial_target": None,
+                    "initial_target_basis": None,
+                    "target_50_bc": None,
+                    "target_618_bc": None,
+                    "reciprocal_abcd": None,
+                    "source_note": (
+                        "Shark 专用管理在 Source T-Bar 后冻结：50% BC 与 Reciprocal AB=CD "
+                        "二者从 C/T-Bar 先到者为 initial target；61.8% BC 为后续 5-0/管理参考。"
+                    ),
+                }
+            else:
+                terminal = float(audit.terminal_price)
+                a_price = float(a_point["price"])
+                b_price = float(b_point["price"])
+                sign = 1.0 if PatternDirection(str(pattern["direction"])) is PatternDirection.BULLISH else -1.0
+                bc_span = abs(b_price - terminal)
+                ab_span = abs(a_price - b_price)
+                target_50 = terminal + sign * 0.50 * bc_span
+                target_618 = terminal + sign * 0.618 * bc_span
+                reciprocal = terminal + sign * ab_span
+                d50 = abs(target_50 - terminal)
+                drec = abs(reciprocal - terminal)
+                eps = 1e-12 * max(1.0, d50, drec)
+                if abs(d50 - drec) <= eps:
+                    initial_target = target_50
+                    initial_basis = "50_percent_and_reciprocal_abcd_tie"
+                elif d50 < drec:
+                    initial_target = target_50
+                    initial_basis = "50_percent"
+                else:
+                    initial_target = reciprocal
+                    initial_basis = "reciprocal_abcd"
+                clock["shark_management"] = {
+                    "status": "source_terminal_observed",
+                    "initial_target": float(initial_target),
+                    "initial_target_basis": initial_basis,
+                    "target_50_bc": float(target_50),
+                    "target_618_bc": float(target_618),
+                    "reciprocal_abcd": float(reciprocal),
+                    "source_note": (
+                        "Shark 专用管理与通用 Type-I 状态分离：initial target 取 50% BC "
+                        "与 Reciprocal AB=CD 先到者；61.8% BC 保留为后续 5-0/管理参考。"
+                    ),
+                }
+
         if audit.terminal_bar is None:
             clock["rsi_bamm_evidence"] = {
                 "status": "waiting_for_source_terminal_bar",

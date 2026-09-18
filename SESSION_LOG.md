@@ -205,3 +205,166 @@
 ### 新会话特别注意
 - 
 ```
+
+
+## M3 Phase 3.2 / 2026-09-18
+
+- Phase 3.1 batch 2 committed at `f5fa0dc39f65d98dc0479b4b62d103263f7b18c3`: automated positive suspension ingestion, non-downgrade storage, sync audit and M1 daily integration.
+- Phase 3 UI wiring correction committed at `179601bd39909bf89d23b788dd0b74b294e955cd`: execution-context component is now actually mounted; its Playwright test is now part of CI.
+- Phase 3.2 first batch committed at `0effcaffd033d5398ffa0e0b09ab67188a958e58`: local core benchmark store/sync, market-context backend payload, Workbench card and browser regression for STAR50/ChiNext/CSI300/SSE Composite.
+- Market context remains evidence-only: no composite score, no identity/Source-PRZ mutation, no lifecycle ownership.
+- GitHub-hosted CI still fails before steps/logs; development continues without repeated reruns.
+
+
+## M3 Phase 3.3 / 2026-09-18
+
+- `686e7ec7af089f3553f6094e27d20cfc4a343aa0`: industry schema, atomic membership refresh, local constituent aggregation, sync script and Windows entrypoint.
+- `2c27f45a00c42dcf67da48a0d7f5326356b640b1`: AKShare industry provider normalization and API `sector_context` integration.
+- `4fab82c9012dcf19a5c719dbe37d65a19d90b64b`: Workbench industry card.
+- `e5ede700ad63774c6c75f5e446cb8b77b7e648b5`: provider/context/browser regression gates and Phase-3.3 spec.
+- `8fafdbeff59b818b63c2db83bae3a86e86641eff`: sector browser regression added to CI command.
+- `a03d31a12d6f30d4aac1dd4787d27a63cf5afd24`: optional `pct_change` hardening with close-to-close fallback.
+- `85b752ce9b3c5fd188a2d09943fd4aa24f618445`: analysis read paths kept side-effect free; sector tables/benchmark directories are no longer created by ordinary reads.
+- Industry strength/breadth/volume is recomputed from local M1 constituent data; Eastmoney supplies membership only.
+- Multi-industry ambiguity is fail-closed; industry context cannot own lifecycle or mutate identity / Source Raw PRZ.
+
+
+## M3 Phase 3.4-3.5 / 2026-09-18
+
+- Phase 3.4 adds multi-membership concept/theme context; multiple concepts are normal rather than ambiguous.
+- Concept membership refresh uses bounded concurrency + retry and all-or-nothing replacement; partial failures preserve the previous complete mapping.
+- Concept evidence is recomputed from local M1 constituents and ordered only by raw 5-day median return; there is no theme score.
+- `acc0efee28827e8df979201ddac666601bfd9f7d` prevents industry/concept future membership from backdating into earlier analysis.
+- Phase 3.5 adds `context_integrity` with current/partial/stale/missing/conflicted/future_observation/unresolved states and no score.
+- Membership older than the default seven-day refresh horizon is surfaced as stale even when a current local aggregate snapshot exists.
+- `运行M3上下文数据同步.bat` now performs execution-event, core benchmark, industry and concept sync in one pass and writes a combined machine-readable report.
+- Current implementation checkpoint before docs commit: `a08a601568342ca9049923f0b5ee156d8dd96eb8`.
+
+
+## M3 Phase 4.1-4.3 / 2026-09-18
+
+- `4c7110c5ed11a98a6730fbdd1ade0b442f2c0c97`: product payload contract auditor.
+- `12032dc56ad68beeede7930d9878aede45ef8220`: real-M1 product-contract smoke + upgraded one-click acceptance.
+- `dcdcd8e5c1099f5892ad8fdec565c7dd43ae7d00`: selected-pattern narrative browser consistency gate + Phase-4 spec.
+- `a8d94554da20e50f8a7e3c82c0f97fec38517539`: source-driven LifecycleCompass consolidated into Source Clock evidence strip.
+- `0eb48487564fdbdbb2db7eb181f0ebde1b61580c`: formal acceptance now requires readable real parquet histories.
+- `12e853581970b0d259acb35a5beaecdb1ff19e63`: lifecycle action state separated from execution feasibility gate.
+- `9326ca7fdb0cacf20d08a987a3d447ada17f9621`: product-contract fixtures and browser execution-gate assertion aligned.
+- Formal action-state vocabulary is waiting / reaction_observation / execution_evaluation / evidence_insufficient.
+- Context cannot vote on or override source lifecycle; execution feasibility is reported separately.
+- PR stays Draft until user-local real-M1 acceptance and context-sync evidence are observed.
+
+
+## M3 Phase 4.4 / 2026-09-18
+
+- `7a60bbbba9effe525b1ffb217aa1458ea37b0ba5`: fixed context-sync success literal / exit-code mismatch.
+- `63fa707d78b1d796d5c1174a1dafa3c4ba5b8a94`: acceptance, metadata, product and context reports now stamp exact git HEAD.
+- `a1525389f088257563a88c1f26558ad98b0b0967`: machine-readable PR readiness evaluator + merge-readiness and final-closeout Windows entrypoints.
+- `9f95560b3d44b5eb70c4f40cc3d5e9c72471d285`: human-readable Chinese readiness report added.
+- Readiness hard-blocks stale evidence from old commits.
+- Context partial failure is blocker; fail-safe degraded refresh is visible warning.
+- Positive-evidence-only suspension coverage remains a known warning and does not masquerade as complete-market evidence.
+- Code-side Phase 4.4 closeout is complete; user-local real-M1 evidence remains to be generated before PR #12 can leave Draft.
+
+
+## M3 Phase 4.5 / 2026-09-18
+
+- `33144a937360fa8cfce009c618b947da8a40d88c`: centralized provider-backed latest closed-trade clock; M1 updater now persists confirmed calendar dates.
+- `9e3b1ed8643c2cb64f2fc6418eb19101170654a0`: formal metadata smoke switched from base-only parquet to base+daily_delta logical history.
+- `4b0488f557578f1c50b3aa67c88f9938479faf3b`: context sync compares provider-confirmed expected closed day with local calendar/logical market date.
+- `ba75cb2e577458e6e48384fab51bc5c7ea52d4ed`: metadata/product/context evidence must align to one expected trade date; final closeout now starts with M1 smart daily update.
+- `3c4ed222b8002d7455ff687a48210d7b1052a440`: all initialized listed SSE/SZSE datasets must be current; any stale/ahead dataset blocks Ready.
+- `181c86c27cfbf25db69f1579f86c45dfb52fc1a0`: clean-worktree evidence identity added.
+- `26c1f171b95830bfd06923591bd959e83e659c27`: formal reports and readiness bound to clean worktree state.
+- `b536dd944e6f9b541506619fd7bd851b72bb732e`: readiness/freshness fixtures aligned with final anti-false-green contract.
+- Phase 4.5 changes acceptance only; harmonic identity / Source PRZ / lifecycle semantics remain unchanged.
+
+
+## M3 Phase 4.6 / 2026-09-18
+
+- User-local closeout on `c444ac64...` confirmed M1 updated 55/55 initialized datasets to 2026-09-17 with zero stale/ahead datasets.
+- Real run exposed `artifacts/` as untracked, causing QA to stop before deterministic gates; fixed by ignoring `artifacts/**`.
+- Final Windows closeout wrapper headings were parsed incorrectly on CMD; control/output lines are now ASCII-safe.
+- External Eastmoney/AkShare disconnects are now classified separately from local structural failures.
+- Industry/concept external unavailability becomes explicit degraded warning; local schema/aggregate/program failures remain blockers.
+- Degraded external-only context sync now exits 0; structural partial failure remains non-zero.
+- Readiness tests freeze READY-with-warnings for external-unavailable context and NOT READY for local failed context.
+- Current implementation checkpoint before docs commit: `ce90d575009b658a6a6c3a1d33b21cf107ce54cd`.
+
+
+## M3 Phase 4.7 / 2026-09-18
+
+Second user-local closeout on `28488826...` proved:
+- M1 fast-pass current: 55/55 initialized datasets already at 2026-09-17;
+- worktree clean fix worked;
+- context external-unavailable semantics worked: context exit 0 with explicit warnings;
+- remaining blockers were exclusively deterministic pytest regression drift.
+
+Five repairs:
+- context sync exit-contract test updated for degraded nonblocking semantics;
+- frozen external replication hash verification normalized checkout CRLF to canonical LF; canonical SHA verified as `4116aeaae8e783f2f5ebc244a001cf78b407cd39b5265eae4e24906c3b819f09`;
+- continuity sentinel phrase restored;
+- API health test aligned to version 0.3.0;
+- Golden Ledger now explicitly names Source Terminal Price Bar.
+
+`.gitattributes` now enforces LF for JSON/Markdown/Python to reduce future Windows hash drift.
+Implementation checkpoint: `5a301baf848d740a537b2b07032057dd566309f9`.
+
+
+## M3 Phase 4.8 / 2026-09-18
+
+Third user-local closeout on `8986897924ba64e2e6c85b26393c84258d7ce1a7` proved:
+- deterministic Python: 376 passed;
+- Web TypeScript/Vite build: passed;
+- strict real-M1 metadata/tradability: passed;
+- product smoke: 8/8 analyses succeeded, 10 patterns observed, 2 contract issues only;
+- both issues were forming Shark patterns missing canonical `source_lifecycle`;
+- context degradation remained warning-only as designed.
+
+Root cause:
+- completed Shark had a dedicated source-clock reconstruction path;
+- forming Shark payload had schema `0XABC`, while forming execution-clock adapter accepted only XABCD/ABCD;
+- therefore no `execution_clock.lifecycle` existed to promote into `source_lifecycle`.
+
+Fix:
+- forming `0XABC` now uses Source Raw PRZ execution observation after B confirmation;
+- reaction anchor is B for Shark, A for XABCD/ABCD;
+- completed Shark source reconstruction also uses B, aligning Type-I reaction span with B→C/T-Bar;
+- no D point is introduced;
+- execution clock carries explicit Shark management evidence: 50% BC, 61.8% BC, Reciprocal AB=CD, and first-of-50%-or-reciprocal initial target;
+- generic Type-I 38.2/61.8 is labeled confirmation evidence only, not Shark management.
+
+Implementation checkpoints:
+- `7f142a78de9dc671a8d1385493018c681e845526` — forming Shark canonical source lifecycle.
+- `b4b18f555dec47a4cbfbe63d1777aa85c30f0e3a` — Shark-specific management preserved on source clock.
+
+
+## M3 Phase 4.8.1 / 2026-09-18
+
+Fourth user-local closeout on `81d92557493b8874b040f6142e9d416ea6ae619e` stopped at one new Shark lifecycle regression assertion:
+- implementation returned 50% BC target 110.44;
+- Reciprocal AB=CD was 110.88;
+- frozen Shark rule is first encountered of 50% BC and Reciprocal AB=CD;
+- therefore implementation was correct and the test expectation was wrong.
+
+Fix commit: `105a08ddfc4cef16a22e8504fd4c289fe2eb0c2f`.
+No harmonic logic, Source Raw PRZ, lifecycle semantics, or management formulas were changed.
+
+
+## M3 Phase 4.9 / 2026-09-18
+
+Fifth user-local closeout on `c6c9514647fadf50bf08e00c0cc58bbbb886c330` reached the final browser layer:
+- Python regression passed;
+- Web build passed;
+- strict real-M1 metadata passed;
+- real-M1 product contract passed;
+- local services started;
+- Playwright result: 15 passed / 3 failed.
+
+The three failures were stale browser assertions:
+- execution-context still expected pre-Phase-4 LifecycleCompass copy;
+- live test still expected API 0.2.0 instead of 0.3.0;
+- fixture smoke still expected an old retrospective note removed during UI consolidation.
+
+No Source lifecycle, harmonic identity, Source Raw PRZ, Shark management or execution-context production logic was changed.
+Implementation fix commit: `d28215bbae682169a8ac47ddf48399bfdf50d05a`.

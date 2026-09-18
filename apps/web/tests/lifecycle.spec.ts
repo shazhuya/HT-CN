@@ -71,6 +71,37 @@ function reactionAudit(overrides: Record<string, unknown> = {}) {
   }
 }
 
+function sourceLifecycle(overrides: Record<string, unknown> = {}) {
+  return {
+    state: 'waiting_terminal',
+    state_reason: 'Price entered Source Raw PRZ and is waiting for terminal-side test.',
+    clock_source: 'source_terminal_price_bar',
+    current_bar: 5,
+    signal_bar: 2,
+    source_prz_entry_bar: 4,
+    source_terminal_bar: null,
+    execution_start_bar: null,
+    bars_since_terminal: null,
+    type_i_t1_bar: null,
+    type_i_t2_bar: null,
+    first_source_prz_exit_bar: null,
+    type_ii_retest_entry_bar: null,
+    type_ii_terminal_bar: null,
+    reversal_exit_after_type_ii_bar: null,
+    source_prz_low: 103.9,
+    source_prz_high: 104.5,
+    pez_low: null,
+    pez_high: null,
+    target_382: null,
+    target_618: null,
+    next_key_price: 103.9,
+    next_key_price_role: 'source_prz_terminal_side',
+    strict_type_ii_full_retest: true,
+    retrospective_geometry_clock_used: false,
+    ...overrides,
+  }
+}
+
 function analysisFor(pattern: Record<string, unknown>) {
   const isForming = pattern.state === 'forming'
   return {
@@ -200,4 +231,80 @@ test('full source PRZ retest with price and RSI evidence stays explicitly non-BA
   await expect(auditCard.getByText(/明确不是 RSI BAMM/)).toBeVisible()
   await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-state', 'reached')
   await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-state', 'reached')
+})
+
+test('canonical source lifecycle overrides contradictory retrospective D-clock audit', async ({ page }) => {
+  await openScenario(page, {
+    ...basePattern,
+    reaction_audit: reactionAudit({ bars_to_382: 2, bars_to_618: 5 }),
+    source_lifecycle: sourceLifecycle({ state: 'waiting_terminal' }),
+  })
+
+  const compass = page.getByTestId('lifecycle-compass')
+  await expect(compass.getByText('Source Clock 证据')).toBeVisible()
+  await expect(page.getByTestId('source-clock-state').getByText('waiting_terminal')).toBeVisible()
+  await expect(compass.getByText('后验 Type-I · 已到 T2（61.8%）')).toHaveCount(0)
+  await expect(compass.getByText(/历史 reaction_audit 不覆盖 canonical source lifecycle/)).toBeVisible()
+  await expect(page.getByTestId('lifecycle-action')).toHaveCount(0)
+})
+
+test('BAMM is rendered as a separate evidence channel and cannot own lifecycle state', async ({ page }) => {
+  await openScenario(page, {
+    ...basePattern,
+    source_lifecycle: sourceLifecycle({
+      state: 'type_i_confirmed',
+      state_reason: '38.2 reached inside five bars.',
+      source_terminal_bar: 4,
+      execution_start_bar: 5,
+      bars_since_terminal: 1,
+      type_i_t1_bar: 5,
+      target_382: 110.28,
+      target_618: 114.0,
+      next_key_price: 114.0,
+      next_key_price_role: 'type_i_61_8_target',
+    }),
+    rsi_bamm_evidence: {
+      status: 'source_confirmed',
+      source_confirmed_count: 1,
+      profile: 'simple_divergence',
+    },
+  })
+
+  await expect(page.getByTestId('source-clock-state').getByText('type_i_confirmed')).toBeVisible()
+  const evidence = page.getByTestId('bamm-evidence-channel')
+  await expect(evidence.getByText(/RSI BAMM · Source confirmed/)).toBeVisible()
+  await expect(evidence.getByText(/不改变 lifecycle、identity 或 Source PRZ/)).toBeVisible()
+})
+
+test('source lifecycle chart renders Source PRZ PEZ T-Bar T+1 and source Type-I targets', async ({ page }) => {
+  await openScenario(page, {
+    ...basePattern,
+    reaction_audit: reactionAudit({ bars_to_382: 2, bars_to_618: 5 }),
+    source_lifecycle: sourceLifecycle({
+      state: 'type_i_confirmed',
+      state_reason: '38.2 reached inside five bars.',
+      source_terminal_bar: 4,
+      execution_start_bar: 5,
+      bars_since_terminal: 1,
+      type_i_t1_bar: 5,
+      source_prz_low: 103.9,
+      source_prz_high: 104.5,
+      pez_low: 103.8,
+      pez_high: 104.5,
+      target_382: 107.0,
+      target_618: 109.2,
+      next_key_price: 109.2,
+      next_key_price_role: 'type_i_61_8_target',
+    }),
+  })
+
+  await expect(page.getByTestId('source-prz-zone')).toBeVisible()
+  await expect(page.getByTestId('source-pez-zone')).toBeVisible()
+  await expect(page.getByTestId('source-event-tbar')).toBeVisible()
+  await expect(page.getByTestId('source-event-tplus1')).toBeVisible()
+  await expect(page.getByTestId('source-event-type-i-t1')).toBeVisible()
+  await expect(page.getByTestId('type-i-target-t1')).toHaveAttribute('data-clock', 'source')
+  await expect(page.getByTestId('type-i-target-t2')).toHaveAttribute('data-clock', 'source')
+  await expect(page.getByText(/Source T1 38\.2% · 107\.00 · 已到达/)).toBeVisible()
+  await expect(page.getByText(/Source T2 61\.8% · 109\.20 · 待到达/)).toBeVisible()
 })

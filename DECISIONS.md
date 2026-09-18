@@ -26,7 +26,7 @@ Carney Volume One / Two / Three 定义 harmonic identity、source measurement �
 
 **状态：Frozen**
 
-只发生 secondary overlap 不足以叫 Type-II。必须先完整 retest 原 PRZ terminal side，再进入 Type-II Terminal Bar 与后续确认。Source PRZ 未解决时 fail closed。
+只发生 secondary overlap 不足以叫 Type-II。必须先完整 retest 原 PRZ terminal side 后再进入 Type-II Terminal Bar 与后续确认。Source PRZ 未解决时 fail closed。
 
 ## D-005 — Wilder RSI evidence 不等于 RSI BAMM
 
@@ -204,6 +204,33 @@ M3 Workbench 的 live/current state 不得再由 historical D/C pivot 直接派�
 RSI BAMM、普通 RSI、A 股市场环境、ATR、流动性等都只能作为 evidence/context channel；它们不能拥有 lifecycle，也不能修改 Carney identity / Source Raw PRZ。
 
 原因：M2.31 的 45 股 observability 显示 174 个 historical completed match 里只有 128 个能从当时信息重建 source clock，说明 retrospective completed geometry 与 live execution observability 并不等价。
+
+## D-021 — A 股交易制度与波动数据只进入 execution context，不得拥有 lifecycle
+
+**状态：Frozen M3 execution-context contract**
+
+M3 Phase 3 起，A 股制度/波动信息统一进入独立 `a_share_execution_context`：
+
+- 普通 A 股 T+1 / 当日买入不可当日卖出的执行约束；
+- SSE/SZSE 板块日常涨跌幅规则；
+- 上市前 5 个交易日不套用日常涨跌幅规则的 IPO 例外；
+- 主板风险警示股票 2026-07-06 前后的历史规则切换；
+- ATR(14) / ATR%、最新日内振幅、前 20 日均量与量比；
+- 证券元数据是否足以判断 ST / 上市年龄 / 板块；
+- 北交所继续 deferred。
+
+决定：
+
+1. execution context 不生成 harmonic identity，不修改 Source Raw PRZ，也不拥有 source lifecycle state；
+2. 不建立“综合可交易性分数”作为黑箱决策器，先暴露原始可审计字段；
+3. 元数据不足时 fail safe：只展示板块名义规则，不猜 ST / IPO 例外；
+4. 因停复牌、特殊证券等事件元数据尚未完整接入，字段使用 `rule_based_price_limit_pct`，禁止命名为 exact price limit；
+5. `special_event_exceptions_unresolved=true` 时，UI 必须明确该规则值不等同于当天精确涨跌停价格；
+6. ATR / 成交量只能用于波动与执行背景，不得反向修复、否决或重排 Carney identity。
+
+原因：A 股交易制度会显著改变“同一个谐波 lifecycle 是否具备现实执行条件”，但把这些规则塞回形态识别会污染 Carney source fidelity；把它们压成单一分数又会失去审计性并诱发错误自动化。
+
+验证方式：主板风险警示 2026-07-06 日期切换回归、STAR/ChiNext 20% 板块规则、IPO 前 5 交易日例外、缺 metadata fail-safe、ATR/量比 deterministic tests，以及工作台独立 execution-context 卡片。
 
 ## 后续新增格式
 
