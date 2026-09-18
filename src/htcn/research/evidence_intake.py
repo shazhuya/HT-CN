@@ -390,8 +390,25 @@ def audit_evidence_bundle(
                 archive,
                 "protocols/m4-outcome-protocol-v2.json",
             )
+            bundle_declares_outcome_contract = any(
+                key in manifest
+                for key in (
+                    "active_outcome_protocol_id",
+                    "active_outcome_protocol_fingerprint",
+                    "current_outcome_engine_contract_version",
+                    "current_outcome_engine_fingerprint",
+                    "outcome_snapshot_count",
+                )
+            )
             if bundled_active_protocol is None:
-                blockers.append("outcome_protocol_bundle_member_missing")
+                if outcome_snapshots or bundle_declares_outcome_contract:
+                    blockers.append(
+                        "outcome_protocol_bundle_member_missing"
+                    )
+                else:
+                    warnings.append(
+                        "legacy_bundle_without_outcome_protocol_member"
+                    )
             elif bundled_active_protocol != active_outcome_protocol:
                 blockers.append("outcome_protocol_bundle_member_drift")
 
