@@ -289,3 +289,60 @@ def test_tampered_baseline_cutoff_blocks_future_commit(tmp_path) -> None:
         assert "legacy baseline identity mismatch" in str(exc)
     else:
         raise AssertionError("tampered baseline must fail before future commit")
+
+
+def test_empty_frozen_baseline_marker_is_valid_for_transaction_native_start(tmp_path) -> None:
+    from htcn.research.capture_transaction import frozen_legacy_baseline_present
+
+    freeze_legacy_baseline(tmp_path, [])
+    assert frozen_legacy_baseline_present(tmp_path) is True
+    capture = _capture([_row("t0")])
+    result = commit_capture_transaction(tmp_path, capture)
+    assert result["status"] == "committed"
+
+
+def test_existing_transaction_nonidentity_tamper_rejected_on_rerun(tmp_path) -> None:
+    import json
+    from pathlib import Path
+
+    capture = _capture([_row("a")])
+    result = commit_capture_transaction(tmp_path, capture)
+    path = Path(result["path"])
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["worktree_clean"] = False
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    try:
+        commit_capture_transaction(tmp_path, capture)
+    except ValueError as exc:
+        assert "clean worktree" in str(exc)
+    else:
+        raise AssertionError("tampered nonidentity metadata must fail closed")
+
+
+def test_legacy_baseline_rejects_alpha_boundary_pollution(tmp_path) -> None:
+    row = _row("legacy", date="2026-09-17", head="old")
+    row["alpha_inference_allowed"] = True
+    try:
+        freeze_legacy_baseline(
+            tmp_path,
+            [row],
+            baseline_through_trade_date="2026-09-17",
+        )
+    except ValueError as exc:
+        assert "permits alpha inference" in str(exc)
+    else:
+        raise AssertionError("polluted legacy baseline must not be frozen")
+
+
+def test_legacy_baseline_rejects_cutoff_before_last_row(tmp_path) -> None:
+    row = _row("legacy", date="2026-09-18", head="old")
+    try:
+        freeze_legacy_baseline(
+            tmp_path,
+            [row],
+            baseline_through_trade_date="2026-09-17",
+        )
+    except ValueError as exc:
+        assert "after baseline_through_trade_date" in str(exc)
+    else:
+        raise AssertionError("baseline cutoff before row date must fail")
