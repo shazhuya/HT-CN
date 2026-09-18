@@ -212,7 +212,6 @@ def _load_valid_cached_snapshot(
             scales=scales,
             universe_hash=universe_hash,
             input_identity=input_identity,
-            input_identity_stable_during_build=input_identity_unchanged,
         )
         return queue, str(stored.get("generated_at_utc") or "")
     except Exception:
@@ -431,6 +430,7 @@ def build_or_load_operator_snapshot(
             cache_path=cache_path if can_cache else None,
             generated_at_utc=generated_at,
             input_identity=input_identity,
+            input_identity_stable_during_build=input_identity_unchanged,
         )
         future.set_result(deepcopy(result))
         return result
