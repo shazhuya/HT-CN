@@ -643,3 +643,10 @@ The ZIP is transport-only and records hashes/provenance. It does not become auth
 evidence and never repairs committed evidence. If the authoritative store is corrupt, the
 bundle preserves the problematic files for diagnosis so the user does not need to locate
 multiple JSON files manually.
+
+
+M1 freshness is now part of the same one-click T1 handoff:
+- the wrapper runs `m1_daily_update.py --limit 0` before any M4 capture;
+- a failed M1 update skips the new authoritative capture;
+- the M1 update console output is persisted as `artifacts/reports/m4-m1-update.log`;
+- the log is included in `m4-evidence-bundle.zip`.
