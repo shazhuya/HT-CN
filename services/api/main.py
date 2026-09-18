@@ -7,6 +7,10 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from htcn.app.harmonic_service import DatasetNotFoundError
+from htcn.app.operator_queue import (
+    build_operator_queue,
+    discover_local_instruments,
+)
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 from htcn.harmonic.rules import CARNEY_RULES
 from htcn.research.type_i_live_evidence import build_type_i_t5_events
@@ -14,7 +18,7 @@ from htcn.research.type_i_live_evidence import build_type_i_t5_events
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
 
-app = FastAPI(title="HT-CN API", version="0.3.0")
+app = FastAPI(title="HT-CN API", version="0.4.0")
 service = M3SourceClockHarmonicService(DATA_ROOT)
 
 app.add_middleware(
@@ -28,7 +32,7 @@ app.add_middleware(
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "ht-cn-api", "version": "0.3.0"}
+    return {"status": "ok", "service": "ht-cn-api", "version": "0.4.0"}
 
 
 @app.get("/api/instruments")
@@ -45,6 +49,26 @@ def instruments(limit: int = Query(default=200, ge=1, le=1000)) -> dict[str, obj
     ]
     return {"count": len(ids), "items": rows}
 
+
+
+
+@app.get("/api/operator/queue")
+def operator_queue(
+    limit: int = Query(default=200, ge=1, le=1000),
+    bars: int = Query(default=420, ge=80, le=1200),
+    include_evidence_insufficient: bool = Query(default=True),
+) -> dict[str, object]:
+    instrument_ids = discover_local_instruments(
+        DATA_ROOT,
+        limit=limit,
+    )
+    return build_operator_queue(
+        service,
+        instrument_ids,
+        bars=bars,
+        scales=(3, 5, 8, 13),
+        include_evidence_insufficient=include_evidence_insufficient,
+    )
 
 @app.get("/api/harmonic/rules")
 def harmonic_rules() -> dict[str, object]:
