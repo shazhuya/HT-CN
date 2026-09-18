@@ -12,6 +12,10 @@ def _bundle(tmp_path: Path):
     transaction_root.mkdir()
     reports = tmp_path / "reports"
     reports.mkdir()
+    (reports / "m4-m1-update.log").write_text(
+        "[HT-CN M1 DAILY] test log\n",
+        encoding="utf-8",
+    )
     (reports / "m4-lifecycle-snapshot.json").write_text(
         json.dumps({"status": "diagnostic"}),
         encoding="utf-8",
@@ -36,6 +40,7 @@ def test_transport_bundle_contains_manifest_and_available_reports(tmp_path) -> N
     with zipfile.ZipFile(output) as archive:
         names = set(archive.namelist())
         assert "bundle-manifest.json" in names
+        assert "reports/m4-m1-update.log" in names
         assert "reports/m4-lifecycle-snapshot.json" in names
         manifest = json.loads(
             archive.read("bundle-manifest.json").decode("utf-8")
