@@ -1,0 +1,139 @@
+.operator-delta {
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.operator-delta__heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.operator-delta__heading h3 {
+  margin: 3px 0 5px;
+  font-size: 17px;
+}
+
+.operator-delta__heading p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.operator-delta__status,
+.operator-delta__error,
+.operator-delta__warning {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.6);
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.operator-delta__error {
+  color: #fecaca;
+}
+
+.operator-delta__warning {
+  color: #fde68a;
+}
+
+.operator-delta__range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 8px;
+  color: #cbd5e1;
+}
+
+.operator-delta__range b {
+  margin-left: auto;
+}
+
+.operator-delta__list {
+  display: grid;
+  gap: 8px;
+}
+
+.operator-delta__item {
+  padding: 11px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 9px;
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.operator-delta__instrument {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.operator-delta__instrument button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.operator-delta__instrument span {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.operator-delta__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.operator-delta__badges span {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(51, 65, 85, 0.78);
+  color: #cbd5e1;
+  font-size: 11px;
+}
+
+.operator-delta__compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.operator-delta__compare > div {
+  padding: 8px;
+  border-radius: 7px;
+  background: rgba(2, 6, 23, 0.36);
+}
+
+.operator-delta__compare small,
+.operator-delta__compare span {
+  display: block;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.operator-delta__compare strong {
+  display: block;
+  margin: 3px 0;
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .operator-delta__heading {
+    flex-direction: column;
+  }
+
+  .operator-delta__compare {
+    grid-template-columns: 1fr;
+  }
+}
