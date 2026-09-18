@@ -39,6 +39,9 @@ class OperatorHistoryContract:
     previous_baseline_mode: str = (
         "latest_observation_of_previous_recorded_trade_date"
     )
+    integrity_mode: str = (
+        "sha256_record_plus_same_day_and_previous_trade_date_links"
+    )
     authoritative_transition: bool = False
     writes_m4_evidence: bool = False
     predictive_score_used: bool = False
@@ -232,6 +235,12 @@ def _history_files(history_root: Path) -> list[Path]:
     )
 
 
+def _record_integrity_sha256(record: dict[str, Any]) -> str:
+    material = dict(record)
+    material.pop("record_integrity_sha256", None)
+    return sha256(_canonical_json(material).encode("utf-8")).hexdigest()
+
+
 def verify_operator_history_record(path: str | Path) -> dict[str, Any]:
     record_path = Path(path)
     errors: list[str] = []
@@ -308,6 +317,12 @@ def verify_operator_history_record(path: str | Path) -> dict[str, Any]:
         if record_path.parent.name != trade_date:
             errors.append("history_directory_trade_date_mismatch")
 
+    expected_integrity = str(record.get("record_integrity_sha256") or "")
+    if len(expected_integrity) != 64:
+        errors.append("history_record_integrity_missing")
+    elif expected_integrity != _record_integrity_sha256(record):
+        errors.append("history_record_integrity_mismatch")
+
     return {
         "status": "valid" if not errors else "invalid",
         "path": str(record_path),
@@ -328,6 +343,83 @@ def _load_valid_records(history_root: Path) -> list[dict[str, Any]]:
         record = checked["record"]
         assert isinstance(record, dict)
         records.append(record)
+
+    by_id = {
+        str(record.get("observation_id") or ""): record
+        for record in records
+    }
+    by_date: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        by_date.setdefault(
+            str(record.get("trade_date") or ""),
+            [],
+        ).append(record)
+
+    for trade_date, revisions in by_date.items():
+        revisions.sort(key=_record_sort_key)
+        expected_ordinals = list(range(1, len(revisions) + 1))
+        actual_ordinals = [
+            int(record.get("revision_ordinal") or 0)
+            for record in revisions
+        ]
+        if actual_ordinals != expected_ordinals:
+            raise RuntimeError(
+                "operator_history_integrity_failure:"
+                f"revision_ordinal_gap:{trade_date}"
+            )
+        for index, record in enumerate(revisions):
+            previous_same = record.get("previous_same_day_observation_id")
+            expected_same = (
+                None
+                if index == 0
+                else revisions[index - 1].get("observation_id")
+            )
+            if previous_same != expected_same:
+                raise RuntimeError(
+                    "operator_history_integrity_failure:"
+                    f"same_day_revision_link_mismatch:{trade_date}"
+                )
+
+    for record in records:
+        current_date = str(record.get("trade_date") or "")
+        previous_date = record.get("previous_recorded_trade_date")
+        previous_id = record.get("previous_observation_id")
+        if previous_date is None:
+            if previous_id is not None:
+                raise RuntimeError(
+                    "operator_history_integrity_failure:"
+                    "previous_observation_without_trade_date"
+                )
+            continue
+        previous_date = str(previous_date)
+        if not previous_date or previous_date >= current_date:
+            raise RuntimeError(
+                "operator_history_integrity_failure:"
+                "previous_trade_date_not_earlier"
+            )
+        previous = by_id.get(str(previous_id or ""))
+        if previous is None:
+            raise RuntimeError(
+                "operator_history_integrity_failure:"
+                "previous_observation_missing"
+            )
+        if str(previous.get("trade_date") or "") != previous_date:
+            raise RuntimeError(
+                "operator_history_integrity_failure:"
+                "previous_observation_trade_date_mismatch"
+            )
+        revisions = by_date.get(previous_date) or []
+        if not revisions:
+            raise RuntimeError(
+                "operator_history_integrity_failure:"
+                "previous_trade_date_missing"
+            )
+        latest_previous = max(revisions, key=_record_sort_key)
+        if previous_id != latest_previous.get("observation_id"):
+            raise RuntimeError(
+                "operator_history_integrity_failure:"
+                "previous_observation_not_latest_revision"
+            )
     return records
 
 
@@ -529,6 +621,11 @@ def append_operator_history(
                 "snapshot_sha256": current["snapshot_sha256"],
                 "queue_sha256": current["queue_sha256"],
             },
+            "previous_same_day_observation_id": (
+                None
+                if latest_same is None
+                else latest_same.get("observation_id")
+            ),
             "previous_recorded_trade_date": previous_trade_date,
             "previous_observation_id": previous_observation_id,
             "queue_snapshot": current["queue"],
@@ -538,6 +635,9 @@ def append_operator_history(
             "is_trade_instruction": False,
             "alpha_inference_allowed": False,
         }
+        record["record_integrity_sha256"] = _record_integrity_sha256(
+            record
+        )
         _write_atomic(exact_path, record)
         checked = verify_operator_history_record(exact_path)
         if checked["status"] != "valid":
