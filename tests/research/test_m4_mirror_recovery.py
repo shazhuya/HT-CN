@@ -9,6 +9,10 @@ from htcn.research.mirror_recovery import (
 )
 
 
+TEST_METHODOLOGY_CONTRACT_VERSION = 1
+TEST_METHODOLOGY_FINGERPRINT = "a" * 64
+
+
 def _row(key: str, date: str, head: str):
     return {
         "code_head": head,
@@ -50,6 +54,8 @@ def _activate_store(root):
         successful_instruments=55,
         failed_instruments=0,
         worktree_clean=True,
+        methodology_contract_version=TEST_METHODOLOGY_CONTRACT_VERSION,
+        methodology_fingerprint=TEST_METHODOLOGY_FINGERPRINT,
         journal_rows=[_row("new", "2026-09-18", "h")],
     )
     commit_capture_transaction(root, capture)
