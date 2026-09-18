@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,15 @@ from htcn.app.a_share_execution_context import (
     load_daily_trading_metadata,
     load_security_metadata,
 )
+
+
+def _git_head() -> str | None:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True
+        ).strip()
+    except Exception:
+        return None
 
 
 def _table_exists(con: duckdb.DuckDBPyConnection, name: str) -> bool:
@@ -53,6 +63,7 @@ def _sample_rows(con: duckdb.DuckDBPyConnection) -> list[tuple[str, str, str | N
 def run(catalog: Path) -> dict[str, Any]:
     result: dict[str, Any] = {
         "schema_version": 1,
+        "code_head": _git_head(),
         "catalog": str(catalog),
         "status": "failed",
         "security_master": {},

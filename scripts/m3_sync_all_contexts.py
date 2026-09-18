@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -25,6 +26,15 @@ from htcn.data.trading_events import sync_daily_trading_events
 
 
 SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
+
+
+def _git_head() -> str | None:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True
+        ).strip()
+    except Exception:
+        return None
 BENCHMARK_START = date(2024, 1, 1)
 
 
@@ -301,6 +311,7 @@ def main() -> int:
     )
     payload = {
         "schema_version": 1,
+        "code_head": _git_head(),
         "target_trade_date": target.isoformat(),
         "run_date_shanghai": today.isoformat(),
         "overall": overall,
