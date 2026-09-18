@@ -8,9 +8,9 @@ import os
 from typing import Any, Iterable
 
 
-CAPTURE_TRANSACTION_SCHEMA_VERSION = 2
+CAPTURE_TRANSACTION_SCHEMA_VERSION = 3
 LEGACY_BASELINE_SCHEMA_VERSION = 1
-SUPPORTED_CAPTURE_TRANSACTION_SCHEMA_VERSIONS = (1, 2)
+SUPPORTED_CAPTURE_TRANSACTION_SCHEMA_VERSIONS = (1, 2, 3)
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,10 +23,12 @@ class CommittedCapture:
     successful_instruments: int
     failed_instruments: int
     candidate_count: int
+    cohort_followup_count: int
     worktree_clean: bool
     methodology_contract_version: int
     methodology_fingerprint: str
     journal_rows: tuple[dict[str, Any], ...]
+    cohort_followup_rows: tuple[dict[str, Any], ...]
     status: str = "committed"
     schema_version: int = CAPTURE_TRANSACTION_SCHEMA_VERSION
     alpha_inference_allowed: bool = False
@@ -35,6 +37,9 @@ class CommittedCapture:
     def as_payload(self) -> dict[str, Any]:
         payload = asdict(self)
         payload["journal_rows"] = [dict(row) for row in self.journal_rows]
+        payload["cohort_followup_rows"] = [
+            dict(row) for row in self.cohort_followup_rows
+        ]
         return payload
 
 
@@ -56,6 +61,7 @@ def _transaction_identity_payload(
     successful_instruments: int,
     failed_instruments: int,
     journal_rows: Iterable[dict[str, Any]],
+    cohort_followup_rows: Iterable[dict[str, Any]] = (),
     methodology_contract_version: int | None = None,
     methodology_fingerprint: str | None = None,
     schema_version: int = CAPTURE_TRANSACTION_SCHEMA_VERSION,
@@ -72,6 +78,14 @@ def _transaction_identity_payload(
         clean.pop("outcome_enrollment_trade_date", None)
         clean.pop("outcome_eligibility_reason", None)
         normalized_rows.append(clean)
+    followups = [dict(row) for row in cohort_followup_rows]
+    followups.sort(key=lambda row: str(row.get("candidate_key") or ""))
+    normalized_followups: list[dict[str, Any]] = []
+    for row in followups:
+        clean = dict(row)
+        clean.pop("capture_transaction_id", None)
+        normalized_followups.append(clean)
+
     payload: dict[str, Any] = {
         "schema_version": int(schema_version),
         "code_head": code_head,
@@ -82,6 +96,9 @@ def _transaction_identity_payload(
         "candidate_count": len(normalized_rows),
         "journal_rows": normalized_rows,
     }
+    if int(schema_version) >= 3:
+        payload["cohort_followup_count"] = len(normalized_followups)
+        payload["cohort_followup_rows"] = normalized_followups
     if int(schema_version) >= 2:
         _validate_methodology_identity(
             methodology_contract_version=methodology_contract_version,
@@ -103,6 +120,7 @@ def capture_transaction_id(
     successful_instruments: int,
     failed_instruments: int,
     journal_rows: Iterable[dict[str, Any]],
+    cohort_followup_rows: Iterable[dict[str, Any]] = (),
     methodology_contract_version: int | None = None,
     methodology_fingerprint: str | None = None,
     schema_version: int = CAPTURE_TRANSACTION_SCHEMA_VERSION,
@@ -114,6 +132,7 @@ def capture_transaction_id(
         successful_instruments=successful_instruments,
         failed_instruments=failed_instruments,
         journal_rows=journal_rows,
+        cohort_followup_rows=cohort_followup_rows,
         methodology_contract_version=methodology_contract_version,
         methodology_fingerprint=methodology_fingerprint,
         schema_version=schema_version,
@@ -208,6 +227,73 @@ def _validate_rows(
 
 
 
+def _validate_followup_rows(
+    *,
+    code_head: str,
+    as_of_trade_date: str,
+    journal_rows: list[dict[str, Any]],
+    followup_rows: list[dict[str, Any]],
+) -> None:
+    journal_keys = {
+        str(row.get("candidate_key") or "")
+        for row in journal_rows
+    }
+    keys: list[str] = []
+    for row in followup_rows:
+        if str(row.get("code_head") or "") != code_head:
+            raise ValueError("capture follow-up row code_head mismatch")
+        if str(row.get("as_of_trade_date") or "") != as_of_trade_date:
+            raise ValueError("capture follow-up row as-of mismatch")
+        key = str(row.get("candidate_key") or "")
+        instrument_id = str(row.get("instrument_id") or "")
+        enrollment = str(row.get("outcome_enrollment_trade_date") or "")
+        if not key or not instrument_id or not enrollment:
+            raise ValueError(
+                "capture follow-up row missing candidate/instrument/enrollment"
+            )
+        if enrollment >= as_of_trade_date:
+            raise ValueError(
+                "capture follow-up requires prior outcome enrollment date"
+            )
+        if str(row.get("scanner_presence") or "") != "absent":
+            raise ValueError("capture follow-up row must be scanner absent")
+        if key in journal_keys:
+            raise ValueError(
+                "capture candidate cannot be scanner-present and follow-up-absent "
+                "in the same transaction"
+            )
+        if row.get("alpha_inference_allowed") is not False:
+            raise ValueError(
+                "capture follow-up unexpectedly permits alpha inference"
+            )
+        if row.get("is_trade_instruction") is not False:
+            raise ValueError(
+                "capture follow-up unexpectedly permits trade instruction"
+            )
+        status = str(row.get("market_observation_status") or "traded")
+        if status == "traded":
+            if str(row.get("execution_context_gate") or "") != "followup_observation_only":
+                raise ValueError(
+                    "traded follow-up requires execution_context_gate="
+                    "followup_observation_only"
+                )
+            for field in (
+                "as_of_open",
+                "as_of_high",
+                "as_of_low",
+                "as_of_close",
+                "as_of_volume",
+            ):
+                if row.get(field) is None:
+                    raise ValueError(
+                        f"traded follow-up missing market fact: {field}"
+                    )
+        _validate_market_observation_row(row)
+        keys.append(key)
+    if len(keys) != len(set(keys)):
+        raise ValueError("capture transaction contains duplicate follow-up candidate_key")
+
+
 def _validate_committed_payload(
     payload: dict[str, Any],
     *,
@@ -252,6 +338,13 @@ def _validate_committed_payload(
     if instrument_count <= 0 or successful != instrument_count or failed != 0:
         raise ValueError(f"capture transaction instrument coverage is incomplete: {source}")
     rows = [dict(row) for row in payload.get("journal_rows") or []]
+    followups = [
+        dict(row) for row in payload.get("cohort_followup_rows") or []
+    ]
+    if schema_version < 3 and followups:
+        raise ValueError(
+            f"pre-v3 capture transaction cannot contain follow-up rows: {source}"
+        )
     _validate_rows(
         code_head=code_head,
         as_of_trade_date=as_of,
@@ -259,6 +352,17 @@ def _validate_committed_payload(
     )
     if int(payload.get("candidate_count") or 0) != len(rows):
         raise ValueError(f"capture transaction candidate_count mismatch: {source}")
+    if schema_version >= 3:
+        _validate_followup_rows(
+            code_head=code_head,
+            as_of_trade_date=as_of,
+            journal_rows=rows,
+            followup_rows=followups,
+        )
+        if int(payload.get("cohort_followup_count") or 0) != len(followups):
+            raise ValueError(
+                f"capture transaction cohort_followup_count mismatch: {source}"
+            )
     txid = str(payload.get("transaction_id") or "")
     expected = capture_transaction_id(
         code_head=code_head,
@@ -267,6 +371,7 @@ def _validate_committed_payload(
         successful_instruments=successful,
         failed_instruments=failed,
         journal_rows=rows,
+        cohort_followup_rows=followups,
         methodology_contract_version=(
             None
             if methodology_contract_version is None
@@ -281,7 +386,7 @@ def _validate_committed_payload(
     )
     if txid != expected:
         raise ValueError(f"capture transaction id mismatch: {source}")
-    for row in rows:
+    for row in [*rows, *followups]:
         if str(row.get("capture_transaction_id") or "") != txid:
             raise ValueError(
                 f"capture transaction row transaction-id mismatch: {source}"
@@ -335,9 +440,12 @@ def build_committed_capture(
     methodology_contract_version: int,
     methodology_fingerprint: str,
     journal_rows: Iterable[dict[str, Any]],
+    cohort_followup_rows: Iterable[dict[str, Any]] = (),
 ) -> CommittedCapture:
     rows = [dict(row) for row in journal_rows]
     rows.sort(key=lambda row: str(row.get("candidate_key") or ""))
+    followups = [dict(row) for row in cohort_followup_rows]
+    followups.sort(key=lambda row: str(row.get("candidate_key") or ""))
     if not code_head:
         raise ValueError("capture transaction requires code_head")
     if not as_of_trade_date:
@@ -358,6 +466,12 @@ def build_committed_capture(
         as_of_trade_date=as_of_trade_date,
         journal_rows=rows,
     )
+    _validate_followup_rows(
+        code_head=code_head,
+        as_of_trade_date=as_of_trade_date,
+        journal_rows=rows,
+        followup_rows=followups,
+    )
     txid = capture_transaction_id(
         code_head=code_head,
         as_of_trade_date=as_of_trade_date,
@@ -365,10 +479,15 @@ def build_committed_capture(
         successful_instruments=successful_instruments,
         failed_instruments=failed_instruments,
         journal_rows=rows,
+        cohort_followup_rows=followups,
         methodology_contract_version=methodology_contract_version,
         methodology_fingerprint=methodology_fingerprint,
     )
     stamped = tuple({**row, "capture_transaction_id": txid} for row in rows)
+    stamped_followups = tuple(
+        {**row, "capture_transaction_id": txid}
+        for row in followups
+    )
     return CommittedCapture(
         transaction_id=txid,
         code_head=code_head,
@@ -378,10 +497,12 @@ def build_committed_capture(
         successful_instruments=successful_instruments,
         failed_instruments=failed_instruments,
         candidate_count=len(stamped),
+        cohort_followup_count=len(stamped_followups),
         worktree_clean=worktree_clean,
         methodology_contract_version=methodology_contract_version,
         methodology_fingerprint=methodology_fingerprint,
         journal_rows=stamped,
+        cohort_followup_rows=stamped_followups,
     )
 
 
