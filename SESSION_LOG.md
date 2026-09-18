@@ -1279,3 +1279,48 @@ Next:
 - do not regress to M4 QFQ;
 - move to the next M5 product-reliability boundary, with cross-process/precompute-vs-API rebuild coordination as the first open concurrency gap;
 - preserve all frozen M3/M4 source/methodology boundaries.
+
+
+## 2026-09-19 — M5 Phase 8 Cross-Process Operator Rebuild Coordination
+
+Branch:
+`m5/cross-process-operator-rebuild`
+
+Phase 8 closed the remaining concurrency gap after Phase 6/7:
+
+- process-local single-flight remains;
+- added cross-platform OS advisory filesystem lock per Operator cache slot;
+- POSIX: fcntl.flock;
+- Windows: msvcrt.locking;
+- lock ownership is descriptor/OS based, so process crash does not create a permanent stale-lock-file deadlock;
+- identical cache-slot writers serialize across API/precompute processes;
+- different input identities do not coalesce;
+- contended force refresh can reuse a just-produced valid cache;
+- cache hit after process wait revalidates current input identity;
+- normal fast cache hit also revalidates current input identity through the current-identity factory;
+- post-build Phase 7 input drift gate remains in force;
+- real multiprocessing regression verifies actual inter-process blocking/release;
+- runtime `data/product/**` and `data/research/**` are Git ignored so cache/lock/evidence do not dirty the source worktree.
+
+Development CI:
+- #1637: real regression exposed old different-identity concurrency test assumption;
+- #1638: same legacy assertion remained while identity-after-wait protection was added;
+- #1639: corrected semantics, 655 Python passed + Web + 21 Playwright;
+- #1640: real multiprocessing lock regression, 656 Python passed + Web + 21 Playwright;
+- #1641 / `35380339931`: final runtime-hygiene closeout, 658 Python passed + Web + 21 Playwright.
+
+Validated code checkpoint:
+`08f51e28f60840cfb6a85b85fbceb091c9392825`
+
+Freeze audit:
+- M4 capture methodology changed components: 0 / 37;
+- Outcome Engine changed components: 0 / 4.
+
+Governance:
+- D-049;
+- `specs/m5-phase-8-cross-process-operator-rebuild.md`.
+
+Next:
+- start Daily Close Product Pipeline from the current Phase 8 lineage;
+- selectively port useful code from old divergent daily-close/handoff experiments;
+- explicitly decouple M5 product readiness from M4 strict-QFQ readiness and M4-only guards.

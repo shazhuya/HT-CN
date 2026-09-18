@@ -1426,3 +1426,60 @@ HT-CN 实战工作台未来必须面对几百到几千只 A 股。重复全 univ
 原因：
 
 M5 已经进入全 universe、并行、缓存和 single-flight 的实战产品阶段。若 cache identity 不绑定实际数据与实际分析代码，同一交易日内的数据更新或代码升级可能静默复用旧 Queue，直接破坏“当前看到的结果对应当前输入”的基本产品可信度。D-048 将这一点冻结为显式、可测试的产品一致性边界，同时继续与 M4 authoritative evidence 完全隔离。
+
+
+## D-049 — 同一 Operator cache slot 的跨进程 rebuild 必须由 OS advisory lock 串行协调
+
+**状态：Frozen M5 Phase 8 cross-process coordination boundary**
+
+正式决定：
+
+1. D-047 的 process-local single-flight 继续保留；
+2. M5 还必须协调独立 API / precompute 进程对同一 Operator cache slot 的 rebuild；
+3. coordination key 以 cache slot 为边界：
+   - cache root；
+   - expected trade date；
+   - bars；
+   - scales；
+4. lock 不按 input identity 分裂，因为不同 identity 仍可能写同一个 cache 文件；
+5. 不同 input identity **不得 coalesce 成同一个 Queue result**，但必须串行写同一 cache slot；
+6. 跨进程协调采用 OS advisory file lock：
+   - POSIX：`fcntl.flock`；
+   - Windows：`msvcrt.locking`；
+7. lock file 只是协调 inode，不是“锁状态真相”；真正 ownership 绑定打开的文件描述符；
+8. 进程异常退出由 OS 释放锁；不得依赖“成功删除 lock 文件”才能恢复；
+9. lock file 位于产品 runtime tree，不进入任何 M4 evidence / methodology identity；
+10. process-local follower 继续使用 `coalesced_wait`；
+11. filesystem-lock waiter 可记录：
+    - `cross_process_coordination_scope=filesystem_advisory_cache_slot_lock`；
+    - waited；
+    - wait seconds；
+12. 非 force 请求取得跨进程锁后必须再次检查 cache；
+13. force refresh 若确实等待过另一个 owner，也可复用该 owner 刚产生的、对自身当前 input identity 有效的 cache；
+14. 任何 cache hit 返回前必须重新检查当前 input identity；
+15. 等待跨进程锁后必须再次读取当前 input identity；
+16. 若请求起始 identity 已不是当前 identity，不得复用仅匹配旧 identity 的 cache；
+17. full build 后 Phase 7 的 input-identity recheck 继续生效；
+18. 输入在等待或构建过程中变化时，最终不得把漂移结果写入正式 product cache；
+19. real multiprocessing regression 必须证明第二进程在相同 lock slot 上阻塞，并在第一进程释放后获取锁；
+20. `data/product/**` 与 `data/research/**` 必须被 Git ignore，runtime cache / lock / local evidence 不得污染 source clean-worktree gate；
+21. Phase 8 coordination 永久属于 product execution layer：
+    - authoritative_evidence=false；
+    - writes_m4_evidence=false；
+    - owns_lifecycle=false；
+    - mutates_harmonic_identity=false；
+    - mutates_source_raw_prz=false；
+22. M4 capture methodology 37 components 不变；
+23. Outcome Engine 4 components 不变；
+24. validated code checkpoint：
+    `08f51e28f60840cfb6a85b85fbceb091c9392825`；
+25. Hosted CI run `35380339931` / #1641：
+    - overall success；
+    - Python 658 passed；
+    - Web build success；
+    - Playwright 21 passed；
+    - browser evidence upload success。
+
+原因：
+
+全 universe rebuild 成本已经足以让 API、多客户端和预计算脚本之间的重复扫描成为真实产品问题。只做 process-local single-flight 无法阻止两个独立进程同时扫描并原子替换同一个 cache 文件。Phase 8 用最小、跨平台、崩溃可恢复的 OS advisory lock 关闭该竞态，同时仍把所有研究语义留在既有 M3/M4 冻结层。

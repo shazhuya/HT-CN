@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `7d1de7a81b7b2efc2a149eecd5a6c41b865123cd`
-context_checkpoint_title: `M5 Phase 7 Operator Cache Input Identity green`
+context_checkpoint: `08f51e28f60840cfb6a85b85fbceb091c9392825`
+context_checkpoint_title: `M5 Phase 8 cross-process Operator rebuild coordination green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -11,28 +11,30 @@ repository: `shazhuya/HT-CN`
 
 ## 当前阶段
 
-正式 `main` 仍以 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration** 为已合并基线；M4 prospective evidence 与 M5 只读产品层在独立分支继续推进。
+正式 `main` 仍以 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration** 为已合并基线；M4 prospective evidence 与 M5 只读产品层继续在独立分支演进。
 
-当前实际开发现场已经进入 **M5 Phase 7 — Operator Cache Input Identity**：
+当前实际开发现场已经完成 **M5 Phase 8 — Cross-Process Operator Rebuild Coordination**：
 
-- 当前分支：`m5/operator-cache-input-identity`
-- Phase 7 validated code checkpoint：`7d1de7a81b7b2efc2a149eecd5a6c41b865123cd`
-- 最新 hosted CI：run `35378357267` / #1634，overall success
-- Python：650 passed
+- 当前分支：`m5/cross-process-operator-rebuild`
+- Phase 8 validated code checkpoint：`08f51e28f60840cfb6a85b85fbceb091c9392825`
+- hosted CI：run `35380339931` / #1641，overall success
+- Python：658 passed
 - Web build：success
 - Playwright：21 passed
 - browser evidence upload：success
-- 用户指出的 run `35378145254` / #1632 属于同一 Phase 7 提交链，因后续 push 被 GitHub concurrency 取消，不是代码测试失败。
+- M4 capture methodology drift：0 / 37
+- Outcome Engine drift：0 / 4
 
-M5 Phase 1–7 当前主线：
+M5 Phase 1–8 当前主线：
 
-1. Phase 1 — Daily Operator Queue；
-2. Phase 2 — Operator Delta；
-3. Phase 3 — Daily Operator Cache；
-4. Phase 4 — Full-Universe Operator Index；
-5. Phase 5 — bounded parallel build；
-6. Phase 6 — process-local single-flight；
-7. Phase 7 — cache input identity：数据输入与分析代码身份进入 cache validation / single-flight key，且构建结束后重核输入身份，构建期间输入变化则禁止写 cache。
+1. Daily Operator Queue；
+2. Operator Delta；
+3. Daily Operator Cache；
+4. Full-Universe Operator Index；
+5. bounded parallel build；
+6. process-local single-flight；
+7. cache input identity（数据 + 分析代码身份）；
+8. filesystem advisory cache-slot lock，协调 API / precompute 等独立进程的同一 cache-slot rebuild。
 
 M5 仍是**只读实战产品层**，不拥有 harmonic identity、Source Raw PRZ 或 lifecycle，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。
 
@@ -1640,3 +1642,55 @@ Phase 7 governance：D-048 / `specs/m5-phase-7-operator-cache-input-identity.md`
 Phase 7 代码已经 green；下一阶段不应再回到 M4 QFQ 或重复做同一缓存 identity 修复。
 
 优先进入 M5 下一产品可靠性阶段：处理 **跨进程 / precompute 与 API 并发 rebuild 的协调边界**，因为 D-047 明确只保证 process-local single-flight。任何新协调层仍只能优化产品执行，不得改变 Queue semantics 或 M4 evidence。
+
+
+## M5 Phase 8 — Cross-Process Operator Rebuild Coordination
+
+Phase 8 关闭了 D-047 明确留下的 process-local-only 并发缺口。
+
+冻结实现：
+
+- 保留 Phase 6 process-local single-flight；
+- 新增 cache-slot scoped filesystem advisory lock；
+- POSIX 使用 `fcntl.flock`；
+- Windows 使用 `msvcrt.locking`；
+- lock file 位于 `data/product/m5/operator_queue/.locks/`，它只是协调 inode，不是 cache/evidence；
+- 锁由 OS 文件描述符拥有，进程异常退出后由 OS 释放，不依赖删除 lock file 解锁；
+- 同一 cache slot（trade date + bars + scales + cache root）的跨进程 rebuild 串行；
+- 不同 input identity 仍**不 coalesce**，只是不能并发写同一个 cache slot；
+- 等待另一进程后，force refresh 可复用对方刚完成、且对自己当前 identity 仍有效的 cache；
+- cache fast hit 与 cross-process wait 后的 hit 都重新核对当前 input identity；
+- build 结束后的 Phase 7 identity recheck 继续保留；
+- 输入在等待/构建中漂移时不得把结果写为正式 cache；
+- 真实 multiprocessing 回归验证第二个进程确实阻塞并在第一个进程释放后取得锁；
+- `data/product/**` 与 `data/research/**` 已明确 Git ignore，runtime cache/lock/evidence 不污染 source worktree。
+
+Validated checkpoint：
+
+`08f51e28f60840cfb6a85b85fbceb091c9392825`
+
+Hosted CI：
+
+- run `35380339931` / #1641：success；
+- Python 658 passed；
+- Web build success；
+- Playwright 21 passed；
+- browser evidence uploaded。
+
+Frozen boundary audit：
+
+- M4 capture methodology：0 / 37 changed；
+- Outcome Engine：0 / 4 changed。
+
+Governance：D-049 / `specs/m5-phase-8-cross-process-operator-rebuild.md`。
+
+### 下一步
+
+进入 M5 下一产品阶段：**Daily Close Product Pipeline**。
+
+旧的 `m5/daily-close-pipeline` / `m5/daily-handoff-bundle` 是早期从共同祖先分叉的实验线，不能直接切回或整分支合并。可择优移植，但必须修正旧设计中的阻塞关系：
+
+- M1 fresh market data 是 M5/M4 可共享的基础；
+- M5 Operator 产品不得被 M4 strict-QFQ readiness 的单票历史供应商问题阻塞；
+- M4 methodology/outcome guards 只约束 M4 research lane，不得成为 M5 product lane 的总前置门；
+- context sync 可 best-effort 更新并把 degraded 状态带入 Queue，而不是把产品入口锁死。
