@@ -30,7 +30,7 @@ if /I not "!M4_BRANCH!"=="!M4_REQUIRED_BRANCH!" (
   exit /b 1
 )
 
-git cat-file -e !M4_MIN_SAFE_COMMIT!^{commit} >nul 2>nul
+git cat-file -e !M4_MIN_SAFE_COMMIT! >nul 2>nul
 if errorlevel 1 (
   echo [HT-CN M4] ERROR: local checkout does not contain the minimum safe hosted-CI-green Phase 3.1 prospective-evidence workflow.
   echo Required ancestor: !M4_MIN_SAFE_COMMIT!
