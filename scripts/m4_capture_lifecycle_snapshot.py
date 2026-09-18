@@ -84,6 +84,72 @@ def _instrument_ids(catalog: Path) -> list[str]:
 
 
 
+def _local_trade_dates_up_to(
+    catalog: Path,
+    trade_date: str,
+) -> list[str]:
+    with duckdb.connect(str(catalog), read_only=True) as con:
+        rows = con.execute(
+            """
+            SELECT trade_date
+            FROM trade_calendar
+            WHERE trade_date <= ?
+            ORDER BY trade_date
+            """,
+            [trade_date],
+        ).fetchall()
+    return [str(row[0]) for row in rows]
+
+
+def _confirmed_full_day_suspension_history(
+    catalog: Path,
+    trade_date: str,
+) -> dict[str, dict[str, dict[str, str | None]]]:
+    with duckdb.connect(str(catalog), read_only=True) as con:
+        table = con.execute(
+            """
+            SELECT COUNT(*)
+            FROM information_schema.tables
+            WHERE table_name = 'security_daily_event'
+            """
+        ).fetchone()
+        if not table or int(table[0]) == 0:
+            return {}
+        rows = con.execute(
+            """
+            SELECT instrument_id, trade_date, source, reason
+            FROM security_daily_event
+            WHERE trade_date <= ?
+              AND LOWER(TRIM(trading_status)) = 'suspended'
+            ORDER BY instrument_id, trade_date
+            """,
+            [trade_date],
+        ).fetchall()
+    history: dict[str, dict[str, dict[str, str | None]]] = {}
+    for instrument_id, event_date, source, reason in rows:
+        history.setdefault(str(instrument_id), {})[str(event_date)] = {
+            "source": None if source is None else str(source),
+            "reason": None if reason is None else str(reason),
+        }
+    return history
+
+
+def _suspension_covers_trade_gap(
+    *,
+    local_trade_dates: list[str],
+    suspension_dates: set[str],
+    underlying_last_trade_date: str,
+    capture_trade_date: str,
+) -> tuple[bool, list[str]]:
+    required = [
+        item
+        for item in local_trade_dates
+        if underlying_last_trade_date < item <= capture_trade_date
+    ]
+    missing = [item for item in required if item not in suspension_dates]
+    return len(missing) == 0 and bool(required), missing
+
+
 def _confirmed_full_day_suspensions(
     catalog: Path,
     trade_date: str,
@@ -205,6 +271,11 @@ def run(
     result["diagnostic_partial_universe"] = diagnostic_partial_universe
 
     suspension_events = _confirmed_full_day_suspensions(catalog, expected)
+    suspension_history = _confirmed_full_day_suspension_history(
+        catalog,
+        expected,
+    )
+    local_trade_dates = _local_trade_dates_up_to(catalog, expected)
     result["confirmed_full_day_suspension_count"] = len(suspension_events)
     suspension_carry_forward: list[str] = []
 
@@ -247,6 +318,22 @@ def run(
                     raise RuntimeError(
                         f"analysis date {as_of} is stale versus {expected} without "
                         "confirmed full-day suspension evidence"
+                    )
+                instrument_suspensions = suspension_history.get(
+                    instrument_id,
+                    {},
+                )
+                covered, missing_suspension_dates = _suspension_covers_trade_gap(
+                    local_trade_dates=local_trade_dates,
+                    suspension_dates=set(instrument_suspensions),
+                    underlying_last_trade_date=as_of,
+                    capture_trade_date=expected,
+                )
+                if not covered:
+                    raise RuntimeError(
+                        "stale analysis is not fully explained by confirmed "
+                        "full-day suspension evidence; missing suspended trade dates="
+                        f"{missing_suspension_dates}"
                     )
                 entries = entries_from_analysis(
                     analysis,

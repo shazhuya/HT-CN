@@ -5,6 +5,7 @@ from collections import Counter
 from scripts.m4_capture_lifecycle_snapshot import (
     _confirmed_full_day_suspensions,
     _summary_counter,
+    _suspension_covers_trade_gap,
     _validate_capture_trade_date,
 )
 
@@ -92,3 +93,40 @@ def test_confirmed_full_day_suspension_query_allows_optional_missing_table(tmp_p
     with duckdb.connect(str(catalog)):
         pass
     assert _confirmed_full_day_suspensions(catalog, "2026-09-18") == {}
+
+
+def test_suspension_gap_must_cover_every_intervening_trade_day() -> None:
+    local_dates = [
+        "2026-09-15",
+        "2026-09-16",
+        "2026-09-17",
+        "2026-09-18",
+    ]
+    covered, missing = _suspension_covers_trade_gap(
+        local_trade_dates=local_dates,
+        suspension_dates={"2026-09-16", "2026-09-17", "2026-09-18"},
+        underlying_last_trade_date="2026-09-15",
+        capture_trade_date="2026-09-18",
+    )
+    assert covered is True
+    assert missing == []
+
+    covered, missing = _suspension_covers_trade_gap(
+        local_trade_dates=local_dates,
+        suspension_dates={"2026-09-18"},
+        underlying_last_trade_date="2026-09-15",
+        capture_trade_date="2026-09-18",
+    )
+    assert covered is False
+    assert missing == ["2026-09-16", "2026-09-17"]
+
+
+def test_suspension_gap_does_not_accept_non_trade_day_only_gap() -> None:
+    covered, missing = _suspension_covers_trade_gap(
+        local_trade_dates=["2026-09-18"],
+        suspension_dates={"2026-09-18"},
+        underlying_last_trade_date="2026-09-18",
+        capture_trade_date="2026-09-18",
+    )
+    assert covered is False
+    assert missing == []
