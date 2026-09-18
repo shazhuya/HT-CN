@@ -62,6 +62,7 @@ def resolve_capture_timeline(
         if row.get("as_of_trade_date")
     })
     journal_heads_by_date: dict[str, set[str]] = {}
+    journal_count_by_date: dict[str, int] = {}
     for row in journal_rows:
         as_of = str(row.get("as_of_trade_date") or "")
         if not as_of:
@@ -69,6 +70,7 @@ def resolve_capture_timeline(
         journal_heads_by_date.setdefault(as_of, set()).add(
             str(row.get("code_head") or "")
         )
+        journal_count_by_date[as_of] = journal_count_by_date.get(as_of, 0) + 1
     for as_of, heads in journal_heads_by_date.items():
         if "" in heads or len(heads) != 1:
             raise ValueError(
@@ -120,6 +122,26 @@ def resolve_capture_timeline(
                 raise ValueError(
                     f"snapshot manifest / journal code-head mismatch on {as_of}: "
                     f"{manifest_head} != {journal_head}"
+                )
+            manifest_candidates = int(
+                manifest_by_date[as_of].get("candidate_count") or 0
+            )
+            journal_candidates = journal_count_by_date.get(as_of, 0)
+            if manifest_candidates != journal_candidates:
+                raise ValueError(
+                    f"snapshot manifest / journal candidate-count mismatch on {as_of}: "
+                    f"{manifest_candidates} != {journal_candidates}"
+                )
+
+    for as_of in manifest_dates:
+        if as_of not in journal_count_by_date:
+            manifest_candidates = int(
+                manifest_by_date[as_of].get("candidate_count") or 0
+            )
+            if manifest_candidates != 0:
+                raise ValueError(
+                    f"snapshot manifest {as_of} reports {manifest_candidates} candidates "
+                    "but journal has no rows"
                 )
 
     dates = tuple(sorted(set(journal_dates) | set(manifest_dates)))

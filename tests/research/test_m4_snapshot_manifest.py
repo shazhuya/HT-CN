@@ -118,3 +118,23 @@ def test_capture_timeline_rejects_manifest_journal_head_mismatch() -> None:
         assert "code-head mismatch" in str(exc)
     else:
         raise AssertionError("manifest/journal head mismatch must fail")
+
+
+def test_capture_timeline_rejects_candidate_count_mismatch() -> None:
+    journal = [{"as_of_trade_date": "2026-09-18", "code_head": "h"}]
+    manifest = [_manifest_row("2026-09-18", head="h", candidates=2)]
+    try:
+        resolve_capture_timeline(journal, manifest)
+    except ValueError as exc:
+        assert "candidate-count mismatch" in str(exc)
+    else:
+        raise AssertionError("manifest/journal candidate count mismatch must fail")
+
+
+def test_capture_timeline_allows_zero_candidate_manifest_without_journal_rows() -> None:
+    timeline = resolve_capture_timeline(
+        [],
+        [_manifest_row("2026-09-18", candidates=0)],
+    )
+    assert timeline.dates == ("2026-09-18",)
+    assert timeline.source == "manifest"
