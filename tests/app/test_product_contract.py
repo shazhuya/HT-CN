@@ -19,6 +19,7 @@ def _analysis():
         "action_state": "execution_evaluation",
         "next_key_price": 111.0,
         "next_key_price_role": "type_i_61_8_target",
+        "execution_context_gate": "execution_unresolved",
         "context_cautions": ["execution:unresolved — event incomplete"],
         "is_trade_instruction": False,
         "uses_score": False,

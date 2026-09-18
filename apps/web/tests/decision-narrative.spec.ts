@@ -144,5 +144,7 @@ test('action-state narrative follows source lifecycle and execution context rend
   await expect(narrative.getByText('当前阶段：执行评估')).toBeVisible()
   await expect(narrative.getByText(/111\.00/)).toBeVisible()
   await expect(narrative.getByText(/不是买卖指令，也不使用综合评分/)).toBeVisible()
+  await expect(page.getByTestId('execution-context-gate')).toHaveAttribute('data-gate', 'execution_unresolved')
+  await expect(page.getByTestId('execution-context-gate')).toContainText('特殊事件证据未完整')
   await expect(page.getByTestId('a-share-execution-context')).toHaveCount(1)
 })
