@@ -12,7 +12,10 @@ PREREG = ROOT / "research" / "m2-type-i-external-replication-prereg-v1.json"
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    # The frozen SHA is defined over canonical Git/LF text, not platform-specific
+    # checkout bytes. Windows CRLF conversion must not invalidate frozen research.
+    canonical = path.read_text(encoding="utf-8").replace("\r\n", "\n")
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def test_external_replication_is_frozen_closed_and_consumed() -> None:

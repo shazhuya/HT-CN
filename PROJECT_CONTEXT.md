@@ -17,6 +17,10 @@ M3 当前原则：
 
 **live/current state 必须由可观察的 Source execution clock 驱动；historical D/C / reaction audit 只保留诊断兼容。**
 
+## Source Fidelity before M3 expansion
+
+该 gate 名称作为跨对话连续性哨兵永久保留。其含义是：M3 产品扩展不得越过已冻结的 M2.31 Source Fidelity、Source Raw PRZ、Source Terminal Price Bar、5-0 quarantine 与 Alternate Bat fail-closed 边界。
+
 ## 正式 main 基线 — M2.31
 
 M2.31 已完成并正式合入 `main`：
