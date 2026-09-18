@@ -6,6 +6,7 @@ from datetime import date
 from typing import Any, Iterable
 
 from .lifecycle_transitions import normalize_journal_rows
+from .snapshot_manifest import resolve_capture_timeline
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,9 +50,26 @@ def _float_or_none(value: object) -> float | None:
 
 def build_prospective_observation_report(
     rows: Iterable[dict[str, Any]],
+    *,
+    manifest_rows: Iterable[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    normalized = normalize_journal_rows(rows)
-    if not normalized:
+    materialized = [dict(row) for row in rows]
+    manifest_materialized = (
+        None
+        if manifest_rows is None
+        else [dict(row) for row in manifest_rows]
+    )
+    timeline = resolve_capture_timeline(
+        materialized,
+        manifest_materialized,
+    )
+    dates = list(timeline.dates)
+    baseline = dates[0] if dates else None
+    normalized = normalize_journal_rows(
+        materialized,
+        baseline_trade_date=baseline,
+    )
+    if not normalized and not dates:
         return {
             "schema_version": 1,
             "status": "empty",
@@ -61,6 +79,8 @@ def build_prospective_observation_report(
             "observations": [],
             "candidate_summaries": [],
             "interpretation": {
+                "capture_timeline_source": timeline.source,
+                "legacy_pre_manifest_dates": list(timeline.legacy_pre_manifest_dates),
                 "captured_snapshot_index_is_trade_session_index": False,
                 "scanner_absence_is_invalidation": False,
                 "return_metrics_computed": False,
@@ -68,7 +88,6 @@ def build_prospective_observation_report(
             },
         }
 
-    dates = sorted({str(row["as_of_trade_date"]) for row in normalized})
     by_date: dict[str, dict[str, dict[str, Any]]] = {}
     for as_of in dates:
         by_date[as_of] = {
@@ -237,6 +256,8 @@ def build_prospective_observation_report(
         "candidate_summaries": candidate_summaries,
         "observations": [item.as_payload() for item in observations],
         "interpretation": {
+            "capture_timeline_source": timeline.source,
+            "legacy_pre_manifest_dates": list(timeline.legacy_pre_manifest_dates),
             "captured_snapshot_index_is_trade_session_index": False,
             "scanner_absence_is_invalidation": False,
             "return_metrics_computed": False,
