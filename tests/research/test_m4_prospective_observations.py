@@ -235,3 +235,117 @@ def test_first_seen_suspended_candidate_is_not_outcome_enrolled() -> None:
     ])
     assert report["prospective_candidate_count"] == 0
     assert report["status"] == "no_outcome_cohort"
+
+
+
+def _absent_followup(
+    date: str,
+    key: str,
+    *,
+    enrollment: str = "2026-09-18",
+    status: str = "traded",
+):
+    suspended = status == "confirmed_full_day_suspended"
+    return {
+        "code_head": "h",
+        "instrument_id": "SSE.600000",
+        "as_of_trade_date": date,
+        "candidate_key": key,
+        "outcome_enrollment_trade_date": enrollment,
+        "scanner_presence": "absent",
+        "underlying_last_trade_date": (
+            "2026-09-18" if suspended else date
+        ),
+        "market_observation_status": status,
+        "execution_context_gate": (
+            "blocked_suspended" if suspended else "followup_observation_only"
+        ),
+        "daily_event_source": "feed" if suspended else None,
+        "daily_event_reason": "full-day suspension" if suspended else None,
+        "as_of_open": None if suspended else 98.0,
+        "as_of_high": None if suspended else 101.0,
+        "as_of_low": None if suspended else 97.0,
+        "as_of_close": None if suspended else 100.0,
+        "as_of_volume": None if suspended else 1200.0,
+        "evidence_only": True,
+        "is_trade_instruction": False,
+        "alpha_inference_allowed": False,
+    }
+
+
+def test_scanner_absent_followup_preserves_market_path_without_lifecycle() -> None:
+    rows = [
+        _row("2026-09-17", "baseline"),
+        _row("2026-09-18", "new"),
+    ]
+    manifest = [
+        _manifest("2026-09-18", candidates=1),
+        _manifest("2026-09-19", candidates=0),
+    ]
+    report = build_prospective_observation_report(
+        rows,
+        manifest_rows=manifest,
+        followup_rows=[_absent_followup("2026-09-19", "new")],
+    )
+    observations = [
+        item for item in report["observations"] if item["candidate_key"] == "new"
+    ]
+    assert [item["scanner_presence"] for item in observations] == [
+        "present",
+        "absent",
+    ]
+    absent = observations[-1]
+    assert absent["market_observation_status"] == "traded"
+    assert absent["as_of_close"] == 100.0
+    assert absent["source_lifecycle_state"] is None
+    assert absent["action_state"] is None
+    assert absent["execution_context_gate"] == "followup_observation_only"
+    summary = report["candidate_summaries"][0]
+    assert summary["scanner_absent_market_followup_snapshot_count"] == 1
+    assert report["market_observation_counts"]["traded"] == 2
+    assert report["interpretation"]["followup_changes_scanner_presence"] is False
+
+
+def test_scanner_absent_suspended_followup_has_no_fake_ohlc() -> None:
+    rows = [
+        _row("2026-09-17", "baseline"),
+        _row("2026-09-18", "new"),
+    ]
+    manifest = [
+        _manifest("2026-09-18", candidates=1),
+        _manifest("2026-09-19", candidates=0),
+    ]
+    report = build_prospective_observation_report(
+        rows,
+        manifest_rows=manifest,
+        followup_rows=[
+            _absent_followup(
+                "2026-09-19",
+                "new",
+                status="confirmed_full_day_suspended",
+            )
+        ],
+    )
+    absent = report["observations"][-1]
+    assert absent["scanner_presence"] == "absent"
+    assert absent["market_observation_status"] == "confirmed_full_day_suspended"
+    assert absent["execution_context_gate"] == "blocked_suspended"
+    assert absent["as_of_close"] is None
+    assert absent["daily_event_source"] == "feed"
+
+
+def test_followup_cannot_coexist_with_scanner_present_row() -> None:
+    rows = [
+        _row("2026-09-17", "baseline"),
+        _row("2026-09-18", "new"),
+        _row("2026-09-19", "new"),
+    ]
+    try:
+        build_prospective_observation_report(
+            rows,
+            followup_rows=[_absent_followup("2026-09-19", "new")],
+        )
+    except ValueError as exc:
+        assert "cannot be scanner-present and follow-up-absent" in str(exc)
+    else:
+        raise AssertionError("present + absent follow-up must fail closed")
