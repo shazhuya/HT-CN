@@ -858,3 +858,110 @@ source rules changed.
 
 No post-T0 future committed capture existed before methodology-v4 freeze, so no future evidence
 was migrated, rewritten or mixed.
+
+## 2026-09-18 — M4 Phase 3.1 outcome evidence v2 closeout
+
+### Scope
+
+Assistant-side Phase 3.1 implementation and pre-first-outcome hardening. No additional user-local QA was requested or used.
+
+### Outcome protocol
+
+- D-036 outcome-v1 remains preserved as historical preregistration.
+- Before any real prospective outcome existed, implementation audit found that direct MFE/MAE differences could become negative when the post-terminal window never crossed Terminal price.
+- `m4-outcome-v2` explicitly supersedes v1 before first real outcome.
+- v2 fingerprint:
+  `5822b302e11d197682dc4bb6d835fb0a3b2d62fc97f788c7a323ecda2770555b`.
+- v2 freezes MFE/MAE as nonnegative zero-floor excursion magnitudes.
+
+### Deterministic evaluator
+
+Implemented:
+
+- frozen enrollment Source-clock seed input;
+- M1 base + daily_delta logical traded-bar history;
+- price-basis compatibility gate;
+- reuse of existing `observe_source_execution()`;
+- reuse of existing `derive_source_lifecycle()`;
+- Source PRZ entry / Terminal / Type-I / reaction-only / Type-II price path;
+- 5/10/20 traded-bar descriptive excursion windows from T+1;
+- right-censoring instead of mechanical failure labels;
+- no entry / stop / fees / P&L / win-rate / alpha.
+
+### Self-contained immutable outcome evidence
+
+- canonical market path now persists trade_date + OHLCV, not only a hash;
+- path SHA-256 includes price basis;
+- outcome snapshot schema advanced to v2;
+- same-date fact drift fails closed;
+- historical outcome backfill fails closed;
+- snapshot binds protocol + capture methodology + outcome engine identity;
+- one outcome chain cannot silently mix identities.
+
+### Outcome Engine identity
+
+- engine contract v1;
+- 4 components:
+  - outcome_protocol.py
+  - outcome_evaluator.py
+  - outcome_snapshot.py
+  - outcome_engine_identity.py
+- exact code anchor:
+  `9cbc0d3d30ac5f0a87748a39788cbee04a44bcc8`;
+- `m4_outcome_engine_freeze_guard.py` runs before private M1 update;
+- current audit: 4/4 engine components unchanged since anchor.
+
+### Capture methodology isolation
+
+- capture methodology remains v4 / schema v5 / observation schema v4;
+- 37 components;
+- exact freeze:
+  `c774c54928c33361952bf1a612a8555633449625`;
+- current audit: 37/37 methodology components unchanged since freeze.
+
+### Bundle / intake
+
+- bundle carries active v2 protocol and historical v1 protocol when present;
+- bundle carries outcome snapshots and outcome-engine guard report;
+- intake reconstructs the prospective cohort from authoritative capture evidence;
+- intake reconstructs DataFrame from bundled OHLCV path;
+- intake reruns the frozen evaluator offline;
+- stored result vs recomputed result mismatch is a blocker;
+- semantic tamper remains detectable even when snapshot ID and transport hashes are regenerated.
+
+### One-click workflow
+
+`运行M4真实A股生命周期快照.bat` now performs:
+
+1. branch / minimum-safe / clean-worktree preflight;
+2. capture-methodology exact-freeze guard;
+3. outcome-engine exact-freeze guard;
+4. M1 update;
+5. authoritative capture;
+6. evidence health;
+7. transition report;
+8. prospective observation report;
+9. outcome-v2 report / immutable snapshot;
+10. evidence bundle.
+
+Phase 3.1 minimum-safe workflow checkpoint:
+`c34026755b3b8c491759eaacdb45376d4e1db485`.
+
+### Frozen decision/spec
+
+- D-037
+- `specs/m4-phase-3-1-outcome-evidence-v2.md`
+
+### Real evidence status
+
+Still no post-T0 real authoritative future capture, no real prospective-new outcome cohort and no real outcome snapshot.
+
+No profitability / win-rate / alpha claim is allowed.
+
+### Next
+
+- verify current hosted CI runner behavior;
+- sync PR #13;
+- if hosted runner remains unallocated, report it as infrastructure limitation, not code-test pass/fail;
+- only then request the next irreducibly private M1 one-click capture when needed.
+
