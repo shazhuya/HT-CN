@@ -83,6 +83,45 @@ def _instrument_ids(catalog: Path) -> list[str]:
     return [str(row[0]) for row in rows]
 
 
+
+def _confirmed_full_day_suspensions(
+    catalog: Path,
+    trade_date: str,
+) -> dict[str, dict[str, str | None]]:
+    """Read positive evidence for full-day suspension on one capture date.
+
+    Absence from this map never certifies normal trading. Intraday suspension is
+    deliberately excluded because it may still have a current-day bar.
+    """
+    with duckdb.connect(str(catalog), read_only=True) as con:
+        table = con.execute(
+            """
+            SELECT COUNT(*)
+            FROM information_schema.tables
+            WHERE table_name = 'security_daily_event'
+            """
+        ).fetchone()
+        if not table or int(table[0]) == 0:
+            return {}
+        rows = con.execute(
+            """
+            SELECT instrument_id, source, reason
+            FROM security_daily_event
+            WHERE trade_date = ?
+              AND LOWER(TRIM(trading_status)) = 'suspended'
+            ORDER BY instrument_id
+            """,
+            [trade_date],
+        ).fetchall()
+    return {
+        str(instrument_id): {
+            "source": None if source is None else str(source),
+            "reason": None if reason is None else str(reason),
+        }
+        for instrument_id, source, reason in rows
+    }
+
+
 def _summary_counter(values: list[str]) -> dict[str, int]:
     return dict(sorted(Counter(values).items()))
 
@@ -165,6 +204,10 @@ def run(
     result["instrument_count"] = len(instruments)
     result["diagnostic_partial_universe"] = diagnostic_partial_universe
 
+    suspension_events = _confirmed_full_day_suspensions(catalog, expected)
+    result["confirmed_full_day_suspension_count"] = len(suspension_events)
+    suspension_carry_forward: list[str] = []
+
     service = M3SourceClockHarmonicService(data_root)
     all_entries = []
     successful = 0
@@ -180,11 +223,43 @@ def run(
                 max_forming=20,
             )
             as_of = str(analysis.get("last_trade_date"))
-            if as_of != expected:
+            suspension = suspension_events.get(instrument_id)
+
+            if as_of > expected:
                 raise RuntimeError(
-                    f"analysis date {as_of} != expected closed trade date {expected}"
+                    f"analysis date {as_of} is ahead of expected closed trade date {expected}"
                 )
-            entries = entries_from_analysis(analysis, code_head=identity.head)
+
+            if as_of == expected:
+                if suspension is not None:
+                    raise RuntimeError(
+                        "suspension_event_bar_conflict: expected-day bar exists while "
+                        "positive full-day suspension evidence is present"
+                    )
+                entries = entries_from_analysis(
+                    analysis,
+                    code_head=identity.head,
+                    capture_trade_date=expected,
+                    market_observation_status="traded",
+                )
+            else:
+                if suspension is None:
+                    raise RuntimeError(
+                        f"analysis date {as_of} is stale versus {expected} without "
+                        "confirmed full-day suspension evidence"
+                    )
+                entries = entries_from_analysis(
+                    analysis,
+                    code_head=identity.head,
+                    capture_trade_date=expected,
+                    market_observation_status="confirmed_full_day_suspended",
+                    execution_context_gate_override="blocked_suspended",
+                    include_latest_bar_facts=False,
+                    daily_event_source=suspension.get("source"),
+                    daily_event_reason=suspension.get("reason"),
+                )
+                suspension_carry_forward.append(instrument_id)
+
             all_entries.extend(entries)
             pattern_counts.append(len(entries))
             successful += 1
@@ -197,6 +272,8 @@ def run(
     result["successful_instruments"] = successful
     result["failed_instruments"] = len(instruments) - successful
     result["candidate_count"] = len(all_entries)
+    result["suspension_carry_forward_count"] = len(suspension_carry_forward)
+    result["suspension_carry_forward_instruments"] = suspension_carry_forward[:50]
     result["candidate_count_by_instrument"] = {
         "min": min(pattern_counts) if pattern_counts else 0,
         "max": max(pattern_counts) if pattern_counts else 0,
