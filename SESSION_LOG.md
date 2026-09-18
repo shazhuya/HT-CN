@@ -684,3 +684,26 @@ Assistant-side only; no user-local QA requested.
 - D-030 freezes transport-integrity semantics.
 
 These changes do not modify authoritative capture semantics or the harmonic methodology fingerprint.
+
+
+## M4 Phase 2.9 / evidence intake revalidation
+
+Assistant-side only; no user-local QA requested.
+
+Implemented:
+- `c983934ed5dbc948359c5c7fc80a0495720d7377`: authoritative bundle intake/recompute engine;
+- `901acd43efd03119f5e9963a77370f8d35a32c16`: standalone intake CLI;
+- `b10d8531581e804d0262b7ecc1e3b5a0c7532901`: adversarial intake test coverage;
+- `97e6c00ce6df48097a3fc4d8ffdaf1656229a190`: blocked bundle and chain provenance fail-closed hardening;
+- `f1e93902816419c7301c4811a8d1f623c8bd3754`: provenance-complete intake fixtures;
+- `9805f10561cd1ce6db996433b943ce97de5c322b`: transport-valid vs evidence-ready intake boundary regression.
+
+The intake engine:
+- revalidates frozen baseline and immutable committed captures;
+- rebuilds the capture timeline;
+- recomputes transition and prospective-observation facts;
+- cross-checks included derived reports;
+- cross-checks bundle/chain methodology and latest-capture provenance;
+- never computes performance or trading signals.
+
+D-031 and `specs/m4-phase-2-9-evidence-intake.md` freeze this contract.
