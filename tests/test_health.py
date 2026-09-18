@@ -28,3 +28,43 @@ def test_missing_local_dataset_returns_404() -> None:
     client = TestClient(app)
     response = client.get("/api/harmonic/SSE.999999")
     assert response.status_code == 404
+
+
+
+def test_operator_delta_endpoint_is_product_observation_only() -> None:
+    client = TestClient(app)
+    contract = {
+        "predictive_score_used": False,
+        "historical_outcome_used": False,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+        "mutates_harmonic_identity": False,
+        "mutates_source_raw_prz": False,
+        "owns_lifecycle": False,
+    }
+    previous = {
+        "schema_version": 2,
+        "contract": contract,
+        "as_of_trade_date": "2026-09-17",
+        "observed_trade_dates": ["2026-09-17"],
+        "observation_integrity": "single_as_of",
+        "items": [],
+        "errors": [],
+    }
+    current = {
+        **previous,
+        "as_of_trade_date": "2026-09-18",
+        "observed_trade_dates": ["2026-09-18"],
+    }
+
+    response = client.post(
+        "/api/operator/delta",
+        json={"previous": previous, "current": current},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "ready"
+    assert payload["contract"]["semantics"] == "product_observation_only"
+    assert payload["contract"]["authoritative_transition"] is False
+    assert payload["contract"]["writes_m4_evidence"] is False
