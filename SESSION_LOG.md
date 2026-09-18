@@ -205,3 +205,12 @@
 ### 新会话特别注意
 - 
 ```
+
+
+## M3 Phase 3.2 / 2026-09-18
+
+- Phase 3.1 batch 2 committed at `f5fa0dc39f65d98dc0479b4b62d103263f7b18c3`: automated positive suspension ingestion, non-downgrade storage, sync audit and M1 daily integration.
+- Phase 3 UI wiring correction committed at `179601bd39909bf89d23b788dd0b74b294e955cd`: execution-context component is now actually mounted; its Playwright test is now part of CI.
+- Phase 3.2 first batch committed at `0effcaffd033d5398ffa0e0b09ab67188a958e58`: local core benchmark store/sync, market-context backend payload, Workbench card and browser regression for STAR50/ChiNext/CSI300/SSE Composite.
+- Market context remains evidence-only: no composite score, no identity/Source-PRZ mutation, no lifecycle ownership.
+- GitHub-hosted CI still fails before steps/logs; development continues without repeated reruns.

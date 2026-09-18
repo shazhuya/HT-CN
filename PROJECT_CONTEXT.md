@@ -1,9 +1,9 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `b68e821011c8a002811e69cdb3e422e32fa04e02`
-context_checkpoint_title: `M3 Phase 1-3: source-clock lifecycle, chart overlays, A-share execution context`
-context_snapshot_date: `2026-09-17`
+context_checkpoint: `0effcaffd033d5398ffa0e0b09ab67188a958e58`
+context_checkpoint_title: `M3 Phase 3.2: event ingestion, real execution UI wiring, core benchmark market context`
+context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
 
@@ -107,6 +107,53 @@ Playwright source-overlay regression 已加入，但 GitHub-hosted runner 当前
 
 工作台已新增 **A 股执行约束与波动背景** card，与 lifecycle 分栏显示。
 
+
+## M3 Phase 3.1 第二批 — 自动交易事件证据
+
+已把 daily-event contract 推进为自动采集链：
+
+- AKShare `stock_tfp_em` 只作为 **positive suspension evidence**；
+- 连续/全天停牌写入 `suspended`，盘中停牌单独写入 `intraday_suspended`；
+- 即使上游返回历史旧记录，也按目标交易日重新过滤；
+- 空结果绝不合成 `normal`；
+- 所有该源记录保持 `resolution_complete=false`；
+- `security_daily_event_sync` 记录 success/failure、条数与 `positive_evidence_only` coverage；
+- 已有 `resolution_complete=true` 的完整记录不能被后来 partial feed 降级覆盖；
+- M1 日更在价格 fast-pass 之前同步事件，事件源失败不阻塞行情更新；
+- 独立入口：`运行M3交易事件同步.bat`。
+
+百度停复牌接口存在长期空结果问题，因此当前不作为“完整事件覆盖”第二源，避免虚假解除 fail-safe。
+
+## M3 Phase 3 UI 纠错
+
+发现并修复两层断链：
+
+1. `AShareExecutionContext.tsx` 已存在，但此前 `App.tsx` 未真正挂载；
+2. `execution-context.spec.ts` 已存在，但 CI Playwright 命令此前未执行它。
+
+现已正式挂载执行约束卡，并纳入浏览器验收。以后不得再以“文件存在”替代“产品已接通”的完成判定。
+
+## M3 Phase 3.2 — Core Market Context
+
+已新增四大固定基准的本地 evidence 层：
+
+- 科创50：`000688`
+- 创业板指：`399006`
+- 沪深300：`000300`
+- 上证指数：`000001`
+
+输出字段以原始可审计指标为主：
+
+- 1 / 5 / 20 日涨跌幅；
+- MA20 距离；
+- MA20 五日斜率；
+- 简单描述性状态（上方且抬升 / 下方且下行 / 混合 / 历史不足）；
+- 个股相对各基准的 5 / 20 日相对强弱。
+
+明确不创建市场综合分数。市场层 `owns_lifecycle=false`，不得修改 harmonic identity 或 Source Raw PRZ。
+
+本地同步入口：`运行M3核心指数同步.bat`。指数数据未同步或源失败时，个股分析继续运行，market context 返回 `unavailable/partial`。
+
 ## 当前 CI 基础设施异常
 
 M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异常：
@@ -131,15 +178,16 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 3.1 — Real Metadata / Tradability Hardening。**
+**M3 Phase 3.3 — Sector / Relative-Strength Context。**
 
 执行顺序：
 
-1. 在 populated M1 `data/market/catalog.duckdb` 上 smoke-test `security_master` 读取；
-2. 验证实际 SSE/SZSE MAIN / STAR / CHINEXT 样本 board/list_date/is_st 映射；
-3. 增加停复牌/恢复交易等 event metadata contract，使 `rule_based_price_limit_pct` 与真实当日制度状态进一步靠拢；
-4. 补 execution-context browser regression；
-5. GitHub-hosted runner 恢复后运行完整 Python/Web/Playwright，不为“让 CI 绿”而修改 source semantics。
+1. 建立证券到行业/概念的可审计映射，不用黑箱标签替代原始来源；
+2. 优先接行业/板块相对强弱与量价环境，不把板块强弱用于“救活”失败谐波；
+3. 建立个股 vs. 行业 vs. 双创/沪深300的分层相对强弱；
+4. 保持市场/行业 context 只做 evidence，不拥有 lifecycle；
+5. GitHub-hosted runner 恢复后一次性跑 Python/Web/Playwright 全门禁，不反复 rerun 空 runner。
+
 
 ## 固定 Source / Product 边界
 
