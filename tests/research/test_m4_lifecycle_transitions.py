@@ -132,3 +132,25 @@ def test_explicit_first_observed_drift_fails_closed() -> None:
         assert "first_observed_trade_date drift" in str(exc)
     else:
         raise AssertionError("first-observed drift must fail closed")
+
+
+def test_candidate_reappearing_after_gap_is_not_new_candidate() -> None:
+    rows = [
+        _row("2026-09-17", "a", lifecycle="waiting_terminal"),
+        _row("2026-09-18", "other"),
+        _row("2026-09-19", "a", lifecycle="type_i_early_reaction"),
+        _row("2026-09-19", "other"),
+    ]
+    transitions = build_transitions(rows)
+    reappeared = next(
+        item
+        for item in transitions
+        if item.candidate_key == "a"
+        and item.to_trade_date == "2026-09-19"
+    )
+    assert reappeared.transition_kind == "scanner_reappeared"
+    assert reappeared.enrollment_state == "baseline_existing"
+    assert reappeared.first_observed_trade_date == "2026-09-17"
+    assert reappeared.from_trade_date == "2026-09-17"
+    assert reappeared.from_lifecycle_state == "waiting_terminal"
+    assert reappeared.to_lifecycle_state == "type_i_early_reaction"

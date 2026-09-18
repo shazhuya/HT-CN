@@ -125,6 +125,7 @@ def build_transitions(
     transitions: list[LifecycleTransition] = []
 
     previous_by_key: dict[str, dict[str, Any]] = {}
+    last_seen_by_key: dict[str, tuple[str, dict[str, Any]]] = {}
     previous_date: str | None = None
 
     for as_of in dates:
@@ -160,20 +161,38 @@ def build_transitions(
             for key, current in current_by_key.items():
                 previous = previous_by_key.get(key)
                 if previous is None:
+                    prior_seen = last_seen_by_key.get(key)
+                    if prior_seen is None:
+                        from_trade_date = None
+                        from_lifecycle_state = None
+                        from_action_state = None
+                        from_next_key_price = None
+                        transition_kind = "new_candidate"
+                    else:
+                        prior_date, prior_row = prior_seen
+                        from_trade_date = prior_date
+                        from_lifecycle_state = str(prior_row.get("source_lifecycle_state"))
+                        from_action_state = str(prior_row.get("action_state"))
+                        from_next_key_price = (
+                            None if prior_row.get("next_key_price") is None
+                            else float(prior_row["next_key_price"])
+                        )
+                        transition_kind = "scanner_reappeared"
+
                     transitions.append(
                         LifecycleTransition(
                             candidate_key=key,
                             instrument_id=str(current.get("instrument_id")),
-                            from_trade_date=None,
+                            from_trade_date=from_trade_date,
                             to_trade_date=as_of,
                             enrollment_state=str(current["enrollment_state"]),
                             first_observed_trade_date=str(current["first_observed_trade_date"]),
-                            transition_kind="new_candidate",
-                            from_lifecycle_state=None,
+                            transition_kind=transition_kind,
+                            from_lifecycle_state=from_lifecycle_state,
                             to_lifecycle_state=str(current.get("source_lifecycle_state")),
-                            from_action_state=None,
+                            from_action_state=from_action_state,
                             to_action_state=str(current.get("action_state")),
-                            from_next_key_price=None,
+                            from_next_key_price=from_next_key_price,
                             to_next_key_price=(
                                 None if current.get("next_key_price") is None
                                 else float(current["next_key_price"])
@@ -233,6 +252,8 @@ def build_transitions(
                     )
                 )
 
+        for key, row in current_by_key.items():
+            last_seen_by_key[key] = (as_of, row)
         previous_by_key = current_by_key
         previous_date = as_of
 
