@@ -8,6 +8,7 @@ from typing import Any
 
 from .capture_transaction import (
     committed_capture_view,
+    frozen_legacy_baseline_present,
     frozen_legacy_baseline_through_date,
     read_committed_captures,
     read_frozen_legacy_baseline,
@@ -81,11 +82,11 @@ def authoritative_mirror_payloads(
     committed = read_committed_captures(transaction_root)
     if not committed:
         return [], [], 0
+    baseline_present = frozen_legacy_baseline_present(transaction_root)
     baseline = read_frozen_legacy_baseline(transaction_root)
-    baseline_through = frozen_legacy_baseline_through_date(transaction_root)
-    if not baseline and baseline_through is None:
+    if not baseline_present:
         raise RuntimeError(
-            "committed transactions exist but frozen legacy baseline is missing"
+            "committed transactions exist but frozen legacy baseline marker is missing"
         )
     journal_rows, manifest_rows = committed_capture_view(
         legacy_journal_rows=baseline,

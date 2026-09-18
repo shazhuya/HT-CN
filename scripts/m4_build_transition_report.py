@@ -8,6 +8,7 @@ from typing import Any
 
 from htcn.research.capture_transaction import (
     committed_capture_view,
+    frozen_legacy_baseline_present,
     frozen_legacy_baseline_through_date,
     read_committed_captures,
     read_frozen_legacy_baseline,
@@ -104,12 +105,12 @@ def main() -> int:
     transaction_root = Path(args.transaction_root)
     committed = read_committed_captures(transaction_root)
     if committed:
+        if not frozen_legacy_baseline_present(transaction_root):
+            raise RuntimeError(
+                "committed capture transactions exist but frozen legacy baseline marker is missing"
+            )
         frozen_baseline = read_frozen_legacy_baseline(transaction_root)
         baseline_through = frozen_legacy_baseline_through_date(transaction_root)
-        if not frozen_baseline and baseline_through is None:
-            raise RuntimeError(
-                "committed capture transactions exist but frozen legacy baseline is missing"
-            )
         rows, manifest_rows = committed_capture_view(
             legacy_journal_rows=frozen_baseline,
             capture_rows=committed,

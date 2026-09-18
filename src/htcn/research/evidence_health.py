@@ -39,6 +39,7 @@ def build_evidence_chain_health(
         findings.append(EvidenceHealthFinding(code, severity, detail))
 
     committed = read_committed_captures(root)
+    baseline_present = frozen_legacy_baseline_present(root)
     baseline_rows = read_frozen_legacy_baseline(root)
     baseline_through = frozen_legacy_baseline_through_date(root)
 
@@ -47,7 +48,7 @@ def build_evidence_chain_health(
             "schema_version": 1,
             "status": "legacy_only",
             "authoritative_evidence_source": "legacy_journal_manifest",
-            "frozen_legacy_baseline_present": bool(baseline_rows or baseline_through),
+            "frozen_legacy_baseline_present": baseline_present,
             "frozen_legacy_baseline_through_trade_date": baseline_through,
             "committed_capture_count": 0,
             "committed_capture_dates": [],
@@ -71,11 +72,11 @@ def build_evidence_chain_health(
             },
         }
 
-    if not baseline_rows and baseline_through is None:
+    if not baseline_present:
         finding(
             "frozen_legacy_baseline_missing",
             "blocker",
-            "Committed transactions exist but frozen legacy baseline evidence is missing.",
+            "Committed transactions exist but frozen legacy baseline marker is missing.",
         )
 
     dates = [str(item["as_of_trade_date"]) for item in committed]
