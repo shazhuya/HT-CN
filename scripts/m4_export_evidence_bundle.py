@@ -82,6 +82,7 @@ def build_bundle(
         )
 
     report_names = (
+        "m4-m1-update.log",
         "m4-lifecycle-snapshot.json",
         "m4-evidence-health.json",
         "m4-evidence-health.md",
