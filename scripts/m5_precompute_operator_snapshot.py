@@ -24,7 +24,6 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Precompute the product-only M5 daily operator queue cache."
     )
-    parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--bars", type=int, default=420)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--workers", type=int, default=4)
@@ -32,7 +31,7 @@ def main() -> int:
 
     instrument_ids = discover_local_instruments(
         DATA_ROOT,
-        limit=max(0, int(args.limit)),
+        limit=0,
     )
     expected = latest_local_trade_date(DATA_ROOT / "catalog.duckdb")
     service = M3SourceClockHarmonicService(DATA_ROOT)
