@@ -751,3 +751,25 @@ scanner presence, lifecycle continuity, invalidation, or a trade signal.
 
 No post-T0 fingerprinted committed capture existed before this methodology-v2 freeze, so
 no future evidence required migration or rewriting.
+
+
+## M4 pre-T1 methodology freeze guard / 2026-09-18
+
+Assistant-side only; no user-local QA requested.
+
+Final pre-T1 audit confirmed that methodology-v2 commit
+`084ddf649e031e8169a761fd3b8578f73b31b5c2` is followed only by non-methodology
+changes: intake, transport, tests, wrapper and governance docs. The 37 fingerprint component
+paths have 0 changes after the frozen commit.
+
+Closed:
+- `821e988e7c8f477fc855e61f7d62a949e64bef81`: methodology component freeze guard;
+- `6d38271cfceb4fdc2ab3940ab5088a72cf45ee64`: one-click private-M1 wrapper runs guard before M1 update;
+- `e7d8e7cbf0797ed37d72cf43d3c15b498be5c3f1`: bundle includes guard provenance;
+- `9e29d0cab64a34be4f188b092e89a1b8ffd55379`: repaired literal-newline import corruption found by static audit;
+- `a0a09e85fe3ae7d80549f2222e0153c8211a832f`: guard fail-closed regressions;
+- `6593ca8c9af84237a217ccef83f51a4cea3e9178`: wrapper ordering regression;
+- `f12f6f789945f657e0446a113737320849d0b7b3`: evidence-bundle guard-report regression;
+- D-033 freezes the exact component code anchor.
+
+The user's computer was not used.
