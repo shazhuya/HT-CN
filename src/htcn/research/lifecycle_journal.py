@@ -12,6 +12,7 @@ OUTCOME_PRE_TERMINAL_STATES = {
     "waiting_terminal",
 }
 OUTCOME_BLOCKED_PATTERN_IDS = {"alternate_bat", "five_zero"}
+FORMAL_PRICE_MODES = {"qfq", "qfq_carry_forward"}
 
 
 ANCHOR_LABELS: dict[str, tuple[str, ...]] = {
@@ -38,6 +39,8 @@ class LifecycleJournalEntry:
     next_key_price_role: str | None
     execution_context_gate: str
     context_integrity_summary: str | None
+    price_mode: str
+    price_basis_id: str
     source_prz_low: float | None
     source_prz_high: float | None
     source_terminal_trade_date: str | None
@@ -174,6 +177,12 @@ def entries_from_analysis(
 
         source = (pattern.get("prz") or {}).get("source_prz") or {}
         source_available = source.get("available") is True
+        price_mode = str(analysis.get("price_mode") or "unknown")
+        price_basis_id = str(analysis.get("price_basis_id") or "")
+        formal_price_basis = (
+            price_mode in FORMAL_PRICE_MODES
+            and price_basis_id.startswith("qfq:")
+        )
         out.append(
             LifecycleJournalEntry(
                 code_head=code_head,
@@ -208,6 +217,8 @@ def entries_from_analysis(
                 context_integrity_summary=(
                     None if integrity_summary is None else str(integrity_summary)
                 ),
+                price_mode=price_mode,
+                price_basis_id=price_basis_id,
                 source_prz_low=(
                     float(source["price_low"])
                     if source_available and source.get("price_low") is not None
@@ -221,7 +232,7 @@ def entries_from_analysis(
                 source_terminal_trade_date=_bar_trade_date(
                     analysis, lifecycle.get("source_terminal_bar")
                 ),
-                eligible_for_validation=True,
+                eligible_for_validation=formal_price_basis,
                 underlying_last_trade_date=underlying_last_trade_date,
                 market_observation_status=market_observation_status,
                 daily_event_source=daily_event_source,
@@ -264,6 +275,12 @@ def prospective_outcome_gate(
     """Strict gate for the future prospective outcome cohort."""
     if enrollment_state != "prospective_new":
         return False, "baseline_existing"
+    if payload.get("eligible_for_validation") is not True:
+        return False, "candidate_not_formal_validation_eligible"
+    price_mode = str(payload.get("price_mode") or "")
+    price_basis_id = str(payload.get("price_basis_id") or "")
+    if price_mode not in FORMAL_PRICE_MODES or not price_basis_id.startswith("qfq:"):
+        return False, "formal_qfq_price_basis_required"
     market_status = str(
         payload.get("market_observation_status") or "traded"
     )
