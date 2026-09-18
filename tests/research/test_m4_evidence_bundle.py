@@ -12,6 +12,10 @@ from htcn.research.capture_transaction import (
     commit_capture_transaction,
     freeze_legacy_baseline,
 )
+from htcn.research.outcome_snapshot import (
+    build_outcome_snapshot,
+    commit_outcome_snapshot,
+)
 from scripts.m4_export_evidence_bundle import build_bundle
 
 
@@ -30,6 +34,10 @@ def _bundle(tmp_path: Path):
     )
     (reports / "m4-lifecycle-snapshot.json").write_text(
         json.dumps({"status": "diagnostic"}),
+        encoding="utf-8",
+    )
+    (reports / "m4-outcome-v1.json").write_text(
+        json.dumps({"status": "no_outcome_cohort"}),
         encoding="utf-8",
     )
     output = reports / "bundle.zip"
@@ -56,6 +64,7 @@ def test_transport_bundle_contains_manifest_and_available_reports(tmp_path) -> N
         assert "reports/m4-methodology-freeze-guard.json" in names
         assert "reports/m4-m1-update.log" in names
         assert "reports/m4-lifecycle-snapshot.json" in names
+        assert "reports/m4-outcome-v1.json" in names
         manifest = json.loads(
             archive.read("bundle-manifest.json").decode("utf-8")
         )
@@ -386,3 +395,55 @@ def test_intake_treats_health_blocked_bundle_as_not_ready(tmp_path: Path) -> Non
     )
     assert result.status == "not_ready"
     assert "bundle_evidence_health_blocked" in result.blockers
+
+
+
+def test_transport_bundle_can_carry_immutable_outcome_snapshot(tmp_path) -> None:
+    transaction_root = tmp_path / "captures"
+    transaction_root.mkdir()
+    reports = tmp_path / "reports"
+    reports.mkdir()
+    outcome_root = tmp_path / "outcomes"
+
+    result = {
+        "schema_version": 1,
+        "candidate_key": "candidate-a",
+        "instrument_id": "SSE.600000",
+        "outcome_enrollment_trade_date": "2026-09-18",
+        "outcome_as_of_trade_date": "2026-09-21",
+        "capture_methodology_fingerprint": "a" * 64,
+        "outcome_protocol_id": "m4-outcome-v1",
+        "outcome_protocol_fingerprint": "b" * 64,
+        "market_path_sha256": "c" * 64,
+        "status": "right_censored_ongoing",
+        "interpretation": {
+            "evidence_only": True,
+            "is_trade_instruction": False,
+            "alpha_inference_allowed": False,
+        },
+    }
+    snapshot = build_outcome_snapshot(
+        outcome_as_of_trade_date="2026-09-21",
+        outcome_protocol_id="m4-outcome-v1",
+        outcome_protocol_fingerprint="b" * 64,
+        capture_methodology_fingerprint="a" * 64,
+        results=[result],
+    )
+    commit_outcome_snapshot(outcome_root, snapshot)
+
+    output = reports / "bundle.zip"
+    payload = build_bundle(
+        transaction_root=transaction_root,
+        journal_path=tmp_path / "journal.jsonl",
+        manifest_path=tmp_path / "manifest.jsonl",
+        reports_root=reports,
+        output=output,
+        outcome_root=outcome_root,
+    )
+    assert payload["outcome_snapshot_count"] == 1
+    assert payload["latest_outcome_snapshot_id"] == snapshot.snapshot_id
+    with zipfile.ZipFile(output) as archive:
+        assert (
+            f"outcomes/2026-09-21__{snapshot.snapshot_id}.json"
+            in archive.namelist()
+        )
