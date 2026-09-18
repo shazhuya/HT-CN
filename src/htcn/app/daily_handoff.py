@@ -116,6 +116,13 @@ def _resolve_inside(root: Path, value: str | Path, *, label: str) -> Path:
     return resolved
 
 
+def _repo_relative(repo: Path, path: Path, *, label: str) -> str:
+    try:
+        return path.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError as exc:
+        raise RuntimeError(f"{label}_outside_repository") from exc
+
+
 def _artifact_path(
     repo: Path,
     pipeline_summary: dict[str, Any],
@@ -262,7 +269,11 @@ def _validate_product_binding(
 
     binding = ProductBinding(
         trade_date=trade_date,
-        cache_path=str(snapshot_path),
+        cache_path=_repo_relative(
+            repo,
+            snapshot_path,
+            label="m5_current_snapshot",
+        ),
         cache_status=cache_status,
         cache_freshness="current",
         input_identity_contract_version=contract_version,
@@ -302,6 +313,17 @@ def _previous_snapshot(
             continue
         if path.name != _canonical_snapshot_name(trade_date):
             continue
+        if payload.get("authoritative_evidence") is not False:
+            continue
+        if payload.get("writes_m4_evidence") is not False:
+            continue
+        queue = payload.get("queue")
+        if not isinstance(queue, dict):
+            continue
+        if str(queue.get("as_of_trade_date") or "") != trade_date:
+            continue
+        if queue.get("observation_integrity") != "single_as_of":
+            continue
         candidates.append((trade_date, path))
     if not candidates:
         return None
@@ -314,6 +336,31 @@ def _verify_nested_m4_bytes(data: bytes) -> dict[str, Any]:
         path = Path(temp) / "m4-evidence-bundle.zip"
         path.write_bytes(data)
         return verify_evidence_bundle(path).as_payload()
+
+
+def _m4_verification_summary(checked: Any) -> dict[str, Any]:
+    manifest = checked.manifest if isinstance(checked.manifest, dict) else {}
+    return {
+        "status": checked.status,
+        "schema_version": checked.schema_version,
+        "listed_file_count": checked.listed_file_count,
+        "archive_member_count": checked.archive_member_count,
+        "error_count": checked.error_count,
+        "warning_count": checked.warning_count,
+        "errors": list(checked.errors),
+        "warnings": list(checked.warnings),
+        "nested_manifest_status": manifest.get("status"),
+        "methodology_contract_version": manifest.get(
+            "methodology_contract_version"
+        ),
+        "methodology_fingerprint": manifest.get("methodology_fingerprint"),
+        "latest_committed_capture_date": manifest.get(
+            "latest_committed_capture_date"
+        ),
+        "latest_capture_transaction_id": manifest.get(
+            "latest_capture_transaction_id"
+        ),
+    }
 
 
 def verify_daily_handoff_bundle(path: str | Path) -> DailyHandoffVerification:
@@ -420,6 +467,44 @@ def verify_daily_handoff_bundle(path: str | Path) -> DailyHandoffVerification:
                 for arcname, record in by_arcname.items():
                     roles.setdefault(str(record.get("role") or ""), []).append(arcname)
 
+                pipeline_members = roles.get("pipeline_summary", [])
+                if len(pipeline_members) != 1:
+                    errors.append("pipeline_summary_role_invalid")
+                else:
+                    pipeline_raw = archive.read(pipeline_members[0])
+                    if _sha256_bytes(pipeline_raw) != str(
+                        manifest.get("pipeline_report_sha256") or ""
+                    ):
+                        errors.append("pipeline_report_hash_mismatch")
+                    try:
+                        pipeline_payload = json.loads(
+                            pipeline_raw.decode("utf-8")
+                        )
+                    except (UnicodeDecodeError, json.JSONDecodeError):
+                        errors.append("pipeline_summary_unreadable")
+                    else:
+                        if not isinstance(pipeline_payload, dict):
+                            errors.append("pipeline_summary_not_object")
+                        else:
+                            if (
+                                pipeline_payload.get("m5_product_ready") is True
+                            ) != product_ready:
+                                errors.append(
+                                    "pipeline_product_ready_mismatch"
+                                )
+                            if (
+                                pipeline_payload.get("m4_research_ready") is True
+                            ) != research_ready:
+                                errors.append(
+                                    "pipeline_research_ready_mismatch"
+                                )
+                            if pipeline_payload.get("overall_status") != manifest.get(
+                                "pipeline_overall_status"
+                            ):
+                                errors.append(
+                                    "pipeline_overall_status_mismatch"
+                                )
+
                 if product_ready:
                     if len(roles.get("m5_current_product_snapshot", [])) != 1:
                         errors.append("current_product_snapshot_role_invalid")
@@ -458,6 +543,47 @@ def verify_daily_handoff_bundle(path: str | Path) -> DailyHandoffVerification:
                                 binding.get("report_sha256") or ""
                             ):
                                 errors.append("product_binding_report_hash_mismatch")
+                            try:
+                                report_payload = json.loads(
+                                    raw.decode("utf-8")
+                                )
+                            except (UnicodeDecodeError, json.JSONDecodeError):
+                                errors.append("bound_product_report_unreadable")
+                            else:
+                                if not isinstance(report_payload, dict):
+                                    errors.append("bound_product_report_not_object")
+                                else:
+                                    if int(report_payload.get("schema_version") or 0) != 2:
+                                        errors.append("bound_product_report_schema_mismatch")
+                                    if report_payload.get("product_ready") is not True:
+                                        errors.append("bound_product_report_not_ready")
+                                    if report_payload.get("observation_integrity") != "single_as_of":
+                                        errors.append("bound_product_report_not_single_as_of")
+                                    if str(report_payload.get("as_of_trade_date") or "") != str(
+                                        binding.get("trade_date") or ""
+                                    ):
+                                        errors.append("bound_product_report_trade_date_mismatch")
+                                    report_identity = report_payload.get("input_identity")
+                                    if (
+                                        not isinstance(report_identity, dict)
+                                        or str(report_identity.get("fingerprint") or "")
+                                        != str(binding.get("input_identity_fingerprint") or "")
+                                    ):
+                                        errors.append("bound_product_report_identity_mismatch")
+                                    report_cache = report_payload.get("product_cache")
+                                    if not isinstance(report_cache, dict):
+                                        errors.append("bound_product_report_cache_missing")
+                                    else:
+                                        if str(report_cache.get("status") or "") not in PERSISTED_CACHE_STATUSES:
+                                            errors.append("bound_product_report_cache_not_persisted")
+                                        if report_cache.get("freshness") != "current":
+                                            errors.append("bound_product_report_cache_not_current")
+                                        if report_cache.get("input_identity_stable_during_build") is not True:
+                                            errors.append("bound_product_report_identity_not_stable")
+                                        if str(report_cache.get("input_identity_fingerprint") or "") != str(
+                                            binding.get("input_identity_fingerprint") or ""
+                                        ):
+                                            errors.append("bound_product_report_cache_identity_mismatch")
 
                 m4_current = roles.get("m4_current_evidence_bundle", [])
                 if research_ready and len(m4_current) != 1:
@@ -584,7 +710,7 @@ def build_daily_handoff_bundle(
     m4_verification: dict[str, Any] | None = None
     if m4_path.is_file():
         checked = verify_evidence_bundle(m4_path)
-        m4_verification = checked.as_payload()
+        m4_verification = _m4_verification_summary(checked)
         if checked.status == "valid":
             members.append(
                 (
@@ -638,7 +764,11 @@ def build_daily_handoff_bundle(
         "m5_product_snapshot_is_authoritative_evidence": False,
         "pipeline_overall_status": pipeline_summary.get("overall_status"),
         "pipeline_report_sha256": _sha256_bytes(pipeline_bytes),
-        "pipeline_report_source": str(pipeline_path),
+        "pipeline_report_source": _repo_relative(
+            repo,
+            pipeline_path,
+            label="pipeline_report",
+        ),
         "m5_product_ready": product_ready,
         "m4_research_ready": research_ready,
         "product_binding": (
