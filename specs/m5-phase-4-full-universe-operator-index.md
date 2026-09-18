@@ -72,14 +72,14 @@ Phase 4：
 
 Validated checkpoint:
 
-`61bde476e0609d20c4018107e835289ce3c4726b`
+`41700e02bff874f7498c51bfbad6d8c5e708d4b2`
 
-GitHub Actions run #1543 / id `35373726746`:
+GitHub Actions run #1583 / id `35373726746`:
 
 - overall: success
 - Python: 629 passed
 - Web build: success
-- Playwright: 20 passed
+- Playwright: 21 passed
 - browser evidence upload: success
 
 专项验收包括：
