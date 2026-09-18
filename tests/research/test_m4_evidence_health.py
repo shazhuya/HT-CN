@@ -1,5 +1,6 @@
 from htcn.research.capture_transaction import (
     build_committed_capture,
+    capture_transaction_id,
     commit_capture_transaction,
     freeze_legacy_baseline,
 )
@@ -214,5 +215,57 @@ def test_health_blocks_current_methodology_drift(tmp_path) -> None:
     assert health["current_methodology_matches_authoritative_chain"] is False
     assert any(
         item["code"] == "current_methodology_differs_from_committed_chain"
+        for item in health["blockers"]
+    )
+
+
+def test_health_blocks_pre_fingerprint_committed_capture(tmp_path) -> None:
+    import json
+
+    root = tmp_path / "captures"
+    root.mkdir()
+    freeze_legacy_baseline(
+        root,
+        [_row("legacy", "2026-09-17", "old")],
+        baseline_through_trade_date="2026-09-17",
+    )
+    row = _row("v1", "2026-09-18", "h")
+    txid = capture_transaction_id(
+        code_head="h",
+        as_of_trade_date="2026-09-18",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        journal_rows=[row],
+        schema_version=1,
+    )
+    payload = {
+        "transaction_id": txid,
+        "code_head": "h",
+        "as_of_trade_date": "2026-09-18",
+        "captured_at_utc": "t",
+        "instrument_count": 55,
+        "successful_instruments": 55,
+        "failed_instruments": 0,
+        "candidate_count": 1,
+        "worktree_clean": True,
+        "journal_rows": [{**row, "capture_transaction_id": txid}],
+        "status": "committed",
+        "schema_version": 1,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+    }
+    (root / f"2026-09-18__{txid}.json").write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
+    health = build_evidence_chain_health(
+        transaction_root=root,
+        journal_path=tmp_path / "journal.jsonl",
+        manifest_path=tmp_path / "manifest.jsonl",
+    )
+    assert health["status"] == "not_ready"
+    assert any(
+        item["code"] == "committed_methodology_identity_missing"
         for item in health["blockers"]
     )
