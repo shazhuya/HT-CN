@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `29fae09844a8dc96e57b5336c6a774859ef92b1b`
-context_checkpoint_title: `M4 Phase 2.10 schema-v3 cohort follow-up + methodology v2`
+context_checkpoint: `f12f6f789945f657e0446a113737320849d0b7b3`
+context_checkpoint_title: `M4 Phase 2.10 methodology-v2 exact pre-T1 freeze guard`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -794,6 +794,24 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 
 
 
+
+
+## M4 pre-T1 exact methodology freeze — D-033
+
+第一笔 T1 不能只依赖“HEAD 包含 methodology-v2 commit”。
+
+当前精确冻结：
+
+- frozen methodology commit：`084ddf649e031e8169a761fd3b8578f73b31b5c2`；
+- methodology contract：v2；
+- component count：37；
+- 一键私有采集在 M1 update 之前运行 `m4_methodology_freeze_guard.py`；
+- guard 要求 37 个 methodology path 相对 frozen commit **零差异**；
+- 任意 methodology component 改动都会在触碰私有 M1 前阻断；
+- guard 结果写入 `artifacts/reports/m4-methodology-freeze-guard.json` 并进入 evidence bundle；
+- 从 frozen commit 到当前审计点，37 个 methodology component 实际改动数 = 0。
+
+非 methodology 的 intake / transport / tests / docs 可以继续维护；若要修改 37 个方法组件，必须显式开启新 methodology epoch，不得静默续接。
 
 ## M4 Phase 2.10 — Cohort follow-up / D-032
 
