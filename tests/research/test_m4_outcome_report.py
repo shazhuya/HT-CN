@@ -5,7 +5,7 @@ def test_outcome_report_keeps_performance_boundaries_explicit() -> None:
     payload = {
         "status": "ready",
         "outcome_as_of_trade_date": "2026-09-28",
-        "outcome_protocol_id": "m4-outcome-v1",
+        "outcome_protocol_id": "m4-outcome-v2",
         "outcome_protocol_fingerprint": "a" * 64,
         "capture_methodology_fingerprint": "b" * 64,
         "candidate_count": 1,
