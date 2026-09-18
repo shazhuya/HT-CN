@@ -6,6 +6,7 @@ import MarketContext, { MarketContextPayload } from './MarketContext'
 import SectorContext, { IndustryContextPayload } from './SectorContext'
 import ConceptContext, { ConceptContextPayload } from './ConceptContext'
 import ContextIntegrity, { ContextIntegrityPayload } from './ContextIntegrity'
+import DecisionNarrative from './DecisionNarrative'
 
 type Health = {
   status: string
@@ -262,6 +263,7 @@ export default function App() {
           <SectorContext context={analysis.sector_context} />
           <ConceptContext context={analysis.concept_context} />
           <TypeIT5Evidence events={analysis.type_i_t5_events ?? []} />
+          <DecisionNarrative narrative={selectedPattern?.decision_narrative} />
 
           <section className="workspace">
             <div className="chart-panel">

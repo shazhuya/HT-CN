@@ -14,6 +14,7 @@ from htcn.app.market_context import build_core_market_context
 from htcn.app.sector_context import build_industry_context
 from htcn.app.concept_context import build_concept_context
 from htcn.app.context_integrity import build_context_integrity
+from htcn.app.decision_narrative import build_decision_narrative
 from htcn.harmonic.execution import SourceExecutionAudit
 from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.rsi_bamm_confluence import observe_source_execution_for_match
@@ -186,6 +187,11 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             concept_context=concept_context,
         ).as_payload()
         for pattern in [*(analysis.get("completed") or []), *(analysis.get("forming") or [])]:
+            pattern["decision_narrative"] = build_decision_narrative(
+                source_lifecycle=pattern.get("source_lifecycle"),
+                context_integrity=analysis["context_integrity"],
+            ).as_payload()
+        for pattern in [*(analysis.get("completed") or []), *(analysis.get("forming") or [])]:
             pattern["a_share_execution_context"] = execution_context
 
         analysis["source_lifecycle_contract"] = {
@@ -217,6 +223,9 @@ class M3SourceClockHarmonicService(SourceAlignedHarmonicService):
             "concept_context_owns_lifecycle": False,
             "context_integrity_field": "context_integrity",
             "context_integrity_role": "freshness_coverage_conflict_diagnostics_not_score",
+            "decision_narrative_field": "*.decision_narrative",
+            "decision_narrative_role": "source_lifecycle_action_state_and_observation_sequence",
+            "decision_narrative_is_trade_instruction": False,
             "daily_event_metadata_table": "security_daily_event",
             "daily_event_complete_required_to_resolve_special_exceptions": True,
             "execution_context_may_change_harmonic_identity": False,
