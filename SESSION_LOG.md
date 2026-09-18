@@ -1176,3 +1176,22 @@ Validation:
 
 D-043 freezes Operator Delta as product observation only, never M4 authoritative evidence.
 
+## 2026-09-19 — M5 Phase 3 Daily Operator Cache green
+
+Implemented:
+- cache-first daily Operator Queue;
+- force refresh;
+- atomic snapshot persistence;
+- universe/date/contract invalidation;
+- stale-data cache rejection;
+- precompute script;
+- UI cache provenance.
+
+Validation:
+- run #1525 success;
+- Python 628 passed;
+- Web build success;
+- Playwright 19 passed.
+
+D-044 freezes product cache as acceleration only, never M4 evidence.
+
