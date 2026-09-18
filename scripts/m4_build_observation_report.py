@@ -68,6 +68,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
                 f"absent-followup={item.get('scanner_absent_market_followup_snapshot_count', 0)}；"
                 f"suspended={item.get('confirmed_full_day_suspended_snapshot_count', 0)}；"
                 f"basis-drift={item.get('price_basis_drift_snapshot_count', 0)}；"
+                f"source-seed={'yes' if item.get('enrollment_source_clock_seed') else 'no'}；"
                 f"terminal={item.get('first_source_terminal_trade_date')}"
             )
     else:
@@ -81,6 +82,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         "- scanner absent 不等于 invalidated。",
         "- 已入组候选 scanner absent 后可继续记录独立 market follow-up，但不会被伪装成 scanner present 或继续拥有 lifecycle。",
         "- price basis 变化只记录 drift；本阶段不自动重基准、不据此计算 return/MFE/MAE。",
+        "- outcome-enrolled candidate 必须冻结 source-clock seed；scanner 后续消失不删除该 seed。",
         "- 确认全天停牌 carry-forward 仍是 candidate present，但不是 traded observation。",
         "- 停牌 carry-forward 不伪造当日 OHLC，也不能作为首次 prospective outcome enrollment。",
         "- 本报告只保留事实 observation 和 milestone。",
