@@ -767,3 +767,93 @@ def test_uncontended_force_refresh_still_rebuilds(
     assert service.calls == 2
     assert refreshed["product_cache"]["status"] == "rebuilt_force"
     assert refreshed["product_cache"]["cross_process_waited"] is False
+
+
+
+def test_cache_hit_rechecks_current_input_identity_before_reuse(
+    tmp_path,
+) -> None:
+    service = CountingService()
+    start = _input_identity(data_fingerprint="data-a")
+    changed = _input_identity(data_fingerprint="data-b")
+    build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=start,
+    )
+    assert service.calls == 1
+
+    payload = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=start,
+        input_identity_factory=lambda: changed,
+    )
+
+    assert service.calls == 2
+    assert payload["product_cache"]["status"] == (
+        "live_not_cached_input_changed"
+    )
+    assert payload["product_cache"][
+        "input_identity_stable_during_build"
+    ] is False
+
+
+def test_process_wait_does_not_reuse_cache_if_identity_changed_while_waiting(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    import htcn.app.operator_snapshot as snapshot
+
+    service = CountingService()
+    start = _input_identity(data_fingerprint="data-a")
+    changed = _input_identity(data_fingerprint="data-b")
+    build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=start,
+    )
+    assert service.calls == 1
+
+    class WaitedProcessLock:
+        def __init__(self, path, *, timeout_seconds):
+            self.path = path
+
+        def acquire(self):
+            return ProcessLockAcquisition(
+                waited=True,
+                wait_seconds=0.5,
+                lock_path=str(self.path),
+            )
+
+        def release(self):
+            return None
+
+    monkeypatch.setattr(
+        snapshot,
+        "OperatorCacheProcessLock",
+        WaitedProcessLock,
+    )
+
+    payload = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=start,
+        input_identity_factory=lambda: changed,
+        force_refresh=True,
+    )
+
+    assert service.calls == 2
+    assert payload["product_cache"]["status"] == (
+        "live_not_cached_input_changed"
+    )
+    assert payload["product_cache"]["cross_process_waited"] is True
+    assert payload["product_cache"]["cross_process_wait_seconds"] == 0.5

@@ -323,16 +323,22 @@ def build_or_load_operator_snapshot(
             input_identity=input_identity,
         )
         if cached is not None:
-            queue, generated_at = cached
-            return _attach_cache_metadata(
-                queue,
-                status="hit",
-                expected_trade_date=expected_trade_date,
-                cache_path=cache_path,
-                generated_at_utc=generated_at,
-                input_identity=input_identity,
-                input_identity_stable_during_build=True,
+            current_identity = (
+                input_identity_factory()
+                if input_identity_factory is not None
+                else input_identity
             )
+            if current_identity.fingerprint == input_identity.fingerprint:
+                queue, generated_at = cached
+                return _attach_cache_metadata(
+                    queue,
+                    status="hit",
+                    expected_trade_date=expected_trade_date,
+                    cache_path=cache_path,
+                    generated_at_utc=generated_at,
+                    input_identity=input_identity,
+                    input_identity_stable_during_build=True,
+                )
 
     flight_key = _single_flight_key(
         cache_root=cache_dir,
@@ -364,9 +370,23 @@ def build_or_load_operator_snapshot(
         process_lock_acquisition = process_lock.acquire()
         # Re-check after becoming both process-local and filesystem-lock owner.
         # A just-finished local request or another process may have populated a
-        # valid cache while this request was waiting. A contended force refresh
-        # is also allowed to reuse the refresh that completed ahead of it.
-        if not force_refresh or process_lock_acquisition.waited:
+        # valid cache while this request was waiting. First refresh the current
+        # input identity: a long cross-process wait must never authorize reuse
+        # of a cache that only matches the request's now-stale starting identity.
+        identity_after_wait = (
+            input_identity_factory()
+            if input_identity_factory is not None
+            else input_identity
+        )
+        identity_stable_after_wait = (
+            identity_after_wait.fingerprint == input_identity.fingerprint
+        )
+        # A contended force refresh may reuse the refresh that completed ahead
+        # of it, but only while the request identity still matches current input.
+        if (
+            identity_stable_after_wait
+            and (not force_refresh or process_lock_acquisition.waited)
+        ):
             cached = _load_valid_cached_snapshot(
                 cache_path=cache_path,
                 expected_trade_date=expected_trade_date,
