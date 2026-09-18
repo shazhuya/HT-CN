@@ -60,7 +60,7 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 
 ## Methodology provenance — D-028
 
-- [x] Current authoritative captures use transaction schema v4; schema v2/v3 are historical pre-T1 provenance.
+- [x] Current authoritative captures use transaction schema v5; schema v2-v4 are historical pre-T1 provenance.
 - [x] Every fingerprinted capture stores methodology contract version + deterministic SHA-256 fingerprint.
 - [x] Methodology identity participates in the transaction ID.
 - [x] Fingerprint coverage includes candidate identity, ratios, Source PRZ/lifecycle,
@@ -69,7 +69,7 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 - [x] One active committed chain may contain only one methodology identity.
 - [x] Current-code methodology mismatch is an evidence-health hard blocker.
 - [x] Pre-fingerprint schema-v1 captures remain readable only for migration audit.
-- [x] Older schema chains cannot silently accept a schema-v3 append; mixed transaction schemas fail closed.
+- [x] Older schema chains cannot silently accept a schema-v5 append; mixed transaction schemas fail closed.
 - [x] Compatibility manifest and mirror integrity expose/check methodology identity.
 - [x] Transition and prospective-observation reports expose authoritative methodology identity.
 - [x] Frozen T0 is not rewritten merely to attach a new fingerprint.
@@ -78,7 +78,7 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 
 - [x] Production capture path passes methodology identity into `build_committed_capture`.
 - [x] Modified research test fixtures pass methodology identity into committed-capture builders.
-- [x] Methodology v3 fingerprint component tree audit: 37 / 37 paths present.
+- [x] Methodology v4 fingerprint component tree audit: 37 / 37 paths present.
 - [x] Evidence-health reports structured blockers rather than mutating evidence.
 - [x] Project context, decision log, session log and PR description are aligned to Phase 2.8.
 
@@ -106,10 +106,23 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 - [x] Exact methodology-v3 freeze commit is `2b0aa92d292410098d9678a3bfd3102f3df1ed4b`.
 - [x] No post-T0 future committed capture existed before the v3 freeze.
 
+## Frozen source-clock reconstruction seed — D-035
+
+- [x] Strict outcome enrollment requires a complete source-clock reconstruction seed.
+- [x] Seed freezes source signal trade date, signal-clock basis, reaction-anchor label and price.
+- [x] Signal-clock basis is `last_frontier_pivot_confirmed_at=index+scale`.
+- [x] Reaction anchor is B for Shark/0XABC and A for XABCD/ABCD.
+- [x] Committed capture schema v5 rejects partial seed while allowing fully seedless non-enrollment rows.
+- [x] Prospective observation schema v4 freezes the complete enrollment source-clock seed.
+- [x] Scanner disappearance cannot delete the frozen seed or censor later source-event reconstruction.
+- [x] Methodology contract advanced to v4 with the same 37 component paths.
+- [x] Exact methodology-v4 freeze commit is `c774c54928c33361952bf1a612a8555633449625`.
+- [x] No post-T0 future committed capture existed before the v4 freeze.
+
 ## Exact pre-T1 methodology code freeze — D-033
 
-- [x] Historical methodology-v2 freeze was `084ddf...`; current T1 freeze is methodology-v3 commit `2b0aa92d292410098d9678a3bfd3102f3df1ed4b`.
-- [x] Current contract version / component count are fixed at v3 / 37.
+- [x] Historical v2/v3 freezes remain auditable; current T1 freeze is methodology-v4 commit `c774c54928c33361952bf1a612a8555633449625`.
+- [x] Current contract version / component count are fixed at v4 / 37.
 - [x] Capture preflight rejects any post-freeze change to the 37 methodology paths.
 - [x] Methodology guard runs before M1 update or authoritative capture.
 - [x] Guard provenance report is included in the evidence transport bundle.
