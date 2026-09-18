@@ -7,6 +7,8 @@ HEAD = "abc123"
 def _reports(expected="2026-09-17"):
     workbench = {
         "code_head": HEAD,
+        "worktree_clean": True,
+        "dirty_paths": [],
         "status": "pass",
         "gates": {
             "python": {"status": "pass"},
@@ -19,6 +21,8 @@ def _reports(expected="2026-09-17"):
     }
     metadata = {
         "code_head": HEAD,
+        "worktree_clean": True,
+        "dirty_paths": [],
         "status": "pass",
         "event_feed_status": "event_partial",
         "samples": [
@@ -47,6 +51,8 @@ def _reports(expected="2026-09-17"):
     }
     product = {
         "code_head": HEAD,
+        "worktree_clean": True,
+        "dirty_paths": [],
         "status": "pass",
         "total_issues": 0,
         "successful_analyses": 2,
@@ -58,6 +64,8 @@ def _reports(expected="2026-09-17"):
     }
     context = {
         "code_head": HEAD,
+        "worktree_clean": True,
+        "dirty_paths": [],
         "overall": "all_steps_completed",
         "expected_trade_date": expected,
         "target_trade_date": expected,

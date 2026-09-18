@@ -7,6 +7,8 @@ HEAD = "abc123"
 def _workbench(status="pass"):
     return {
         "code_head": HEAD,
+        "worktree_clean": True,
+        "dirty_paths": [],
         "status": status,
         "gates": {
             "python": {"status": "pass"},
@@ -22,6 +24,8 @@ def _workbench(status="pass"):
 def _metadata():
     return {
         "code_head": HEAD,
+        "worktree_clean": True,
+        "dirty_paths": [],
         "status": "pass",
         "event_feed_status": "event_partial",
         "samples": [
@@ -35,6 +39,8 @@ def _metadata():
 def _product(patterns=2):
     return {
         "code_head": HEAD,
+        "worktree_clean": True,
+        "dirty_paths": [],
         "status": "pass",
         "total_issues": 0,
         "successful_analyses": 3,
@@ -48,6 +54,8 @@ def _product(patterns=2):
 def _context(overall="all_steps_completed"):
     return {
         "code_head": HEAD,
+        "worktree_clean": True,
+        "dirty_paths": [],
         "overall": overall,
         "expected_trade_date": "2026-09-17",
         "target_trade_date": "2026-09-17",
