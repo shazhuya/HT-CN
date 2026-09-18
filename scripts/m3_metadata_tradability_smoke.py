@@ -14,6 +14,8 @@ from htcn.app.a_share_execution_context import (
     load_daily_trading_metadata,
     load_security_metadata,
 )
+from htcn.data.delta import DailyHistoryView, MarketDailyDeltaStore
+from htcn.data.store import ParquetDailyStore
 
 
 def _git_head() -> str | None:
@@ -140,6 +142,12 @@ def run(catalog: Path) -> dict[str, Any]:
             confirmed_suspended = 0
         samples = _sample_rows(con)
 
+    data_root = catalog.parent
+    history = DailyHistoryView(
+        ParquetDailyStore(data_root / "daily"),
+        MarketDailyDeltaStore(data_root / "daily_delta"),
+    )
+
     sample_payloads: list[dict[str, Any]] = []
     for instrument_id, board, parquet_raw in samples:
         metadata = load_security_metadata(catalog, instrument_id)
@@ -155,38 +163,46 @@ def run(catalog: Path) -> dict[str, Any]:
             "parquet_loaded": False,
             "execution_context": None,
         }
+        payload["base_parquet_loaded"] = False
+        payload["logical_history_loaded"] = False
+        payload["logical_last_trade_date"] = None
         if parquet_raw:
             parquet = _resolve_parquet(catalog, parquet_raw)
             payload["resolved_parquet_path"] = str(parquet)
-            if parquet.exists():
-                frame = pd.read_parquet(parquet).tail(80).reset_index(drop=True)
-                if not frame.empty:
-                    as_of = None
-                    if "trade_date" in frame.columns:
-                        stamp = pd.to_datetime(frame["trade_date"].iloc[-1], errors="coerce")
-                        if not pd.isna(stamp):
-                            as_of = stamp.date()
-                    event = load_daily_trading_metadata(catalog, instrument_id, as_of)
-                    context = build_a_share_execution_context(
-                        frame,
-                        instrument_id=instrument_id,
-                        metadata=metadata,
-                        daily_event=event,
-                    )
-                    payload["parquet_loaded"] = True
-                    payload["execution_context"] = {
-                        "as_of_trade_date": context.as_of_trade_date,
-                        "board": context.board,
-                        "metadata_available": context.metadata_available,
-                        "daily_event_available": context.daily_event_available,
-                        "daily_trading_status": context.daily_trading_status,
-                        "tradable_on_as_of_date": context.tradable_on_as_of_date,
-                        "price_limit_status": context.price_limit_status,
-                        "rule_based_price_limit_pct": context.rule_based_price_limit_pct,
-                        "special_event_exceptions_unresolved": context.special_event_exceptions_unresolved,
-                        "atr_pct": context.atr_pct,
-                        "volume_ratio_20": context.volume_ratio_20,
-                    }
+            payload["base_parquet_loaded"] = parquet.exists()
+
+        frame = history.read(instrument_id).tail(80).reset_index(drop=True)
+        if not frame.empty:
+            as_of = None
+            if "trade_date" in frame.columns:
+                stamp = pd.to_datetime(frame["trade_date"].iloc[-1], errors="coerce")
+                if not pd.isna(stamp):
+                    as_of = stamp.date()
+            event = load_daily_trading_metadata(catalog, instrument_id, as_of)
+            context = build_a_share_execution_context(
+                frame,
+                instrument_id=instrument_id,
+                metadata=metadata,
+                daily_event=event,
+            )
+            payload["parquet_loaded"] = True
+            payload["logical_history_loaded"] = True
+            payload["logical_last_trade_date"] = (
+                None if as_of is None else as_of.isoformat()
+            )
+            payload["execution_context"] = {
+                "as_of_trade_date": context.as_of_trade_date,
+                "board": context.board,
+                "metadata_available": context.metadata_available,
+                "daily_event_available": context.daily_event_available,
+                "daily_trading_status": context.daily_trading_status,
+                "tradable_on_as_of_date": context.tradable_on_as_of_date,
+                "price_limit_status": context.price_limit_status,
+                "rule_based_price_limit_pct": context.rule_based_price_limit_pct,
+                "special_event_exceptions_unresolved": context.special_event_exceptions_unresolved,
+                "atr_pct": context.atr_pct,
+                "volume_ratio_20": context.volume_ratio_20,
+            }
         sample_payloads.append(payload)
 
     result["samples"] = sample_payloads
@@ -194,8 +210,11 @@ def run(catalog: Path) -> dict[str, Any]:
         item["metadata_loaded"] and item["metadata_board"] == item["board_expected"]
         for item in sample_payloads
     )
-    parquet_checks = [item for item in sample_payloads if item.get("parquet_path")]
-    parquet_ok = all(item["parquet_loaded"] for item in parquet_checks) if parquet_checks else False
+    logical_checks = list(sample_payloads)
+    parquet_ok = (
+        bool(logical_checks)
+        and all(item.get("logical_history_loaded") for item in logical_checks)
+    )
     result["status"] = (
         "pass"
         if core_ok and parquet_ok
