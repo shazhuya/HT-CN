@@ -20,6 +20,9 @@ def _row(date: str, key: str, *, state: str = "waiting_terminal"):
         ),
         "execution_context_gate": "tradable",
         "context_integrity_summary": "complete",
+        "eligible_for_validation": True,
+        "price_mode": "qfq",
+        "price_basis_id": "qfq:" + "1" * 64,
         "source_prz_low": 90.0,
         "source_prz_high": 92.0,
         "source_terminal_trade_date": None,
@@ -260,6 +263,8 @@ def _absent_followup(
         "execution_context_gate": (
             "blocked_suspended" if suspended else "followup_observation_only"
         ),
+        "price_mode": "qfq",
+        "price_basis_id": "qfq:" + "1" * 64,
         "daily_event_source": "feed" if suspended else None,
         "daily_event_reason": "full-day suspension" if suspended else None,
         "as_of_open": None if suspended else 98.0,
@@ -349,3 +354,22 @@ def test_followup_cannot_coexist_with_scanner_present_row() -> None:
         assert "cannot be scanner-present and follow-up-absent" in str(exc)
     else:
         raise AssertionError("present + absent follow-up must fail closed")
+
+
+
+def test_price_basis_drift_is_recorded_without_auto_rebase() -> None:
+    later = _row("2026-09-19", "new")
+    later["price_basis_id"] = "qfq:" + "2" * 64
+    rows = [
+        _row("2026-09-17", "baseline"),
+        _row("2026-09-18", "new"),
+        later,
+    ]
+    report = build_prospective_observation_report(rows)
+    summary = report["candidate_summaries"][0]
+    assert summary["enrollment_price_basis_id"] == "qfq:" + "1" * 64
+    assert summary["price_basis_drift_snapshot_count"] == 1
+    assert summary["first_price_basis_drift_date"] == "2026-09-19"
+    assert summary["price_basis_stable_across_observations"] is False
+    assert report["observations"][-1]["price_basis_matches_enrollment"] is False
+    assert report["interpretation"]["price_basis_drift_is_auto_rebased"] is False
