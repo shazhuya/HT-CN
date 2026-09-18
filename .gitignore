@@ -16,6 +16,7 @@ apps/web/playwright-report/
 *.tsbuildinfo
 
 # Local data and runtime artifacts
+artifacts/**
 data/**/*.parquet
 data/**/*.duckdb
 data/**/*.db
