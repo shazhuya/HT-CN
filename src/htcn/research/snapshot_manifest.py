@@ -27,6 +27,7 @@ class SnapshotManifestEntry:
     candidate_count: int
     worktree_clean: bool
     status: str
+    cohort_followup_count: int = 0
     capture_transaction_id: str | None = None
     methodology_contract_version: int | None = None
     methodology_fingerprint: str | None = None
