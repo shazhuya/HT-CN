@@ -111,6 +111,7 @@ def audit_evidence_bundle(
 
     if "bundle_reports_evidence_health_blocked" in transport.warnings:
         warnings.append("bundle_reports_evidence_health_blocked")
+        blockers.append("bundle_evidence_health_blocked")
 
     manifest = transport.manifest or {}
     summary["bundle_status"] = manifest.get("status")
@@ -188,6 +189,25 @@ def audit_evidence_bundle(
                 ):
                     blockers.append("bundle_methodology_differs_from_committed_chain")
 
+            if len(committed) != int(manifest.get("committed_capture_count") or 0):
+                blockers.append("bundle_committed_capture_count_drift")
+            if committed:
+                latest_capture = committed[-1]
+                if (
+                    manifest.get("latest_committed_capture_date")
+                    != latest_capture.get("as_of_trade_date")
+                ):
+                    blockers.append("bundle_latest_capture_date_drift")
+                if (
+                    manifest.get("latest_capture_transaction_id")
+                    != latest_capture.get("transaction_id")
+                ):
+                    blockers.append("bundle_latest_transaction_id_drift")
+                if manifest.get("code_head") != latest_capture.get("code_head"):
+                    blockers.append("bundle_code_head_differs_from_latest_capture")
+                if manifest.get("worktree_clean") is not True:
+                    blockers.append("bundle_worktree_not_clean")
+
             health = _json_member(archive, "reports/m4-evidence-health.json")
             if health is None:
                 warnings.append("evidence_health_report_missing")
@@ -203,9 +223,14 @@ def audit_evidence_bundle(
                         blockers.append("evidence_health_latest_capture_drift")
                     if (
                         health.get("authoritative_methodology_fingerprint")
-                        not in (None, chain_methodology_fingerprint)
+                        != chain_methodology_fingerprint
                     ):
                         blockers.append("evidence_health_methodology_drift")
+                    if (
+                        health.get("authoritative_methodology_contract_version")
+                        != chain_methodology_version
+                    ):
+                        blockers.append("evidence_health_methodology_version_drift")
 
             included_transition = _json_member(
                 archive,
@@ -238,9 +263,14 @@ def audit_evidence_bundle(
                     )
                 if (
                     included_transition.get("methodology_fingerprint")
-                    not in (None, chain_methodology_fingerprint)
+                    != chain_methodology_fingerprint
                 ):
                     blockers.append("transition_report_methodology_drift")
+                if (
+                    included_transition.get("methodology_contract_version")
+                    != chain_methodology_version
+                ):
+                    blockers.append("transition_report_methodology_version_drift")
 
             included_observation = _json_member(
                 archive,
@@ -270,9 +300,14 @@ def audit_evidence_bundle(
                     )
                 if (
                     included_observation.get("methodology_fingerprint")
-                    not in (None, chain_methodology_fingerprint)
+                    != chain_methodology_fingerprint
                 ):
                     blockers.append("observation_report_methodology_drift")
+                if (
+                    included_observation.get("methodology_contract_version")
+                    != chain_methodology_version
+                ):
+                    blockers.append("observation_report_methodology_version_drift")
 
             all_rows = [dict(row) for row in transition.get("normalized_rows") or []]
             latest_trade_date = transition.get("latest_trade_date")
