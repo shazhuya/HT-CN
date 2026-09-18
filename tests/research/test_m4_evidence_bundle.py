@@ -425,6 +425,8 @@ def test_transport_bundle_can_carry_immutable_outcome_snapshot(tmp_path) -> None
         "outcome_enrollment_trade_date": "2026-09-18",
         "outcome_as_of_trade_date": "2026-09-21",
         "capture_methodology_fingerprint": "a" * 64,
+        "outcome_engine_contract_version": 1,
+        "outcome_engine_fingerprint": "d" * 64,
         "outcome_protocol_id": "m4-outcome-v1",
         "outcome_protocol_fingerprint": "b" * 64,
         "current_price_basis_id": path_basis,
