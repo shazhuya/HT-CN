@@ -1362,3 +1362,67 @@ HT-CN 实战工作台未来必须面对几百到几千只 A 股。重复全 univ
 
 全 A 股 daily cache miss 的成本较高。React 双请求或多客户端并发如果触发重复 full-universe build，会把 CPU / IO 负担成倍放大。D-047 将重复请求合并，但不赋予协调层任何研究语义。
 
+
+
+## D-048 — Operator cache 必须绑定当前数据输入身份与分析代码身份
+
+**状态：Frozen M5 Phase 7 cache-input-identity boundary**
+
+正式决定：
+
+1. M5 product cache 的有效性不能只由交易日 / bars / scales / universe / cache contract 决定；
+2. 同一交易日内，只要底层数据输入发生变化，旧 cache 必须失效；
+3. 同一交易日内，只要能够改变 Queue 输出的分析代码发生变化，旧 cache 必须失效；
+4. Data Input Identity contract v1 覆盖当前 Operator Queue 的本地正式输入：
+   - `catalog.duckdb`；
+   - `catalog.duckdb.wal`；
+   - `daily/**/*.parquet`；
+   - `daily_delta/**/*.parquet`；
+   - `adjustment/qfq/**/*.parquet`；
+   - `benchmarks/**/*.parquet`；
+5. Data Input Identity 使用 relative path + size + mtime_ns；它是产品 cache invalidation identity，不是研究证据 hash；
+6. Analysis Code Identity contract v1 使用内容 SHA-256，覆盖：
+   - Operator / context / source service 相关 app 文件；
+   - 对应 data 层文件；
+   - `src/htcn/harmonic/**/*.py`；
+7. Operator Cache Input Identity contract v1 必须合并 data fingerprint 与 analysis-code fingerprint；
+8. Operator snapshot contract 升级到 v2，并持久化完整 input identity provenance；
+9. cache read 必须校验：
+   - trade date；
+   - bars；
+   - scales；
+   - universe hash；
+   - snapshot contract；
+   - operator input identity；
+   - data fingerprint；
+   - analysis-code fingerprint；
+10. single-flight key 必须包含 operator input fingerprint；
+11. 不同 input identity 的 concurrent request 不允许被错误合并为同一 single-flight；
+12. API 进程启动时冻结 analysis-code identity；运行中的进程不得把磁盘上后续热改源码当成自己已加载的代码身份；
+13. API 每次 Queue 请求重新计算 data identity；
+14. precompute 进程同样冻结本进程 analysis-code identity；
+15. full-universe build 完成后必须再次读取当前 data identity；
+16. 若 build 前后 combined input identity 不一致：
+    - `input_identity_stable_during_build=false`；
+    - status=`live_not_cached_input_changed`；
+    - 禁止写 product cache；
+17. cache hit 明确记录 `input_identity_stable_during_build=true`；
+18. input identity / cache / single-flight 永久属于 product execution layer：
+    - authoritative_evidence=false；
+    - writes_m4_evidence=false；
+    - methodology_identity=false；
+19. Phase 7 不修改 harmonic identity / Source Raw PRZ / Source lifecycle / M4 enrollment / Outcome Engine；
+20. D-047 的 single-flight scope 仍只是 process-local；D-048 不虚构跨进程锁语义；
+21. validated checkpoint：
+    `7d1de7a81b7b2efc2a149eecd5a6c41b865123cd`；
+22. Hosted CI run `35378357267` / #1634：
+    - overall success；
+    - Python 650 passed；
+    - Web build success；
+    - Playwright 21 passed；
+    - browser evidence upload success；
+23. run `35378145254` / #1632 的 cancelled 结论来自后续 push supersede，不得解释成 Phase 7 测试失败。
+
+原因：
+
+M5 已经进入全 universe、并行、缓存和 single-flight 的实战产品阶段。若 cache identity 不绑定实际数据与实际分析代码，同一交易日内的数据更新或代码升级可能静默复用旧 Queue，直接破坏“当前看到的结果对应当前输入”的基本产品可信度。D-048 将这一点冻结为显式、可测试的产品一致性边界，同时继续与 M4 authoritative evidence 完全隔离。

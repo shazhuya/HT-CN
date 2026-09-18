@@ -1,9 +1,9 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `af1124dcd32bd1d719877e7d88ff74d26c6deebf`
-context_checkpoint_title: `M4 QFQ readiness 54/55; historical Saturday continuity repair frozen`
-context_snapshot_date: `2026-09-18`
+context_checkpoint: `7d1de7a81b7b2efc2a149eecd5a6c41b865123cd`
+context_checkpoint_title: `M5 Phase 7 Operator Cache Input Identity green`
+context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
 
@@ -11,20 +11,30 @@ repository: `shazhuya/HT-CN`
 
 ## 当前阶段
 
-正式 `main` 已合入 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration**。
+正式 `main` 仍以 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration** 为已合并基线；M4 prospective evidence 与 M5 只读产品层在独立分支继续推进。
 
-- M3 merge commit：`edec5e21fb9e873daf8fb77fceaa0d89dbbd5b25`
-- M3 PR：#12，已于 2026-09-18 合并
-- 最终本机验收：current-head READY（known warnings only），hard blocker = 0
-- 当前开发分支：`m4/real-a-share-validation-workflow`
+当前实际开发现场已经进入 **M5 Phase 7 — Operator Cache Input Identity**：
 
-M4 当前原则：
+- 当前分支：`m5/operator-cache-input-identity`
+- Phase 7 validated code checkpoint：`7d1de7a81b7b2efc2a149eecd5a6c41b865123cd`
+- 最新 hosted CI：run `35378357267` / #1634，overall success
+- Python：650 passed
+- Web build：success
+- Playwright：21 passed
+- browser evidence upload：success
+- 用户指出的 run `35378145254` / #1632 属于同一 Phase 7 提交链，因后续 push 被 GitHub concurrency 取消，不是代码测试失败。
 
-**先建立从真实当前交易日开始的 prospective、append-only、no-backfill 生命周期证据，再讨论统计规律、机会排序或执行优先级。**
+M5 Phase 1–7 当前主线：
 
-M3 的 source-clock 规则继续作为不可回退基线：
+1. Phase 1 — Daily Operator Queue；
+2. Phase 2 — Operator Delta；
+3. Phase 3 — Daily Operator Cache；
+4. Phase 4 — Full-Universe Operator Index；
+5. Phase 5 — bounded parallel build；
+6. Phase 6 — process-local single-flight；
+7. Phase 7 — cache input identity：数据输入与分析代码身份进入 cache validation / single-flight key，且构建结束后重核输入身份，构建期间输入变化则禁止写 cache。
 
-**live/current state 必须由可观察的 Source execution clock 驱动；historical D/C / reaction audit 只保留诊断兼容。**
+M5 仍是**只读实战产品层**，不拥有 harmonic identity、Source Raw PRZ 或 lifecycle，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。
 
 ## 正式 main 基线 — M3
 
@@ -1581,3 +1591,52 @@ Implemented:
 
 D-047 freezes single-flight as product concurrency coordination only.
 
+
+
+## M5 Phase 7 — Operator Cache Input Identity
+
+Phase 7 修复了“同一交易日内，底层数据或分析代码发生变化但旧 Queue cache 仍可能被复用”的产品一致性缺口。
+
+当前冻结实现：
+
+- Data Input Identity contract v1：
+  - `catalog.duckdb` / WAL；
+  - `daily`；
+  - `daily_delta`；
+  - `adjustment/qfq`；
+  - `benchmarks`；
+  - 使用 relative path + size + mtime_ns 构建产品缓存失效 fingerprint。
+- Analysis Code Identity contract v1：
+  - app 层与 data 层显式依赖；
+  - `src/htcn/harmonic/**/*.py`；
+  - 使用文件内容 SHA-256。
+- Operator Cache Input Identity contract v1 合并 data + analysis-code fingerprint。
+- Operator snapshot contract 已升至 v2，并持久化 input identity。
+- cache read 必须同时匹配 trade date / bars / scales / universe / contract / input identity。
+- single-flight key 绑定 input identity；不同 identity 不允许错误 coalesce。
+- API 进程冻结 analysis-code identity，但每次请求刷新 data identity。
+- precompute 同样冻结本进程 analysis-code identity，并在 full build 完成后再次读取 data identity。
+- 构建过程中若 input identity 改变：
+  - 返回 `live_not_cached_input_changed`；
+  - 禁止把本次结果写成正式 product cache。
+- Phase 7 不改变 Queue semantics，不进入 M4 methodology / outcome evidence。
+
+Validated checkpoint：
+
+`7d1de7a81b7b2efc2a149eecd5a6c41b865123cd`
+
+Hosted CI：
+
+- run `35378357267` / #1634：success；
+- Python 650 passed；
+- Web build success；
+- Playwright 21 passed；
+- browser evidence artifact uploaded。
+
+Phase 7 governance：D-048 / `specs/m5-phase-7-operator-cache-input-identity.md`。
+
+### 下一步
+
+Phase 7 代码已经 green；下一阶段不应再回到 M4 QFQ 或重复做同一缓存 identity 修复。
+
+优先进入 M5 下一产品可靠性阶段：处理 **跨进程 / precompute 与 API 并发 rebuild 的协调边界**，因为 D-047 明确只保证 process-local single-flight。任何新协调层仍只能优化产品执行，不得改变 Queue semantics 或 M4 evidence。

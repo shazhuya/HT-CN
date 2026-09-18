@@ -1235,3 +1235,47 @@ Validation:
 
 D-047 freezes single-flight as product execution coordination only.
 
+
+
+## 2026-09-19 — M5 Phase 7 Operator Cache Input Identity green
+
+Recovered the actual current M5 branch after an earlier stale M4-context restore.
+
+Current branch:
+`m5/operator-cache-input-identity`
+
+Validated implementation checkpoint:
+`7d1de7a81b7b2efc2a149eecd5a6c41b865123cd`
+
+Phase 7 implementation:
+- added product-only Data Input Identity;
+- added product-only Analysis Code Identity;
+- combined them into Operator Cache Input Identity;
+- snapshot cache contract advanced to v2;
+- cache reads now reject same-day data/code identity drift;
+- single-flight identity now includes the combined input fingerprint;
+- different input identities do not coalesce;
+- API freezes analysis-code identity per running process and refreshes data identity per request;
+- precompute freezes analysis-code identity per process and rechecks data identity after full build;
+- input change during build returns `live_not_cached_input_changed` and suppresses cache write.
+
+CI sequence:
+- run #1627 exposed a real Phase 7 regression during development;
+- later fixes and tests closed it;
+- run #1632 / `35378145254` was cancelled by a newer push, not a code-test failure;
+- run #1633 / `35378178032`: success;
+- run #1634 / `35378357267`: success;
+- Python: 650 passed;
+- Web build: success;
+- Playwright: 21 passed;
+- browser evidence upload: success.
+
+Governance closeout:
+- D-048;
+- `specs/m5-phase-7-operator-cache-input-identity.md`;
+- PROJECT_CONTEXT moved from stale M4 QFQ checkpoint to M5 Phase 7.
+
+Next:
+- do not regress to M4 QFQ;
+- move to the next M5 product-reliability boundary, with cross-process/precompute-vs-API rebuild coordination as the first open concurrency gap;
+- preserve all frozen M3/M4 source/methodology boundaries.
