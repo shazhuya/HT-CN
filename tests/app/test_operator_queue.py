@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import threading
+
 from htcn.app.operator_queue import (
     WORKFLOW_BUCKET_ORDER,
     build_operator_queue,
@@ -303,3 +305,162 @@ def test_operator_queue_presentation_filter_preserves_full_snapshot_input() -> N
         item["action_state"]
         for item in full["items"]
     } == {"waiting", "evidence_insufficient"}
+
+
+
+def test_parallel_operator_queue_matches_serial_semantics() -> None:
+    payloads = {
+        "SSE.1": _analysis(
+            _pattern(
+                pattern_id="bat",
+                action_state="waiting",
+                lifecycle_state="approaching_source_prz",
+            )
+        ),
+        "SSE.2": _analysis(
+            _pattern(
+                pattern_id="crab",
+                action_state="execution_evaluation",
+                lifecycle_state="type_i_confirmed",
+            )
+        ),
+        "SZSE.3": _analysis(
+            _pattern(
+                pattern_id="gartley",
+                action_state="reaction_observation",
+                lifecycle_state="t_plus_1",
+            )
+        ),
+    }
+    instruments = ["SSE.1", "SSE.2", "SZSE.3"]
+
+    serial = build_operator_queue(
+        FakeService(payloads),
+        instruments,
+        max_workers=1,
+    )
+    parallel = build_operator_queue(
+        FakeService(payloads),
+        instruments,
+        max_workers=3,
+        service_factory=lambda: FakeService(payloads),
+    )
+
+    assert parallel["items"] == serial["items"]
+    assert parallel["errors"] == serial["errors"]
+    assert parallel["action_state_counts"] == serial["action_state_counts"]
+    assert parallel["lifecycle_state_counts"] == serial["lifecycle_state_counts"]
+    assert parallel["as_of_trade_date"] == serial["as_of_trade_date"]
+    assert serial["build_execution"]["mode"] == "sequential"
+    assert parallel["build_execution"]["mode"] == "parallel_thread_pool"
+    assert parallel["build_execution"]["changes_queue_semantics"] is False
+
+
+def test_parallel_request_without_factory_falls_back_to_sequential() -> None:
+    service = FakeService({
+        "SSE.1": _analysis(
+            _pattern(
+                pattern_id="bat",
+                action_state="waiting",
+                lifecycle_state="approaching_source_prz",
+            )
+        ),
+        "SSE.2": _analysis(
+            _pattern(
+                pattern_id="crab",
+                action_state="waiting",
+                lifecycle_state="approaching_source_prz",
+            )
+        ),
+    })
+
+    payload = build_operator_queue(
+        service,
+        ["SSE.1", "SSE.2"],
+        max_workers=4,
+    )
+
+    execution = payload["build_execution"]
+    assert execution["mode"] == "sequential"
+    assert execution["effective_max_workers"] == 1
+    assert execution["parallel_fallback_reason"] == (
+        "service_factory_required_for_parallel_isolation"
+    )
+
+
+def test_parallel_operator_queue_uses_thread_local_service_instances() -> None:
+    lock = threading.Lock()
+    barrier = threading.Barrier(2)
+    service_ids: set[int] = set()
+
+    class ProbeService:
+        def analyze(
+            self,
+            instrument_id: str,
+            *,
+            bars: int,
+            scales: tuple[int, ...],
+        ) -> dict:
+            with lock:
+                service_ids.add(id(self))
+            barrier.wait(timeout=2)
+            return _analysis(
+                _pattern(
+                    pattern_id="bat",
+                    action_state="waiting",
+                    lifecycle_state="approaching_source_prz",
+                )
+            )
+
+    payload = build_operator_queue(
+        ProbeService(),
+        ["SSE.1", "SSE.2"],
+        max_workers=2,
+        service_factory=ProbeService,
+    )
+
+    assert payload["failed_instrument_count"] == 0
+    assert payload["analyzed_instrument_count"] == 2
+    assert len(service_ids) == 2
+    assert payload["build_execution"]["service_isolation"] == (
+        "thread_local_service_factory"
+    )
+
+
+def test_parallel_operator_queue_keeps_error_isolation_and_progress() -> None:
+    payloads: dict[str, dict | Exception] = {
+        "SSE.1": _analysis(
+            _pattern(
+                pattern_id="bat",
+                action_state="waiting",
+                lifecycle_state="approaching_source_prz",
+            )
+        ),
+        "SSE.2": RuntimeError("broken local history"),
+        "SSE.3": _analysis(
+            _pattern(
+                pattern_id="crab",
+                action_state="reaction_observation",
+                lifecycle_state="t_plus_1",
+            )
+        ),
+    }
+    progress: list[tuple[int, int, str, bool]] = []
+
+    payload = build_operator_queue(
+        FakeService(payloads),
+        ["SSE.1", "SSE.2", "SSE.3"],
+        max_workers=3,
+        service_factory=lambda: FakeService(payloads),
+        progress_callback=lambda done, total, instrument, ok: progress.append(
+            (done, total, instrument, ok)
+        ),
+    )
+
+    assert payload["analyzed_instrument_count"] == 2
+    assert payload["failed_instrument_count"] == 1
+    assert payload["errors"][0]["instrument_id"] == "SSE.2"
+    assert len(progress) == 3
+    assert {row[2] for row in progress} == {"SSE.1", "SSE.2", "SSE.3"}
+    assert progress[-1][0] == 3
+    assert all(row[1] == 3 for row in progress)
