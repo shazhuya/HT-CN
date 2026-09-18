@@ -278,3 +278,15 @@
 - `26c1f171b95830bfd06923591bd959e83e659c27`: formal reports and readiness bound to clean worktree state.
 - `b536dd944e6f9b541506619fd7bd851b72bb732e`: readiness/freshness fixtures aligned with final anti-false-green contract.
 - Phase 4.5 changes acceptance only; harmonic identity / Source PRZ / lifecycle semantics remain unchanged.
+
+
+## M3 Phase 4.6 / 2026-09-18
+
+- User-local closeout on `c444ac64...` confirmed M1 updated 55/55 initialized datasets to 2026-09-17 with zero stale/ahead datasets.
+- Real run exposed `artifacts/` as untracked, causing QA to stop before deterministic gates; fixed by ignoring `artifacts/**`.
+- Final Windows closeout wrapper headings were parsed incorrectly on CMD; control/output lines are now ASCII-safe.
+- External Eastmoney/AkShare disconnects are now classified separately from local structural failures.
+- Industry/concept external unavailability becomes explicit degraded warning; local schema/aggregate/program failures remain blockers.
+- Degraded external-only context sync now exits 0; structural partial failure remains non-zero.
+- Readiness tests freeze READY-with-warnings for external-unavailable context and NOT READY for local failed context.
+- Current implementation checkpoint before docs commit: `ce90d575009b658a6a6c3a1d33b21cf107ce54cd`.

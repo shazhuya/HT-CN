@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `b536dd944e6f9b541506619fd7bd851b72bb732e`
-context_checkpoint_title: `M3 Phase 4.5: anti-false-green freshness, full-market coverage and clean-worktree readiness`
+context_checkpoint: `ce90d575009b658a6a6c3a1d33b21cf107ce54cd`
+context_checkpoint_title: `M3 Phase 4.6: real-run blocker fixes for artifacts, Windows wrapper and external-context fail-safe`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -385,6 +385,40 @@ Context sync 新增 `market_data_freshness`：
 
 最终 READY 因而要求：代码身份正确、工作树干净、全市场本地日线新鲜、代表样本新鲜、产品 contract 通过、浏览器验收通过、context 无结构性 failure。
 
+
+## M3 Phase 4.6 — Real-Run Blocker Fixes
+
+用户本机首次运行 `运行M3最终收口.bat` 暴露出三类真实问题，已修复：
+
+1. **Generated artifacts polluted clean-worktree evidence**
+   - 真实日志中 `artifacts/` 作为 untracked 路径导致 QA 在 gate 1 前直接退出；
+   - `.gitignore` 现加入 `artifacts/**`；
+   - 生成的验收/Playwright/context/readiness 文件不再让 worktree 自己变脏。
+
+2. **Windows CMD parser corruption**
+   - 原最终收口 wrapper 的中文标题行在部分 Windows CMD 环境被误解析，出现 `'ase' is not recognized` / `'HEAD' is not recognized`；
+   - `运行M3最终收口.bat` 控制行改为 ASCII-safe 文本；
+   - 不影响 Python/报告中的中文优先产品规范。
+
+3. **External context outage semantics**
+   - 首次真实运行时 M1 已 55/55 更新到最新收盘日，market-data freshness 全部 current；
+   - 外部 Eastmoney/AkShare 连接断开导致四指数、行业、概念拉取失败；
+   - 规则现冻结为：
+     - 本地 schema / DB / aggregate / program error → `failed` → hard blocker；
+     - 可识别的 remote connection / timeout / proxy / SSL failure → `external_unavailable` → warning；
+     - 有旧完整 mapping 时继续 fail-safe preserve；
+     - 无旧 mapping 时明确 unavailable，不伪造 current evidence。
+
+Context sync exit semantics 同步调整：
+
+- `all_steps_completed` → exit 0；
+- `degraded`（仅外部不可达 / fail-safe 降级）→ exit 0；
+- `partial_failure`（本地结构性失败）→ non-zero。
+
+Readiness 回归测试冻结：
+`market=partial + industry/concept=external_unavailable` 可成为 READY-with-warnings；
+`industry/concept=failed` 仍然 NOT READY。
+
 ## 当前 CI 基础设施异常
 
 M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异常：
@@ -409,17 +443,14 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 4.5 — 用户本机最终真实验收。**
+**M3 Phase 4.6 — 用户本机第二次最终收口。**
 
-代码侧已完成 anti-false-green 收口；下一步只生成真实证据：
-
-1. 当前分支必须 clean worktree；
-2. 双击 `运行M3最终收口.bat`；
-3. 最终只读取 `artifacts/reports/m3-pr-readiness.md`；
-4. 若 NOT READY，只修 blocker；
-5. 若 READY / READY（有已知警告），再将 PR #12 从 Draft 推进到 Ready。
-
-在真实 `pr_ready=true` 之前，不新增 pattern family，不解除 5-0 quarantine / Alternate Bat fail-closed。
+1. `git pull` 到最新 `m3/source-clock-lifecycle-migration`；
+2. 确认 `git status --short` 无输出；
+3. 重新运行 `运行M3最终收口.bat`；
+4. 只提交新的 `artifacts/reports/m3-pr-readiness.md`；
+5. 若 READY / READY（有已知警告），推进 PR #12 Draft → Ready；
+6. 若 NOT READY，仅处理剩余 blocker，不扩展新功能。
 
 
 ## 固定 Source / Product 边界
