@@ -95,6 +95,11 @@ def test_bullish_source_events_reuse_core_and_start_windows_at_t_plus_1() -> Non
         methodology_fingerprint=METHOD,
     )
     assert result["status"] == "source_outcome_observed"
+    assert result["market_path_rows"][0]["trade_date"] == "2026-09-16"
+    assert result["market_path_rows"][-1]["trade_date"] == "2026-09-28"
+    assert result["market_path_traded_bar_count"] == len(
+        result["market_path_rows"]
+    )
     events = result["source_events"]
     assert events["source_terminal_trade_date"] == "2026-09-18"
     assert events["source_terminal_price"] == 95.0
