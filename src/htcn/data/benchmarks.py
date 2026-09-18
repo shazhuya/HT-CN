@@ -23,8 +23,8 @@ CORE_BENCHMARKS: tuple[BenchmarkSpec, ...] = (
 
 class CoreBenchmarkStore:
     def __init__(self, root: str | Path) -> None:
+        # Read paths must stay side-effect free. Writers create the directory in upsert().
         self.root = Path(root)
-        self.root.mkdir(parents=True, exist_ok=True)
 
     def path_for(self, key: str) -> Path:
         return self.root / f"{key}.parquet"
@@ -48,6 +48,7 @@ class CoreBenchmarkStore:
         )
 
     def upsert(self, key: str, incoming: pd.DataFrame) -> pd.DataFrame:
+        self.root.mkdir(parents=True, exist_ok=True)
         required = {"trade_date", "open", "high", "low", "close"}
         missing = required.difference(incoming.columns)
         if missing:

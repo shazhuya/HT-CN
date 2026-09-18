@@ -7,7 +7,7 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-from htcn.data.sectors import INDUSTRY_KIND, INDUSTRY_SOURCE, ensure_sector_schema
+from htcn.data.sectors import INDUSTRY_KIND, INDUSTRY_SOURCE
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,8 +98,15 @@ def build_industry_context(
     path = Path(catalog_path)
     if not path.exists():
         return _empty("membership_unavailable")
-    ensure_sector_schema(path)
     with duckdb.connect(str(path), read_only=True) as con:
+        table_names = {
+            str(row[0])
+            for row in con.execute(
+                "SELECT table_name FROM information_schema.tables"
+            ).fetchall()
+        }
+        if "security_sector_membership" not in table_names:
+            return _empty("membership_unavailable")
         rows = con.execute("""
             SELECT sector_code, sector_name, source, observed_on
             FROM security_sector_membership
@@ -122,6 +129,18 @@ def build_industry_context(
 
     code, name = candidates[0].sector_code, candidates[0].sector_name
     with duckdb.connect(str(path), read_only=True) as con:
+        table_names = {
+            str(item[0])
+            for item in con.execute(
+                "SELECT table_name FROM information_schema.tables"
+            ).fetchall()
+        }
+        if "sector_snapshot" not in table_names:
+            return _empty(
+                "mapped_snapshot_unavailable", candidates=candidates,
+                mapping_source=source, mapping_observed_on=observed,
+                sector_code=code, sector_name=name
+            )
         row = con.execute("""
             SELECT * FROM sector_snapshot
             WHERE sector_kind=? AND sector_code=?
