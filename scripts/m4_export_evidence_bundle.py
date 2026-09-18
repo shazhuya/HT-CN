@@ -1,0 +1,237 @@
+from __future__ import annotations
+
+import argparse
+from datetime import datetime, timezone
+from hashlib import sha256
+import json
+from pathlib import Path
+from typing import Any
+import zipfile
+
+from htcn.app.evidence_identity import read_code_identity
+from htcn.research.capture_transaction import (
+    frozen_legacy_baseline_present,
+    read_committed_captures,
+)
+from htcn.research.evidence_health import build_evidence_chain_health
+from htcn.research.methodology_identity import build_methodology_identity
+
+
+BUNDLE_SCHEMA_VERSION = 1
+
+
+def _sha256(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _member(
+    path: Path,
+    *,
+    arcname: str,
+    required: bool,
+) -> dict[str, Any]:
+    return {
+        "path": path,
+        "arcname": arcname,
+        "required": required,
+    }
+
+
+def build_bundle(
+    *,
+    transaction_root: Path,
+    journal_path: Path,
+    manifest_path: Path,
+    reports_root: Path,
+    output: Path,
+) -> dict[str, Any]:
+    identity = read_code_identity()
+    methodology = build_methodology_identity()
+    health = build_evidence_chain_health(
+        transaction_root=transaction_root,
+        journal_path=journal_path,
+        manifest_path=manifest_path,
+    )
+    committed = read_committed_captures(transaction_root)
+
+    members: list[dict[str, Any]] = []
+
+    baseline = transaction_root / "legacy_baseline.json"
+    if frozen_legacy_baseline_present(transaction_root):
+        members.append(
+            _member(
+                baseline,
+                arcname="authoritative/legacy_baseline.json",
+                required=True,
+            )
+        )
+
+    for path in sorted(transaction_root.glob("????-??-??__*.json")):
+        members.append(
+            _member(
+                path,
+                arcname=f"authoritative/captures/{path.name}",
+                required=True,
+            )
+        )
+
+    report_names = (
+        "m4-lifecycle-snapshot.json",
+        "m4-evidence-health.json",
+        "m4-evidence-health.md",
+        "m4-lifecycle-transitions.json",
+        "m4-lifecycle-transitions.md",
+        "m4-prospective-observations.json",
+        "m4-prospective-observations.md",
+    )
+    for name in report_names:
+        path = reports_root / name
+        if path.exists():
+            members.append(
+                _member(
+                    path,
+                    arcname=f"reports/{name}",
+                    required=False,
+                )
+            )
+
+    missing_required = [
+        item["arcname"]
+        for item in members
+        if item["required"] and not item["path"].is_file()
+    ]
+    if missing_required:
+        raise FileNotFoundError(
+            f"required M4 evidence bundle member missing: {missing_required}"
+        )
+
+    file_records: list[dict[str, Any]] = []
+    for item in members:
+        path = Path(item["path"])
+        if not path.is_file():
+            continue
+        file_records.append(
+            {
+                "arcname": str(item["arcname"]),
+                "size_bytes": path.stat().st_size,
+                "sha256": _sha256(path),
+                "required": bool(item["required"]),
+            }
+        )
+
+    latest_capture = committed[-1] if committed else None
+    manifest: dict[str, Any] = {
+        "schema_version": BUNDLE_SCHEMA_VERSION,
+        "status": (
+            "evidence_health_blocked"
+            if int(health.get("blocker_count") or 0) > 0
+            else "transport_bundle_ready"
+        ),
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "code_head": identity.head,
+        "worktree_clean": identity.worktree_clean,
+        "methodology_contract_version": methodology.contract_version,
+        "methodology_fingerprint": methodology.fingerprint,
+        "committed_capture_count": len(committed),
+        "latest_committed_capture_date": (
+            None
+            if latest_capture is None
+            else latest_capture.get("as_of_trade_date")
+        ),
+        "latest_capture_transaction_id": (
+            None
+            if latest_capture is None
+            else latest_capture.get("transaction_id")
+        ),
+        "evidence_health_status": health.get("status"),
+        "evidence_health_blocker_count": health.get("blocker_count"),
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+        "authoritative_evidence_modified": False,
+        "interpretation": (
+            "This ZIP is a transport bundle only. Authoritative evidence remains "
+            "the frozen baseline plus immutable committed capture transactions."
+        ),
+        "files": file_records,
+    }
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    tmp = output.with_name(f".{output.name}.tmp")
+    if tmp.exists():
+        tmp.unlink()
+
+    with zipfile.ZipFile(
+        tmp,
+        mode="w",
+        compression=zipfile.ZIP_DEFLATED,
+        compresslevel=9,
+    ) as archive:
+        archive.writestr(
+            "bundle-manifest.json",
+            json.dumps(
+                manifest,
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+        )
+        for item in members:
+            path = Path(item["path"])
+            if path.is_file():
+                archive.write(path, arcname=str(item["arcname"]))
+
+    tmp.replace(output)
+
+    return {
+        **manifest,
+        "output": str(output),
+        "bundle_size_bytes": output.stat().st_size,
+        "bundle_sha256": _sha256(output),
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Package M4 authoritative evidence and derived reports for handoff."
+    )
+    parser.add_argument(
+        "--transaction-root",
+        default="data/research/m4/captures",
+    )
+    parser.add_argument(
+        "--journal",
+        default="data/research/m4/lifecycle_journal.jsonl",
+    )
+    parser.add_argument(
+        "--manifest",
+        default="data/research/m4/snapshot_manifest.jsonl",
+    )
+    parser.add_argument(
+        "--reports-root",
+        default="artifacts/reports",
+    )
+    parser.add_argument(
+        "--output",
+        default="artifacts/reports/m4-evidence-bundle.zip",
+    )
+    args = parser.parse_args()
+
+    payload = build_bundle(
+        transaction_root=Path(args.transaction_root),
+        journal_path=Path(args.journal),
+        manifest_path=Path(args.manifest),
+        reports_root=Path(args.reports_root),
+        output=Path(args.output),
+    )
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    print(f"\n[M4] evidence transport bundle: {payload['output']}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
