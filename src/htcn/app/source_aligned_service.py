@@ -309,7 +309,7 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
         frame: pd.DataFrame,
     ) -> dict[str, Any] | None:
         schema = str(pattern.get("schema"))
-        if schema not in {"XABCD", "ABCD"}:
+        if schema not in {"XABCD", "ABCD", "0XABC"}:
             return None
         points = list(pattern.get("points") or [])
         if not points:
@@ -331,8 +331,12 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
                 },
             }
 
-        a_point = next((point for point in points if point.get("label") == "A"), None)
-        if a_point is None:
+        reaction_anchor_label = "B" if schema == "0XABC" else "A"
+        reaction_anchor = next(
+            (point for point in points if point.get("label") == reaction_anchor_label),
+            None,
+        )
+        if reaction_anchor is None:
             return None
         prz = cls._rebuild_prz_from_payload(pattern)
         audit = observe_source_execution(
@@ -340,7 +344,7 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
             signal_bar=signal_bar,
             direction=PatternDirection(str(pattern["direction"])),
             prz=prz,
-            reaction_anchor_price=float(a_point["price"]),
+            reaction_anchor_price=float(reaction_anchor["price"]),
             observation_end_bar=len(frame) - 1,
         )
         clock = audit.as_payload()
@@ -349,6 +353,8 @@ class SourceAlignedHarmonicService(LocalHarmonicService):
                 "signal_clock_basis": "last_frontier_pivot_confirmed_at=index+scale",
                 "frontier_pivot_index": int(frontier["index"]),
                 "confirmation_lag_bars": scale,
+                "reaction_anchor_label": reaction_anchor_label,
+                "reaction_anchor_price": float(reaction_anchor["price"]),
                 "retrospective_d_clock_used": False,
                 "pez": {
                     "available": audit.pez_low is not None and audit.pez_high is not None,

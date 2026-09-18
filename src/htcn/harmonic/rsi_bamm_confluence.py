@@ -200,8 +200,12 @@ def observe_source_execution_for_match(
     if signal_bar < 0 or signal_bar >= len(frame) or signal_bar >= observation_end:
         return None
 
-    a_point = next((point for point in match.points if point.label == "A"), None)
-    if a_point is None:
+    reaction_anchor_label = "B" if isinstance(match, SharkMatch) else "A"
+    reaction_anchor = next(
+        (point for point in match.points if point.label == reaction_anchor_label),
+        None,
+    )
+    if reaction_anchor is None:
         return None
 
     return observe_source_execution(
@@ -209,7 +213,7 @@ def observe_source_execution_for_match(
         signal_bar=signal_bar,
         direction=match.direction,
         prz=prz,
-        reaction_anchor_price=float(a_point.price),
+        reaction_anchor_price=float(reaction_anchor.price),
         observation_end_bar=observation_end,
     )
 
