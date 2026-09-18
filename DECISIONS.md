@@ -1213,3 +1213,44 @@ HT-CN 已经具备较强的单标的 source-aligned 解释能力，但缺少日�
 
 实战工作台需要知道“今天发生了什么”，但产品状态差异和研究证据链不是一回事。D-043 将两者硬分离，既提升日常使用价值，又避免产生第二套伪 authoritative lifecycle history。
 
+## D-044 — M5 每日 Queue 缓存属于产品加速层，freshness 不满足时禁止落盘为当日缓存
+
+**状态：Frozen M5 Phase 3 product-cache boundary**
+
+正式决定：
+
+1. M5 可缓存完整 Operator Queue，以避免同交易日重复逐只运行 M3；
+2. cache identity 必须至少绑定：
+   - expected trade date
+   - bars
+   - scales
+   - universe hash
+   - cache contract version；
+3. product cache 永久声明：
+   - authoritative_evidence=false
+   - writes_m4_evidence=false；
+4. cache 不拥有 lifecycle；
+5. cache 不修改 harmonic identity；
+6. cache 不修改 Source Raw PRZ；
+7. cache 不进入 M4 enrollment/outcome；
+8. 只有 single_as_of Queue 可缓存；
+9. 若有 expected local trade date，则 Queue as-of 必须与其一致；
+10. 新交易日下旧 Queue 只能 live_not_cached，禁止错存成新交易日快照；
+11. cache corruption / schema mismatch / universe mismatch 不得阻断 live rebuild；
+12. cache 写入使用 temp + fsync + atomic replace；
+13. UI filter 只能作用于 presentation copy，不得改变完整 cached universe；
+14. 普通页面打开默认 cache-first；
+15. 用户显式“刷新队列”使用 refresh=true 强制重算；
+16. 允许每日 M1 更新后通过独立脚本预热产品 Queue；
+17. 预热结果不属于 research evidence；
+18. Hosted CI run #1525：
+   - overall success
+   - Python 628 passed
+   - Web build success
+   - Playwright 19 passed
+   - browser evidence upload success。
+
+原因：
+
+HT-CN 实战工作台未来必须面对几百到几千只 A 股。重复全 universe 扫描会把产品性能变成主要瓶颈。D-044 允许产品层做可验证、可失效、可回退的每日缓存，同时明确禁止把缓存升级成研究证据或 methodology state。
+
