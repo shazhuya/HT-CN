@@ -12,6 +12,7 @@ import duckdb
 from htcn.app.evidence_identity import read_code_identity
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 from htcn.research.lifecycle_journal import append_entries, entries_from_analysis
+from htcn.research.snapshot_manifest import SnapshotManifestEntry, append_snapshot_manifest
 
 
 def _expected_trade_date(catalog: Path) -> str:
@@ -45,6 +46,7 @@ def run(
     *,
     data_root: Path,
     journal_path: Path,
+    manifest_path: Path,
     max_symbols: int = 0,
 ) -> dict[str, Any]:
     catalog = data_root / "catalog.duckdb"
@@ -59,6 +61,7 @@ def run(
         "alpha_inference_allowed": False,
         "is_trade_instruction": False,
         "journal_path": str(journal_path),
+        "manifest_path": str(manifest_path),
         "errors": [],
     }
 
@@ -126,6 +129,23 @@ def run(
 
     append_result = append_entries(journal_path, all_entries)
     result["journal_append"] = append_result
+
+    manifest_entry = SnapshotManifestEntry(
+        code_head=str(identity.head),
+        as_of_trade_date=expected,
+        captured_at_utc=str(result["captured_at_utc"]),
+        instrument_count=len(instruments),
+        successful_instruments=successful,
+        failed_instruments=len(instruments) - successful,
+        candidate_count=len(all_entries),
+        worktree_clean=identity.worktree_clean,
+        status="pass",
+    )
+    result["manifest_append"] = append_snapshot_manifest(
+        manifest_path,
+        manifest_entry,
+    )
+
     result["source_lifecycle_states"] = _summary_counter(
         [entry.source_lifecycle_state for entry in all_entries]
     )
@@ -150,6 +170,10 @@ def main() -> int:
         default="data/research/m4/lifecycle_journal.jsonl",
     )
     parser.add_argument(
+        "--manifest",
+        default="data/research/m4/snapshot_manifest.jsonl",
+    )
+    parser.add_argument(
         "--output",
         default="artifacts/reports/m4-lifecycle-snapshot.json",
     )
@@ -159,6 +183,7 @@ def main() -> int:
     payload = run(
         data_root=Path(args.data_root),
         journal_path=Path(args.journal),
+        manifest_path=Path(args.manifest),
         max_symbols=max(0, args.max_symbols),
     )
     output = Path(args.output)
