@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from htcn.app.evidence_identity import read_code_identity
+
 
 @dataclass(frozen=True, slots=True)
 class ReadinessFinding:
@@ -101,6 +103,23 @@ def evaluate(
     context_current = _require_current_report(
         findings, name="context", report=context, current_head=current_head
     )
+
+    for report_name, report in (
+        ("workbench", workbench),
+        ("metadata", metadata),
+        ("product", product),
+        ("context", context),
+    ):
+        if report is not None and report.get("worktree_clean") is not True:
+            _finding(
+                findings,
+                f"{report_name}_evidence_dirty_worktree",
+                "blocker",
+                (
+                    f"{report_name} evidence was generated from a dirty worktree: "
+                    f"{report.get('dirty_paths') or []}."
+                ),
+            )
 
     if workbench_current and workbench is not None:
         if workbench.get("status") != "pass":
@@ -438,13 +457,31 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    identity = read_code_identity()
     payload = evaluate(
-        current_head=_git_head(),
+        current_head=identity.head,
         workbench=_load(Path(args.workbench)),
         metadata=_load(Path(args.metadata)),
         product=_load(Path(args.product)),
         context=_load(Path(args.context)),
     )
+    if not identity.worktree_clean:
+        blockers = list(payload.get("blockers") or [])
+        blockers.append({
+            "code": "current_worktree_dirty",
+            "severity": "blocker",
+            "detail": f"Current worktree has uncommitted changes: {list(identity.dirty_paths)}.",
+        })
+        payload["blockers"] = blockers
+        payload["blocker_count"] = len(blockers)
+        payload["pr_ready"] = False
+        payload["status"] = "not_ready"
+        payload["current_worktree_clean"] = False
+        payload["current_dirty_paths"] = list(identity.dirty_paths)
+    else:
+        payload["current_worktree_clean"] = True
+        payload["current_dirty_paths"] = []
+
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(

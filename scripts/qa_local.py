@@ -8,6 +8,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from htcn.app.evidence_identity import read_code_identity
+
 
 ROOT = Path(__file__).resolve().parents[1]
 VENV_PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
@@ -72,9 +74,12 @@ def main() -> int:
     os.chdir(ROOT)
     SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
+    code_identity = read_code_identity(ROOT)
     summary: dict[str, object] = {
         "schema_version": 1,
-        "code_head": git_head(),
+        "code_head": code_identity.head,
+        "worktree_clean": code_identity.worktree_clean,
+        "dirty_paths": list(code_identity.dirty_paths),
         "started_at_utc": utc_now(),
         "completed_at_utc": None,
         "status": "running",
@@ -83,6 +88,16 @@ def main() -> int:
     gates = summary["gates"]
     assert isinstance(gates, dict)
     write_acceptance(summary)
+    if not code_identity.worktree_clean:
+        summary["status"] = "failed"
+        summary["failure_reason"] = "dirty_worktree"
+        summary["completed_at_utc"] = utc_now()
+        write_acceptance(summary)
+        print(
+            f"[HT-CN QA] ERROR: worktree is dirty: {list(code_identity.dirty_paths)}",
+            file=sys.stderr,
+        )
+        return 2
 
     def gate(name: str, label: str, cmd: list[str], *, cwd: Path | None = None) -> None:
         gates[name] = {

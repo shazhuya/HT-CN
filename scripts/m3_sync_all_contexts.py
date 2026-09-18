@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 import duckdb
 import pandas as pd
 
+from htcn.app.evidence_identity import read_code_identity
 from htcn.data.benchmarks import CORE_BENCHMARKS, CoreBenchmarkStore
 from htcn.data.concepts import (
     build_concept_snapshots_from_local_market,
@@ -443,9 +444,12 @@ def main() -> int:
         if "failed" not in states
         else "partial_failure"
     )
+    identity = read_code_identity()
     payload = {
         "schema_version": 1,
-        "code_head": _git_head(),
+        "code_head": identity.head,
+        "worktree_clean": identity.worktree_clean,
+        "dirty_paths": list(identity.dirty_paths),
         "target_trade_date": target.isoformat(),
         "expected_trade_date": expected_target.isoformat(),
         "local_trade_calendar_latest": local_target.isoformat(),

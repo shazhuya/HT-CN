@@ -8,6 +8,7 @@ from typing import Any
 
 import duckdb
 
+from htcn.app.evidence_identity import read_code_identity
 from htcn.app.product_contract import audit_product_payload
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 
@@ -77,9 +78,12 @@ def _candidate_ids(con: duckdb.DuckDBPyConnection) -> list[str]:
 
 def run(*, data_root: Path, max_samples: int = 8) -> dict[str, Any]:
     catalog = data_root / "catalog.duckdb"
+    identity = read_code_identity()
     result: dict[str, Any] = {
         "schema_version": 1,
-        "code_head": _git_head(),
+        "code_head": identity.head,
+        "worktree_clean": identity.worktree_clean,
+        "dirty_paths": list(identity.dirty_paths),
         "data_root": str(data_root),
         "catalog": str(catalog),
         "status": "failed",

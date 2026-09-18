@@ -9,6 +9,7 @@ from typing import Any
 import duckdb
 import pandas as pd
 
+from htcn.app.evidence_identity import read_code_identity
 from htcn.app.a_share_execution_context import (
     build_a_share_execution_context,
     load_daily_trading_metadata,
@@ -63,9 +64,12 @@ def _sample_rows(con: duckdb.DuckDBPyConnection) -> list[tuple[str, str, str | N
 
 
 def run(catalog: Path) -> dict[str, Any]:
+    identity = read_code_identity()
     result: dict[str, Any] = {
         "schema_version": 1,
-        "code_head": _git_head(),
+        "code_head": identity.head,
+        "worktree_clean": identity.worktree_clean,
+        "dirty_paths": list(identity.dirty_paths),
         "catalog": str(catalog),
         "status": "failed",
         "security_master": {},
