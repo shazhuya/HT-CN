@@ -277,3 +277,30 @@ M2.31/M3 已证明 historical completed geometry 与 live source-clock observabi
 - idempotent append regression；
 - real-A-share latest-closed-day snapshot；
 - 后续跨交易日 transition ledger。
+
+
+## D-023 — 用户本机只用于不可替代的本地数据采集
+
+**状态：Frozen engineering workflow**
+
+HT-CN 后续开发默认不得把用户电脑当作常规测试机。
+
+决定：
+
+1. 代码静态核查、单元测试、回归测试、浏览器验收、文件分析、状态迁移计算、报告生成，只要当前 assistant/tool 环境能够完成，就必须由 assistant 自行完成；
+2. 不允许为了方便、节省 assistant 工具调用或重复确认，把可自行完成的测试转交给用户本机；
+3. 用户电脑只允许承担 assistant 客观无法访问的本地资源步骤，例如用户私有 M1 DuckDB/Parquet、未连接的本地服务、仅存在本机的凭据/硬件/数据源；
+4. 即使确实需要本机，也必须最小化为“不可替代的数据采集动作”，不得顺带要求用户重复执行 Python/Web/Playwright 等 assistant 可自行完成的验收；
+5. 用户上传本地采集结果后，后续分析、质量检查、代码修复、统计与报告由 assistant 接管；
+6. 同一个本地动作不得因为 assistant 自己的测试迭代而反复要求用户重跑；应先穷尽 assistant 侧测试，再在确实需要新本地证据时调用一次；
+7. 若未来可以通过连接器、上传一次数据集、自动 artifact 或其他非侵入方式替代人工本机运行，应优先采用替代方式。
+
+原因：
+
+用户已经明确要求“非必要不要调用我的电脑，所有能由 assistant 完成的测试都由 assistant 自己完成”。此前 M3/M4 closeout 将真实 M1 数据验证扩张成了反复本机 QA，增加了不必要的人工作业，也混淆了“本地私有数据采集”和“代码测试”两个职责。
+
+验证方式：
+
+- 每个需要用户本机动作的任务必须能明确说明其不可替代的本地依赖；
+- 普通代码提交不得默认附带“请用户运行完整测试”；
+- 本地 snapshot 一旦上传，后续处理必须在 assistant 环境完成。

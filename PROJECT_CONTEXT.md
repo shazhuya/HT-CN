@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `4922cca8c9dea41551d3cbeeb8e722eafbf2589f`
-context_checkpoint_title: `M4 Phase 1: prospective real-A-share lifecycle journal baseline`
+context_checkpoint: `43822e3e441850d0b0e79320cec14542b5187377`
+context_checkpoint_title: `M4 Phase 1.1: baseline-vs-prospective enrollment and local-machine-minimization policy`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -499,6 +499,15 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 - standard XABCD per-pattern AB=CD hard-gate refinement 仍可后续 source-backed refinement，但当前不应打断 M3 lifecycle 产品迁移；
 - BSE 继续 deferred。
 
+## 本机调用规则 — D-023
+
+用户电脑不是 HT-CN 常规测试环境。
+
+- assistant 能完成的静态、单元、回归、浏览器、文件分析与统计全部自行完成；
+- 用户本机只承担 assistant 无法访问的私有 M1 数据采集；
+- 本地结果一经上传，后续由 assistant 接管；
+- 不得因 assistant 自身迭代反复要求用户重跑完整 QA。
+
 ## 下一步唯一主任务
 
 **M4 Phase 1 — 生成第一份真实 prospective 生命周期快照并建立 transition baseline。**
@@ -508,8 +517,9 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 1. 用户本机切换到 `m4/real-a-share-validation-workflow`；
 2. 运行 `运行M4真实A股生命周期快照.bat`；
 3. 核查全部 initialized SSE/SZSE 是否同一最新交易日、零失败；
-4. 将第一日 journal 作为 prospective T0，不做历史补录；
-5. 第二个真实交易日开始，建立 candidate lifecycle transition 对比；
+4. 第一日 journal 作为 T0 **baseline inventory**；T0 已存在候选标记 baseline_existing，不冒充从 formation 开始的 prospective 样本；
+5. T0 之后首次出现的 candidate 才标记 prospective_new；
+6. 第二个真实交易日开始，建立 candidate lifecycle transition 对比；
 6. 在至少积累若干真实交易日之前，不把状态频数解释成胜率/alpha。
 
 
