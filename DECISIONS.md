@@ -1119,3 +1119,47 @@ Formal rule:
     - Outcome Engine drift = 0/4.
 12. No post-T0 authoritative future capture existed when D-041 was frozen.
 
+## D-042 — M5 作为只读实战产品层与 M4 prospective evidence 并行推进
+
+**状态：Frozen M5 Phase 1 product boundary**
+
+正式决定：
+
+1. 新建独立分支：
+   `m5/a-share-operator-workbench`；
+2. M5 不继续堆在 M4 PR #13 上；
+3. M5 Phase 1 的目标是 Daily Operator Queue，不是新的 harmonic engine；
+4. Queue 只能消费已有：
+   - source_lifecycle；
+   - decision_narrative；
+   - execution/context integrity；
+5. Queue 不拥有 lifecycle；
+6. Queue 不修改 harmonic identity；
+7. Queue 不修改 Source Raw PRZ；
+8. Queue 不修改 M4 enrollment 或 outcome evidence；
+9. Queue 的固定工作流顺序：
+   - execution_evaluation
+   - reaction_observation
+   - waiting
+   - evidence_insufficient
+10. 该顺序只表示人工观察优先级，不是预测收益排名；
+11. Queue 禁止使用：
+   - win rate；
+   - alpha；
+   - MFE/MAE outcome；
+   - buy/sell score；
+   - composite predictive score；
+12. Queue 默认只显示 primary identity；
+13. secondary identity 仍留在单票 audit；
+14. 单一 instrument 失败不得拖垮整个 operator queue；
+15. 首页产品结构变为：
+   - 今日观察队列；
+   - 单标的深度工作台；
+16. M5 CI 必须执行 Playwright browser acceptance；
+17. M4 prospective validation 可以继续独立积累，M5 不等待单个历史数据边角问题才开始产品化；
+18. 未来若要把真实 outcome statistics 接入 queue 排序，必须另行预注册，D-042 不授权。
+
+原因：
+
+HT-CN 已经具备较强的单标的 source-aligned 解释能力，但缺少日常操作入口。继续扩识别规则的边际价值低于把已冻结能力组织成“全市场 -> 观察队列 -> 单票深挖”的实战工作流。
+
