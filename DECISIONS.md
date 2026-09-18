@@ -1163,3 +1163,53 @@ Formal rule:
 
 HT-CN 已经具备较强的单标的 source-aligned 解释能力，但缺少日常操作入口。继续扩识别规则的边际价值低于把已冻结能力组织成“全市场 -> 观察队列 -> 单票深挖”的实战工作流。
 
+## D-043 — Operator Delta 仅为产品观察变化，不得冒充 M4 authoritative transition
+
+**状态：Frozen M5 Phase 2 product-observation boundary**
+
+正式决定：
+
+1. M5 Phase 2 增加“今日变化 / Operator Delta”；
+2. Queue product identity 必须优先使用 harmonic point trade_date，避免滚动窗口 index 漂移；
+3. Queue snapshot schema 升级为 v2，显式记录 as_of_trade_date / observed_trade_dates / observation_integrity；
+4. 只有 single_as_of snapshot 可参与日间比较；
+5. mixed-as-of 不比较；
+6. reverse chronology 不比较；
+7. 同一交易日刷新不生成 delta；
+8. 允许展示：
+   - new_candidate
+   - disappeared_candidate
+   - action_state_changed
+   - lifecycle_state_changed
+   - pattern_state_changed
+   - next_key_changed
+   - execution_gate_changed
+   - context_cautions_changed
+9. 当前 instrument 分析失败时，必须抑制该 instrument 的 disappeared_candidate；
+10. 浏览器只保存最近两份 product Queue snapshot；
+11. localStorage snapshot 不是 research evidence，可重置；
+12. Queue 始终保存完整 candidate 集；UI 的 evidence-insufficient filter 不得改变 comparison universe；
+13. POST /api/operator/delta 是纯函数式比较，不持久化 evidence；
+14. Operator Delta contract 永久声明：
+   - authoritative_transition=false
+   - writes_m4_evidence=false
+   - predictive_score_used=false
+   - historical_outcome_used=false
+   - alpha_inference_allowed=false
+   - is_trade_instruction=false
+   - mutates_harmonic_identity=false
+   - mutates_source_raw_prz=false
+   - owns_lifecycle=false
+15. 不允许用 M4 outcome statistics 在 Phase 2 中排序 change；
+16. Hosted CI run #1503：
+   - overall success
+   - Python 619 passed
+   - Web build success
+   - Playwright 19 passed
+17. M4 frozen methodology diff=0；
+18. Outcome Engine diff=0。
+
+原因：
+
+实战工作台需要知道“今天发生了什么”，但产品状态差异和研究证据链不是一回事。D-043 将两者硬分离，既提升日常使用价值，又避免产生第二套伪 authoritative lifecycle history。
+
