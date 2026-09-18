@@ -57,6 +57,27 @@ def test_methodology_identity_covers_advanced_harmonic_state_files() -> None:
         "src/htcn/harmonic/rsi_bamm_confluence.py",
         "src/htcn/harmonic/rsi_bamm_lifecycle.py",
         "src/htcn/harmonic/source_lifecycle.py",
+        "src/htcn/research/capture_transaction.py",
+        "src/htcn/research/cohort_followup.py",
+        "src/htcn/research/lifecycle_transitions.py",
+        "src/htcn/research/prospective_observations.py",
+        "src/htcn/research/snapshot_manifest.py",
+        "scripts/m4_capture_lifecycle_snapshot.py",
+    }
+    assert required.issubset(set(METHODOLOGY_RELATIVE_PATHS))
+
+
+
+def test_methodology_v2_covers_prospective_evidence_semantics() -> None:
+    assert METHODOLOGY_CONTRACT_VERSION == 2
+    assert len(METHODOLOGY_RELATIVE_PATHS) == 37
+    required = {
+        "src/htcn/research/capture_transaction.py",
+        "src/htcn/research/cohort_followup.py",
+        "src/htcn/research/lifecycle_journal.py",
+        "src/htcn/research/lifecycle_transitions.py",
+        "src/htcn/research/prospective_observations.py",
+        "src/htcn/research/snapshot_manifest.py",
         "scripts/m4_capture_lifecycle_snapshot.py",
     }
     assert required.issubset(set(METHODOLOGY_RELATIVE_PATHS))
