@@ -82,6 +82,7 @@ def build_context_integrity(
     market_context: dict[str, Any] | None,
     sector_context: dict[str, Any] | None,
     concept_context: dict[str, Any] | None,
+    membership_max_age_days: int = 7,
 ) -> ContextIntegrity:
     as_of = _parse(as_of_trade_date)
     layers: list[ContextLayerIntegrity] = []
@@ -187,17 +188,34 @@ def build_context_integrity(
             f"行业层状态：{sector_status}。"
         ))
     else:
-        layers.append(_dated_state(
-            layer="industry",
-            as_of=as_of,
-            evidence_date=_parse(sector.get("snapshot_trade_date")),
-            source=sector.get("mapping_source"),
-            coverage=(
-                None if sector.get("total_member_count") is None
-                else f"{sector.get('return_20d_count')}/{sector.get('total_member_count')}"
-            ),
-            current_reason="行业本地成分聚合已对齐分析交易日。",
-        ))
+        mapping_date = _parse(sector.get("mapping_observed_on"))
+        mapping_too_old = (
+            as_of is not None
+            and mapping_date is not None
+            and (as_of - mapping_date).days > max(membership_max_age_days, 0)
+        )
+        if mapping_too_old:
+            layers.append(ContextLayerIntegrity(
+                "industry", "stale", sector.get("snapshot_trade_date"),
+                sector.get("mapping_source"),
+                (
+                    None if sector.get("total_member_count") is None
+                    else f"{sector.get('return_20d_count')}/{sector.get('total_member_count')}"
+                ),
+                f"行业成分映射已超过 {membership_max_age_days} 天未刷新；即使本地快照为当日，也不能确认 membership 仍完整。",
+            ))
+        else:
+            layers.append(_dated_state(
+                layer="industry",
+                as_of=as_of,
+                evidence_date=_parse(sector.get("snapshot_trade_date")),
+                source=sector.get("mapping_source"),
+                coverage=(
+                    None if sector.get("total_member_count") is None
+                    else f"{sector.get('return_20d_count')}/{sector.get('total_member_count')}"
+                ),
+                current_reason="行业本地成分聚合已对齐分析交易日。",
+            ))
 
     concept = concept_context or {}
     concept_status = str(concept.get("status") or "membership_unavailable")
@@ -220,9 +238,18 @@ def build_context_integrity(
         dates = [_parse(item.get("snapshot_trade_date")) for item in items if item.get("snapshot_trade_date")]
         resolved = int(concept.get("resolved_count") or 0)
         total = int(concept.get("membership_count") or 0)
+        mapping_date = _parse(concept.get("mapping_observed_on"))
+        mapping_too_old = (
+            as_of is not None
+            and mapping_date is not None
+            and (as_of - mapping_date).days > max(membership_max_age_days, 0)
+        )
         if concept_status == "partial" or resolved < total:
             state = "partial"
             reason = "仅部分概念已有本地快照。"
+        elif mapping_too_old:
+            state = "stale"
+            reason = f"概念 membership 已超过 {membership_max_age_days} 天未刷新。"
         elif as_of is not None and any(item > as_of for item in dates):
             state = "future_observation"
             reason = "至少一个概念快照日晚于分析日。"

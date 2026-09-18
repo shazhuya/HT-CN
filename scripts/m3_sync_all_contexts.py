@@ -308,7 +308,7 @@ def main() -> int:
         "layers": layers,
         "catalog_audit": _catalog_audit(catalog, target),
         "semantic_note": (
-            "overall is an operational sync state, not an investment score. "
+            "overall only describes whether synchronization steps completed; it is not an investment score or evidence-completeness score. "
             "Event coverage remains positive-evidence-only until a complete source exists."
         ),
     }
@@ -321,7 +321,7 @@ def main() -> int:
     )
     print(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
     print(f"\n[M3] combined context report: {output}")
-    return 0 if overall == "complete" else 2
+    return 0 if overall == "all_steps_completed" else 2
 
 
 if __name__ == "__main__":
