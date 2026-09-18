@@ -346,8 +346,8 @@ def test_intake_offline_recomputes_valid_outcome_snapshot(
         path,
         expected_baseline_trade_date="2026-09-17",
     )
-    assert result.blocker_count == 0
-    assert result.status in {"ready", "ready_with_warnings"}
+    assert result.blocker_count == 0, result.blockers
+    assert result.status in {"ready", "ready_with_warnings"}, result.as_payload()
     assert result.summary["outcome_snapshot_count"] == 1
     assert result.summary["outcome_result_count"] == 1
     assert result.summary["outcome_status_counts"] == {
