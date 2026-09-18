@@ -240,3 +240,42 @@ def test_prospective_outcome_gate_allows_resolved_pre_terminal_candidate() -> No
     )
     assert eligible is True
     assert reason == "prospective_new_pre_terminal_source_resolved"
+
+
+def test_entries_from_analysis_captures_latest_raw_market_facts() -> None:
+    pattern = _pattern("ABCD")
+    analysis = {
+        "instrument_id": "SSE.600000",
+        "last_trade_date": "2026-09-18",
+        "bars": [
+            {
+                "index": 0,
+                "trade_date": "2026-09-17",
+                "open": 9.8,
+                "high": 10.1,
+                "low": 9.7,
+                "close": 10.0,
+                "volume": 1000,
+            },
+            {
+                "index": 1,
+                "trade_date": "2026-09-18",
+                "open": 10.0,
+                "high": 10.5,
+                "low": 9.9,
+                "close": 10.4,
+                "volume": 1200,
+            },
+        ],
+        "context_integrity": {"summary_state": "complete"},
+        "completed": [],
+        "forming": [pattern],
+    }
+    rows = entries_from_analysis(analysis, code_head="abc")
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.as_of_open == 10.0
+    assert row.as_of_high == 10.5
+    assert row.as_of_low == 9.9
+    assert row.as_of_close == 10.4
+    assert row.as_of_volume == 1200.0
