@@ -173,7 +173,9 @@ def test_handoff_binds_exact_final_snapshot_not_latest_file(tmp_path: Path) -> N
 
     assert payload["verification"]["status"] == "valid"
     assert payload["product_binding"]["trade_date"] == "2026-09-18"
-    assert payload["product_binding"]["cache_path"] == str(current.resolve())
+    assert payload["product_binding"]["cache_path"] == str(
+        current.relative_to(tmp_path).as_posix()
+    )
 
     with zipfile.ZipFile(output) as archive:
         names = set(archive.namelist())
@@ -335,4 +337,62 @@ def test_handoff_accepts_repo_relative_cache_path(tmp_path: Path) -> None:
     )
 
     assert payload["verification"]["status"] == "valid"
-    assert payload["product_binding"]["cache_path"] == str(snapshot.resolve())
+    assert payload["product_binding"]["cache_path"] == str(
+        snapshot.relative_to(tmp_path).as_posix()
+    )
+
+
+def test_handoff_manifest_uses_portable_repository_relative_paths(
+    tmp_path: Path,
+) -> None:
+    pipeline, _ = _prepare_product_ready(tmp_path)
+    output = tmp_path / "handoff.zip"
+    build_daily_handoff_bundle(
+        root=tmp_path,
+        pipeline_summary=pipeline,
+        output=output,
+    )
+
+    with zipfile.ZipFile(output) as archive:
+        manifest = json.loads(
+            archive.read("daily-handoff-manifest.json").decode("utf-8")
+        )
+
+    assert manifest["pipeline_report_source"] == (
+        "artifacts/reports/m5-daily-close-pipeline.json"
+    )
+    assert manifest["product_binding"]["cache_path"] == (
+        "data/product/m5/operator_queue/"
+        "2026-09-18__b420__s3-5-8-13.json"
+    )
+    assert str(tmp_path) not in json.dumps(manifest, ensure_ascii=False)
+
+
+def test_verifier_cross_checks_pipeline_ready_flags(tmp_path: Path) -> None:
+    pipeline, _ = _prepare_product_ready(tmp_path)
+    output = tmp_path / "handoff.zip"
+    build_daily_handoff_bundle(
+        root=tmp_path,
+        pipeline_summary=pipeline,
+        output=output,
+    )
+
+    rebuilt = tmp_path / "tampered.zip"
+    with zipfile.ZipFile(output, "r") as source, zipfile.ZipFile(
+        rebuilt,
+        "w",
+        compression=zipfile.ZIP_DEFLATED,
+    ) as target:
+        for info in source.infolist():
+            data = source.read(info.filename)
+            if info.filename == "pipeline/m5-daily-close-pipeline.json":
+                payload = json.loads(data.decode("utf-8"))
+                payload["m5_product_ready"] = False
+                data = (
+                    json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+                ).encode("utf-8")
+            target.writestr(info.filename, data)
+
+    checked = verify_daily_handoff_bundle(rebuilt)
+    assert checked.status == "invalid"
+    assert checked.errors
