@@ -1204,10 +1204,10 @@ Implemented:
 - search/filter/pagination over the complete product snapshot.
 
 Validation:
-- run #1543 success;
+- run #1583 success;
 - Python 629 passed;
 - Web build success;
-- Playwright 20 passed.
+- Playwright 21 passed.
 
 D-045 freezes scan completeness independently from presentation.
 
