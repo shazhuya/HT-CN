@@ -4,7 +4,16 @@ from htcn.research.capture_transaction import (
     freeze_legacy_baseline,
 )
 from htcn.research.evidence_health import build_evidence_chain_health
+from htcn.research.methodology_identity import build_methodology_identity
 from htcn.research.mirror_recovery import repair_compatibility_mirrors
+
+
+def _methodology_kwargs() -> dict[str, object]:
+    identity = build_methodology_identity()
+    return {
+        "methodology_contract_version": identity.contract_version,
+        "methodology_fingerprint": identity.fingerprint,
+    }
 
 
 def _row(key: str, date: str, head: str):
@@ -49,6 +58,7 @@ def _store(tmp_path):
         successful_instruments=55,
         failed_instruments=0,
         worktree_clean=True,
+        **_methodology_kwargs(),
         journal_rows=[_row("new", "2026-09-18", "h")],
     )
     commit_capture_transaction(root, capture)
@@ -169,4 +179,38 @@ def test_missing_frozen_baseline_marker_is_structured_blocker(tmp_path) -> None:
     )
     assert health["mirror_integrity"]["journal_mirror_status"] == (
         "not_checked_authoritative_blocker"
+    )
+
+
+def test_health_blocks_current_methodology_drift(tmp_path) -> None:
+    root = tmp_path / "captures"
+    freeze_legacy_baseline(
+        root,
+        [_row("legacy", "2026-09-17", "old")],
+        baseline_through_trade_date="2026-09-17",
+    )
+    identity = build_methodology_identity()
+    capture = build_committed_capture(
+        code_head="h",
+        as_of_trade_date="2026-09-18",
+        captured_at_utc="t",
+        instrument_count=55,
+        successful_instruments=55,
+        failed_instruments=0,
+        worktree_clean=True,
+        methodology_contract_version=identity.contract_version,
+        methodology_fingerprint="0" * 64,
+        journal_rows=[_row("new", "2026-09-18", "h")],
+    )
+    commit_capture_transaction(root, capture)
+    health = build_evidence_chain_health(
+        transaction_root=root,
+        journal_path=tmp_path / "journal.jsonl",
+        manifest_path=tmp_path / "manifest.jsonl",
+    )
+    assert health["status"] == "not_ready"
+    assert health["current_methodology_matches_authoritative_chain"] is False
+    assert any(
+        item["code"] == "current_methodology_differs_from_committed_chain"
+        for item in health["blockers"]
     )
