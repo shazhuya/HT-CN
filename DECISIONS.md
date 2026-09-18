@@ -1483,3 +1483,51 @@ M5 已经进入全 universe、并行、缓存和 single-flight 的实战产品�
 原因：
 
 全 universe rebuild 成本已经足以让 API、多客户端和预计算脚本之间的重复扫描成为真实产品问题。只做 process-local single-flight 无法阻止两个独立进程同时扫描并原子替换同一个 cache 文件。Phase 8 用最小、跨平台、崩溃可恢复的 OS advisory lock 关闭该竞态，同时仍把所有研究语义留在既有 M3/M4 冻结层。
+
+
+## D-050 — 每日收盘流水线必须把 M5 产品 lane 与 M4 research lane 解耦，并在研究侧 QFQ 后最终重验产品 cache
+
+**状态：Frozen M5 Phase 9 daily-close product boundary**
+
+正式决定：
+
+1. M1 fresh market data 是 M5 product 与 M4 research 的共享硬前置；
+2. M3 context sync 对 M5 是 best-effort，不是 hard product gate；
+3. M5 initial Operator cache 必须在 M4 research lane 之前构建；
+4. M4 source preflight 只约束 M4 research lane；
+5. M4 methodology / Outcome guards 只约束 M4 research lane；
+6. M4 strict-QFQ readiness 只约束 M4 research lane；
+7. 单一历史 provider/QFQ 边角问题不得把已经满足产品条件的 M5 Queue 判为不可用；
+8. M4 research lane 运行后必须执行 M5 final **non-force** cache revalidation；
+9. final revalidation 的原因是 `adjustment/qfq` 属于 Phase 7 Data Input Identity，M4 QFQ 写入可能使初始 M5 cache 失效；
+10. 若 M4 未改变产品输入，final step 应退化为廉价 cache hit；若改变，则按当前 identity 自动 rebuild；
+11. final product-ready 必须基于 current / single-as-of / persisted cache / stable input identity；
+12. 单票 instrument failures 保持隔离；只要系统级 readiness 成立即可 `ready_with_instrument_failures`，但错误明细必须显式输出；
+13. M5 initial failure 可以在 final validation 恢复；最终 persistent M5 failure 才是产品失败；
+14. M5 failure 不得抹掉一个独立有效的 M4 research result；
+15. M4 degraded 不得把一个独立有效的 final M5 product 改写成 product failure；
+16. daily subprocess 必须 unbuffered 并实时 tee stdout，同时保存 per-step logs；
+17. context sync 必须暴露阶段进度，避免长时间“无反应”；
+18. M5 precompute report 必须携带 instrument_errors，而不只给失败数量；
+19. Phase 9 永久属于 product orchestration：
+    - authoritative_evidence=false；
+    - writes_m4_evidence=false；
+    - mutates_harmonic_identity=false；
+    - mutates_source_raw_prz=false；
+    - owns_lifecycle=false；
+20. 不使用 win rate / alpha / predictive score 进行 Queue 排序，不输出 trade instruction；
+21. Phase 8 → Phase 9 changed files 未触碰冻结的 M4 methodology / Outcome Engine；
+22. M4 capture methodology drift：0 / 37；
+23. Outcome Engine drift：0 / 4；
+24. validated code checkpoint：
+    `dec76022098574537333e8d3abd56bcc3b928a99`；
+25. Hosted CI run `35381269831` / #1646：
+    - overall success；
+    - Python 682 passed；
+    - Web build success；
+    - Playwright 21 passed；
+    - browser evidence upload success。
+
+原因：
+
+每日产品入口的第一职责是稳定地产出“当前输入对应的当前 Queue”。M4 research 有更严格的 evidence/source/QFQ 约束，这些约束不能反向变成 M5 的总开关；同时，M4 QFQ 又确实可能改变 Phase 7 已纳入 identity 的产品输入，所以必须在 research lane 后做一次轻量、非 force 的最终 revalidation。D-050 将“解耦”与“最终一致性”同时冻结。
