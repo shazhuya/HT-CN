@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `da927140b8e9b4bea31e0fcc1cd8d8b23b371661`
-context_checkpoint_title: `M4 T1 private-capture preflight + static regression`
+context_checkpoint: `20ed0f7fc7fde00f67937eb342057f88b99bb444`
+context_checkpoint_title: `M4 T1 preflight + atomic verified evidence bundle`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -790,6 +790,16 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 3. 真正出现至少一个 strict prospective_outcome_eligible candidate；
 4. 在任何 return / MFE / MAE / win-rate / alpha 统计前，另行冻结 future outcome protocol。
 
+
+
+## M4 transport bundle integrity — D-030
+
+- `m4-evidence-bundle.zip` 不是 authoritative evidence，只是运输层；
+- 每个成员由 manifest 记录 size + SHA-256；
+- duplicate / extra / unsafe-path / missing / size-SHA mismatch 均 fail closed；
+- exporter 先验证临时 ZIP，再原子发布正式 ZIP，发布后再次验证；
+- `evidence_health_blocked` 允许作为完整诊断包交接，但不会被解释为 evidence ready；
+- 用户不需要额外运行 bundle QA；必要采集仍保持一个动作，assistant 收到 ZIP 后可独立复验。
 
 ## M4 T1 本机采集 preflight — D-029
 
