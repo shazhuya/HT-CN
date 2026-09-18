@@ -5,11 +5,42 @@ import json
 import threading
 import time
 
+from htcn.app.operator_input_identity import (
+    ANALYSIS_CODE_IDENTITY_CONTRACT_VERSION,
+    DATA_INPUT_IDENTITY_CONTRACT_VERSION,
+    OPERATOR_INPUT_IDENTITY_CONTRACT_VERSION,
+    AnalysisCodeIdentity,
+    DataInputIdentity,
+    OperatorCacheInputIdentity,
+)
 from htcn.app.operator_snapshot import (
     OPERATOR_SNAPSHOT_CONTRACT_VERSION,
     build_or_load_operator_snapshot,
     operator_universe_hash,
 )
+
+
+def _input_identity(
+    *,
+    data_fingerprint: str = "data-a",
+    code_fingerprint: str = "code-a",
+) -> OperatorCacheInputIdentity:
+    data = DataInputIdentity(
+        DATA_INPUT_IDENTITY_CONTRACT_VERSION,
+        data_fingerprint,
+        1,
+    )
+    code = AnalysisCodeIdentity(
+        ANALYSIS_CODE_IDENTITY_CONTRACT_VERSION,
+        code_fingerprint,
+        1,
+    )
+    return OperatorCacheInputIdentity(
+        OPERATOR_INPUT_IDENTITY_CONTRACT_VERSION,
+        f"combined:{data_fingerprint}:{code_fingerprint}",
+        data,
+        code,
+    )
 
 
 def _pattern() -> dict:
@@ -71,6 +102,7 @@ def test_operator_snapshot_cache_hit_avoids_reanalysis(tmp_path) -> None:
         ["SSE.1", "SSE.2"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
     calls_after_first = service.calls
     second = build_or_load_operator_snapshot(
@@ -78,6 +110,7 @@ def test_operator_snapshot_cache_hit_avoids_reanalysis(tmp_path) -> None:
         ["SSE.1", "SSE.2"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
 
     assert calls_after_first == 2
@@ -94,6 +127,7 @@ def test_operator_snapshot_force_refresh_reanalyzes(tmp_path) -> None:
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
     assert service.calls == 1
 
@@ -102,6 +136,7 @@ def test_operator_snapshot_force_refresh_reanalyzes(tmp_path) -> None:
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
         force_refresh=True,
     )
 
@@ -116,6 +151,7 @@ def test_operator_snapshot_universe_change_invalidates_cache(tmp_path) -> None:
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
     assert service.calls == 1
 
@@ -124,6 +160,7 @@ def test_operator_snapshot_universe_change_invalidates_cache(tmp_path) -> None:
         ["SSE.1", "SSE.2"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
 
     assert service.calls == 3
@@ -136,6 +173,7 @@ def test_operator_snapshot_trade_date_gets_separate_cache(tmp_path) -> None:
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-17",
+        input_identity=_input_identity(),
     )
     service.as_of = "2026-09-18"
     current = build_or_load_operator_snapshot(
@@ -143,6 +181,7 @@ def test_operator_snapshot_trade_date_gets_separate_cache(tmp_path) -> None:
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
 
     assert service.calls == 2
@@ -157,6 +196,7 @@ def test_operator_snapshot_is_product_cache_not_evidence(tmp_path) -> None:
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
 
     cache = payload["product_cache"]
@@ -178,6 +218,7 @@ def test_operator_snapshot_file_contains_contract_and_universe_hash(tmp_path) ->
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
 
     path = next(tmp_path.glob("*.json"))
@@ -198,6 +239,7 @@ def test_operator_snapshot_does_not_cache_stale_queue_as_current_date(
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
 
     assert payload["product_cache"]["status"] == "live_not_cached"
@@ -222,6 +264,7 @@ def test_operator_snapshot_cache_hit_does_not_create_parallel_workers(
         ["SSE.1", "SSE.2"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
         max_workers=2,
         service_factory=factory,
     )
@@ -235,6 +278,7 @@ def test_operator_snapshot_cache_hit_does_not_create_parallel_workers(
         ["SSE.1", "SSE.2"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
         max_workers=2,
         service_factory=factory,
     )
@@ -301,6 +345,7 @@ def test_operator_snapshot_single_flight_coalesces_concurrent_cache_miss(
             ["SSE.1"],
             cache_root=tmp_path,
             expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
         )
 
     with ThreadPoolExecutor(max_workers=2) as executor:
@@ -337,6 +382,7 @@ def test_operator_snapshot_single_flight_coalesces_concurrent_force_refresh(
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
 
     started = threading.Event()
@@ -356,6 +402,7 @@ def test_operator_snapshot_single_flight_coalesces_concurrent_force_refresh(
             ["SSE.1"],
             cache_root=tmp_path,
             expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
             force_refresh=True,
         )
 
@@ -393,12 +440,14 @@ def test_operator_snapshot_regular_cache_metadata_exposes_single_flight_scope(
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
     hit = build_or_load_operator_snapshot(
         service,
         ["SSE.1"],
         cache_root=tmp_path,
         expected_trade_date="2026-09-18",
+        input_identity=_input_identity(),
     )
 
     assert hit["product_cache"]["status"] == "hit"
@@ -406,3 +455,123 @@ def test_operator_snapshot_regular_cache_metadata_exposes_single_flight_scope(
         "process_local_cache_identity"
     )
     assert hit["product_cache"]["coalesced_from_status"] is None
+
+
+
+def test_operator_snapshot_same_day_data_identity_change_invalidates_cache(
+    tmp_path,
+) -> None:
+    service = CountingService()
+    first = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=_input_identity(data_fingerprint="data-a"),
+    )
+    second = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=_input_identity(data_fingerprint="data-b"),
+    )
+
+    assert first["product_cache"]["status"] == "rebuilt"
+    assert second["product_cache"]["status"] == "rebuilt"
+    assert service.calls == 2
+    assert second["product_cache"]["data_input_fingerprint"] == "data-b"
+
+
+def test_operator_snapshot_same_day_code_identity_change_invalidates_cache(
+    tmp_path,
+) -> None:
+    service = CountingService()
+    build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=_input_identity(code_fingerprint="code-a"),
+    )
+    second = build_or_load_operator_snapshot(
+        service,
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=_input_identity(code_fingerprint="code-b"),
+    )
+
+    assert second["product_cache"]["status"] == "rebuilt"
+    assert service.calls == 2
+    assert second["product_cache"]["analysis_code_fingerprint"] == "code-b"
+
+
+def test_operator_snapshot_persists_input_identity_summary(tmp_path) -> None:
+    identity = _input_identity(
+        data_fingerprint="data-summary",
+        code_fingerprint="code-summary",
+    )
+    build_or_load_operator_snapshot(
+        CountingService(),
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=identity,
+    )
+
+    stored = json.loads(
+        next(tmp_path.glob("*.json")).read_text(encoding="utf-8")
+    )
+    assert stored["input_identity"]["fingerprint"] == identity.fingerprint
+    assert stored["input_identity"]["data"]["fingerprint"] == "data-summary"
+    assert stored["input_identity"]["analysis_code"]["fingerprint"] == "code-summary"
+    assert stored["input_identity"]["methodology_identity"] is False
+
+
+def test_operator_snapshot_does_not_cache_when_input_changes_during_build(
+    tmp_path,
+) -> None:
+    start = _input_identity(data_fingerprint="data-before")
+    after = _input_identity(data_fingerprint="data-after")
+
+    payload = build_or_load_operator_snapshot(
+        CountingService(),
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=start,
+        input_identity_factory=lambda: after,
+    )
+
+    assert payload["product_cache"]["status"] == (
+        "live_not_cached_input_changed"
+    )
+    assert payload["product_cache"][
+        "input_identity_stable_during_build"
+    ] is False
+    assert list(tmp_path.glob("*.json")) == []
+
+
+def test_operator_snapshot_cache_hit_reports_stable_input_identity(
+    tmp_path,
+) -> None:
+    identity = _input_identity()
+    build_or_load_operator_snapshot(
+        CountingService(),
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=identity,
+    )
+    hit = build_or_load_operator_snapshot(
+        CountingService(),
+        ["SSE.1"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        input_identity=identity,
+    )
+
+    assert hit["product_cache"]["status"] == "hit"
+    assert hit["product_cache"]["input_identity_stable_during_build"] is True
+    assert hit["product_cache"]["input_identity_fingerprint"] == identity.fingerprint
