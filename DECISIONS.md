@@ -457,3 +457,41 @@ A 股全天停牌日通常没有新的日 K 线。M4 不允许因此把已有 ha
 - first-seen suspended outcome-enrollment rejection；
 - already-enrolled candidate continuity across suspension；
 - suspension event + current-day bar conflict fail closed。
+
+
+## D-028 — Prospective committed evidence is bound to one deterministic methodology fingerprint
+
+**状态：Frozen M4 methodology-provenance contract**
+
+M4 前瞻证据不能只依赖 `code_head` 判断方法是否相同。普通文档或基础设施提交会改变 commit SHA，而真正需要防止的是 harmonic identity、Source Raw PRZ、Source lifecycle、BAMM evidence、特殊形态 source handling 或 prospective enrollment 规则发生变化后继续把新旧样本混在一个 cohort。
+
+正式决定：
+
+1. 新的 authoritative committed capture 使用 transaction schema v2；
+2. 每个 transaction 必须携带 `methodology_contract_version` 与 64 位 SHA-256 `methodology_fingerprint`；
+3. methodology fingerprint 由固定、有序的核心方法文件清单逐文件 SHA-256 后再次聚合得到；
+4. methodology identity 进入 transaction identity，因此方法变化必须改变 transaction ID；
+5. 同一个 active M4 committed-capture chain 只允许一个 methodology identity；
+6. 已有 committed capture 与新 capture fingerprint 不一致时 fail closed，禁止静默混样；
+7. pre-fingerprint schema-v1 transaction 可以读取用于显式迁移审计，但不能继续追加到 active fingerprinted chain；
+8. evidence-health 必须将当前代码 fingerprint 与 authoritative chain fingerprint 对比；不一致为 hard blocker；
+9. mismatch 不会篡改或否定旧 committed evidence，只表示当前代码不能继续该证据链；
+10. 若确需改变核心方法，必须建立显式 versioned methodology epoch / 新 protocol，而不是覆盖旧 transaction；
+11. frozen T0 baseline 不补写 fingerprint，因为它是既有 baseline inventory，且永久不进入 prospective outcome inference；
+12. compatibility manifest 与 derived reports 暴露 fingerprint，但 mirror 仍不是权威证据；
+13. methodology identity 只证明研究规则 provenance，不证明 alpha / 胜率 / 盈利能力。
+
+原因：
+
+前瞻研究最危险的污染之一不是文件损坏，而是研究规则在样本积累中途改变却仍按同一个 cohort 统计。D-028 将“使用了哪一套方法”提升为 authoritative evidence 的一部分，使规则漂移像数据篡改一样可检测、可阻断。
+
+验证方式：
+
+- methodology fingerprint deterministic regression；
+- core-method file changed -> fingerprint changes；
+- missing fingerprint source file fail closed；
+- transaction ID changes when methodology changes；
+- committed chain methodology drift rejection；
+- pre-fingerprint schema-v1 explicit migration regression；
+- evidence-health current-vs-chain mismatch hard blocker；
+- compatibility manifest methodology drift detection / repair regression。
