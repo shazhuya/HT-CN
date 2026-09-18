@@ -583,7 +583,7 @@ def test_operator_snapshot_cache_hit_reports_stable_input_identity(
 def test_operator_snapshot_different_input_identities_do_not_coalesce(
     tmp_path,
 ) -> None:
-    barrier = threading.Barrier(2)
+    started = threading.Event()
     lock = threading.Lock()
     counter = {"calls": 0}
 
@@ -597,7 +597,8 @@ def test_operator_snapshot_different_input_identities_do_not_coalesce(
         ) -> dict:
             with lock:
                 counter["calls"] += 1
-            barrier.wait(timeout=3)
+                started.set()
+            time.sleep(0.05)
             return {
                 "last_trade_date": "2026-09-18",
                 "price_mode": "qfq",
@@ -620,6 +621,7 @@ def test_operator_snapshot_different_input_identities_do_not_coalesce(
             run,
             _input_identity(data_fingerprint="data-a"),
         )
+        assert started.wait(timeout=2)
         second_future = executor.submit(
             run,
             _input_identity(data_fingerprint="data-b"),
@@ -630,10 +632,15 @@ def test_operator_snapshot_different_input_identities_do_not_coalesce(
     assert counter["calls"] == 2
     assert first["product_cache"]["status"] == "rebuilt"
     assert second["product_cache"]["status"] == "rebuilt"
+    assert first["product_cache"]["status"] != "coalesced_wait"
+    assert second["product_cache"]["status"] != "coalesced_wait"
     assert first["product_cache"]["input_identity_fingerprint"] != (
         second["product_cache"]["input_identity_fingerprint"]
     )
-
+    assert (
+        first["product_cache"]["cross_process_waited"]
+        or second["product_cache"]["cross_process_waited"]
+    )
 
 
 def test_operator_process_lock_path_is_cache_slot_scoped(tmp_path) -> None:
