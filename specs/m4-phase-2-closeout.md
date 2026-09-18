@@ -60,7 +60,7 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 
 ## Methodology provenance — D-028
 
-- [x] Current authoritative captures use transaction schema v3; schema v2 is historical Phase 2.8 provenance.
+- [x] Current authoritative captures use transaction schema v4; schema v2/v3 are historical pre-T1 provenance.
 - [x] Every fingerprinted capture stores methodology contract version + deterministic SHA-256 fingerprint.
 - [x] Methodology identity participates in the transaction ID.
 - [x] Fingerprint coverage includes candidate identity, ratios, Source PRZ/lifecycle,
@@ -78,7 +78,7 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 
 - [x] Production capture path passes methodology identity into `build_committed_capture`.
 - [x] Modified research test fixtures pass methodology identity into committed-capture builders.
-- [x] Methodology v2 fingerprint component tree audit: 37 / 37 paths present.
+- [x] Methodology v3 fingerprint component tree audit: 37 / 37 paths present.
 - [x] Evidence-health reports structured blockers rather than mutating evidence.
 - [x] Project context, decision log, session log and PR description are aligned to Phase 2.8.
 
@@ -93,10 +93,23 @@ It does **not** close M4 as a whole and does not authorize alpha / win-rate / re
 - [x] Methodology contract v2 fingerprints 37 files, including capture chronology, enrollment normalization and follow-up semantics.
 - [x] No post-T0 fingerprinted future capture existed before methodology-v2 freeze.
 
+## Price-basis provenance — D-034
+
+- [x] Formal prospective evidence accepts only QFQ / QFQ carry-forward.
+- [x] Raw fallback is excluded from validation enrollment and authoritative capture.
+- [x] Formal rows persist `price_mode` and deterministic `price_basis_id`.
+- [x] QFQ basis ID ignores same-factor carry-forward dates but changes with factor-regime changes.
+- [x] Committed capture schema v4 requires basis provenance on journal and follow-up rows.
+- [x] Prospective observation schema v3 freezes enrollment basis and reports later drift.
+- [x] Basis drift is surfaced but never auto-rebased in Phase 2.
+- [x] Methodology contract advanced to v3 with the same 37 component paths.
+- [x] Exact methodology-v3 freeze commit is `2b0aa92d292410098d9678a3bfd3102f3df1ed4b`.
+- [x] No post-T0 future committed capture existed before the v3 freeze.
+
 ## Exact pre-T1 methodology code freeze — D-033
 
-- [x] Frozen methodology-v2 component commit is `084ddf649e031e8169a761fd3b8578f73b31b5c2`.
-- [x] Current contract version / component count are fixed at v2 / 37.
+- [x] Historical methodology-v2 freeze was `084ddf...`; current T1 freeze is methodology-v3 commit `2b0aa92d292410098d9678a3bfd3102f3df1ed4b`.
+- [x] Current contract version / component count are fixed at v3 / 37.
 - [x] Capture preflight rejects any post-freeze change to the 37 methodology paths.
 - [x] Methodology guard runs before M1 update or authoritative capture.
 - [x] Guard provenance report is included in the evidence transport bundle.
