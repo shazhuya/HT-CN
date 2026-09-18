@@ -11,11 +11,13 @@ from htcn.app.daily_close_pipeline import (
     execute_daily_close_steps,
 )
 from htcn.app.daily_close_runner import evaluate_daily_close_preflight
+from htcn.app.daily_handoff import build_daily_handoff_bundle
 
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT_ROOT = ROOT / "artifacts" / "reports"
 REPORT_PATH = REPORT_ROOT / "m5-daily-close-pipeline.json"
+HANDOFF_PATH = REPORT_ROOT / "htcn-daily-handoff.zip"
 CATALOG_PATH = ROOT / "data" / "market" / "catalog.duckdb"
 
 
@@ -141,6 +143,7 @@ def main() -> int:
     summary["python_executable"] = sys.executable
     summary["artifacts"] = {
         "pipeline_report": str(REPORT_PATH.relative_to(ROOT)),
+        "daily_handoff_bundle": str(HANDOFF_PATH.relative_to(ROOT)),
         "m5_operator_snapshot_report": "artifacts/reports/m5-operator-snapshot.json",
         "m4_lifecycle_snapshot": "artifacts/reports/m4-lifecycle-snapshot.json",
         "m4_evidence_health": "artifacts/reports/m4-evidence-health.json",
@@ -151,6 +154,32 @@ def main() -> int:
         "m4_authoritative_captures": "data/research/m4/captures",
         "m5_product_cache": "data/product/m5/operator_queue",
     }
+
+    try:
+        handoff = build_daily_handoff_bundle(
+            root=ROOT,
+            pipeline_summary=summary,
+            output=HANDOFF_PATH,
+        )
+        summary["handoff_ready"] = True
+        summary["daily_handoff"] = {
+            "status": handoff.get("status"),
+            "output": str(HANDOFF_PATH.relative_to(ROOT)),
+            "bundle_size_bytes": handoff.get("bundle_size_bytes"),
+            "bundle_sha256": handoff.get("bundle_sha256"),
+            "verification": handoff.get("verification"),
+        }
+    except Exception as exc:
+        summary["handoff_ready"] = False
+        summary["daily_handoff"] = {
+            "status": "failed",
+            "output": str(HANDOFF_PATH.relative_to(ROOT)),
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+        if int(summary["exit_code"]) == 0:
+            summary["exit_code"] = 1
+            summary["overall_status"] = "partial"
+
     _write_report(summary)
 
     print()
@@ -160,9 +189,11 @@ def main() -> int:
         f"overall={summary['overall_status']} "
         f"data_ready={summary['data_ready']} "
         f"m5_product_ready={summary['m5_product_ready']} "
-        f"m4_research_ready={summary['m4_research_ready']}"
+        f"m4_research_ready={summary['m4_research_ready']} "
+        f"handoff_ready={summary.get('handoff_ready', False)}"
     )
     print(f"report={REPORT_PATH.relative_to(ROOT)}")
+    print(f"handoff={HANDOFF_PATH.relative_to(ROOT)}")
     print("=" * 72)
     return int(summary["exit_code"])
 
