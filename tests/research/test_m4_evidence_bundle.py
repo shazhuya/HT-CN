@@ -276,6 +276,8 @@ def _write_intake_bundle(
     manifest = {
         "schema_version": 1,
         "status": "transport_bundle_ready",
+        "code_head": "abc123",
+        "worktree_clean": True,
         "methodology_contract_version": 1,
         "methodology_fingerprint": bundle_fingerprint,
         "committed_capture_count": 1,
