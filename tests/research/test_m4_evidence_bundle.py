@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import zipfile
 
+import pandas as pd
+
 from htcn.research.evidence_bundle import verify_evidence_bundle
 from htcn.research.evidence_intake import audit_evidence_bundle
 from htcn.research.capture_transaction import (
@@ -12,6 +14,7 @@ from htcn.research.capture_transaction import (
     commit_capture_transaction,
     freeze_legacy_baseline,
 )
+from htcn.research.outcome_evaluator import canonical_market_path_hash
 from htcn.research.outcome_snapshot import (
     build_outcome_snapshot,
     commit_outcome_snapshot,
@@ -405,6 +408,15 @@ def test_transport_bundle_can_carry_immutable_outcome_snapshot(tmp_path) -> None
     reports.mkdir()
     outcome_root = tmp_path / "outcomes"
 
+    path_rows = [{
+        "trade_date": "2026-09-21",
+        "open": 99.0,
+        "high": 101.0,
+        "low": 98.0,
+        "close": 100.0,
+        "volume": 1000.0,
+    }]
+    path_basis = "qfq:" + "1" * 64
     result = {
         "schema_version": 1,
         "candidate_key": "candidate-a",
@@ -414,7 +426,14 @@ def test_transport_bundle_can_carry_immutable_outcome_snapshot(tmp_path) -> None
         "capture_methodology_fingerprint": "a" * 64,
         "outcome_protocol_id": "m4-outcome-v1",
         "outcome_protocol_fingerprint": "b" * 64,
-        "market_path_sha256": "c" * 64,
+        "current_price_basis_id": path_basis,
+        "market_path_trade_dates": ["2026-09-21"],
+        "market_path_traded_bar_count": 1,
+        "market_path_rows": path_rows,
+        "market_path_sha256": canonical_market_path_hash(
+            pd.DataFrame(path_rows),
+            price_basis_id=path_basis,
+        ),
         "status": "right_censored_ongoing",
         "interpretation": {
             "evidence_only": True,
