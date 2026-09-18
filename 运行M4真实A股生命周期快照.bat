@@ -109,9 +109,8 @@ type "artifacts\reports\m4-m1-update.log"
 echo.
 echo [2/8] Strict formal-QFQ universe readiness...
 if "!M1_EXIT!"=="0" (
-  .venv\Scripts\python.exe scripts\m4_prepare_qfq_universe.py --retries 1 --sleep 0.05 > "artifacts\reports\m4-qfq-readiness.log" 2>&1
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "& { & '.\.venv\Scripts\python.exe' -u 'scripts\m4_prepare_qfq_universe.py' '--retries' '1' '--sleep' '0.05' 2>&1 | Tee-Object -FilePath 'artifacts\reports\m4-qfq-readiness.log'; exit $LASTEXITCODE }"
   set "QFQ_EXIT=!ERRORLEVEL!"
-  type "artifacts\reports\m4-qfq-readiness.log"
 ) else (
   echo [HT-CN M4] SKIP: M1 update did not pass; QFQ readiness was not attempted.
   set "QFQ_EXIT=1"
