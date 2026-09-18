@@ -34,6 +34,8 @@ class LifecycleJournalEntry:
     source_prz_high: float | None
     source_terminal_trade_date: str | None
     eligible_for_validation: bool
+    enrollment_state: str = "pending_append_classification"
+    first_observed_trade_date: str | None = None
     evidence_only: bool = True
     is_trade_instruction: bool = False
     alpha_inference_allowed: bool = False
@@ -209,13 +211,58 @@ def append_entries(
         )
         for row in existing
     }
+    prior_by_candidate: dict[str, list[dict[str, Any]]] = {}
+    for row in existing:
+        key = str(row.get("candidate_key") or "")
+        if key:
+            prior_by_candidate.setdefault(key, []).append(row)
+
+    baseline_capture = len(existing) == 0
     payloads = []
+    baseline_appended = 0
+    prospective_new_appended = 0
+
     for entry in incoming:
         identity = (entry.code_head, entry.as_of_trade_date, entry.candidate_key)
         if identity in identities:
             continue
         identities.add(identity)
-        payloads.append(entry.as_payload())
+
+        prior = prior_by_candidate.get(entry.candidate_key, [])
+        if prior:
+            prior_dates = sorted(
+                str(row.get("first_observed_trade_date") or row.get("as_of_trade_date"))
+                for row in prior
+                if row.get("first_observed_trade_date") or row.get("as_of_trade_date")
+            )
+            first_observed = prior_dates[0] if prior_dates else entry.as_of_trade_date
+            prior_states = {
+                str(row.get("enrollment_state"))
+                for row in prior
+                if row.get("enrollment_state")
+            }
+            enrollment_state = (
+                "prospective_new"
+                if prior_states == {"prospective_new"}
+                else "baseline_existing"
+            )
+        elif baseline_capture:
+            first_observed = entry.as_of_trade_date
+            enrollment_state = "baseline_existing"
+        else:
+            first_observed = entry.as_of_trade_date
+            enrollment_state = "prospective_new"
+
+        payload = entry.as_payload()
+        payload["first_observed_trade_date"] = first_observed
+        payload["enrollment_state"] = enrollment_state
+        payloads.append(payload)
+        prior_by_candidate.setdefault(entry.candidate_key, []).append(payload)
+
+        if enrollment_state == "baseline_existing":
+            baseline_appended += 1
+        else:
+            prospective_new_appended += 1
 
     if payloads:
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -229,4 +276,6 @@ def append_entries(
         "appended": len(payloads),
         "existing": len(existing),
         "as_of_trade_date": as_of,
+        "baseline_existing_appended": baseline_appended,
+        "prospective_new_appended": prospective_new_appended,
     }

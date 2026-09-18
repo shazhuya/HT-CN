@@ -129,3 +129,63 @@ def test_append_forbids_historical_backfill(tmp_path) -> None:
         assert "forbids backfill" in str(exc)
     else:
         raise AssertionError("backfill must fail closed")
+
+
+def test_first_capture_is_baseline_existing(tmp_path) -> None:
+    path = tmp_path / "journal.jsonl"
+    result = append_entries(path, [_entry("2026-09-18", key="baseline")])
+    rows = path.read_text(encoding="utf-8").splitlines()
+    import json
+    payload = json.loads(rows[0])
+    assert result["baseline_existing_appended"] == 1
+    assert result["prospective_new_appended"] == 0
+    assert payload["enrollment_state"] == "baseline_existing"
+    assert payload["first_observed_trade_date"] == "2026-09-18"
+
+
+def test_candidate_first_seen_after_baseline_is_prospective_new(tmp_path) -> None:
+    path = tmp_path / "journal.jsonl"
+    append_entries(path, [_entry("2026-09-18", key="baseline")])
+    result = append_entries(path, [_entry("2026-09-19", key="new")])
+    import json
+    payloads = [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+    ]
+    latest = payloads[-1]
+    assert result["baseline_existing_appended"] == 0
+    assert result["prospective_new_appended"] == 1
+    assert latest["enrollment_state"] == "prospective_new"
+    assert latest["first_observed_trade_date"] == "2026-09-19"
+
+
+def test_existing_baseline_candidate_stays_baseline_on_later_capture(tmp_path) -> None:
+    path = tmp_path / "journal.jsonl"
+    append_entries(path, [_entry("2026-09-18", key="same")])
+    append_entries(path, [_entry("2026-09-19", key="same", head="h2")])
+    import json
+    payloads = [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+    ]
+    latest = payloads[-1]
+    assert latest["enrollment_state"] == "baseline_existing"
+    assert latest["first_observed_trade_date"] == "2026-09-18"
+
+
+def test_legacy_t0_row_without_enrollment_fields_is_treated_as_baseline(tmp_path) -> None:
+    import json
+    path = tmp_path / "journal.jsonl"
+    legacy = _entry("2026-09-18", key="legacy").as_payload()
+    legacy.pop("enrollment_state", None)
+    legacy.pop("first_observed_trade_date", None)
+    path.write_text(json.dumps(legacy, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    append_entries(path, [_entry("2026-09-19", key="legacy", head="h2")])
+    payloads = [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+    ]
+    latest = payloads[-1]
+    assert latest["enrollment_state"] == "baseline_existing"
+    assert latest["first_observed_trade_date"] == "2026-09-18"
