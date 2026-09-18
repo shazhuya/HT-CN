@@ -384,6 +384,15 @@ def audit_evidence_bundle(
                 ):
                     blockers.append("observation_report_methodology_version_drift")
 
+            bundled_outcome_protocol = _json_member(
+                archive,
+                "protocols/m4-outcome-protocol-v1.json",
+            )
+            if bundled_outcome_protocol is None:
+                blockers.append("outcome_protocol_bundle_member_missing")
+            elif bundled_outcome_protocol != outcome_protocol:
+                blockers.append("outcome_protocol_bundle_member_drift")
+
             manifest_outcome_error = str(
                 manifest.get("outcome_snapshot_read_error") or ""
             )
