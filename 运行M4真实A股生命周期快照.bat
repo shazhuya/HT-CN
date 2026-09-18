@@ -18,35 +18,49 @@ if not exist "data\market\catalog.duckdb" (
 echo ============================================================
 echo HT-CN M4 PROSPECTIVE EVIDENCE CAPTURE
 echo Current closed day only. No historical backfill.
-echo One run: capture + health + transition + observation + handoff bundle.
+echo One run: M1 update + capture + health + transition + observation + handoff bundle.
 echo ============================================================
 echo.
 
-echo [1/5] Authoritative lifecycle capture...
-.venv\Scripts\python.exe scripts\m4_capture_lifecycle_snapshot.py
-set "CAPTURE_EXIT=!ERRORLEVEL!"
+if not exist "artifacts\reports" mkdir "artifacts\reports"
+
+echo [1/6] M1 smart daily update...
+.venv\Scripts\python.exe scripts\m1_daily_update.py --limit 0 --sleep 0.05 > "artifacts\reports\m4-m1-update.log" 2>&1
+set "M1_EXIT=!ERRORLEVEL!"
+type "artifacts\reports\m4-m1-update.log"
 
 echo.
-echo [2/5] Evidence-chain health...
+echo [2/6] Authoritative lifecycle capture...
+if "!M1_EXIT!"=="0" (
+  .venv\Scripts\python.exe scripts\m4_capture_lifecycle_snapshot.py
+  set "CAPTURE_EXIT=!ERRORLEVEL!"
+) else (
+  echo [HT-CN M4] SKIP: M1 update did not pass; no new authoritative capture will be attempted.
+  set "CAPTURE_EXIT=1"
+)
+
+echo.
+echo [3/6] Evidence-chain health...
 .venv\Scripts\python.exe scripts\m4_evidence_health.py
 set "HEALTH_EXIT=!ERRORLEVEL!"
 
 echo.
-echo [3/5] Lifecycle transition report...
+echo [4/6] Lifecycle transition report...
 .venv\Scripts\python.exe scripts\m4_build_transition_report.py
 set "TRANSITION_EXIT=!ERRORLEVEL!"
 
 echo.
-echo [4/5] Prospective observation report...
+echo [5/6] Prospective observation report...
 .venv\Scripts\python.exe scripts\m4_build_observation_report.py
 set "OBSERVATION_EXIT=!ERRORLEVEL!"
 
 echo.
-echo [5/5] Evidence handoff bundle...
+echo [6/6] Evidence handoff bundle...
 .venv\Scripts\python.exe scripts\m4_export_evidence_bundle.py
 set "BUNDLE_EXIT=!ERRORLEVEL!"
 
 set "FINAL_EXIT=0"
+if not "!M1_EXIT!"=="0" set "FINAL_EXIT=1"
 if not "!CAPTURE_EXIT!"=="0" set "FINAL_EXIT=1"
 if not "!HEALTH_EXIT!"=="0" set "FINAL_EXIT=1"
 if not "!TRANSITION_EXIT!"=="0" set "FINAL_EXIT=1"
@@ -56,7 +70,7 @@ if not "!BUNDLE_EXIT!"=="0" set "FINAL_EXIT=1"
 echo.
 echo ============================================================
 echo HT-CN M4 CAPTURE SUMMARY
-echo capture=!CAPTURE_EXIT! health=!HEALTH_EXIT! transition=!TRANSITION_EXIT! observation=!OBSERVATION_EXIT! bundle=!BUNDLE_EXIT!
+echo m1=!M1_EXIT! capture=!CAPTURE_EXIT! health=!HEALTH_EXIT! transition=!TRANSITION_EXIT! observation=!OBSERVATION_EXIT! bundle=!BUNDLE_EXIT!
 echo ============================================================
 
 if "!FINAL_EXIT!"=="0" (
@@ -66,6 +80,7 @@ if "!FINAL_EXIT!"=="0" (
 )
 
 echo.
+echo M1 log:       artifacts\reports\m4-m1-update.log
 echo Snapshot:     artifacts\reports\m4-lifecycle-snapshot.json
 echo Health:       artifacts\reports\m4-evidence-health.json
 echo Transitions:  artifacts\reports\m4-lifecycle-transitions.json
