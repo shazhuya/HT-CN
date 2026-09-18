@@ -54,5 +54,5 @@ def test_capture_wrapper_runs_outcome_only_after_capture_health_observation() ->
 def test_capture_wrapper_treats_outcome_as_final_gate() -> None:
     text = _wrapper_text()
     assert 'if not "!OUTCOME_EXIT!"=="0" set "FINAL_EXIT=1"' in text
-    assert "m4-outcome-v1.json" in text
+    assert "m4-outcome-v2.json" in text
     assert "data\\research\\m4\\outcomes" in text
