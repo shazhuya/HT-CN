@@ -6,7 +6,8 @@ from pathlib import Path
 import zipfile
 
 from htcn.research.evidence_bundle import verify_evidence_bundle
-from scripts.m4_export_evidence_bundle import build_bundle
+from htcn.research.evidence_intake import audit_evidence_bundle
+from htcn.research.capture_transaction import (\n    build_committed_capture,\n    commit_capture_transaction,\n    freeze_legacy_baseline,\n)\nfrom scripts.m4_export_evidence_bundle import build_bundle
 
 
 def _bundle(tmp_path: Path):
@@ -191,3 +192,169 @@ def test_ready_bundle_cannot_claim_health_blockers(tmp_path: Path) -> None:
     result = verify_evidence_bundle(path)
     assert result.status == "invalid"
     assert "ready_bundle_has_health_blockers" in result.errors
+
+
+
+def _write_intake_bundle(
+    path: Path,
+    *,
+    baseline_date: str = "2026-09-17",
+    capture_date: str = "2026-09-18",
+    bundle_fingerprint: str = "2" * 64,
+    chain_fingerprint: str = "2" * 64,
+    tamper_capture_after_commit: bool = False,
+    include_drifted_transition: bool = False,
+    include_health_blocker: bool = False,
+) -> None:
+    root = path.parent / "intake-captures"
+    root.mkdir()
+    freeze_legacy_baseline(
+        root,
+        [],
+        baseline_through_trade_date=baseline_date,
+    )
+    capture = build_committed_capture(
+        code_head="abc123",
+        as_of_trade_date=capture_date,
+        captured_at_utc="2026-09-18T08:00:00+00:00",
+        instrument_count=1,
+        successful_instruments=1,
+        failed_instruments=0,
+        worktree_clean=True,
+        methodology_contract_version=1,
+        methodology_fingerprint=chain_fingerprint,
+        journal_rows=[],
+    )
+    commit_capture_transaction(root, capture)
+
+    capture_path = root / f"{capture_date}__{capture.transaction_id}.json"
+    if tamper_capture_after_commit:
+        value = json.loads(capture_path.read_text(encoding="utf-8"))
+        value["worktree_clean"] = False
+        capture_path.write_text(
+            json.dumps(value, ensure_ascii=False, sort_keys=True),
+            encoding="utf-8",
+        )
+
+    payloads: dict[str, bytes] = {
+        "authoritative/legacy_baseline.json": (
+            root / "legacy_baseline.json"
+        ).read_bytes(),
+        f"authoritative/captures/{capture_path.name}": capture_path.read_bytes(),
+    }
+    if include_drifted_transition:
+        payloads["reports/m4-lifecycle-transitions.json"] = json.dumps(
+            {
+                "status": "transitions_available",
+                "date_count": 999,
+                "baseline_trade_date": baseline_date,
+                "latest_trade_date": capture_date,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        ).encode("utf-8")
+    if include_health_blocker:
+        payloads["reports/m4-evidence-health.json"] = json.dumps(
+            {
+                "blocker_count": 1,
+                "latest_committed_capture_date": capture_date,
+                "authoritative_methodology_fingerprint": chain_fingerprint,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        ).encode("utf-8")
+
+    records = [
+        {
+            "arcname": name,
+            "size_bytes": len(payload),
+            "sha256": sha256(payload).hexdigest(),
+            "required": name.startswith("authoritative/"),
+        }
+        for name, payload in sorted(payloads.items())
+    ]
+    manifest = {
+        "schema_version": 1,
+        "status": "transport_bundle_ready",
+        "methodology_contract_version": 1,
+        "methodology_fingerprint": bundle_fingerprint,
+        "committed_capture_count": 1,
+        "latest_committed_capture_date": capture_date,
+        "latest_capture_transaction_id": capture.transaction_id,
+        "evidence_health_blocker_count": 0,
+        "committed_capture_read_error": None,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+        "authoritative_evidence_modified": False,
+        "files": records,
+    }
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr(
+            "bundle-manifest.json",
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True),
+        )
+        for name, payload in payloads.items():
+            archive.writestr(name, payload)
+
+
+def test_intake_recomputes_authoritative_t1_without_derived_reports(tmp_path: Path) -> None:
+    path = tmp_path / "t1.zip"
+    _write_intake_bundle(path)
+    result = audit_evidence_bundle(
+        path,
+        expected_baseline_trade_date="2026-09-17",
+    )
+    assert result.status == "ready_with_warnings"
+    assert result.blocker_count == 0
+    assert result.summary["committed_capture_count"] == 1
+    assert result.summary["committed_capture_dates"] == ["2026-09-18"]
+    assert result.summary["capture_timeline"] == ["2026-09-17", "2026-09-18"]
+
+
+def test_intake_rejects_bundle_methodology_drift(tmp_path: Path) -> None:
+    path = tmp_path / "t1.zip"
+    _write_intake_bundle(
+        path,
+        bundle_fingerprint="3" * 64,
+        chain_fingerprint="2" * 64,
+    )
+    result = audit_evidence_bundle(path, expected_baseline_trade_date="2026-09-17")
+    assert result.status == "not_ready"
+    assert "bundle_methodology_differs_from_committed_chain" in result.blockers
+
+
+def test_intake_rejects_wrong_frozen_baseline_date(tmp_path: Path) -> None:
+    path = tmp_path / "t1.zip"
+    _write_intake_bundle(path, baseline_date="2026-09-16")
+    result = audit_evidence_bundle(path, expected_baseline_trade_date="2026-09-17")
+    assert result.status == "not_ready"
+    assert "unexpected_frozen_baseline_trade_date" in result.blockers
+
+
+def test_intake_rejects_authoritative_capture_tamper_even_when_zip_hashes_match(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "t1.zip"
+    _write_intake_bundle(path, tamper_capture_after_commit=True)
+    result = audit_evidence_bundle(path, expected_baseline_trade_date="2026-09-17")
+    assert result.status == "not_ready"
+    assert any(
+        item.startswith("authoritative_intake_error:")
+        for item in result.blockers
+    )
+
+
+def test_intake_rejects_derived_transition_report_drift(tmp_path: Path) -> None:
+    path = tmp_path / "t1.zip"
+    _write_intake_bundle(path, include_drifted_transition=True)
+    result = audit_evidence_bundle(path, expected_baseline_trade_date="2026-09-17")
+    assert result.status == "not_ready"
+    assert any(item.startswith("transition_report_drift:") for item in result.blockers)
+
+
+def test_intake_rejects_included_evidence_health_blocker(tmp_path: Path) -> None:
+    path = tmp_path / "t1.zip"
+    _write_intake_bundle(path, include_health_blocker=True)
+    result = audit_evidence_bundle(path, expected_baseline_trade_date="2026-09-17")
+    assert result.status == "not_ready"
+    assert "evidence_health_report_has_blockers" in result.blockers
