@@ -815,3 +815,46 @@ No harmonic ratios, Source Raw PRZ source definitions, BAMM, Shark or 5-0 source
 
 No post-T0 future committed capture existed before methodology-v3 freeze, so no future evidence
 was migrated or mixed.
+
+
+## M4 Phase 2.12 / frozen source-clock seed + methodology v4
+
+Assistant-side only; no user-local QA requested.
+
+Outcome-protocol sufficiency review found a second pre-T1 censoring risk:
+
+D-032 preserved scanner-absent future market observations, but the existing
+`observe_source_execution()` function also requires the original observable forming-signal
+time and reaction-anchor price. Without freezing those at enrollment, a candidate that leaves
+the scanner before Source Terminal cannot be reconstructed from OHLC alone.
+
+Existing forming payload already exposed the required facts through `execution_clock`, so no
+new harmonic geometry rule was needed.
+
+Closed:
+- `05ae340c5d3563a5951cb1f6684e534b580f0e58`: journal persists the minimal source-clock seed and D-024 enrollment requires it;
+- `2370e434a945eaf269e46ce1c9934df1fb4eb26b`: observation candidate summaries freeze enrollment source-clock seed;
+- `0ed3d1fa54bc6a64a024daee32dab593e1363206`: lifecycle-journal seed regressions;
+- `8c3edc2548fcd9196426bfbaa2214aab4036a11d`: transition fixtures carry the seed;
+- `30170131a1b4e8e63f5d4300f4160a5508b3bc7b`: observation fixtures and frozen-seed assertions;
+- `46d6bfc6a3733585fc669c8892345c32e72fea3a`: committed capture schema v5 + all-or-none seed validation;
+- `b6925b8752b910c0f425384a48f93679f11059ba`: schema-v5 seed contract regressions;
+- `1035029284d0cedb499a49bce94a77be41c5b62a`: prospective observation schema v4;
+- `d742053c704ef919888f22e8c7592ec82e3e3097`: observation-v4 seed regression;
+- `c774c54928c33361952bf1a612a8555633449625`: methodology contract v4 exact freeze;
+- `1b572b1f15806e3958a73b42c6d76e1ed69784b9`: exact methodology guard advanced to v4;
+- `04db0a1c5d31ca5f132c600669c4422b9608ea8b`: one-click T1 wrapper requires v4 checkpoint;
+- `18de18a1bf5e51cfd6332acb0dbce0a2b08fd1d4`: explicit v4->v5 schema boundary regression;
+- `7c5f0880420127dd63e2438d20c506caff7858e5`: human-readable observation report surfaces frozen seed;
+- D-035 and `specs/m4-phase-2-12-source-clock-seed.md` freeze the contract.
+
+Methodology delta from v3 anchor `2b0aa92d...` to v4 anchor `c774c549...` was audited.
+Only four fingerprint components changed:
+`lifecycle_journal.py`, `capture_transaction.py`, `prospective_observations.py`,
+and `methodology_identity.py`.
+
+No harmonic ratios, Source Raw PRZ definitions, source lifecycle algorithm, BAMM, Shark or 5-0
+source rules changed.
+
+No post-T0 future committed capture existed before methodology-v4 freeze, so no future evidence
+was migrated, rewritten or mixed.
