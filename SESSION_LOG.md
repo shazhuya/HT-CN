@@ -227,3 +227,15 @@
 - `85b752ce9b3c5fd188a2d09943fd4aa24f618445`: analysis read paths kept side-effect free; sector tables/benchmark directories are no longer created by ordinary reads.
 - Industry strength/breadth/volume is recomputed from local M1 constituent data; Eastmoney supplies membership only.
 - Multi-industry ambiguity is fail-closed; industry context cannot own lifecycle or mutate identity / Source Raw PRZ.
+
+
+## M3 Phase 3.4-3.5 / 2026-09-18
+
+- Phase 3.4 adds multi-membership concept/theme context; multiple concepts are normal rather than ambiguous.
+- Concept membership refresh uses bounded concurrency + retry and all-or-nothing replacement; partial failures preserve the previous complete mapping.
+- Concept evidence is recomputed from local M1 constituents and ordered only by raw 5-day median return; there is no theme score.
+- `acc0efee28827e8df979201ddac666601bfd9f7d` prevents industry/concept future membership from backdating into earlier analysis.
+- Phase 3.5 adds `context_integrity` with current/partial/stale/missing/conflicted/future_observation/unresolved states and no score.
+- Membership older than the default seven-day refresh horizon is surfaced as stale even when a current local aggregate snapshot exists.
+- `运行M3上下文数据同步.bat` now performs execution-event, core benchmark, industry and concept sync in one pass and writes a combined machine-readable report.
+- Current implementation checkpoint before docs commit: `a08a601568342ca9049923f0b5ee156d8dd96eb8`.

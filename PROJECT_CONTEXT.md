@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `85b752ce9b3c5fd188a2d09943fd4aa24f618445`
-context_checkpoint_title: `M3 Phase 3.3: auditable industry context and hierarchical relative strength`
+context_checkpoint: `a08a601568342ca9049923f0b5ee156d8dd96eb8`
+context_checkpoint_title: `M3 Phase 3.5: concept/theme context, no-backdating, freshness and unified context integrity`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -188,6 +188,56 @@ Playwright source-overlay regression 已加入，但 GitHub-hosted runner 当前
 
 固定边界：行业层 `owns_lifecycle=false`，`mutates_harmonic_identity=false`，`mutates_source_raw_prz=false`。
 
+
+## M3 Phase 3.4 — Concept / Theme Context
+
+概念/题材与行业采用不同语义：
+
+- 概念天然多对多；一只股票属于多个概念是正常状态，不标 ambiguous；
+- 来源：AKShare / Eastmoney `stock_board_concept_name_em` + `stock_board_concept_cons_em`；
+- 周级 membership 刷新使用有界并发，默认 8 workers、每概念重试；
+- 全量抓取全部成功后才原子替换旧映射；任一概念失败保留旧完整映射；
+- 概念强弱/广度/量能继续只由本地 M1 成分股重算；
+- 工作台默认展开最多 8 个概念，按透明的 5 日中位收益降序，不生成“题材评分”；
+- 输出个股相对每个概念的 5 / 20 日强弱。
+
+no-backdating：行业/概念 `mapping_observed_on > analysis.as_of` 时返回 `mapping_after_as_of`，禁止未来 membership 回填历史分析。
+
+同步入口：`运行M3概念题材同步.bat`。
+
+## M3 Phase 3.5 — Context Integrity / One-Click Sync
+
+已新增非评分的 `context_integrity`：
+
+- execution；
+- market；
+- industry；
+- concept。
+
+每层只报告：`current / partial / stale / missing / conflicted / future_observation / unresolved`，同时带 evidence date / source / coverage / reason。
+
+规则：
+
+- 四指数未全部对齐分析日 → partial / stale；
+- 行业映射冲突 → conflicted；
+- future membership → future_observation；
+- 行业/概念 membership 默认超过 7 天未刷新 → stale；
+- execution 特殊事件源仍不完整 → unresolved；
+- 完整性总览 `is_score=false`，不生成投资评分或买卖信号。
+
+一键入口：`运行M3上下文数据同步.bat`。
+
+它连续同步：
+
+1. 当日停牌正向证据；
+2. 科创50 / 创业板指 / 沪深300 / 上证指数；
+3. 行业 membership + 本地行业快照；
+4. 概念 membership + 本地概念快照；
+
+并输出 `artifacts/reports/m3-context-sync-summary.json`。某一层失败不会隐藏其他层已完成结果。
+
+当前 AKShare 源码已核实行业/概念成分接口均接受 `BKxxxx` 板块代码。
+
 ## 当前 CI 基础设施异常
 
 M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异常：
@@ -212,15 +262,15 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 3.4 — Concept / Theme Context + Context Hierarchy Closeout。**
+**M3 Phase 4 — Product Decision Narrative / Action-State Orchestration。**
 
-优先级：
+在不生成黑箱评分、不替用户做交易执行的前提下，把已经冻结的证据层组织成实战工作流：
 
-1. 概念板块作为多对多标签处理，不把多概念股票强行压成“唯一概念”；
-2. 只对可审计、可本地重算的概念建立 strength/breadth evidence；
-3. 形成 `individual -> industry -> concept/theme -> core market` 的分层视图，但禁止生成黑箱综合分；
-4. 增加 context freshness / coverage 元数据，明确“旧、缺、冲突”而不是静默沿用；
-5. runner 恢复后跑 Python/Web/Playwright 全门禁，并在真实 M1 catalog 上执行三套同步 smoke。
+1. lifecycle 仍是唯一“形态现在在哪”的主时钟；
+2. execution / market / industry / concept 只改变“可执行性、环境解释和注意事项”，不改变 harmonic identity；
+3. 输出“现在先看什么 → 下一关键价/状态 → 什么证据会使路径失效 → 哪些 context 当前不可用”；
+4. 明确区分 **等待 / 反应观察 / 执行评估 / 证据不足**，禁止压成买卖评分；
+5. 在真实 M1 catalog 上跑 `运行M3上下文数据同步.bat` + 工作台 smoke 后，再决定 PR #12 是否进入 Ready。
 
 
 ## 固定 Source / Product 边界
