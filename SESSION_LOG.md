@@ -601,3 +601,23 @@ GitHub Actions remains infrastructure-limited:
 latest push / pull_request deterministic-tests jobs completed with `steps=null`, so no pytest
 or Web build actually executed. This is the same known runner-allocation anomaly and is not
 counted as test pass or code failure.
+
+
+## M4 Phase 2 closeout / evidence integrity
+
+Phase 2 assistant-side closeout completed after the Phase 2.8 methodology-provenance audit.
+
+Closed:
+- schema-v1 chain cannot silently accept schema-v2 append;
+- 32/32 methodology fingerprint component paths exist in the repository tree;
+- production committed-capture builder receives methodology identity;
+- modified research fixtures receive methodology identity;
+- mirror methodology drift is detectable;
+- Phase 2 closeout checklist frozen at `specs/m4-phase-2-closeout.md`;
+- PROJECT_CONTEXT advanced to the first real fingerprinted future-capture gate.
+
+Remaining evidence gates are external/forward-looking:
+- GitHub hosted deterministic runner must actually allocate steps/logs;
+- first post-T0 fingerprinted real-M1 capture;
+- first strict prospective outcome-enrolled candidate;
+- separately preregistered future outcome protocol before performance inference.
