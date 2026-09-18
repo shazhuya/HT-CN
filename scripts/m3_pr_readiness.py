@@ -1,0 +1,306 @@
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+
+@dataclass(frozen=True, slots=True)
+class ReadinessFinding:
+    code: str
+    severity: str
+    detail: str
+
+
+def _git_head() -> str | None:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True
+        ).strip()
+    except Exception:
+        return None
+
+
+def _load(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _finding(
+    findings: list[ReadinessFinding],
+    code: str,
+    severity: str,
+    detail: str,
+) -> None:
+    findings.append(ReadinessFinding(code, severity, detail))
+
+
+def _require_current_report(
+    findings: list[ReadinessFinding],
+    *,
+    name: str,
+    report: dict[str, Any] | None,
+    current_head: str | None,
+) -> bool:
+    if report is None:
+        _finding(
+            findings,
+            f"{name}_report_missing",
+            "blocker",
+            f"{name} report is missing or unreadable.",
+        )
+        return False
+    report_head = report.get("code_head")
+    if current_head is None:
+        _finding(
+            findings,
+            "current_git_head_unavailable",
+            "blocker",
+            "Cannot resolve current git HEAD, so acceptance evidence cannot be bound to code.",
+        )
+        return False
+    if report_head != current_head:
+        _finding(
+            findings,
+            f"{name}_report_stale",
+            "blocker",
+            f"{name} report belongs to {report_head!r}, current HEAD is {current_head!r}.",
+        )
+        return False
+    return True
+
+
+def evaluate(
+    *,
+    current_head: str | None,
+    workbench: dict[str, Any] | None,
+    metadata: dict[str, Any] | None,
+    product: dict[str, Any] | None,
+    context: dict[str, Any] | None,
+) -> dict[str, Any]:
+    findings: list[ReadinessFinding] = []
+
+    workbench_current = _require_current_report(
+        findings, name="workbench", report=workbench, current_head=current_head
+    )
+    metadata_current = _require_current_report(
+        findings, name="metadata", report=metadata, current_head=current_head
+    )
+    product_current = _require_current_report(
+        findings, name="product", report=product, current_head=current_head
+    )
+    context_current = _require_current_report(
+        findings, name="context", report=context, current_head=current_head
+    )
+
+    if workbench_current and workbench is not None:
+        if workbench.get("status") != "pass":
+            _finding(
+                findings, "workbench_acceptance_failed", "blocker",
+                f"Formal workbench acceptance status is {workbench.get('status')!r}.",
+            )
+        expected_gates = {
+            "python",
+            "web_build",
+            "real_m1_metadata",
+            "real_m1_product_contract",
+            "local_services",
+            "playwright",
+        }
+        gates = workbench.get("gates") or {}
+        missing = sorted(expected_gates - set(gates))
+        if missing:
+            _finding(
+                findings, "workbench_gate_missing", "blocker",
+                f"Formal acceptance is missing gates: {missing}.",
+            )
+        failed = sorted(
+            key for key in expected_gates
+            if isinstance(gates.get(key), dict)
+            and gates[key].get("status") != "pass"
+        )
+        if failed:
+            _finding(
+                findings, "workbench_gate_not_passed", "blocker",
+                f"Formal acceptance gates not passed: {failed}.",
+            )
+
+    if metadata_current and metadata is not None:
+        if metadata.get("status") != "pass":
+            _finding(
+                findings, "real_m1_metadata_failed", "blocker",
+                f"Strict real-M1 metadata status is {metadata.get('status')!r}.",
+            )
+        samples = metadata.get("samples") or []
+        boards = {
+            str(item.get("board_expected"))
+            for item in samples
+            if item.get("metadata_loaded") and item.get("parquet_loaded")
+        }
+        missing_boards = sorted({"MAIN", "STAR", "CHINEXT"} - boards)
+        if missing_boards:
+            _finding(
+                findings, "real_m1_board_coverage_missing", "blocker",
+                f"Readable representative parquet missing for boards: {missing_boards}.",
+            )
+        if metadata.get("event_feed_status") != "event_complete":
+            _finding(
+                findings, "daily_event_feed_partial", "warning",
+                (
+                    "Daily event feed is not complete-market coverage; "
+                    "special-event exceptions remain fail-safe unresolved where applicable."
+                ),
+            )
+
+    if product_current and product is not None:
+        if product.get("status") != "pass":
+            _finding(
+                findings, "real_m1_product_contract_failed", "blocker",
+                f"Real-M1 product contract status is {product.get('status')!r}.",
+            )
+        if int(product.get("total_issues") or 0) != 0:
+            _finding(
+                findings, "real_m1_product_contract_issues", "blocker",
+                f"Product contract found {product.get('total_issues')} issue(s).",
+            )
+        if int(product.get("successful_analyses") or 0) <= 0:
+            _finding(
+                findings, "real_m1_no_successful_analysis", "blocker",
+                "No real-M1 analysis completed successfully.",
+            )
+        if int(product.get("total_patterns") or 0) <= 0:
+            _finding(
+                findings, "real_m1_no_pattern_observed", "warning",
+                (
+                    "Selected real-M1 samples produced no harmonic candidates; "
+                    "unit/browser gates still verify pattern contracts, but real-pattern assembly was not observed."
+                ),
+            )
+
+    if context_current and context is not None:
+        overall = str(context.get("overall") or "unknown")
+        if overall == "partial_failure":
+            _finding(
+                findings, "context_sync_partial_failure", "blocker",
+                "At least one context synchronization layer failed structurally.",
+            )
+        elif overall == "degraded":
+            _finding(
+                findings, "context_sync_degraded", "warning",
+                (
+                    "Context sync completed with degradation; preserved snapshots/fallbacks "
+                    "must remain explicitly surfaced by context integrity."
+                ),
+            )
+        elif overall != "all_steps_completed":
+            _finding(
+                findings, "context_sync_unknown_state", "blocker",
+                f"Unexpected context sync state: {overall!r}.",
+            )
+
+        layers = context.get("layers") or {}
+        for layer_name, layer in layers.items():
+            if not isinstance(layer, dict):
+                continue
+            state = str(layer.get("state") or "unknown")
+            if state == "failed":
+                _finding(
+                    findings, f"context_{layer_name}_failed", "blocker",
+                    f"Context layer {layer_name} failed.",
+                )
+            elif state not in {"current", "partial_positive_evidence"}:
+                _finding(
+                    findings, f"context_{layer_name}_{state}", "warning",
+                    f"Context layer {layer_name} is {state}.",
+                )
+
+        event = layers.get("execution_event") if isinstance(layers, dict) else None
+        if isinstance(event, dict) and event.get("coverage_scope") == "positive_evidence_only":
+            _finding(
+                findings, "execution_event_positive_only", "warning",
+                (
+                    "Suspension feed is positive-evidence-only by design; absence of an event "
+                    "does not prove a security was tradable."
+                ),
+            )
+
+    blockers = [item for item in findings if item.severity == "blocker"]
+    warnings = [item for item in findings if item.severity == "warning"]
+    pr_ready = not blockers
+
+    return {
+        "schema_version": 1,
+        "evaluated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "code_head": current_head,
+        "pr_ready": pr_ready,
+        "status": "ready_with_warnings" if pr_ready and warnings else "ready" if pr_ready else "not_ready",
+        "blocker_count": len(blockers),
+        "warning_count": len(warnings),
+        "blockers": [asdict(item) for item in blockers],
+        "warnings": [asdict(item) for item in warnings],
+        "known_boundaries": [
+            "5-0 remains production-quarantined.",
+            "Alternate Bat remains fail-closed.",
+            "BSE remains deferred.",
+            "Daily event coverage may remain positive-evidence-only; this is a surfaced limitation, not silent completeness.",
+        ],
+        "semantic_note": (
+            "pr_ready is a code/evidence readiness gate, not an investment score, "
+            "performance claim, or permission to execute trades."
+        ),
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="HT-CN M3 PR readiness closeout")
+    parser.add_argument(
+        "--workbench",
+        default="artifacts/reports/m3-workbench-acceptance.json",
+    )
+    parser.add_argument(
+        "--metadata",
+        default="artifacts/reports/m3-metadata-tradability-smoke.json",
+    )
+    parser.add_argument(
+        "--product",
+        default="artifacts/reports/m3-product-contract-smoke.json",
+    )
+    parser.add_argument(
+        "--context",
+        default="artifacts/reports/m3-context-sync-summary.json",
+    )
+    parser.add_argument(
+        "--output",
+        default="artifacts/reports/m3-pr-readiness.json",
+    )
+    args = parser.parse_args()
+
+    payload = evaluate(
+        current_head=_git_head(),
+        workbench=_load(Path(args.workbench)),
+        metadata=_load(Path(args.metadata)),
+        product=_load(Path(args.product)),
+        context=_load(Path(args.context)),
+    )
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    print(f"\n[M3] PR readiness report: {output}")
+    return 0 if payload["pr_ready"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
