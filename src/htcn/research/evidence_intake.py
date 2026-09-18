@@ -20,6 +20,7 @@ from .capture_transaction import (
 )
 from .evidence_bundle import verify_evidence_bundle
 from .lifecycle_transitions import build_transition_report
+from .outcome_engine_identity import build_outcome_engine_identity
 from .outcome_evaluator import evaluate_candidate_outcome
 from .outcome_protocol import load_outcome_protocol, load_outcome_protocol_v2
 from .outcome_snapshot import read_outcome_snapshots
@@ -199,6 +200,7 @@ def audit_evidence_bundle(
             active_outcome_protocol, active_outcome_identity = (
                 load_outcome_protocol_v2()
             )
+            current_outcome_engine = build_outcome_engine_identity()
             baseline_present = frozen_legacy_baseline_present(transaction_root)
             baseline_rows = read_frozen_legacy_baseline(transaction_root)
             baseline_through = frozen_legacy_baseline_through_date(transaction_root)
@@ -393,6 +395,31 @@ def audit_evidence_bundle(
             elif bundled_active_protocol != active_outcome_protocol:
                 blockers.append("outcome_protocol_bundle_member_drift")
 
+            if (
+                manifest.get("active_outcome_protocol_id")
+                not in {None, active_outcome_identity.protocol_id}
+            ):
+                blockers.append("bundle_active_outcome_protocol_id_drift")
+            if (
+                manifest.get("active_outcome_protocol_fingerprint")
+                not in {None, active_outcome_identity.fingerprint}
+            ):
+                blockers.append(
+                    "bundle_active_outcome_protocol_fingerprint_drift"
+                )
+            if (
+                manifest.get("current_outcome_engine_contract_version")
+                not in {None, current_outcome_engine.contract_version}
+            ):
+                blockers.append("bundle_current_outcome_engine_version_drift")
+            if (
+                manifest.get("current_outcome_engine_fingerprint")
+                not in {None, current_outcome_engine.fingerprint}
+            ):
+                blockers.append(
+                    "bundle_current_outcome_engine_fingerprint_drift"
+                )
+
             manifest_outcome_error = str(
                 manifest.get("outcome_snapshot_read_error") or ""
             )
@@ -470,6 +497,21 @@ def audit_evidence_bundle(
                 ):
                     blockers.append(
                         "outcome_snapshot_protocol_fingerprint_drift"
+                    )
+                if (
+                    int(
+                        snapshot.get(
+                            "outcome_engine_contract_version"
+                        ) or 0
+                    )
+                    != current_outcome_engine.contract_version
+                    or str(
+                        snapshot.get("outcome_engine_fingerprint") or ""
+                    )
+                    != current_outcome_engine.fingerprint
+                ):
+                    blockers.append(
+                        "outcome_snapshot_engine_identity_drift"
                     )
                 if (
                     str(
@@ -709,6 +751,12 @@ def audit_evidence_bundle(
                 "outcome_protocol_id": active_outcome_identity.protocol_id,
                 "outcome_protocol_fingerprint": (
                     active_outcome_identity.fingerprint
+                ),
+                "current_outcome_engine_contract_version": (
+                    current_outcome_engine.contract_version
+                ),
+                "current_outcome_engine_fingerprint": (
+                    current_outcome_engine.fingerprint
                 ),
                 "outcome_snapshot_count": len(outcome_snapshots),
                 "latest_outcome_as_of_trade_date": (
