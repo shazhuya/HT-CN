@@ -129,3 +129,19 @@ Phase 2.10 still does not define or compute:
 
 It only ensures that a future preregistered outcome protocol will have an uncensored,
 auditable market path for already enrolled candidates.
+
+
+## Current supersession — Phase 2.11
+
+Phase 2.10 introduced schema v3 cohort follow-up under methodology v2 before any real post-T0
+future transaction was committed.
+
+Phase 2.11 adds formal price-basis provenance and therefore advances the current T1 protocol to:
+
+- committed capture schema v4;
+- methodology contract v3;
+- the same 37 methodology component paths;
+- exact frozen methodology commit `2b0aa92d292410098d9678a3bfd3102f3df1ed4b`.
+
+The cohort-followup semantics from D-032 remain active. Phase 2.11 adds price-coordinate
+provenance; it does not remove scanner-absent follow-up.
