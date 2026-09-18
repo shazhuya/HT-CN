@@ -25,7 +25,8 @@ echo ============================================================
 echo 每日收盘流水线结束，exit=%PIPELINE_EXIT%
 echo 汇总报告: artifacts\reports\m5-daily-close-pipeline.json
 echo M5工作台: data\product\m5\operator_queue
-echo M4证据包: artifacts\reports\m4-evidence-bundle.zip
+echo 每日上传包: artifacts\reports\htcn-daily-handoff.zip
+echo M4证据子包: artifacts\reports\m4-evidence-bundle.zip
 echo ============================================================
 echo.
 pause
