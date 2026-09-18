@@ -90,7 +90,7 @@ def build_prospective_observation_report(
                 "cohort follow-up evidence cannot exist without captured timeline"
             )
         return {
-            "schema_version": 3,
+            "schema_version": 4,
             "status": "empty",
             "captured_dates": [],
             "prospective_candidate_count": 0,
@@ -550,7 +550,7 @@ def build_prospective_observation_report(
     )
 
     return {
-        "schema_version": 3,
+        "schema_version": 4,
         "status": "no_outcome_cohort" if not enrollment else "observations_available",
         "captured_dates": dates,
         "prospective_candidate_count": len(enrollment),
