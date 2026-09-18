@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `5e6c747f7dc2f2b4d8b3515b0e1d5eb1d9902055`
-context_checkpoint_title: `M4 T1 one-click M1-update + evidence-bundle gate`
+context_checkpoint: `da927140b8e9b4bea31e0fcc1cd8d8b23b371661`
+context_checkpoint_title: `M4 T1 private-capture preflight + static regression`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -789,6 +789,19 @@ Phase 2 evidence-integrity closeout 已冻结：`specs/m4-phase-2-closeout.md`�
 2. 用户私有 M1 数据产生首个 post-T0 fingerprinted future capture；
 3. 真正出现至少一个 strict prospective_outcome_eligible candidate；
 4. 在任何 return / MFE / MAE / win-rate / alpha 统计前，另行冻结 future outcome protocol。
+
+
+## M4 T1 本机采集 preflight — D-029
+
+在任何私有 M1 更新或 authoritative capture 之前，一键入口现在先验证：
+
+- 当前分支必须为 `m4/real-a-share-validation-workflow`；
+- HEAD 必须包含最低安全 checkpoint `3bd0c236d5f1318caf0b6125f9f99ef1f113e0af`；
+- detached / wrong branch / stale-or-diverged protocol 均 fail closed；
+- worktree 必须 clean；
+- preflight 失败时明确保证 **M1 update 和 authoritative capture 均未启动**。
+
+该 preflight 只保护本机采集入口，不进入 methodology fingerprint，不改变 harmonic / Source PRZ / lifecycle / enrollment 语义。
 
 ## 本机调用规则 — D-023
 
