@@ -100,3 +100,36 @@ def test_report_surfaces_price_basis_drift_without_auto_rebase() -> None:
     assert "basis-drift=1" in text
     assert "不自动重基准" in text
     assert "return/MFE/MAE" in text
+
+
+
+def test_report_surfaces_frozen_source_clock_seed() -> None:
+    payload = {
+        "status": "observations_available",
+        "captured_dates": ["2026-09-18"],
+        "prospective_candidate_count": 1,
+        "observation_count": 1,
+        "scanner_presence_counts": {"present": 1},
+        "market_observation_counts": {"traded": 1},
+        "lifecycle_observation_counts": {"waiting_terminal": 1},
+        "candidate_summaries": [{
+            "candidate_key": "k",
+            "outcome_enrollment_trade_date": "2026-09-18",
+            "enrollment_source_clock_seed": {
+                "source_signal_trade_date": "2026-09-16",
+                "source_reaction_anchor_label": "A",
+                "source_reaction_anchor_price": 100.0,
+            },
+            "captured_snapshot_count": 1,
+            "present_snapshot_count": 1,
+            "absent_snapshot_count": 0,
+            "scanner_absent_market_followup_snapshot_count": 0,
+            "confirmed_full_day_suspended_snapshot_count": 0,
+            "price_basis_drift_snapshot_count": 0,
+            "first_source_terminal_trade_date": None,
+        }],
+        "interpretation": {"capture_timeline_source": "manifest"},
+    }
+    text = render_markdown(payload)
+    assert "source-seed=yes" in text
+    assert "scanner 后续消失不删除该 seed" in text
