@@ -290,8 +290,12 @@ def test_committed_transactions_forbid_backfill_after_newer_date(tmp_path) -> No
         [_row("newer", date="2026-09-19")],
         date="2026-09-19",
     )
+    older_row = _row("older", date="2026-09-18")
+    # Keep this candidate outside the outcome cohort so follow-up coverage
+    # does not mask the chronology invariant this test is intended to assert.
+    older_row["eligible_for_validation"] = False
     older = _capture(
-        [_row("older", date="2026-09-18")],
+        [older_row],
         date="2026-09-18",
     )
     commit_capture_transaction(tmp_path, newer)
