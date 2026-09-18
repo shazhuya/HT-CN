@@ -17,12 +17,18 @@ Future captures are wrapped into one immutable committed JSON file.
 
 Transaction identity includes:
 
+- capture schema version;
+- methodology contract version + deterministic methodology fingerprint;
 - code head;
 - as-of trade date;
 - complete instrument coverage;
 - canonical sorted candidate facts.
 
 It excludes wall-clock capture time so identical reruns stay idempotent.
+
+From Phase 2.8 onward, new authoritative captures use transaction schema v2. An active
+prospective chain may contain only one methodology identity; methodology drift fails closed
+and requires an explicitly versioned new methodology epoch.
 
 ## Commit protocol
 
