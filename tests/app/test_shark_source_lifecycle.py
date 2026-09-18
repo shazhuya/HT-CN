@@ -62,6 +62,16 @@ def test_forming_shark_gets_source_clock_and_lifecycle_from_b_anchor() -> None:
     assert clock["target_382"] == pytest.approx(96.88 + 0.382 * (124.0 - 96.88))
     assert clock["lifecycle"]["state"] == "source_terminal_complete"
     assert clock["lifecycle"]["source_terminal_bar"] == 6
+    assert clock["type_i_target_semantics"] == (
+        "generic_type_i_reaction_confirmation_only_not_shark_management_target"
+    )
+    management = clock["shark_management"]
+    assert management["status"] == "source_terminal_observed"
+    assert management["target_50_bc"] == pytest.approx(96.88 + 0.50 * (124.0 - 96.88))
+    assert management["target_618_bc"] == pytest.approx(96.88 + 0.618 * (124.0 - 96.88))
+    assert management["reciprocal_abcd"] == pytest.approx(96.88 + (124.0 - 110.0))
+    assert management["initial_target"] == pytest.approx(management["reciprocal_abcd"])
+    assert management["initial_target_basis"] == "reciprocal_abcd"
 
 
 def test_completed_shark_source_clock_uses_b_not_a_as_type_i_span_anchor() -> None:
