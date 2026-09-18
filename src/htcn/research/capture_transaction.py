@@ -8,8 +8,9 @@ import os
 from typing import Any, Iterable
 
 
-CAPTURE_TRANSACTION_SCHEMA_VERSION = 1
+CAPTURE_TRANSACTION_SCHEMA_VERSION = 2
 LEGACY_BASELINE_SCHEMA_VERSION = 1
+SUPPORTED_CAPTURE_TRANSACTION_SCHEMA_VERSIONS = (1, 2)
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +24,8 @@ class CommittedCapture:
     failed_instruments: int
     candidate_count: int
     worktree_clean: bool
+    methodology_contract_version: int
+    methodology_fingerprint: str
     journal_rows: tuple[dict[str, Any], ...]
     status: str = "committed"
     schema_version: int = CAPTURE_TRANSACTION_SCHEMA_VERSION
@@ -53,6 +56,9 @@ def _transaction_identity_payload(
     successful_instruments: int,
     failed_instruments: int,
     journal_rows: Iterable[dict[str, Any]],
+    methodology_contract_version: int | None = None,
+    methodology_fingerprint: str | None = None,
+    schema_version: int = CAPTURE_TRANSACTION_SCHEMA_VERSION,
 ) -> dict[str, Any]:
     rows = [dict(row) for row in journal_rows]
     rows.sort(key=lambda row: str(row.get("candidate_key") or ""))
@@ -66,8 +72,8 @@ def _transaction_identity_payload(
         clean.pop("outcome_enrollment_trade_date", None)
         clean.pop("outcome_eligibility_reason", None)
         normalized_rows.append(clean)
-    return {
-        "schema_version": CAPTURE_TRANSACTION_SCHEMA_VERSION,
+    payload: dict[str, Any] = {
+        "schema_version": int(schema_version),
         "code_head": code_head,
         "as_of_trade_date": as_of_trade_date,
         "instrument_count": int(instrument_count),
@@ -76,6 +82,17 @@ def _transaction_identity_payload(
         "candidate_count": len(normalized_rows),
         "journal_rows": normalized_rows,
     }
+    if int(schema_version) >= 2:
+        _validate_methodology_identity(
+            methodology_contract_version=methodology_contract_version,
+            methodology_fingerprint=methodology_fingerprint,
+            source="capture transaction identity",
+        )
+        payload["methodology_contract_version"] = int(
+            methodology_contract_version
+        )
+        payload["methodology_fingerprint"] = str(methodology_fingerprint)
+    return payload
 
 
 def capture_transaction_id(
@@ -86,6 +103,9 @@ def capture_transaction_id(
     successful_instruments: int,
     failed_instruments: int,
     journal_rows: Iterable[dict[str, Any]],
+    methodology_contract_version: int | None = None,
+    methodology_fingerprint: str | None = None,
+    schema_version: int = CAPTURE_TRANSACTION_SCHEMA_VERSION,
 ) -> str:
     identity = _transaction_identity_payload(
         code_head=code_head,
@@ -94,8 +114,28 @@ def capture_transaction_id(
         successful_instruments=successful_instruments,
         failed_instruments=failed_instruments,
         journal_rows=journal_rows,
+        methodology_contract_version=methodology_contract_version,
+        methodology_fingerprint=methodology_fingerprint,
+        schema_version=schema_version,
     )
     return sha256(_canonical_json(identity).encode("utf-8")).hexdigest()[:24]
+
+
+def _validate_methodology_identity(
+    *,
+    methodology_contract_version: int | None,
+    methodology_fingerprint: str | None,
+    source: str,
+) -> None:
+    if methodology_contract_version is None or int(methodology_contract_version) <= 0:
+        raise ValueError(f"missing methodology contract version: {source}")
+    fingerprint = str(methodology_fingerprint or "")
+    if len(fingerprint) != 64:
+        raise ValueError(f"invalid methodology fingerprint length: {source}")
+    try:
+        int(fingerprint, 16)
+    except ValueError as exc:
+        raise ValueError(f"invalid methodology fingerprint encoding: {source}") from exc
 
 
 def _validate_market_observation_row(
@@ -175,8 +215,25 @@ def _validate_committed_payload(
 ) -> tuple[str, str, list[dict[str, Any]]]:
     if payload.get("status") != "committed":
         raise ValueError(f"capture transaction is not committed: {source}")
-    if int(payload.get("schema_version") or 0) != CAPTURE_TRANSACTION_SCHEMA_VERSION:
+    schema_version = int(payload.get("schema_version") or 0)
+    if schema_version not in SUPPORTED_CAPTURE_TRANSACTION_SCHEMA_VERSIONS:
         raise ValueError(f"unsupported capture transaction schema: {source}")
+    methodology_contract_version = payload.get("methodology_contract_version")
+    methodology_fingerprint = payload.get("methodology_fingerprint")
+    if schema_version >= 2:
+        _validate_methodology_identity(
+            methodology_contract_version=(
+                None
+                if methodology_contract_version is None
+                else int(methodology_contract_version)
+            ),
+            methodology_fingerprint=(
+                None
+                if methodology_fingerprint is None
+                else str(methodology_fingerprint)
+            ),
+            source=source,
+        )
     if payload.get("worktree_clean") is not True:
         raise ValueError(f"capture transaction was not from clean worktree: {source}")
     if payload.get("alpha_inference_allowed") is not False:
@@ -210,6 +267,17 @@ def _validate_committed_payload(
         successful_instruments=successful,
         failed_instruments=failed,
         journal_rows=rows,
+        methodology_contract_version=(
+            None
+            if methodology_contract_version is None
+            else int(methodology_contract_version)
+        ),
+        methodology_fingerprint=(
+            None
+            if methodology_fingerprint is None
+            else str(methodology_fingerprint)
+        ),
+        schema_version=schema_version,
     )
     if txid != expected:
         raise ValueError(f"capture transaction id mismatch: {source}")
@@ -264,6 +332,8 @@ def build_committed_capture(
     successful_instruments: int,
     failed_instruments: int,
     worktree_clean: bool,
+    methodology_contract_version: int,
+    methodology_fingerprint: str,
     journal_rows: Iterable[dict[str, Any]],
 ) -> CommittedCapture:
     rows = [dict(row) for row in journal_rows]
@@ -278,6 +348,11 @@ def build_committed_capture(
         raise ValueError("capture transaction requires complete instrument coverage")
     if worktree_clean is not True:
         raise ValueError("capture transaction requires clean worktree")
+    _validate_methodology_identity(
+        methodology_contract_version=methodology_contract_version,
+        methodology_fingerprint=methodology_fingerprint,
+        source="build_committed_capture",
+    )
     _validate_rows(
         code_head=code_head,
         as_of_trade_date=as_of_trade_date,
@@ -290,6 +365,8 @@ def build_committed_capture(
         successful_instruments=successful_instruments,
         failed_instruments=failed_instruments,
         journal_rows=rows,
+        methodology_contract_version=methodology_contract_version,
+        methodology_fingerprint=methodology_fingerprint,
     )
     stamped = tuple({**row, "capture_transaction_id": txid} for row in rows)
     return CommittedCapture(
@@ -302,6 +379,8 @@ def build_committed_capture(
         failed_instruments=failed_instruments,
         candidate_count=len(stamped),
         worktree_clean=worktree_clean,
+        methodology_contract_version=methodology_contract_version,
+        methodology_fingerprint=methodology_fingerprint,
         journal_rows=stamped,
     )
 
@@ -317,6 +396,24 @@ def commit_capture_transaction(
     target_root = Path(root)
     target_root.mkdir(parents=True, exist_ok=True)
     final_path = target_root / _capture_filename(capture)
+
+    existing_payloads = read_committed_captures(target_root)
+    for existing in existing_payloads:
+        existing_version = existing.get("methodology_contract_version")
+        existing_fingerprint = str(existing.get("methodology_fingerprint") or "")
+        if existing_version is None or not existing_fingerprint:
+            raise ValueError(
+                "existing committed capture predates methodology fingerprint; "
+                "explicit methodology migration is required"
+            )
+        if (
+            int(existing_version) != capture.methodology_contract_version
+            or existing_fingerprint != capture.methodology_fingerprint
+        ):
+            raise ValueError(
+                "methodology fingerprint drift across committed capture chain; "
+                "start an explicitly versioned methodology epoch instead of mixing evidence"
+            )
 
     existing_paths = sorted(target_root.glob("????-??-??__*.json"))
     existing_dates = [path.name.split("__", 1)[0] for path in existing_paths]
@@ -399,6 +496,17 @@ def read_committed_captures(root: str | Path) -> list[dict[str, Any]]:
         dates.add(as_of)
         captures.append(payload)
     captures.sort(key=lambda item: str(item.get("as_of_trade_date")))
+    methodology_keys = {
+        (
+            item.get("methodology_contract_version"),
+            str(item.get("methodology_fingerprint") or ""),
+        )
+        for item in captures
+    }
+    if len(methodology_keys) > 1:
+        raise ValueError(
+            "committed capture chain contains mixed methodology fingerprints"
+        )
     return captures
 
 def committed_capture_view(
@@ -432,6 +540,10 @@ def committed_capture_view(
             "failed_instruments": capture["failed_instruments"],
             "candidate_count": capture["candidate_count"],
             "worktree_clean": capture["worktree_clean"],
+            "methodology_contract_version": capture.get(
+                "methodology_contract_version"
+            ),
+            "methodology_fingerprint": capture.get("methodology_fingerprint"),
             "status": "pass",
             "alpha_inference_allowed": False,
             "is_trade_instruction": False,
