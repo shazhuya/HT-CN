@@ -22,9 +22,15 @@ from htcn.data.trading_clock import latest_closed_trade_clock
 from htcn.research.capture_transaction import (
     build_committed_capture,
     commit_capture_transaction,
+    committed_capture_view,
     freeze_legacy_baseline,
     frozen_legacy_baseline_through_date,
     read_committed_captures,
+    read_frozen_legacy_baseline,
+)
+from htcn.research.cohort_followup import (
+    enrolled_outcome_cohort,
+    followup_from_analysis,
 )
 from htcn.research.evidence_health import build_evidence_chain_health
 from htcn.research.lifecycle_journal import append_entries, entries_from_analysis, read_journal
@@ -273,9 +279,58 @@ def run(
         result["status"] = "failed_market_data_freshness"
         return result
 
+    existing_committed = read_committed_captures(transaction_root)
+    prior_outcome_cohort: dict[str, dict[str, str]] = {}
+    if existing_committed:
+        baseline_rows = read_frozen_legacy_baseline(transaction_root)
+        baseline_trade_date = frozen_legacy_baseline_through_date(
+            transaction_root
+        )
+        prior_journal_rows, _ = committed_capture_view(
+            legacy_journal_rows=baseline_rows,
+            capture_rows=existing_committed,
+        )
+        prior_outcome_cohort = enrolled_outcome_cohort(
+            prior_journal_rows,
+            baseline_trade_date=baseline_trade_date,
+        )
+
     all_instruments = _instrument_ids(catalog)
-    instruments = all_instruments
     diagnostic_partial_universe = max_symbols > 0
+    prior_cohort_instruments = sorted({
+        item["instrument_id"]
+        for item in prior_outcome_cohort.values()
+    })
+    missing_prior_instruments = sorted(
+        set(prior_cohort_instruments) - set(all_instruments)
+    )
+    result["prior_outcome_cohort_candidate_count"] = len(
+        prior_outcome_cohort
+    )
+    result["prior_outcome_cohort_instrument_count"] = len(
+        prior_cohort_instruments
+    )
+    result["missing_prior_cohort_instruments"] = missing_prior_instruments
+    if missing_prior_instruments and not diagnostic_partial_universe:
+        result["errors"].append({
+            "scope": "cohort_followup_universe",
+            "error": (
+                "previously outcome-enrolled instrument disappeared from the "
+                "initialized listed universe; explicit listing-end handling is "
+                f"required before capture: {missing_prior_instruments}"
+            ),
+        })
+        result["status"] = "failed_cohort_followup_universe"
+        return result
+
+    prior_by_instrument: dict[str, list[dict[str, str]]] = {}
+    for item in prior_outcome_cohort.values():
+        prior_by_instrument.setdefault(
+            item["instrument_id"],
+            [],
+        ).append(item)
+
+    instruments = all_instruments
     if diagnostic_partial_universe:
         instruments = all_instruments[:max_symbols]
     result["expected_trade_date"] = expected
@@ -294,6 +349,7 @@ def run(
 
     service = M3SourceClockHarmonicService(data_root)
     all_entries = []
+    all_followups = []
     successful = 0
     pattern_counts: list[int] = []
 
@@ -326,6 +382,25 @@ def run(
                     capture_trade_date=expected,
                     market_observation_status="traded",
                 )
+                current_keys = {
+                    entry.candidate_key for entry in entries
+                }
+                for prior in prior_by_instrument.get(instrument_id, []):
+                    if prior["candidate_key"] in current_keys:
+                        continue
+                    all_followups.append(
+                        followup_from_analysis(
+                            analysis,
+                            code_head=str(identity.head),
+                            capture_trade_date=expected,
+                            candidate_key=prior["candidate_key"],
+                            outcome_enrollment_trade_date=prior[
+                                "outcome_enrollment_trade_date"
+                            ],
+                            market_observation_status="traded",
+                            include_latest_bar_facts=True,
+                        )
+                    )
             else:
                 if suspension is None:
                     raise RuntimeError(
@@ -358,6 +433,29 @@ def run(
                     daily_event_source=suspension.get("source"),
                     daily_event_reason=suspension.get("reason"),
                 )
+                current_keys = {
+                    entry.candidate_key for entry in entries
+                }
+                for prior in prior_by_instrument.get(instrument_id, []):
+                    if prior["candidate_key"] in current_keys:
+                        continue
+                    all_followups.append(
+                        followup_from_analysis(
+                            analysis,
+                            code_head=str(identity.head),
+                            capture_trade_date=expected,
+                            candidate_key=prior["candidate_key"],
+                            outcome_enrollment_trade_date=prior[
+                                "outcome_enrollment_trade_date"
+                            ],
+                            market_observation_status=(
+                                "confirmed_full_day_suspended"
+                            ),
+                            include_latest_bar_facts=False,
+                            daily_event_source=suspension.get("source"),
+                            daily_event_reason=suspension.get("reason"),
+                        )
+                    )
                 suspension_carry_forward.append(instrument_id)
 
             all_entries.extend(entries)
@@ -372,6 +470,7 @@ def run(
     result["successful_instruments"] = successful
     result["failed_instruments"] = len(instruments) - successful
     result["candidate_count"] = len(all_entries)
+    result["cohort_followup_count"] = len(all_followups)
     result["suspension_carry_forward_count"] = len(suspension_carry_forward)
     result["suspension_carry_forward_instruments"] = suspension_carry_forward[:50]
     result["candidate_count_by_instrument"] = {
@@ -396,7 +495,6 @@ def run(
         })
         return result
 
-    existing_committed = read_committed_captures(transaction_root)
     if not existing_committed:
         legacy_rows = read_journal(journal_path)
         legacy_manifest_rows = read_snapshot_manifest(manifest_path)
@@ -428,6 +526,9 @@ def run(
         methodology_contract_version=methodology_identity.contract_version,
         methodology_fingerprint=methodology_identity.fingerprint,
         journal_rows=[entry.as_payload() for entry in all_entries],
+        cohort_followup_rows=[
+            entry.as_payload() for entry in all_followups
+        ],
     )
     result["capture_transaction"] = commit_capture_transaction(
         transaction_root,
@@ -464,6 +565,7 @@ def run(
             successful_instruments=successful,
             failed_instruments=len(instruments) - successful,
             candidate_count=len(all_entries),
+            cohort_followup_count=len(all_followups),
             worktree_clean=identity.worktree_clean,
             status="pass",
             capture_transaction_id=committed_capture.transaction_id,
