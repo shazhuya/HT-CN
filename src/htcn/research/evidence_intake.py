@@ -10,6 +10,7 @@ import zipfile
 
 from .capture_transaction import (
     committed_capture_view,
+    committed_followup_view,
     frozen_legacy_baseline_present,
     frozen_legacy_baseline_through_date,
     read_committed_captures,
@@ -149,6 +150,7 @@ def audit_evidence_bundle(
                     legacy_journal_rows=baseline_rows,
                     capture_rows=committed,
                 )
+            followup_rows = committed_followup_view(committed)
 
             timeline = resolve_capture_timeline(
                 journal_rows,
@@ -162,6 +164,7 @@ def audit_evidence_bundle(
             observation = build_prospective_observation_report(
                 journal_rows,
                 manifest_rows=manifest_rows,
+                followup_rows=followup_rows,
                 legacy_baseline_trade_date=baseline_through,
             )
 
@@ -375,6 +378,7 @@ def audit_evidence_bundle(
                 "prospective_outcome_eligible_candidate_keys": eligible_keys,
                 "prospective_observation_status": observation.get("status"),
                 "prospective_observation_count": observation.get("observation_count"),
+                "cohort_followup_row_count": len(followup_rows),
                 "confirmed_full_day_suspended_row_count": len(suspension_rows),
             })
 
