@@ -4,7 +4,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 
 set "M4_REQUIRED_BRANCH=m4/real-a-share-validation-workflow"
-set "M4_MIN_SAFE_COMMIT=3bd0c236d5f1318caf0b6125f9f99ef1f113e0af"
+set "M4_MIN_SAFE_COMMIT=084ddf649e031e8169a761fd3b8578f73b31b5c2"
 
 where git >nul 2>nul
 if errorlevel 1 (
