@@ -309,3 +309,31 @@ Five repairs:
 
 `.gitattributes` now enforces LF for JSON/Markdown/Python to reduce future Windows hash drift.
 Implementation checkpoint: `5a301baf848d740a537b2b07032057dd566309f9`.
+
+
+## M3 Phase 4.8 / 2026-09-18
+
+Third user-local closeout on `8986897924ba64e2e6c85b26393c84258d7ce1a7` proved:
+- deterministic Python: 376 passed;
+- Web TypeScript/Vite build: passed;
+- strict real-M1 metadata/tradability: passed;
+- product smoke: 8/8 analyses succeeded, 10 patterns observed, 2 contract issues only;
+- both issues were forming Shark patterns missing canonical `source_lifecycle`;
+- context degradation remained warning-only as designed.
+
+Root cause:
+- completed Shark had a dedicated source-clock reconstruction path;
+- forming Shark payload had schema `0XABC`, while forming execution-clock adapter accepted only XABCD/ABCD;
+- therefore no `execution_clock.lifecycle` existed to promote into `source_lifecycle`.
+
+Fix:
+- forming `0XABC` now uses Source Raw PRZ execution observation after B confirmation;
+- reaction anchor is B for Shark, A for XABCD/ABCD;
+- completed Shark source reconstruction also uses B, aligning Type-I reaction span with B→C/T-Bar;
+- no D point is introduced;
+- execution clock carries explicit Shark management evidence: 50% BC, 61.8% BC, Reciprocal AB=CD, and first-of-50%-or-reciprocal initial target;
+- generic Type-I 38.2/61.8 is labeled confirmation evidence only, not Shark management.
+
+Implementation checkpoints:
+- `7f142a78de9dc671a8d1385493018c681e845526` — forming Shark canonical source lifecycle.
+- `b4b18f555dec47a4cbfbe63d1777aa85c30f0e3a` — Shark-specific management preserved on source clock.

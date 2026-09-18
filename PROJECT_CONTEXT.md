@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `5a301baf848d740a537b2b07032057dd566309f9`
-context_checkpoint_title: `M3 Phase 4.7: deterministic regression drift repair after second real closeout`
+context_checkpoint: `b4b18f555dec47a4cbfbe63d1777aa85c30f0e3a`
+context_checkpoint_title: `M3 Phase 4.8: forming Shark canonical source lifecycle and dedicated management semantics`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -447,23 +447,31 @@ M2.31 后期至当前 M3，GitHub-hosted Actions 出现仓库/平台级调度异
 
 ## 下一步唯一主任务
 
-**M3 Phase 4.7 — 用户本机第三次最终收口。**
+**M3 Phase 4.8 — 用户本机第四次最终收口。**
 
-第二次真实收口已经把 blocker 收敛为 5 个 deterministic regression drift，现均已修复：
+第三次真实收口已证明：
 
-1. context sync exit-contract test 更新为 `all_steps_completed/degraded -> exit 0`；
-2. external replication SHA 校验改为 canonical LF，冻结 SHA 本身未改变；
-3. continuity sentinel `Source Fidelity before M3 expansion` 恢复；
-4. health endpoint test 对齐 API `0.3.0`；
-5. Golden Ledger 显式恢复术语 `Source Terminal Price Bar`。
+- Python 376/376 全绿；
+- Web build 全绿；
+- strict real-M1 metadata 全绿；
+- 唯一 hard blocker 是两个 forming Shark 缺失 canonical `source_lifecycle`。
+
+现已修复：
+
+1. forming Shark `0-X-A-B` 进入 observable Source Clock；
+2. Source T-Bar 仍对应未来 C terminal-side test，不发明 D；
+3. Shark Type-I 观察跨度改为 B → Source T-Bar(C)，不再错误使用 A；
+4. Shark 专用管理继续独立冻结：50% BC / Reciprocal AB=CD 先到者为 initial target，61.8% BC 为后续管理参考；
+5. 通用 38.2/61.8 仅作为 Type-I reaction confirmation evidence，不冒充 Shark 专用管理目标。
 
 下一步：
 
 1. `git pull --ff-only`；
-2. 确认 clean worktree；
+2. clean worktree；
 3. 重新运行 `运行M3最终收口.bat`；
-4. 提交新的 `m3-pr-readiness.md`；
-5. 若 READY / READY（有已知警告），推进 PR #12 Draft → Ready。
+4. 若 product contract 通过，QA 应继续执行 local services + Playwright；
+5. 提交新的 `m3-pr-readiness.md`；
+6. 若 READY / READY（有已知警告），推进 PR #12 Draft → Ready。
 
 
 ## 固定 Source / Product 边界
