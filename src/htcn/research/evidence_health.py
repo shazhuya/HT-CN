@@ -203,7 +203,8 @@ def build_evidence_chain_health(
             finding(
                 "committed_methodology_identity_missing",
                 "blocker",
-                "Committed capture predates mandatory methodology identity; explicit migration is required.",
+                "Committed capture predates mandatory methodology identity; "
+                "explicit migration is required.",
             )
         else:
             authoritative_methodology_contract_version = int(method_version)
@@ -217,7 +218,8 @@ def build_evidence_chain_health(
                 finding(
                     "current_methodology_differs_from_committed_chain",
                     "blocker",
-                    "Current core methodology fingerprint differs from the authoritative committed capture chain.",
+                    "Current core methodology fingerprint differs from the "
+                    "authoritative committed capture chain.",
                 )
 
     dates = [str(item["as_of_trade_date"]) for item in committed]
