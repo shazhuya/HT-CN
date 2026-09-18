@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `106c53da04dab0c3fcc9d03d6b2148106128ff77`
-context_checkpoint_title: `M4 T1 acquisition gate frozen to hosted-CI-green Phase 3.1`
+context_checkpoint: `1f16341a009bfef23d70de35618656e7d6fe23a4`
+context_checkpoint_title: `M4 first-bundle diagnosis: strict full-universe QFQ readiness gate`
 context_snapshot_date: `2026-09-18`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -1184,4 +1184,78 @@ freeze audit：
 `artifacts/reports/m4-evidence-bundle.zip`
 
 其余验收继续由 assistant 完成。
+
+## M4 first private bundle diagnosis — D-039
+
+用户首次成功上传 `m4-evidence-bundle.zip` 后，assistant-side 完成独立检查。
+
+Bundle transport integrity：
+
+- manifest listed members：12；
+- SHA-256 mismatches：0；
+- methodology freeze guard：`frozen_match`；
+- outcome-engine freeze guard：`frozen_match`；
+- worktree_clean=true。
+
+真实 capture 结果：
+
+- code head：`276de795cbbf13c33d7aca563e225b02ece5f0c0`；
+- target closed trade date：2026-09-18；
+- initialized instruments：55；
+- M1 raw update：55 / 55 成功；
+- bulk snapshot provider unavailable，自动转 slow-path repair；
+- slow-path repair：55 / 55 成功；
+- formal capture successful instruments：3；
+- formal capture failed instruments：52；
+- candidate rows calculated before fail-close：2；
+- authoritative journal append：**未发生**；
+- committed captures：0；
+- outcome snapshots：0。
+
+3 个成功标的：
+
+- SSE.600519
+- SSE.688256
+- SZSE.300820
+
+它们正好是历史 `m1_adjustment_pilot.py` 的 3 个 QFQ pilot。
+
+52 个失败的统一根因：
+
+`formal prospective capture requires QFQ price basis: mode=raw basis=raw`
+
+因此这不是 harmonic scanner 故障，也不是 T1 evidence 失败，而是 **formal-QFQ acquisition provisioning 缺失**。
+
+修复：
+
+- 新增 `scripts/m4_prepare_qfq_universe.py`；
+- one-click 顺序变为：
+  M1 raw update → strict QFQ readiness → authoritative capture → health → transitions → observations → outcome-v2 → bundle；
+- existing formal QFQ 直接复用；
+- 缺失/破损 factors 使用 AkShare → BaoStock fallback 建立；
+- per-symbol factor write 可续跑；
+- 只有 55/55 formal QFQ ready 才能启动 authoritative capture；
+- QFQ failure 不会写 authoritative T1；
+- bundle 增加：
+  - `m4-qfq-readiness.json`
+  - `m4-qfq-readiness.log`。
+
+GitHub Actions run #1431：
+
+- overall success；
+- Python tests success；
+- Web build success。
+
+Freeze audit：
+
+- capture methodology drift：0 / 37；
+- Outcome Engine drift：0 / 4。
+
+### 当前下一步
+
+用户只需要更新本地 M4 branch 后重新运行同一个 one-click BAT。
+
+下一次首次 QFQ expansion 可能需要对约 52 个缺 factor 标的进行网络拉取，因此会比普通日更慢；这是一次性/resumable 工作。完成后后续已有 formal-ready 标的不会重复抓取。
+
+仍然不需要用户手工运行 `m2_qfq_expand.py`、pytest 或其他脚本。
 
