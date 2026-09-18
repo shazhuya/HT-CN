@@ -200,3 +200,41 @@ def test_operator_snapshot_does_not_cache_stale_queue_as_current_date(
     assert payload["product_cache"]["status"] == "live_not_cached"
     assert payload["product_cache"]["freshness"] == "stale"
     assert list(tmp_path.glob("*.json")) == []
+
+
+
+def test_operator_snapshot_cache_hit_does_not_create_parallel_workers(
+    tmp_path,
+) -> None:
+    base_service = CountingService()
+    factory_calls = 0
+
+    def factory() -> CountingService:
+        nonlocal factory_calls
+        factory_calls += 1
+        return CountingService()
+
+    first = build_or_load_operator_snapshot(
+        base_service,
+        ["SSE.1", "SSE.2"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        max_workers=2,
+        service_factory=factory,
+    )
+    calls_after_build = factory_calls
+    assert first["product_cache"]["status"] == "rebuilt"
+    assert calls_after_build >= 2
+    assert first["build_execution"]["mode"] == "parallel_thread_pool"
+
+    second = build_or_load_operator_snapshot(
+        base_service,
+        ["SSE.1", "SSE.2"],
+        cache_root=tmp_path,
+        expected_trade_date="2026-09-18",
+        max_workers=2,
+        service_factory=factory,
+    )
+
+    assert second["product_cache"]["status"] == "hit"
+    assert factory_calls == calls_after_build
