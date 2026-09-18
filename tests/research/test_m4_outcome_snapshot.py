@@ -42,6 +42,8 @@ def _result(
         "outcome_enrollment_trade_date": "2026-09-17",
         "outcome_as_of_trade_date": as_of,
         "capture_methodology_fingerprint": METHOD,
+        "outcome_engine_contract_version": 1,
+        "outcome_engine_fingerprint": "d" * 64,
         "outcome_protocol_id": "m4-outcome-v1",
         "outcome_protocol_fingerprint": PROTOCOL,
         "current_price_basis_id": "qfq:" + "1" * 64,
@@ -143,3 +145,37 @@ def test_result_as_of_drift_fails_closed() -> None:
     result["outcome_as_of_trade_date"] = "2026-09-29"
     with pytest.raises(ValueError, match="as-of drift"):
         _snapshot(result)
+
+
+
+def test_outcome_snapshot_chain_rejects_engine_identity_drift(tmp_path) -> None:
+    first = _snapshot(_result())
+    commit_outcome_snapshot(tmp_path, first)
+
+    changed_result = _result(as_of="2026-09-29")
+    changed_result["outcome_engine_fingerprint"] = "e" * 64
+    changed = build_outcome_snapshot(
+        outcome_as_of_trade_date="2026-09-29",
+        outcome_protocol_id="m4-outcome-v1",
+        outcome_protocol_fingerprint=PROTOCOL,
+        capture_methodology_fingerprint=METHOD,
+        results=[changed_result],
+    )
+    with pytest.raises(ValueError, match="outcome chain identity drift"):
+        commit_outcome_snapshot(tmp_path, changed)
+
+
+def test_outcome_snapshot_chain_rejects_historical_backfill(tmp_path) -> None:
+    later_result = _result(as_of="2026-09-29")
+    later = build_outcome_snapshot(
+        outcome_as_of_trade_date="2026-09-29",
+        outcome_protocol_id="m4-outcome-v1",
+        outcome_protocol_fingerprint=PROTOCOL,
+        capture_methodology_fingerprint=METHOD,
+        results=[later_result],
+    )
+    commit_outcome_snapshot(tmp_path, later)
+
+    earlier = _snapshot(_result())
+    with pytest.raises(ValueError, match="forbids historical backfill"):
+        commit_outcome_snapshot(tmp_path, earlier)
