@@ -1417,3 +1417,57 @@ Next:
 - keep PR #22 draft/unmerged unless later integration policy explicitly changes；
 - start the next M5 product phase from the Phase 10 governance lineage；
 - preferred next boundary: Daily Operator History / Change Journal v1, product observation only, still isolated from M4 authoritative prospective evidence and prohibited from outcome-based ranking。
+
+
+## 2026-09-19 — M5 Phase 11 Daily Operator History / Change Journal v1 green
+
+Branch:
+`m5/daily-operator-history`
+
+Validated code checkpoint:
+`504cc063d93e999dcbac1b131e14f475beacd4d0`
+
+Implementation:
+- added append-only product history under `data/product/m5/operator_history/<trade_date>/<observation_id>.json`；
+- records only the final post-research, post-revalidation M5 Operator state；
+- exact source validation binds final M5 report, exact cache snapshot, trade date, single-as-of and Phase 7 input identity；
+- observation id binds report/snapshot/Queue hashes plus source generated-at and input identity；
+- exact rerun is idempotent；
+- same-day source/input changes append revisions instead of overwriting；
+- older same-day revisions and historical backfill are rejected；
+- append is serialized with an OS advisory lock；
+- every observation carries a self-contained Queue snapshot；
+- daily Delta compares to the latest revision of the previous recorded trade date；
+- current analysis failures keep disappearance suppression；
+- record-integrity SHA plus same-day and previous-trade-date links fail closed on tampering/deletion；
+- query defaults to latest revision per day but can expose all revisions；
+- added `scripts/m5_record_operator_history.py`；
+- added `scripts/m5_query_operator_history.py`；
+- added `运行HT-CN历史变化查询.bat`；
+- daily-close pipeline now records history only after final cache revalidation；
+- history failure is independent from `m5_product_ready`；
+- added GET `/api/operator/history`；
+- added Workbench **跨日产品观察历史** panel；
+- added deterministic browser gate `operator-history.spec.ts`。
+
+CI sequence:
+- #1693 / `35384383540`: Python 715 + Web green; existing 21 Playwright green; new history test failed only because one text locator matched two date cards；
+- locator narrowed to latest-day card in `b49d1468a243f0a129def63b6ee3984170d1ceb8`；
+- #1695 / `35384556086`: 715 Python + Web + 22 Playwright green；
+- chain hardening added record hash/revision/baseline deletion tests；
+- #1699 / `35384764795`: 718 Python + Web + 22 Playwright + browser evidence green。
+
+Freeze audit:
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-052；
+- `specs/m5-phase-11-daily-operator-history.md`；
+- PROJECT_CONTEXT top-level current stage corrected from stale Phase 8 to Phase 11。
+
+Next:
+- Phase 12: Daily Review Digest / Change Triage v1；
+- summarize product-history changes into transparent daily review/navigation；
+- no win-rate, alpha, outcome ranking, predictive scoring or trade instruction；
+- any handoff integration must use a new versioned contract rather than mutating frozen Phase 10 handoff v2。
