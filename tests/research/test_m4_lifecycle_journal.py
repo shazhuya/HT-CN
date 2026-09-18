@@ -279,3 +279,17 @@ def test_entries_from_analysis_captures_latest_raw_market_facts() -> None:
     assert row.as_of_low == 9.9
     assert row.as_of_close == 10.4
     assert row.as_of_volume == 1200.0
+
+
+def test_manifest_baseline_date_prevents_first_later_candidate_becoming_baseline(tmp_path) -> None:
+    path = tmp_path / "journal.jsonl"
+    result = append_entries(
+        path,
+        [_entry("2026-09-19", key="first-visible")],
+        baseline_trade_date="2026-09-18",
+    )
+    import json
+    payload = json.loads(path.read_text(encoding="utf-8").strip())
+    assert result["prospective_new_appended"] == 1
+    assert payload["enrollment_state"] == "prospective_new"
+    assert payload["first_observed_trade_date"] == "2026-09-19"

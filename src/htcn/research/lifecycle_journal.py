@@ -246,6 +246,8 @@ def read_journal(path: str | Path) -> list[dict[str, Any]]:
 def append_entries(
     path: str | Path,
     entries: Iterable[LifecycleJournalEntry],
+    *,
+    baseline_trade_date: str | None = None,
 ) -> dict[str, int | str | None]:
     incoming = list(entries)
     if not incoming:
@@ -292,7 +294,13 @@ def append_entries(
         if key:
             prior_by_candidate.setdefault(key, []).append(row)
 
-    baseline_capture = len(existing) == 0
+    baseline_capture = (
+        len(existing) == 0
+        and (
+            baseline_trade_date is None
+            or as_of == str(baseline_trade_date)
+        )
+    )
     payloads = []
     baseline_appended = 0
     prospective_new_appended = 0

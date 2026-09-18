@@ -12,7 +12,11 @@ import duckdb
 from htcn.app.evidence_identity import read_code_identity
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 from htcn.research.lifecycle_journal import append_entries, entries_from_analysis
-from htcn.research.snapshot_manifest import SnapshotManifestEntry, append_snapshot_manifest
+from htcn.research.snapshot_manifest import (
+    SnapshotManifestEntry,
+    append_snapshot_manifest,
+    read_snapshot_manifest,
+)
 
 
 def _expected_trade_date(catalog: Path) -> str:
@@ -127,7 +131,17 @@ def run(
         result["status"] = "failed_no_journal_append"
         return result
 
-    append_result = append_entries(journal_path, all_entries)
+    existing_manifest = read_snapshot_manifest(manifest_path)
+    baseline_trade_date = (
+        min(str(row["as_of_trade_date"]) for row in existing_manifest)
+        if existing_manifest
+        else expected
+    )
+    append_result = append_entries(
+        journal_path,
+        all_entries,
+        baseline_trade_date=baseline_trade_date,
+    )
     result["journal_append"] = append_result
 
     manifest_entry = SnapshotManifestEntry(
