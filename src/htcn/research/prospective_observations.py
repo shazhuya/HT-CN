@@ -90,7 +90,7 @@ def build_prospective_observation_report(
                 "cohort follow-up evidence cannot exist without captured timeline"
             )
         return {
-            "schema_version": 2,
+            "schema_version": 3,
             "status": "empty",
             "captured_dates": [],
             "prospective_candidate_count": 0,
@@ -254,6 +254,12 @@ def build_prospective_observation_report(
                 if first_absent is None:
                     first_absent = as_of
                 if followup is not None:
+                    followup_mode = str(followup.get("price_mode") or "")
+                    followup_basis = str(followup.get("price_basis_id") or "")
+                    if not followup_mode or not followup_basis:
+                        raise ValueError(
+                            f"candidate {key} follow-up on {as_of} missing price basis"
+                        )
                     absent_market_followup_count += 1
                     market_status = str(
                         followup.get("market_observation_status") or "traded"
@@ -355,6 +361,13 @@ def build_prospective_observation_report(
                         first_basis_drift_date = as_of
                 observations.append(observation)
                 continue
+
+            current_mode = str(row.get("price_mode") or "")
+            current_basis = str(row.get("price_basis_id") or "")
+            if not current_mode or not current_basis:
+                raise ValueError(
+                    f"candidate {key} observation on {as_of} missing price basis"
+                )
 
             if ever_absent and absent_streak > 0 and first_reappeared is None:
                 first_reappeared = as_of
@@ -490,7 +503,7 @@ def build_prospective_observation_report(
     )
 
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "status": "no_outcome_cohort" if not enrollment else "observations_available",
         "captured_dates": dates,
         "prospective_candidate_count": len(enrollment),
