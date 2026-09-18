@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from htcn.app.operator_input_identity import (
+    build_analysis_code_identity,
     build_operator_cache_input_identity,
 )
 from htcn.app.operator_queue import discover_local_instruments
@@ -38,10 +39,18 @@ def main() -> int:
     )
     expected = latest_local_trade_date(DATA_ROOT / "catalog.duckdb")
     service = M3SourceClockHarmonicService(DATA_ROOT)
-    input_identity = build_operator_cache_input_identity(
-        data_root=DATA_ROOT,
+    analysis_code_identity = build_analysis_code_identity(
         project_root=ROOT,
     )
+
+    def current_input_identity():
+        return build_operator_cache_input_identity(
+            data_root=DATA_ROOT,
+            project_root=ROOT,
+            analysis_code_identity=analysis_code_identity,
+        )
+
+    input_identity = current_input_identity()
 
     def progress(
         completed: int,
@@ -69,6 +78,7 @@ def main() -> int:
         cache_root=CACHE_ROOT,
         expected_trade_date=expected,
         input_identity=input_identity,
+        input_identity_factory=current_input_identity,
         bars=int(args.bars),
         scales=(3, 5, 8, 13),
         force_refresh=bool(args.force),
