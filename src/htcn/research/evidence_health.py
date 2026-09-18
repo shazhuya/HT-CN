@@ -27,6 +27,19 @@ class EvidenceHealthFinding:
         }
 
 
+def _error(exc: Exception) -> str:
+    return f"{type(exc).__name__}: {exc}"
+
+
+def _unavailable_mirror_state(reason: str) -> dict[str, object]:
+    return {
+        "journal_mirror_status": reason,
+        "manifest_mirror_status": reason,
+        "repair_needed": False,
+        "authoritative_evidence_intact": False,
+    }
+
+
 def build_evidence_chain_health(
     *,
     transaction_root: str | Path,
@@ -39,17 +52,69 @@ def build_evidence_chain_health(
     def finding(code: str, severity: str, detail: str) -> None:
         findings.append(EvidenceHealthFinding(code, severity, detail))
 
-    committed = read_committed_captures(root)
-    baseline_present = frozen_legacy_baseline_present(root)
-    baseline_rows = read_frozen_legacy_baseline(root)
-    baseline_through = frozen_legacy_baseline_through_date(root)
-
-    if not committed:
+    try:
+        committed = read_committed_captures(root)
+    except Exception as exc:
+        finding(
+            "committed_capture_read_error",
+            "blocker",
+            _error(exc),
+        )
+        blockers = [item.as_payload() for item in findings]
         return {
             "schema_version": 1,
-            "status": "legacy_only",
+            "status": "not_ready",
+            "authoritative_evidence_source": "committed_transaction_store_unreadable",
+            "frozen_legacy_baseline_present": None,
+            "frozen_legacy_baseline_row_count": None,
+            "frozen_legacy_baseline_through_trade_date": None,
+            "committed_capture_count": None,
+            "committed_capture_dates": [],
+            "earliest_committed_capture_date": None,
+            "latest_committed_capture_date": None,
+            "zero_candidate_capture_dates": [],
+            "total_committed_candidate_rows": None,
+            "mirror_integrity": _unavailable_mirror_state(
+                "not_checked_authoritative_blocker"
+            ),
+            "blocker_count": 1,
+            "warning_count": 0,
+            "blockers": blockers,
+            "warnings": [],
+            "transition_evidence_chain_ready": False,
+            "interpretation": {
+                "uses_score": False,
+                "mirror_is_authoritative": False,
+                "alpha_inference_allowed": False,
+                "is_trade_instruction": False,
+            },
+        }
+
+    baseline_present = False
+    baseline_rows: list[dict[str, Any]] = []
+    baseline_through: str | None = None
+    baseline_error: Exception | None = None
+    try:
+        baseline_present = frozen_legacy_baseline_present(root)
+        baseline_rows = read_frozen_legacy_baseline(root)
+        baseline_through = frozen_legacy_baseline_through_date(root)
+    except Exception as exc:
+        baseline_error = exc
+        finding(
+            "frozen_legacy_baseline_invalid",
+            "blocker",
+            _error(exc),
+        )
+
+    if not committed:
+        blockers = [item for item in findings if item.severity == "blocker"]
+        return {
+            "schema_version": 1,
+            "status": "legacy_only_not_ready" if blockers else "legacy_only",
             "authoritative_evidence_source": "legacy_journal_manifest",
-            "frozen_legacy_baseline_present": baseline_present,
+            "frozen_legacy_baseline_present": (
+                None if baseline_error is not None else baseline_present
+            ),
             "frozen_legacy_baseline_through_trade_date": baseline_through,
             "committed_capture_count": 0,
             "committed_capture_dates": [],
@@ -61,9 +126,9 @@ def build_evidence_chain_health(
                 "manifest_mirror_status": "transaction_store_not_active",
                 "repair_needed": False,
             },
-            "blocker_count": 0,
+            "blocker_count": len(blockers),
             "warning_count": 0,
-            "blockers": [],
+            "blockers": [item.as_payload() for item in blockers],
             "warnings": [],
             "transition_evidence_chain_ready": False,
             "interpretation": {
@@ -73,7 +138,7 @@ def build_evidence_chain_health(
             },
         }
 
-    if not baseline_present:
+    if baseline_error is None and not baseline_present:
         finding(
             "frozen_legacy_baseline_missing",
             "blocker",
@@ -103,17 +168,36 @@ def build_evidence_chain_health(
         if int(item.get("candidate_count") or 0) == 0
     ]
 
-    mirror = inspect_compatibility_mirrors(
-        transaction_root=root,
-        journal_path=journal_path,
-        manifest_path=manifest_path,
-    )
-    if mirror.repair_needed:
-        finding(
-            "compatibility_mirror_repair_needed",
-            "warning",
-            "Compatibility mirror is missing/corrupt/drifted; authoritative committed evidence remains intact.",
+    authoritative_blockers = [
+        item for item in findings if item.severity == "blocker"
+    ]
+    if authoritative_blockers:
+        mirror_payload = _unavailable_mirror_state(
+            "not_checked_authoritative_blocker"
         )
+    else:
+        try:
+            mirror = inspect_compatibility_mirrors(
+                transaction_root=root,
+                journal_path=journal_path,
+                manifest_path=manifest_path,
+            )
+            mirror_payload = mirror.as_payload()
+            if mirror.repair_needed:
+                finding(
+                    "compatibility_mirror_repair_needed",
+                    "warning",
+                    "Compatibility mirror is missing/corrupt/drifted; authoritative committed evidence remains intact.",
+                )
+        except Exception as exc:
+            mirror_payload = _unavailable_mirror_state(
+                "mirror_integrity_check_failed"
+            )
+            finding(
+                "mirror_integrity_check_error",
+                "blocker",
+                _error(exc),
+            )
 
     blockers = [item for item in findings if item.severity == "blocker"]
     warnings = [item for item in findings if item.severity == "warning"]
@@ -127,9 +211,17 @@ def build_evidence_chain_health(
             if warnings
             else "ready"
         ),
-        "authoritative_evidence_source": "frozen_baseline_plus_committed_transactions",
-        "frozen_legacy_baseline_present": baseline_present,
-        "frozen_legacy_baseline_row_count": len(baseline_rows),
+        "authoritative_evidence_source": (
+            "frozen_baseline_plus_committed_transactions"
+            if baseline_present
+            else "committed_transactions_without_valid_baseline"
+        ),
+        "frozen_legacy_baseline_present": (
+            None if baseline_error is not None else baseline_present
+        ),
+        "frozen_legacy_baseline_row_count": (
+            None if baseline_error is not None else len(baseline_rows)
+        ),
         "frozen_legacy_baseline_through_trade_date": baseline_through,
         "committed_capture_count": len(committed),
         "committed_capture_dates": dates,
@@ -137,7 +229,7 @@ def build_evidence_chain_health(
         "latest_committed_capture_date": dates[-1] if dates else None,
         "zero_candidate_capture_dates": zero_candidate_dates,
         "total_committed_candidate_rows": total_rows,
-        "mirror_integrity": mirror.as_payload(),
+        "mirror_integrity": mirror_payload,
         "blocker_count": len(blockers),
         "warning_count": len(warnings),
         "blockers": [item.as_payload() for item in blockers],
