@@ -120,3 +120,70 @@ def test_safe_internal_gap_repair_does_not_fill_trailing_freshness_gap() -> None
     ready, reason = _strict_factor_candidate(raw, repaired)
     assert ready is True
     assert reason == "strict_factor_candidate_ready"
+
+
+
+def _historical_saturday_raw(
+    *,
+    saturday_pre_close: float = 10.0,
+    monday_pre_close: float = 10.2,
+) -> pd.DataFrame:
+    dates = pd.to_datetime([
+        "1991-04-12",
+        "1991-04-13",
+        "1991-04-15",
+    ])
+    closes = [10.0, 10.2, 10.3]
+    return pd.DataFrame({
+        "instrument_id": ["SZSE.000001"] * 3,
+        "trade_date": dates,
+        "open": [10.0, 10.0, 10.2],
+        "high": [10.2, 10.3, 10.4],
+        "low": [9.9, 9.9, 10.1],
+        "close": closes,
+        "volume": [1000.0, 1100.0, 1200.0],
+        "pre_close": [9.9, saturday_pre_close, monday_pre_close],
+    })
+
+
+def test_historical_saturday_gap_can_use_raw_preclose_continuity() -> None:
+    raw = _historical_saturday_raw()
+    factors = pd.DataFrame({
+        "instrument_id": ["SZSE.000001", "SZSE.000001"],
+        "trade_date": pd.to_datetime(["1991-04-12", "1991-04-15"]),
+        "price_factor": [1.0, 1.02],
+        "mode": ["qfq", "qfq"],
+        "source": ["baostock_qfq", "baostock_qfq"],
+    })
+
+    repaired, audit = _repair_safe_internal_factor_gaps(raw, factors)
+
+    assert len(repaired) == 3
+    assert len(audit) == 1
+    assert audit[0]["fill_rule"] == (
+        "historical_saturday_raw_preclose_continuity"
+    )
+    assert audit[0]["relative_factor_drift"] > 0.005
+    assert audit[0]["relative_factor_drift"] < 0.05
+    ready, reason = _strict_factor_candidate(raw, repaired)
+    assert ready is True
+    assert reason == "strict_factor_candidate_ready"
+
+
+def test_historical_saturday_gap_refuses_raw_preclose_discontinuity() -> None:
+    raw = _historical_saturday_raw(saturday_pre_close=8.0)
+    factors = pd.DataFrame({
+        "instrument_id": ["SZSE.000001", "SZSE.000001"],
+        "trade_date": pd.to_datetime(["1991-04-12", "1991-04-15"]),
+        "price_factor": [1.0, 1.02],
+        "mode": ["qfq", "qfq"],
+        "source": ["baostock_qfq", "baostock_qfq"],
+    })
+
+    repaired, audit = _repair_safe_internal_factor_gaps(raw, factors)
+
+    assert len(repaired) == 2
+    assert audit == []
+    ready, reason = _strict_factor_candidate(raw, repaired)
+    assert ready is False
+    assert reason.startswith("historical_factor_gap:")
