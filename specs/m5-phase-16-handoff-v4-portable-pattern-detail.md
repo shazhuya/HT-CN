@@ -1,6 +1,6 @@
 # M5 Phase 16 — Handoff v4 / Portable Pattern Drill-down Transport v1
 
-状态：**implementation in progress**
+状态：**Frozen / hosted CI green**
 
 ## 1. 目标
 
@@ -162,19 +162,45 @@ Windows：
 
 ## 9. Acceptance
 
-- [ ] v3 invalid -> v4 fail closed；
-- [ ] input identity mismatch -> v4 fail closed；
-- [ ] all Queue display keys exhaustively covered by detail or explicit error；
-- [ ] no extra detail key outside current Queue；
-- [ ] exact pattern key can be re-derived from transported points；
-- [ ] v4 verifier detects semantic tamper even when outer member hash is updated；
-- [ ] v4 inspector requires no market DB；
-- [ ] node label includes price；
-- [ ] Source PRZ / lifecycle event can render from transport；
-- [ ] forming pattern does not invent future D；
-- [ ] next-key dashed line is guide, not projected pattern leg；
-- [ ] Python regression green；
-- [ ] existing Web build green；
-- [ ] existing Playwright gates green；
-- [ ] M4 methodology drift = 0；
-- [ ] Outcome Engine drift = 0。
+- [x] v3 invalid -> v4 fail closed；
+- [x] input identity mismatch -> v4 fail closed；
+- [x] all Queue display keys exhaustively covered by detail or explicit error；
+- [x] no extra detail key outside current Queue；
+- [x] exact pattern key can be re-derived from transported points；
+- [x] v4 verifier detects semantic tamper even when outer member hash is updated；
+- [x] v4 inspector requires no market DB；
+- [x] node label includes price；
+- [x] Source PRZ / lifecycle event can render from transport；
+- [x] forming pattern does not invent future D；
+- [x] next-key dashed line is guide, not projected pattern leg；
+- [x] Python regression green；
+- [x] existing Web build green；
+- [x] existing Playwright gates green；
+- [x] M4 methodology drift = 0；
+- [x] Outcome Engine drift = 0。
+
+
+## 10. Hosted validation closeout — 2026-09-19
+
+Validated implementation checkpoint:
+
+`348fd5b47341fbc01e74085530c4fd8dec9aed28`
+
+Hosted CI:
+- Actions **#1822 / 35419647193**: success;
+- Python **784 passed**, 1163 warnings;
+- Web build: success;
+- Playwright: **24 passed**;
+- browser evidence upload: success.
+
+Development note:
+- first CI #1820 correctly exposed a zero-count parsing bug in the new v4 verifier: a legal integer 0 was being collapsed by `value or -1`;
+- fix `348fd5b...` preserves zero as a valid count and does not relax exhaustive coverage;
+- the regression suite remained intact and the second full hosted run passed.
+
+Phase-15 base diff:
+- Phase16 implementation is ahead-only;
+- M4 methodology files changed: 0;
+- Outcome Engine files changed: 0.
+
+Phase 16 v1 is **code-complete / hosted-CI-green**.
