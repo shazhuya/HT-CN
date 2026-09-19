@@ -1471,3 +1471,56 @@ Next:
 - summarize product-history changes into transparent daily review/navigation；
 - no win-rate, alpha, outcome ranking, predictive scoring or trade instruction；
 - any handoff integration must use a new versioned contract rather than mutating frozen Phase 10 handoff v2。
+
+
+## 2026-09-19 — M5 Phase 12 Daily Review Digest / Change Triage v1 green
+
+Branch:
+`m5/daily-review-digest-v1`
+
+Validated code checkpoint:
+`84c7d8a0f2d46cd8ed9b79dcd638cb727d165465`
+
+Implementation:
+- added `src/htcn/app/daily_review_digest.py`；
+- digest reads only the latest valid Phase-11 history revision；
+- validates that latest Delta is exhaustive before building any review；
+- preserves every change item and its complete change_types；
+- fixed review workflow order: execution_evaluation → reaction_observation → waiting → evidence_insufficient → disappeared_candidate；
+- explicit contract says workflow order is not expected-return/trade ranking；
+- summarizes new/disappeared/action/lifecycle/pattern/next-key/execution-gate/context changes；
+- separates analysis-incomplete instruments from disappearance；
+- added baseline/no-change/change-ready status variants；
+- added presentation-only workflow/change-type/instrument filters；
+- source total remains unchanged after filtering；
+- invalid workflow/change-type filter is rejected explicitly；
+- added `scripts/m5_build_daily_review_digest.py`；
+- daily-close pipeline runs digest only after successful Phase-11 history append；
+- digest failure does not rewrite product/history/research readiness；
+- added `运行HT-CN每日变化复盘.bat`；
+- added GET `/api/operator/review-digest`；
+- added Workbench **每日变化复盘** before the history panel；
+- UI shows source total and filter hit count side-by-side；
+- review items drill into the single-symbol workbench；
+- added browser gate `daily-review-digest.spec.ts`。
+
+Validation:
+- CI #1725 / `35413513169`: 733 Python + Web + 23 Playwright green；
+- final hardening added exhaustive Delta guard and invalid-filter rejection；
+- CI #1733 / `35413656027`: 736 Python + Web + 23 Playwright + browser evidence green。
+
+Freeze audit:
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-053；
+- `specs/m5-phase-12-daily-review-digest.md`；
+- PROJECT_CONTEXT top-level current stage advanced to Phase 12。
+
+Next:
+- Phase 13: Review Session / Follow-up Journal v1；
+- bind review workflow state to source observation/display key；
+- product workflow annotations only；
+- no lifecycle/action mutation, no trade execution, no alpha/win-rate/predictive ranking；
+- future handoff expansion must use a new versioned contract rather than mutating frozen Phase-10 handoff v2。
