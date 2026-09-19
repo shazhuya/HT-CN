@@ -58,6 +58,12 @@
       "title": "Immutable M4 components are governed by freeze guards, not lint rewrites",
       "status": "active",
       "source": "governance/decisions/D-070-freeze-vs-lint-boundary.md"
+    },
+    {
+      "id": "D-071",
+      "title": "Behavior-sensitive legacy lint is exception-ledgered, not silently rewritten",
+      "status": "active",
+      "source": "governance/decisions/D-071-behavior-sensitive-lint-exceptions.md"
     }
   ],
   "rules": {
