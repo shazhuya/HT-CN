@@ -21,6 +21,12 @@ from htcn.app.operator_input_identity import (
     build_analysis_code_identity,
     build_operator_cache_input_identity,
 )
+from htcn.app.review_followup_journal import (
+    REVIEW_STATES,
+    append_review_event,
+    build_latest_review_session,
+    filter_review_session,
+)
 from htcn.app.operator_queue import (
     build_operator_queue,
     discover_local_instruments,
@@ -38,6 +44,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
 OPERATOR_CACHE_ROOT = ROOT / "data" / "product" / "m5" / "operator_queue"
 OPERATOR_HISTORY_ROOT = ROOT / "data" / "product" / "m5" / "operator_history"
+REVIEW_JOURNAL_ROOT = ROOT / "data" / "product" / "m5" / "review_journal"
 OPERATOR_ANALYSIS_CODE_IDENTITY = build_analysis_code_identity(
     project_root=ROOT,
 )
@@ -150,6 +157,104 @@ def operator_queue(
         payload,
         include_evidence_insufficient=include_evidence_insufficient,
     )
+
+@app.get("/api/operator/review-session")
+def operator_review_session(
+    workflow_bucket: str | None = Query(default=None),
+    change_type: str | None = Query(default=None),
+    instrument_id: str | None = Query(default=None),
+    review_state: str | None = Query(default=None),
+    follow_up_only: bool = Query(default=False),
+) -> dict[str, object]:
+    if (
+        workflow_bucket is not None
+        and workflow_bucket not in WORKFLOW_REVIEW_ORDER
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=f"unknown review workflow bucket: {workflow_bucket}",
+        )
+    if change_type is not None and change_type not in CHANGE_TYPE_ORDER:
+        raise HTTPException(
+            status_code=400,
+            detail=f"unknown review change type: {change_type}",
+        )
+    if review_state is not None and review_state not in REVIEW_STATES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"unknown review state: {review_state}",
+        )
+    try:
+        session = build_latest_review_session(
+            history_root=OPERATOR_HISTORY_ROOT,
+            journal_root=REVIEW_JOURNAL_ROOT,
+        )
+        return filter_review_session(
+            session,
+            workflow_bucket=workflow_bucket,
+            change_type=change_type,
+            instrument_id=instrument_id,
+            review_state=review_state,
+            follow_up_only=follow_up_only,
+        )
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"review session unavailable: {exc}",
+        ) from exc
+
+
+@app.post("/api/operator/review-session/event")
+def operator_review_session_event(
+    payload: dict[str, Any] = Body(...),
+) -> dict[str, object]:
+    required = (
+        "source_observation_id",
+        "display_key",
+        "review_state",
+        "client_request_id",
+    )
+    missing = [
+        key
+        for key in required
+        if not str(payload.get(key) or "").strip()
+    ]
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail="missing review event fields: " + ",".join(missing),
+        )
+    try:
+        result = append_review_event(
+            history_root=OPERATOR_HISTORY_ROOT,
+            journal_root=REVIEW_JOURNAL_ROOT,
+            source_observation_id=str(payload["source_observation_id"]),
+            display_key=str(payload["display_key"]),
+            review_state=str(payload["review_state"]),
+            note=payload.get("note"),
+            client_request_id=payload["client_request_id"],
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except TimeoutError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"review journal unavailable: {exc}",
+        ) from exc
+
+    return {
+        "schema_version": 1,
+        "status": result["status"],
+        "event": result["event"],
+        "waited_for_lock": result["waited_for_lock"],
+        "wait_seconds": result["wait_seconds"],
+        "authoritative_evidence": False,
+        "writes_m4_evidence": False,
+        "is_trade_instruction": False,
+    }
+
 
 @app.get("/api/operator/review-digest")
 def operator_review_digest(
