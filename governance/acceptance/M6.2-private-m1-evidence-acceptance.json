@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "phase": "M6.2",
+  "change_id": "CR-0066",
+  "status": "accepted",
+  "accepted_date": "2026-09-20",
+  "evidence_bundle_filename": "htcn-m6-private-m1-closeout-evidence.zip",
+  "evidence_bundle_sha256": "8a9146a503173b9f30de13792069d71d87c1ca1cae368c0d3773510933413b68",
+  "source_main_head": "e40eb32253a03d62ce2c7bdd253762f824a54a26",
+  "end_remote_main_head": "e40eb32253a03d62ce2c7bdd253762f824a54a26",
+  "trade_date": "2026-09-18",
+  "delivery_bundle_sha256": "7a05303ecd91804a7e315cb16be7bdea821fe475b12f4366d626f79d77cf4e40",
+  "input_identity_fingerprint": "24f8ae23ecd78fd3806af6908713e04b24eca5bdd4f9f090da231ade66ef203c",
+  "pipeline_report_sha256": "9a4b1b913de9a0a8a2ddf2c953cc3bebf1c1bb90c760401ed491bd13311528fe",
+  "m6_verification": {
+    "status": "ready_with_warnings",
+    "full_closeout_ready": true,
+    "error_count": 0,
+    "hard_check_count": 50,
+    "hard_check_failures": 0,
+    "warnings": [
+      "m1_full_listed_coverage:partial_initialized_scope_allowed:55/5218",
+      "pipeline_m4_research_degraded"
+    ]
+  },
+  "independent_inspection": {
+    "outer_manifest_exact": true,
+    "outer_member_hashes_valid": true,
+    "unsafe_or_duplicate_members": false,
+    "nested_portable_manifest_valid": true,
+    "nested_handoff_v4_manifest_valid": true,
+    "phase21_candidate_count": 61,
+    "phase21_detail_error_count": 0,
+    "phase21_future_point_violation_count": 0,
+    "phase21_page_error_count": 0,
+    "phase21_console_error_count": 0,
+    "shark_complete_count": 5,
+    "shark_forming_prefix_count": 5,
+    "bse_candidate_count": 0
+  },
+  "authority_boundary": {
+    "authoritative_m4_evidence": false,
+    "writes_m4_evidence": false,
+    "is_trade_instruction": false
+  }
+}

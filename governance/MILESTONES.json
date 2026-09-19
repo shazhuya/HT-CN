@@ -52,12 +52,12 @@
         {
           "id": "M6.2",
           "title": "Real Private-M1 Closeout",
-          "status": "awaiting_private_run"
+          "status": "closed"
         },
         {
           "id": "M6.3",
           "title": "Universe Coverage Contract",
-          "status": "planned"
+          "status": "ready_not_started"
         },
         {
           "id": "M6.4",

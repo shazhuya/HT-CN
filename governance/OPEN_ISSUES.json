@@ -5,13 +5,13 @@
       "id": "ISSUE-0061",
       "severity": "blocker",
       "type": "operational",
-      "status": "awaiting_private_run",
+      "status": "closed",
       "title": "Real private-M1 current-market closeout evidence not yet produced",
-      "blocks": [
-        "M6.2 closeout"
-      ],
-      "next_action": "On the machine that owns private M1, update to current formal main and run exactly one entry: 运行HT-CN M6.2真实Private-M1最终收口.bat. If it finishes READY, upload only artifacts/reports/htcn-m6-private-m1-closeout-evidence.zip for independent acceptance.",
-      "current_fact": "M6.2 engineering is integrated on main commit 86fd17d01b3b9c2fc597d500723c6966c9a2250f and main push run 35443729796 is green. Raw private M1 upload is not required."
+      "blocks": [],
+      "next_action": "None — M6.2 real Private-M1 evidence was produced and independently accepted.",
+      "current_fact": "Accepted evidence binds canonical main e40eb32253a03d62ce2c7bdd253762f824a54a26, trade date 2026-09-18, delivery 7a05303ecd91804a7e315cb16be7bdea821fe475b12f4366d626f79d77cf4e40, and zero hard M6 errors.",
+      "resolution": "Closed by A-20260920-0066-032. Evidence ZIP SHA-256 8a9146a503173b9f30de13792069d71d87c1ca1cae368c0d3773510933413b68; full_closeout_ready=true; 50/50 M6 checks passed; nested evidence hashes verified independently.",
+      "closed_in": "CR-0066"
     },
     {
       "id": "ISSUE-0062",

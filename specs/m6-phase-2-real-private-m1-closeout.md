@@ -1,6 +1,6 @@
 # M6 Phase 2 — Real Private-M1 Closeout / Identity-Bound Evidence Bundle v1
 
-status: awaiting_private_run
+status: closed
 change: CR-0066
 decision: D-066
 
@@ -225,3 +225,20 @@ The standalone ZIP verifier MUST remain valid even when the uploaded artifact is
 - immutable Phase19 archive member hashes must match the corresponding bundled members.
 
 This prevents a re-packed ZIP from becoming valid merely because an attacker recomputed the outer manifest hashes after altering inner semantic evidence.
+
+## 13. Empirical closeout acceptance
+
+The real Private-M1 evidence bundle generated from canonical main `e40eb32253a03d62ce2c7bdd253762f824a54a26` was independently accepted on 2026-09-20.
+
+- evidence ZIP SHA-256: `8a9146a503173b9f30de13792069d71d87c1ca1cae368c0d3773510933413b68`;
+- trade date: `2026-09-18`;
+- end-of-run local HEAD = remote main = `e40eb32253a03d62ce2c7bdd253762f824a54a26`;
+- M6 hard checks: 50/50 passed, zero errors;
+- Phase21: 61 candidates / 61 details / zero detail errors / zero browser page or console errors / zero future-point violations;
+- Shark: 5 complete + 5 forming-prefix, with no fabricated D;
+- BSE candidates: 0;
+- carried warnings remain non-blocking and are handed to M6.3 coverage semantics.
+
+Canonical machine-readable receipt: `governance/acceptance/M6.2-private-m1-evidence-acceptance.json`.
+
+M6.2 is closed. This acceptance is operational evidence, not M4 authoritative research evidence.
