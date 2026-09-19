@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.2-CLOSED",
+  "state_id": "HTCN-M6.3-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,22 +21,24 @@
   },
   "current": {
     "milestone": "M6",
-    "phase": "M6.2",
-    "title": "Real Private-M1 Closeout",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260920-0066-035",
-    "latest_hosted_validation_attempt_id": "A-20260920-0066-035",
-    "work_branch": null,
+    "phase": "M6.3",
+    "title": "Universe Coverage Contract",
+    "status": "implementing",
+    "active_change": "CR-0068",
+    "active_spec": "specs/m6-phase-3-universe-coverage-contract.md",
+    "latest_attempt_id": "A-20260920-0068-001",
+    "latest_hosted_validation_attempt_id": "A-20260920-0068-001",
+    "work_branch": "m6/universe-coverage-contract-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35457509102,
-      "run_number": 2211,
+      "workflow_run": 35459245173,
+      "run_number": 2245,
       "event": "pull_request",
-      "head": "12971a5e20863b287dab31949456e2c186e8374d",
-      "python_passed": 881,
+      "head": "067ff916247d4ecd31ef170a679305057170bc6c",
+      "python_passed": 886,
       "warnings": 0,
+      "ruff_observed": 481,
+      "ruff_budget": 483,
       "project_os_integrity": "success",
       "formal_main_release_integrity": "success",
       "existing_playwright_passed": 24,
@@ -44,20 +46,7 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10588810587,
-      "scope": "M6.2 empirical Private-M1 acceptance closure plus phase-dynamic Project OS continuity regression hardening."
-    },
-    "closeout_acceptance": {
-      "result": "accepted",
-      "evidence_receipt": "governance/acceptance/M6.2-private-m1-evidence-acceptance.json",
-      "evidence_bundle_sha256": "8a9146a503173b9f30de13792069d71d87c1ca1cae368c0d3773510933413b68",
-      "source_main_head": "e40eb32253a03d62ce2c7bdd253762f824a54a26",
-      "trade_date": "2026-09-18",
-      "status": "ready_with_warnings",
-      "warnings": [
-        "m1_full_listed_coverage:partial_initialized_scope_allowed:55/5218",
-        "pipeline_m4_research_degraded"
-      ]
+      "scope": "Initial M6.3 machine-readable universe coverage contract before final fail-closed parentage hardening."
     }
   },
   "private_m1": {
@@ -71,7 +60,7 @@
   "next_major_task": {
     "phase": "M6.3",
     "title": "Universe Coverage Contract",
-    "status": "ready_not_started",
+    "status": "implementing",
     "blocked_until": []
   },
   "freezes": {
@@ -90,6 +79,7 @@
     "bse_default_scope": "deferred"
   },
   "required_specs": [
+    "specs/m6-phase-3-universe-coverage-contract.md",
     "specs/m6-phase-2-portable-chat-continuity.md",
     "specs/m6-phase-2-real-private-m1-closeout.md",
     "specs/m5-phase-23-real-closeout-preflight.md",
