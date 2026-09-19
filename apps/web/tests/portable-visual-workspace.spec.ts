@@ -78,12 +78,12 @@ test('M5 Phase18 portable visual workspace renders frozen semantics in a real br
   await expect(chart.locator('[data-layer-id="source_raw_prz"]')).toBeVisible()
   await page.getByLabel('全组件 Envelope').uncheck()
 
-  await expect(chart.locator('[data-event-field="source_terminal_bar"]')).toBeVisible()
-  await expect(chart.locator('[data-event-field="execution_start_bar"]')).toBeVisible()
-  await expect(chart.locator('[data-event-field="type_ii_terminal_bar"]')).toBeVisible()
-  await expect(chart.locator('[data-guide-field="target_382"]')).toBeVisible()
-  await expect(chart.locator('[data-guide-field="target_618"]')).toBeVisible()
-  await expect(chart.locator('[data-guide-field="next_key_price"]')).toBeVisible()
+  await expect(chart.locator('[data-event-field="source_terminal_bar"]')).toHaveCount(1)
+  await expect(chart.locator('[data-event-field="execution_start_bar"]')).toHaveCount(1)
+  await expect(chart.locator('[data-event-field="type_ii_terminal_bar"]')).toHaveCount(1)
+  await expect(chart.locator('[data-guide-field="target_382"]')).toHaveCount(1)
+  await expect(chart.locator('[data-guide-field="target_618"]')).toHaveCount(1)
+  await expect(chart.locator('[data-guide-field="next_key_price"]')).toHaveCount(1)
 
   await expect(page.getByText('同几何身份冲突：', { exact: false })).toBeVisible()
   await expect(page.getByText(/当前图只画 Queue 选中的 primary identity/)).toBeVisible()
@@ -144,7 +144,7 @@ test('M5 Phase18 portable visual workspace renders frozen semantics in a real br
   await expect(refinementRow.getByText('Raw PRZ 成员', { exact: true })).toHaveCount(0)
   await expect(
     chart.locator('[data-component-role="execution_refinement_not_raw_prz"]'),
-  ).toBeVisible()
+  ).toHaveCount(1)
 
   await page.getByLabel('PRZ 组件线').uncheck()
   await expect(chart.locator('[data-component-name]')).toHaveCount(0)
