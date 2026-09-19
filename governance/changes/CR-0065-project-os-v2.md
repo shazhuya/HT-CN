@@ -1,6 +1,6 @@
 # CR-0065 — HT-CN Project OS v2 / 跨对话无损续接
 
-status: validation_failed
+status: validation_green
 baseline_ref: m5/phase23-postmerge-closeout
 baseline_head: 29c88c41aa024a4ac00fecdf7e43a61a51e50ad1
 target: main
@@ -39,3 +39,12 @@ milestone: M6.1
 ## 非目标
 
 本 Change 不修改 harmonic identity、Source Raw PRZ、Source lifecycle、M4 methodology、Outcome Engine，不执行 private-M1 更新，不引入预测评分或交易执行。
+
+## 当前验证状态
+
+- Project OS fail-closed gate: green；
+- push CI #2019 / 35436109461: success；
+- Python: 855 passed / 1163 warnings；
+- Web build: success；
+- PR→main formal release: pending on final governance HEAD；
+- first failed validation #2010 is preserved in Attempt Ledger and was fixed without weakening the gate。
