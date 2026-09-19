@@ -1577,3 +1577,55 @@ Next:
 - carry validated Phase-11 history, Phase-12 digest and Phase-13 current review/follow-up context through a new versioned handoff；
 - do not mutate frozen Phase-10 handoff v2；
 - do not elevate review workflow state into M4 authority, ranking or trade execution。
+
+
+## 2026-09-19 — M5 Phase 14 Daily Handoff Bundle v3 / Review-State Transport green
+
+Branch:
+`m5/daily-handoff-bundle-v3`
+
+Validated code checkpoint:
+`c9de28d959b64043663a2bceccb17cc87b8f3756`
+
+Implementation:
+- added a new v3 transport without modifying frozen Phase-10 handoff v2；
+- v3 builds/verifies v2 in a temporary directory, then nests it as the frozen product/M4 base；
+- existing v2 ZIP/report are never overwritten；
+- outer v3 manifest binds nested-v2 schema/status/product binding/bundle SHA；
+- pipeline hash is verified against exact raw nested-v2 pipeline bytes；
+- pipeline product/history/digest/M4 readiness is inherited, not redefined；
+- current Phase-11 history must bind to exact v2 product report/snapshot hashes and trade date；
+- bounded history transport includes current, direct previous trade-date baseline, and direct previous same-day revision when needed；
+- verifier independently rebuilds Operator Delta from previous/current queues；
+- Phase-12 digest is recomputed from transported current history；
+- Phase-13 review-session export is captured under review-journal lock；
+- review-session semantic projection must equal Phase-12 digest；
+- only currently referenced review journal events plus their predecessor closure are transported；
+- missing predecessors and unrelated extra events both invalidate v3；
+- every event retains Phase-13 self-integrity verification and is cross-checked against session state；
+- atomic temp verify -> replace -> final verify retained；
+- added isolated v3 runner/report；
+- added `scripts/m5_build_daily_handoff_v3.py`；
+- added `运行HT-CN每日交接包v3.bat`；
+- v3 one-click neither reruns daily-close pipeline nor calls the old v2 entrypoint。
+
+Validation:
+- CI #1788 / `35416245508`: 771 Python + Web + 24 Playwright + browser evidence green；
+- final hardening added predecessor-chain closure and forged nested-v2/pipeline-binding tests；
+- CI #1790 / `35416336734`: 774 Python + Web + 24 Playwright + browser evidence green。
+
+Freeze audit:
+- Phase-10 handoff v2 changed files: 0；
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-055；
+- `specs/m5-phase-14-daily-handoff-bundle-v3.md`；
+- PROJECT_CONTEXT top-level current stage advanced to Phase 14。
+
+Next:
+- Phase 15: Handoff v3 Inspector / Portable Review Workspace v1；
+- read/verify/browse a v3 bundle without requiring the local market database；
+- expose transported product/history/digest/review/follow-up state in a Chinese-first read-only workspace；
+- no automatic import into local history/journal, no new review events, no M4 write, no ranking/trade inference。
