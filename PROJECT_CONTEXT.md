@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `a3ee750a0bb069caf68fddb84b7e6ad74de735f1`
-context_checkpoint_title: `M5 Phase 22 Formal Main Release Integrity PR-to-main gates green`
+context_checkpoint: `56b6da0d30b951c3ff569ff4739ddbe6e5d3e695`
+context_checkpoint_title: `M5 Phase 22 Formal Main Release Integrity operationally closed`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -17,7 +17,20 @@ repository: `shazhuya/HT-CN`
 
 因此完整 M2→M3→M4→M5 Phase21 lineage 已正式存在于 `main`，Phase21 不再只是 feature branch。
 
-当前实际开发现场已经完成 **M5 Phase 22 — Formal Main Release Integrity v1 的 PR→main hosted release gate**。Phase22 当前分支为 `m5/main-release-integrity-v1`，PR #34 以正式 `main` 为 base。Actions #1942 已证明新的 `formal-main-release-integrity` job 会在 PR→main 时真实启动并通过；Phase22 merge 后还需要观察一次真实 push→main run，才完成 operational closeout。
+**M5 Phase 22 — Formal Main Release Integrity v1 已完成并正式进入 `main`。**
+
+- Phase22 PR #34：merged；
+- Phase22 main merge commit：`56b6da0d30b951c3ff569ff4739ddbe6e5d3e695`；
+- PR→main 路径：Actions #1942 / `35429893144`，`formal-main-release-integrity` success；
+- push→main 路径：Actions #1951 / `35430336154`，`formal-main-release-integrity` success；
+- 正式 release lineage：ready；
+- existing Playwright：24 passed；
+- Phase18 browser/evidence：green；
+- Phase21 dynamic browser/evidence：green；
+- M4 methodology drift：0 / 37；
+- Outcome Engine drift：0 / 4。
+
+因此 Phase22 已 operationally closed：正式 main 现在不会再比 feature branch 少一层浏览器/冻结验收。
 
 Phase21 的真实 current-market/private-M1 `full_closeout_ready` 仍然是独立本地门禁：只有持有当前私有 M1 的机器运行 `运行HT-CN主线真实A股最终验收.bat` 才能建立该证据。
 
@@ -58,7 +71,9 @@ M5 Phase 1–22 当前主线：
 17. Portable Visual Semantics v2：schema-specific topology、Raw PRZ / Ideal Core / Envelope 分层、Source Clock 与非几何 guides；
 18. Portable Visual Browser Acceptance：真实 Chromium + 5 场景截图/哈希证据 + 独立 evidence verifier；
 19. Daily Portable Delivery v1：staged v3 → exact-identity v4 → Inspector/HTML → verified outer ZIP → immutable archive → latest pointer last；
-20. Preserve-Ancestry Integration Readiness：full-history Git gate、关键 provenance ancestor 守卫、main-only change 审计、merge-only carrier PR #32，并已通过 merge commit `7ed0c56c...` 正式进入 main；\n21. Main Real-M1 Closeout / Current Delivery Acceptance：绑定当前 clean main HEAD、Phase9 pipeline、Phase19 latest run/pointer/archive/aliases，并对 exact latest workspace 做动态 Chromium 全候选审计与截图/hash evidence；已通过 merge commit `d8687f2b...` 正式进入 main；hosted CI 只证明验收机制，本地 private-M1 才能产生 real-market `full_closeout_ready`；\n22. Formal Main Release Integrity：对 push main / PR→main 建立独立 full-history release job，强制 lineage、24 browser、Phase18、Phase21、M4 methodology freeze、Outcome Engine freeze 全链重新验收。
+20. Preserve-Ancestry Integration Readiness：full-history Git gate、关键 provenance ancestor 守卫、main-only change 审计、merge-only carrier PR #32，并已通过 merge commit `7ed0c56c...` 正式进入 main；
+21. Main Real-M1 Closeout / Current Delivery Acceptance：绑定当前 clean main HEAD、Phase9 pipeline、Phase19 latest run/pointer/archive/aliases，并对 exact latest workspace 做动态 Chromium 全候选审计与截图/hash evidence；已通过 merge commit `d8687f2b...` 正式进入 main；hosted CI 只证明验收机制，本地 private-M1 才能产生 real-market `full_closeout_ready`；
+22. Formal Main Release Integrity：对 push main / PR→main 建立独立 full-history release job，强制 lineage、24 browser、Phase18、Phase21、M4 methodology freeze、Outcome Engine freeze 全链重新验收。
 
 M5 仍是**只读实战产品层 + 人工复盘工作流 + transport / portable delivery 层**，不拥有 harmonic identity、Source Raw PRZ、canonical lifecycle 或 action state，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 19 只编排和封装已验证的 Phase9/14/16/17 产物，不改变这些状态的语义。
 
@@ -2663,8 +2678,16 @@ GitHub administration boundary:
 - repository workflow enforcement is verified;
 - server-side required-status-check configuration is not observable and is not claimed.
 
-Remaining operational observation before final Phase22 closure:
-- merge PR #34;
-- confirm the resulting push to `main` starts and passes `formal-main-release-integrity`.
+Operational closeout:
+- PR #34 merged as `56b6da0d30b951c3ff569ff4739ddbe6e5d3e695`;
+- merge-generated push-main Actions #1951 / `35430336154` started and passed `formal-main-release-integrity`;
+- release-lineage status=ready;
+- formal release existing Playwright 24 passed;
+- Phase18 / Phase21 browser evidence valid;
+- M4 methodology drift 0 / 37;
+- Outcome Engine drift 0 / 4;
+- formal release artifact ID 10579948344.
+
+Phase22 is **operationally closed on both PR→main and push→main**.
 
 Phase22 does not modify harmonic identity, Source Raw PRZ, source lifecycle, Phase19/21 product semantics or M4 authoritative evidence.

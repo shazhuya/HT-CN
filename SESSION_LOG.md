@@ -1833,3 +1833,32 @@ Next:
   - release artifact ID 10580297443.
 - Attempted to read GitHub server-side main branch protection. The current GitHub integration returned 403 `Resource not accessible by integration`; branch-protection required-check policy therefore remains unobserved and is not claimed.
 - Phase22 still requires one post-merge operational observation: the merge-generated push to main must actually launch and pass `formal-main-release-integrity`.
+
+
+### Phase22 post-merge operational closeout
+
+- PR #34 merged into formal main with merge commit `56b6da0d30b951c3ff569ff4739ddbe6e5d3e695`.
+- Post-merge ancestry audit confirmed Phase22 head plus Phase21/20/M4/M3/M2 anchors remain real ancestors.
+- The commit-run helper used earlier only surfaces pull-request-triggered runs, so push-main verification was switched to the repository Actions GET endpoint filtered by `event=push` and exact merge SHA.
+- The merge-generated main push produced Actions #1951 / `35430336154`.
+- Actual event facts:
+  - event=push;
+  - head_branch=main;
+  - head_sha=`56b6da0d30b951c3ff569ff4739ddbe6e5d3e695`.
+- Push-main deterministic prerequisite:
+  - status success;
+  - Python 832 passed.
+- Push-main formal release job:
+  - status success;
+  - release-lineage report status=ready;
+  - existing Playwright 24 passed;
+  - Phase18 Playwright 1 passed / evidence valid;
+  - Phase21 dynamic Playwright 1 passed / evidence valid;
+  - M4 methodology drift 0/37;
+  - Outcome Engine drift 0/4;
+  - release artifact ID 10579948344.
+- Both workflow trigger paths are now empirically closed:
+  - PR→main: verified;
+  - push→main: verified.
+- Phase22 is operationally closed.
+- GitHub server-side branch-protection required-check policy remains unobservable because the current integration receives 403 on the protection endpoint; no claim is made about that admin setting.
