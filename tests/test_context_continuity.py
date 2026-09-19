@@ -125,4 +125,4 @@ def test_project_state_engine_is_fail_closed_and_checks_ancestry() -> None:
     assert "release anchor is not an ancestor" in text
     assert "required spec missing" in text
     assert "active decision source missing" in text
-    assert "return 2" in text
+    assert "return 2" in text\n    assert text.count("ALLOWED_CHANGE_STATUS = {") == 1
