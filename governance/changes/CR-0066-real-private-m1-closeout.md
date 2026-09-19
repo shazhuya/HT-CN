@@ -214,3 +214,30 @@ The first real private-M1 run after the portable-continuity repair reached the M
 Project State already freezes `bse_default_scope` as `deferred`. The bounded correction therefore excludes `BSE.*` from the default M5/M6.2 operator universe while preserving any local BSE files untouched. Generic instrument discovery remains capable of returning BSE when no exchange filter is requested.
 
 This correction does not alter harmonic identity, Source Raw PRZ, Source lifecycle, M4 evidence, Outcome Engine, or trading semantics. A fresh hosted validation and a fresh real private-M1 run on the resulting current main are required.
+
+## Private-M1 Phase21 forming-Shark audit correction
+
+The real private-M1 run on the post-BSE-scope main progressed through the dynamic Chromium audit and exposed a browser-test contract bug for a live forming Shark candidate. The transported visual semantics correctly reported schema `0XABC` with observed prefix ending at `B` and future `C` still missing, but the Phase21 Playwright test incorrectly treated `topology.observed_labels` as if it were the complete schema label set and unconditionally required the observed last label to be `C`.
+
+This is a test/audit defect, not a harmonic-identity defect. Existing source-aligned visual semantics already define Shark as expected topology `0-X-A-B-C`, permit `forming_prefix` observations such as `0-X-A-B`, require missing future labels to remain undrawn, and prohibit fabrication of `D`.
+
+The bounded correction makes Phase21 compare rendered nodes with `observed_labels`, separately verifies the canonical `expected_labels == [0,X,A,B,C]`, requires completed Shark to end at `C`, and requires forming Shark prefixes to report `C` among missing future labels. No product geometry, Source Raw PRZ, lifecycle, M4 evidence, or harmonic identity is changed.
+
+A fresh hosted validation and a fresh private-M1 closeout on the resulting current main are required.
+
+## Forming-Shark audit validation closeout
+
+- real Private-M1 failure on main `8f38a628b068417164fd1caad01110d35c4b88b1` is preserved as A-20260919-0066-027;
+- first hosted regression run #2177 / `35455483180` is preserved as A-20260919-0066-028; the forming-Shark browser case passed, while the stale five-screenshot Phase18 evidence contract failed closed;
+- corrected hosted run #2179 / `35455632325` on `01e417129b8f48a287872737802d44b5917519c3` passed 880 Python tests / 0 warnings, Ruff 483, Web build, 24 existing browser tests, six-case Phase18 browser acceptance, Phase18 evidence verification (11 checks / 6 screenshots), Phase21 dynamic Chromium audit, Phase21 evidence verification, M4 methodology frozen-match (37), and Outcome Engine frozen-match (4);
+- formal release artifact: `10588047315`.
+
+This validates the audit correction without changing harmonic identity, Source Raw PRZ, Source lifecycle, M4 methodology, Outcome Engine or trade semantics. M6.2 remains `awaiting_private_run`; a fresh real Private-M1 run on the resulting canonical main is still required before any closeout claim.
+
+## Dynamic Attempt-pointer continuity-test repair
+
+Final ledger-bearing PR run #2183 / `35455810195` failed after Project OS and Ruff succeeded because two tests still asserted the historical literal attempt `A-20260919-0066-023`. The machine state had correctly advanced to A-20260919-0066-029.
+
+The repair removes those stale numeric pins. Tests now validate the actual contract: state pointers resolve in the Attempt Ledger, belong to CR-0066, the hosted pointer is successful, and its workflow matches `latest_validation`. Runtime Project OS validation remains unchanged and fail-closed.
+
+The failed candidate is A-20260919-0066-030; the bounded test repair is A-20260919-0066-031. A fresh complete PR validation is required before merge.

@@ -23,6 +23,7 @@ REQUIRED_CHECKS = {
     "forming_xabcd_missing_d_not_rendered",
     "standalone_abcd_topology_and_ratios",
     "shark_0xabc_without_d",
+    "forming_shark_missing_c_not_rendered",
     "five_zero_618_refinement_not_raw_prz",
     "component_layer_toggle",
 }
@@ -32,6 +33,7 @@ REQUIRED_SCREENSHOT_BASENAMES = {
     "m5-phase18-xabcd-forming.png",
     "m5-phase18-abcd-complete.png",
     "m5-phase18-shark.png",
+    "m5-phase18-shark-forming.png",
     "m5-phase18-five-zero.png",
 }
 

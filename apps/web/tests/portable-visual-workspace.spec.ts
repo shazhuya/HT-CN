@@ -48,7 +48,7 @@ test('M5 Phase18 portable visual workspace renders frozen semantics in a real br
     page.locator('.shell > .muted').filter({ hasText: 'Visual Semantics v2' }),
   ).toBeVisible()
   await expect(page.locator('#verify')).toContainText('验证：valid')
-  await expect(page.getByText('Queue候选', { exact: true }).locator('..')).toContainText('5')
+  await expect(page.getByText('Queue候选', { exact: true }).locator('..')).toContainText('6')
   await expect(page.getByText('完整覆盖', { exact: true }).locator('..')).toContainText('是')
 
   const screenshots: Array<Record<string, unknown>> = []
@@ -133,7 +133,21 @@ test('M5 Phase18 portable visual workspace renders frozen semantics in a real br
   checks.push('shark_0xabc_without_d')
   screenshots.push(await capture(page, 'm5-phase18-shark.png'))
 
-  // 5) 5-0: 61.8 is visible only as execution refinement, never Raw PRZ membership.
+  // 5) Forming Shark: 0-X-A-B is valid while C remains a missing future node.
+  await selectInstrument(page, 'SSE.600006')
+  for (const label of ['0', 'X', 'A', 'B']) {
+    await expect(chart.locator(`[data-node-label="${label}"]`)).toBeVisible()
+  }
+  await expect(chart.locator('[data-node-label="C"]')).toHaveCount(0)
+  await expect(chart.locator('[data-node-label="D"]')).toHaveCount(0)
+  await expect(chart.locator('[data-leg-name="AB"]')).toBeVisible()
+  await expect(chart.locator('[data-leg-name="BC"]')).toHaveCount(0)
+  await expect(page.getByText(/尚未发生：C（只列出，不绘制）/)).toBeVisible()
+  await expect(page.getByText(/Shark 终点是 C，不虚构 D/)).toBeVisible()
+  checks.push('forming_shark_missing_c_not_rendered')
+  screenshots.push(await capture(page, 'm5-phase18-shark-forming.png'))
+
+  // 6) 5-0: 61.8 is visible only as execution refinement, never Raw PRZ membership.
   await selectInstrument(page, 'SSE.600005')
   await expect(page.getByText(/5-0 production quarantine/)).toBeVisible()
   const refinementRow = page.getByRole('row').filter({

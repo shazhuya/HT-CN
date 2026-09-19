@@ -143,15 +143,18 @@ test('M5 Phase21 audits the prepared latest portable workspace dynamically', asy
 
     expect(['complete', 'forming_prefix']).toContain(String(topology.status ?? ''))
 
-    const expectedLabels = Array.isArray(topology.observed_labels)
+    const observedLabels = Array.isArray(topology.observed_labels)
       ? topology.observed_labels.map(String)
+      : []
+    const schemaExpectedLabels = Array.isArray(topology.expected_labels)
+      ? topology.expected_labels.map(String)
       : []
     const actualLabels = await dataAttributes(
       page,
       '.chart [data-node-label]',
       'data-node-label',
     )
-    expect(actualLabels).toEqual(expectedLabels)
+    expect(actualLabels).toEqual(observedLabels)
 
     const expectedLegs = Array.isArray(topology.legs)
       ? topology.legs.map((leg: JsonObject) => String(leg.name ?? ''))
@@ -172,8 +175,14 @@ test('M5 Phase21 audits the prepared latest portable workspace dynamically', asy
     }
 
     if (schema === '0XABC') {
+      expect(schemaExpectedLabels).toEqual(['0', 'X', 'A', 'B', 'C'])
       expect(actualLabels).not.toContain('D')
-      expect(expectedLabels.at(-1)).toBe('C')
+      if (String(topology.status ?? '') === 'complete') {
+        expect(actualLabels.at(-1)).toBe('C')
+      } else {
+        expect(String(topology.status ?? '')).toBe('forming_prefix')
+        expect(missingLabels).toContain('C')
+      }
     }
 
     const prz = (visual.prz ?? {}) as JsonObject

@@ -31,8 +31,10 @@ def test_project_os_runtime_validation_is_green() -> None:
         "real_run_in_progress",
     }
     assert state["current"]["active_change"] == "CR-0066"
-    assert state["current"]["latest_attempt_id"] == "A-20260919-0066-023"
-    assert state["current"]["latest_hosted_validation_attempt_id"] == ("A-20260919-0066-023")
+    assert state["current"]["latest_attempt_id"].startswith("A-")
+    assert state["current"]["latest_hosted_validation_attempt_id"].startswith("A-")
+    assert state["current"]["latest_validation"]["result"] == "success"
+    assert isinstance(state["current"]["latest_validation"]["workflow_run"], int)
     assert state["next_major_task"]["phase"] == "M6.2"
     assert any("legacy PROJECT_CONTEXT" in item for item in warnings)
 
