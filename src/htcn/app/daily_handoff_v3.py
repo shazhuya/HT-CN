@@ -601,6 +601,24 @@ def verify_daily_handoff_bundle_v3(
                     if not isinstance(base_binding, dict):
                         errors.append("nested_v2_binding_missing")
                     else:
+                        if int(
+                            base_binding.get("schema_version") or 0
+                        ) != BASE_V2_SCHEMA_VERSION:
+                            errors.append(
+                                "nested_v2_binding_schema_mismatch"
+                            )
+                        if base_binding.get("status") != base_manifest.get(
+                            "status"
+                        ):
+                            errors.append(
+                                "nested_v2_binding_status_mismatch"
+                            )
+                        if base_binding.get(
+                            "product_binding"
+                        ) != base_manifest.get("product_binding"):
+                            errors.append(
+                                "nested_v2_binding_product_mismatch"
+                            )
                         if len(base_members) == 1:
                             base_raw = archive.read(base_members[0])
                             if _sha256_bytes(base_raw) != str(
