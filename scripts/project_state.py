@@ -233,16 +233,17 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
     if current_status not in ALLOWED_STATE_STATUS:
         errors.append(f"current state has invalid status: {current_status}")
     if not active_change and current.get("status") not in {"closed", "ready", "ready_not_started"}:
-        errors.append(
-            "current state without active_change must be closed/ready/ready_not_started"
-        )
+        errors.append("current state without active_change must be closed/ready/ready_not_started")
     if active_change and current.get("status") == "closed":
         errors.append("closed current state must not retain an active_change")
     if active_change:
         try:
             change_path = _find_change_file(str(active_change))
             change_text = change_path.read_text(encoding="utf-8")
-            if f"baseline_head: {state.get('governance_baseline', {}).get('head')}" not in change_text:
+            if (
+                f"baseline_head: {state.get('governance_baseline', {}).get('head')}"
+                not in change_text
+            ):
                 errors.append("active Change baseline_head does not match governance baseline")
             change_status = _single_status(change_path, "active Change", errors)
             if change_status and change_status not in ALLOWED_CHANGE_STATUS:
@@ -318,9 +319,7 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
                 try:
                     record = json.loads(raw)
                 except json.JSONDecodeError as exc:
-                    errors.append(
-                        f"attempt ledger invalid JSON at line {line_no}: {exc}"
-                    )
+                    errors.append(f"attempt ledger invalid JSON at line {line_no}: {exc}")
                     continue
                 attempt_id = str(record.get("attempt_id", ""))
                 if not attempt_id:
@@ -336,9 +335,7 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
             errors.append(f"attempt ledger has no record for active change {active_change}")
 
         latest_attempt_id = str(current.get("latest_attempt_id", ""))
-        latest_matches = [
-            row for row in attempts if row.get("attempt_id") == latest_attempt_id
-        ]
+        latest_matches = [row for row in attempts if row.get("attempt_id") == latest_attempt_id]
         if not latest_attempt_id:
             errors.append("current.latest_attempt_id is required while a change is active")
         elif len(latest_matches) != 1:
@@ -361,9 +358,7 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
                 errors.append("latest attempt commit is not an ancestor of HEAD")
 
         hosted_attempt_id = str(current.get("latest_hosted_validation_attempt_id", ""))
-        hosted_matches = [
-            row for row in attempts if row.get("attempt_id") == hosted_attempt_id
-        ]
+        hosted_matches = [row for row in attempts if row.get("attempt_id") == hosted_attempt_id]
         if not hosted_attempt_id:
             errors.append(
                 "current.latest_hosted_validation_attempt_id is required while a change is active"
@@ -378,9 +373,7 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
             hosted_commit = _commit_from_attempt(hosted_attempt)
             latest_validation = current.get("latest_validation") or {}
             validation_commit = str(
-                latest_validation.get("merge_commit")
-                or latest_validation.get("head")
-                or ""
+                latest_validation.get("merge_commit") or latest_validation.get("head") or ""
             )
             if hosted_attempt.get("change_id") != active_change:
                 errors.append("latest hosted validation attempt does not belong to active change")
@@ -428,9 +421,7 @@ def build_resume_pack(state: dict[str, Any]) -> str:
     branch = run_git("branch", "--show-current", allow_failure=True) or "(detached)"
     release = state["last_integrated_release"]
     release_commit = release["commit"]
-    recent = run_git(
-        "log", "-12", "--date=short", "--pretty=format:%h %ad %s", allow_failure=True
-    )
+    recent = run_git("log", "-12", "--date=short", "--pretty=format:%h %ad %s", allow_failure=True)
     delta = run_git(
         "log",
         "--date=short",
@@ -441,9 +432,29 @@ def build_resume_pack(state: dict[str, Any]) -> str:
     changed = run_git("diff", "--name-status", f"{release_commit}..{head}", allow_failure=True)
 
     current = state["current"]
-    change_text = ""
+    change_index = "(none)"
     if current.get("active_change"):
-        change_text = _find_change_file(current["active_change"]).read_text(encoding="utf-8")
+        change_path = _find_change_file(current["active_change"])
+        change_text = change_path.read_text(encoding="utf-8")
+        metadata: list[str] = []
+        headings: list[str] = []
+        for line in change_text.splitlines():
+            if line.startswith("## "):
+                headings.append(line.removeprefix("## ").strip())
+            elif not headings and line.strip():
+                metadata.append(line.rstrip())
+        relative_change = change_path.relative_to(ROOT).as_posix()
+        change_index = "\n".join(
+            [
+                f"- canonical file: `{relative_change}`",
+                *metadata,
+                "- sections: " + "; ".join(headings),
+                (
+                    "- full body: read the canonical file above; it is intentionally not "
+                    "duplicated in this compact index."
+                ),
+            ]
+        )
 
     decisions = read_json(DECISIONS_PATH)
     issues = read_json(ISSUES_PATH)
@@ -476,11 +487,15 @@ def build_resume_pack(state: dict[str, Any]) -> str:
         _markdown_json("Active Decision Index", decisions),
         _markdown_json("Open Issues", issues),
         _markdown_json("Source Coverage", source),
-        "## Active Change\n\n" + (change_text.strip() or "(none)") + "\n",
-        "## Required Specs\n\n" + "\n".join(f"- `{x}`" for x in state.get("required_specs", [])) + "\n",
+        "## Active Change Index\n\n" + change_index + "\n",
+        "## Required Specs\n\n"
+        + "\n".join(f"- `{x}`" for x in state.get("required_specs", []))
+        + "\n",
         "## Recent commits\n\n```text\n" + (recent or "(none)") + "\n```\n",
         "## Commits after last integrated release\n\n```text\n" + (delta or "(none)") + "\n```\n",
-        "## Changed files after last integrated release\n\n```text\n" + (changed or "(none)") + "\n```\n",
+        "## Changed files after last integrated release\n\n```text\n"
+        + (changed or "(none)")
+        + "\n```\n",
         recovery_questions,
     ]
     return "\n".join(parts).rstrip() + "\n"

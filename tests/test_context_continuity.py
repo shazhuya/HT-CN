@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = [
     "AGENTS.md",
+    "CHAT_CONTINUATION.md",
     "PROJECT_BLUEPRINT.md",
     "governance/PROJECT_STATE.json",
     "governance/MILESTONES.json",
@@ -18,9 +19,12 @@ REQUIRED_FILES = [
     "requirements-dev.lock",
     "scripts/project_state.py",
     "scripts/context_pack.py",
+    "scripts/build_chat_continuation_bundle.py",
+    "scripts/verify_chat_continuation_bundle.py",
     "scripts/pytest_with_warning_budget.py",
     "scripts/ruff_with_budget.py",
     "生成HT-CN续接包.bat",
+    "验证HT-CN续接包.bat",
     "检查HT-CN续接状态.bat",
 ]
 
@@ -51,9 +55,7 @@ def test_project_state_is_machine_current_truth() -> None:
     assert state["current"]["active_change"] == "CR-0066"
     assert state["current"]["active_spec"] == "specs/m6-phase-2-real-private-m1-closeout.md"
     assert state["current"]["latest_attempt_id"] == "A-20260919-0066-023"
-    assert state["current"]["latest_hosted_validation_attempt_id"] == (
-        "A-20260919-0066-023"
-    )
+    assert state["current"]["latest_hosted_validation_attempt_id"] == ("A-20260919-0066-023")
     assert state["next_major_task"]["phase"] == "M6.2"
     assert state["next_major_task"]["status"] in {
         "implementing",
@@ -101,6 +103,7 @@ def test_decision_index_prevents_old_decision_revival() -> None:
     assert "D-034" in rows["D-035"]["supersedes"]
     assert rows["D-065"]["source"] == "governance/decisions/D-065-project-os-v2.md"
     assert rows["D-066"]["source"] == "governance/decisions/D-066-private-m1-evidence-bundle.md"
+    assert rows["D-067"]["source"] == "governance/decisions/D-067-portable-chat-continuity.md"
 
 
 def test_source_coverage_keeps_known_fail_closed_boundaries() -> None:
@@ -127,6 +130,21 @@ def test_agent_protocol_demotes_chat_and_legacy_context() -> None:
     assert "No Important Fact Only in Chat" in text
     assert "PROJECT_CONTEXT.md" in text
     assert "不再拥有 current-state authority" in text
+    assert "普通 ChatGPT / 其他 AI 的便携续接" in text
+    assert "Bootstrap Receipt" in text
+    assert "不要求通读全部旧聊天" in text
+
+
+def test_portable_continuation_contract_is_required_and_private_safe() -> None:
+    state = load("governance/PROJECT_STATE.json")
+    assert "specs/m6-phase-2-portable-chat-continuity.md" in state["required_specs"]
+    contract = (ROOT / "CHAT_CONTINUATION.md").read_text(encoding="utf-8")
+    assert "不需要每次重新阅读全部旧聊天" in contract
+    assert "Bootstrap Receipt 必答项" in contract
+    assert "私有 M1 数据库" in contract
+    generator = (ROOT / "生成HT-CN续接包.bat").read_text(encoding="utf-8")
+    assert "build_chat_continuation_bundle.py" in generator
+    assert "--allow-dirty" not in generator
 
 
 def test_project_state_engine_is_fail_closed_and_checks_ancestry() -> None:

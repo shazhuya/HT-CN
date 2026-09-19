@@ -38,6 +38,22 @@
 
 Resume Pack 是动态索引，不再整包复制所有历史长文档。
 
+### 普通 ChatGPT / 其他 AI 的便携续接
+
+当新对话不能直接读取仓库或没有 GitHub 连接时：
+
+1. 用户在最新、干净的工作区运行 `生成HT-CN续接包.bat`；
+2. 上传 `artifacts/reports/htcn-chat-continuation-bundle.zip`；若目标 AI 不能读取
+   ZIP，则上传 `logs/context/HTCN_CHAT_HANDOFF.md`；
+3. 把 `logs/context/HTCN_NEW_CHAT_PROMPT.md` 作为新聊天第一条任务消息；
+4. Agent 必须按 `CHAT_CONTINUATION.md` 先返回完整 Bootstrap Receipt，之后才能改代码；
+5. 没有在线 GitHub 能力时必须明确标注“未在线核对”，不得假装已核对；
+6. 不要求通读全部旧聊天。只有本次任务依赖某个未落库的具体用户选择时，才定向
+   检索对应旧对话，并在 closeout 前把恢复事实写回治理台账。
+
+ZIP、standalone Markdown 和 prompt 都是可再生视图，不能覆盖 canonical Git / CI /
+Project State。详细格式、校验和隐私边界见 `CHAT_CONTINUATION.md`。
+
 ## 3. No Important Fact Only in Chat
 
 以下任何事实出现后，必须在本工作单元结束前进入 Change / Decision / Issue / Attempt / State 至少一个 ledger：
@@ -85,8 +101,9 @@ Resume Pack 是动态索引，不再整包复制所有历史长文档。
 5. 新 blocker 写 Open Issues；
 6. Gate/next task 变化更新 PROJECT_STATE；
 7. 运行 `python scripts/project_state.py --resume`；
-8. CI Project OS gate 通过；
-9. merge 后必须做 post-merge state closeout，不能让 PROJECT_STATE 永久停在 feature-branch 状态。
+8. 重新运行 `生成HT-CN续接包.bat`，使下一个普通聊天获得最新 HEAD；
+9. CI Project OS gate 通过；
+10. merge 后必须做 post-merge state closeout，不能让 PROJECT_STATE 永久停在 feature-branch 状态。
 
 ## 7. 无损恢复验收
 

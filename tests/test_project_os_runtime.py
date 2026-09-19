@@ -32,9 +32,7 @@ def test_project_os_runtime_validation_is_green() -> None:
     }
     assert state["current"]["active_change"] == "CR-0066"
     assert state["current"]["latest_attempt_id"] == "A-20260919-0066-023"
-    assert state["current"]["latest_hosted_validation_attempt_id"] == (
-        "A-20260919-0066-023"
-    )
+    assert state["current"]["latest_hosted_validation_attempt_id"] == ("A-20260919-0066-023")
     assert state["next_major_task"]["phase"] == "M6.2"
     assert any("legacy PROJECT_CONTEXT" in item for item in warnings)
 
@@ -51,6 +49,8 @@ def test_resume_pack_is_compact_state_index_not_legacy_dump() -> None:
     assert "## FILE: `SESSION_LOG.md`" not in pack
     assert "## FILE: `PROJECT_CONTEXT.md`" not in pack
     assert "# Core Context Files" not in pack
+    assert "## Active Change Index" in pack
+    assert "full body: read the canonical file above" in pack
     assert len(pack) < 30000
 
 

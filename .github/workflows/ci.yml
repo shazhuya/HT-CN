@@ -46,6 +46,22 @@ jobs:
       - name: Run Python tests
         run: python scripts/pytest_with_warning_budget.py
 
+      - name: Build and verify portable chat continuation bundle
+        run: python scripts/build_chat_continuation_bundle.py
+
+      - name: Upload portable chat continuation bundle
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: htcn-chat-continuation-${{ github.sha }}
+          path: |
+            artifacts/reports/htcn-chat-continuation-bundle.zip
+            logs/context/HTCN_CHAT_HANDOFF.md
+            logs/context/HTCN_CHAT_HANDOFF.sha256
+            logs/context/HTCN_NEW_CHAT_PROMPT.md
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
