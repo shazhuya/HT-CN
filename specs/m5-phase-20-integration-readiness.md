@@ -1,6 +1,6 @@
 # M5 Phase 20 — Preserve-Ancestry Integration Readiness v1
 
-状态：**implementation in progress**
+状态：**Frozen / integration gates green**
 
 ## 1. 目标
 
@@ -189,19 +189,60 @@ Phase20 不：
 
 ## 11. Acceptance
 
-- [ ] current main HEAD exact match；
-- [ ] merge base exact match；
-- [ ] main-only commit exact match；
-- [ ] main-only path exact README-only；
-- [ ] lineage-only commits >= 625；
-- [ ] all required checkpoints are ancestors；
-- [ ] tracked worktree clean；
-- [ ] merge method contract = merge-only；
-- [ ] squash/rebase forbidden；
-- [ ] M4 methodology guard green；
-- [ ] M4 Outcome Engine guard green；
-- [ ] deterministic product CI green；
-- [ ] Phase18 browser evidence green；
-- [ ] integration-readiness hosted job green；
-- [ ] carrier PR to main created and mergeable；
-- [ ] no methodology/product implementation drift introduced by Phase20。
+- [x] current main HEAD exact match；
+- [x] merge base exact match；
+- [x] main-only commit exact match；
+- [x] main-only path exact README-only；
+- [x] lineage-only commits >= 625；
+- [x] all required checkpoints are ancestors；
+- [x] tracked worktree clean；
+- [x] merge method contract = merge-only；
+- [x] squash/rebase forbidden；
+- [x] M4 methodology guard green；
+- [x] M4 Outcome Engine guard green；
+- [x] deterministic product CI green；
+- [x] Phase18 browser evidence green；
+- [x] integration-readiness hosted job green；
+- [x] carrier PR to main created and mergeable；
+- [x] no methodology/product implementation drift introduced by Phase20。
+
+
+## 12. Hosted validation closeout — 2026-09-19
+
+Validated implementation checkpoint:
+
+`9082230dea8d509c8596059c541c5236a141971e`
+
+Carrier PR:
+
+- #32;
+- head: `m5/integration-readiness-v1`;
+- base: `main`;
+- integration method contract: merge commit only.
+
+Hosted CI:
+
+- Actions **#1890 / 35426649834**: success;
+- Python: **808 passed**, 1163 warnings;
+- Web build: success;
+- existing deterministic Playwright: **24 passed**;
+- Phase18 portable visual Playwright: **1 passed**;
+- Phase18 semantic evidence verifier: valid;
+- browser evidence artifact ID: **10579371311**.
+
+Full-history integration gate:
+
+- status: **ready**;
+- lineage-only commits: **630**;
+- main-only commits: **1**;
+- main-only commit: `e25fd9584008d35ec464c73f91854d12a66f79ff`;
+- merge base: `edec5e21fb9e873daf8fb77fceaa0d89dbbd5b25`;
+- allowed main-only paths: README only;
+- all required provenance checkpoints are ancestors;
+- M4 methodology changed components: **0**;
+- M4 Outcome Engine changed components: **0**;
+- readiness evidence artifact ID: **10579201636**.
+
+Non-blocking maintenance note:
+
+GitHub hosted runners warn that several current `actions/*@v4/v5` packages still declare Node 20 and are being forced onto Node 24. The jobs are currently successful. This is tracked as CI dependency maintenance, not an integration blocker.
