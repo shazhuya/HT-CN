@@ -1,6 +1,6 @@
 # M6.4 — Repository Governance
 
-status: implementing
+status: ready_to_merge
 
 ## 1. Objective
 
