@@ -93,14 +93,6 @@ def main() -> int:
 
     catalog_universes = load_catalog_universes(DATA_ROOT)
     instrument_ids = list(catalog_universes["initialized_ids"])
-    universe_coverage = build_universe_coverage(
-        listed_ids=catalog_universes["listed_ids"],
-        initialized_ids=instrument_ids,
-        qfq_evaluated=False,
-        operator_ids=instrument_ids,
-        excluded_local_ids=catalog_universes["excluded_local_ids"],
-        initialization_errors=catalog_universes["initialization_errors"],
-    )
     expected = latest_local_trade_date(DATA_ROOT / "catalog.duckdb")
     service = M3SourceClockHarmonicService(DATA_ROOT)
     analysis_code_identity = build_analysis_code_identity(
@@ -154,6 +146,15 @@ def main() -> int:
     readiness = evaluate_precompute_readiness(
         payload,
         expected_trade_date=expected,
+    )
+    universe_coverage = build_universe_coverage(
+        listed_ids=catalog_universes["listed_ids"],
+        initialized_ids=instrument_ids,
+        qfq_evaluated=False,
+        operator_ids=instrument_ids,
+        candidate_count=int(payload.get("candidate_count") or 0),
+        excluded_local_ids=catalog_universes["excluded_local_ids"],
+        initialization_errors=catalog_universes["initialization_errors"],
     )
     report = {
         "schema_version": 2,
