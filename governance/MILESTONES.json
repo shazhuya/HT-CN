@@ -40,7 +40,7 @@
         {
           "id": "M6.1",
           "title": "Project OS v2 / Cross-Conversation Lossless Continuity",
-          "status": "implementing",
+          "status": "validation_green",
           "exit_gate": [
             "machine-readable project state validates",
             "dynamic resume pack derives active specs/decisions/issues from state",
