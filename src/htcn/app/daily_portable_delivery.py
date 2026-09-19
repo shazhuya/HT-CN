@@ -790,26 +790,29 @@ def run_daily_portable_delivery(
             if not trade_date or len(bundle_sha) != 64:
                 raise RuntimeError("portable_delivery_identity_missing")
 
-            archive_dir = (
-                archive_root_path
-                / trade_date
-                / bundle_sha[:16]
-            )
+            trade_date_root = archive_root_path / trade_date
+            trade_date_root.mkdir(parents=True, exist_ok=True)
+            archive_dir = trade_date_root / bundle_sha[:16]
             if archive_dir.exists():
                 raise RuntimeError(
                     f"portable_delivery_archive_collision:{archive_dir}"
                 )
-            archive_dir.mkdir(parents=True, exist_ok=False)
+            archive_stage = trade_date_root / (
+                f".{bundle_sha[:16]}.tmp"
+            )
+            if archive_stage.exists():
+                shutil.rmtree(archive_stage)
+            archive_stage.mkdir(parents=False, exist_ok=False)
 
             archive_delivery = (
-                archive_dir / "htcn-daily-portable-delivery-v1.zip"
+                archive_stage / "htcn-daily-portable-delivery-v1.zip"
             )
-            archive_v4 = archive_dir / "htcn-daily-handoff-v4.zip"
+            archive_v4 = archive_stage / "htcn-daily-handoff-v4.zip"
             archive_inspector = (
-                archive_dir / "m5-handoff-v4-inspector.json"
+                archive_stage / "m5-handoff-v4-inspector.json"
             )
             archive_workspace = (
-                archive_dir / "m5-handoff-v4-pattern-workspace.html"
+                archive_stage / "m5-handoff-v4-pattern-workspace.html"
             )
             shutil.copyfile(stage_delivery, archive_delivery)
             shutil.copyfile(stage_v4, archive_v4)
@@ -842,6 +845,42 @@ def run_daily_portable_delivery(
                     },
                 },
                 "contract": PortableDeliveryContract().as_payload(),
+            }
+            _write_json_atomic(
+                archive_stage / "m5-portable-delivery-archive.json",
+                archive_manifest,
+            )
+            archive_stage.replace(archive_dir)
+
+            # Paths in the manifest are computed against their final immutable
+            # directory name, so rewrite once after the atomic directory move.
+            archive_delivery = (
+                archive_dir / "htcn-daily-portable-delivery-v1.zip"
+            )
+            archive_v4 = archive_dir / "htcn-daily-handoff-v4.zip"
+            archive_inspector = (
+                archive_dir / "m5-handoff-v4-inspector.json"
+            )
+            archive_workspace = (
+                archive_dir / "m5-handoff-v4-pattern-workspace.html"
+            )
+            archive_manifest["files"] = {
+                "portable_delivery": {
+                    "path": str(archive_delivery.relative_to(repo)),
+                    "sha256": _sha256_path(archive_delivery),
+                },
+                "handoff_v4": {
+                    "path": str(archive_v4.relative_to(repo)),
+                    "sha256": _sha256_path(archive_v4),
+                },
+                "inspector_json": {
+                    "path": str(archive_inspector.relative_to(repo)),
+                    "sha256": _sha256_path(archive_inspector),
+                },
+                "workspace_html": {
+                    "path": str(archive_workspace.relative_to(repo)),
+                    "sha256": _sha256_path(archive_workspace),
+                },
             }
             _write_json_atomic(
                 archive_dir / "m5-portable-delivery-archive.json",
