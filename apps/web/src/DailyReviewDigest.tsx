@@ -99,9 +99,9 @@ export default function DailyReviewDigest({
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback((
-    nextWorkflow = workflow,
-    nextChangeType = changeType,
-    nextInstrument = instrument,
+    nextWorkflow = 'all',
+    nextChangeType = 'all',
+    nextInstrument = '',
   ) => {
     setLoading(true)
     setError(null)
@@ -131,10 +131,10 @@ export default function DailyReviewDigest({
         setError(err.message)
       })
       .finally(() => setLoading(false))
-  }, [apiBase, workflow, changeType, instrument])
+  }, [apiBase])
 
   useEffect(() => {
-    load('all', 'all', '')
+    load()
   }, [load])
 
   return (
@@ -148,7 +148,10 @@ export default function DailyReviewDigest({
             顺序只表示“先看哪类变化”，不是收益率、胜率或买卖排名。
           </p>
         </div>
-        <button onClick={() => load()} disabled={loading}>
+        <button
+          onClick={() => load(workflow, changeType, instrument)}
+          disabled={loading}
+        >
           {loading ? '刷新中…' : '刷新复盘'}
         </button>
       </div>
@@ -239,7 +242,10 @@ export default function DailyReviewDigest({
                 placeholder="例如 SSE.688256"
               />
             </label>
-            <button onClick={() => load()} disabled={loading}>
+            <button
+              onClick={() => load(workflow, changeType, instrument)}
+              disabled={loading}
+            >
               应用筛选
             </button>
             <button
