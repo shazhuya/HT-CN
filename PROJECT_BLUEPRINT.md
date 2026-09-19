@@ -1,6 +1,6 @@
 # HT-CN Project Blueprint — 项目总蓝图
 
-blueprint_schema: `2`
+blueprint_schema: `3`
 status: `authoritative`
 
 ## 1. 项目使命
@@ -40,7 +40,37 @@ HT-CN 不是自动交易执行器，不以历史回看后的漂亮形态冒充�
 | M8 | Evidence-based Decision Calibration | planned |
 | M9 | Stable Research/Product Release | planned |
 
-## 4. M6 蓝图
+## 4. 最终产品交互目标 — TradingView 类同步图表工作台
+
+HT-CN 的最终主图必须升级为接近 TradingView 的交互式研究工作台，而不是只生成静态谐波截图或固定 SVG。该目标属于正式产品能力，后续实现不得以“静态图已经能显示 XABCD/PRZ”为完成标准。
+
+### 4.1 当前基线与目标差距
+
+当前 Web 主图仍以 `HarmonicChart.tsx` 自绘 SVG 为主：在重新运行分析、切换标的或切换候选时会重新渲染谐波结构，但尚未形成 TradingView 式统一时间轴/价格轴的拖动、缩放、十字光标和 overlay 同步机制。仓库已引入 `lightweight-charts` 依赖，但“依赖存在”不得被视为本目标已完成。
+
+### 4.2 必须实现的交互语义
+
+1. K 线主图支持鼠标拖动平移、滚轮/触控缩放、价格轴与时间轴缩放、视口复位等连续交互。
+2. XABCD / ABCD / 0XABC 的节点、腿线和标签必须绑定 canonical K 线时间/索引与价格坐标；主图平移或缩放时，几何 overlay 与对应 K 线同步移动，不允许视觉漂移。
+3. Source Raw PRZ、HT-CN Ideal Core、Component Envelope、PEZ、T1/T2、Source Terminal、T+1、Type-I/Type-II 生命周期事件必须使用同一时间/价格坐标系统并与 K 线同步。
+4. 节点标签、比例、PRZ 区域和生命周期标记在缩放后仍须保持可读、可审计；不得因为 viewport transform 改写 Source Identity、Raw PRZ、Source Clock 或生命周期状态。
+5. 拖动/缩放本身属于显示坐标变换，**不得因为每一个鼠标像素移动而重新跑谐波识别**。只有在新 K 线到达、历史数据窗口扩展、复权/数据版本变化、标的或参数变化时，才触发增量计算或重新分析。
+6. 当分析结果更新时，overlay 必须无缝重新锚定最新 canonical bar/time/price；形成中的结构应随新 K 线演化，未来节点不得提前绘制，已冻结的历史 Source evidence 不得被回看重写。
+7. 至少支持十字光标/hover 对齐到当前 K 线，并能同时读取 OHLC、节点身份、比例、PRZ、生命周期和关键价位；信息面板与图中对象必须指向同一 bar/time/price identity。
+8. 图表实现应优先复用稳定的交互式 chart engine（现有 `lightweight-charts` 可作为候选基础），但第三方库只负责坐标/交互层，不得拥有或改写 HT-CN harmonic Source truth。
+9. 浏览器自动化必须验证 pan / zoom 后 XABCD、PRZ、节点、生命周期与目标线仍与原始 K 线 identity 对齐；不能只验证 DOM 元素“存在”。
+10. 最终 M9 Stable Research/Product Release 不得在这一交互能力仍停留于静态 SVG snapshot 时宣称产品主图完成。
+
+### 4.3 “实时”定义
+
+HT-CN 在本目标中的“实时”分为两层：
+
+- **实时渲染联动**：用户拖动或缩放图表时，K 线与所有谐波 overlay 立即在同一坐标系内同步移动；
+- **数据驱动实时计算**：当 canonical 市场数据新增/扩展或分析参数改变时，谐波引擎按既定 Source 规则增量或重新计算，并把最新状态推送到主图。
+
+这两者必须分开，避免把 viewport 操作误当成重新识别信号，也避免用静态截图冒充 TradingView 类交互。
+
+## 5. M6 蓝图
 
 ### M6.1 — Project OS v2 / Cross-Conversation Lossless Continuity
 把项目从“聊天驱动”改成“仓库状态驱动”。建立 Blueprint、machine-readable State、Milestone、Change、Decision、Issue、Attempt、Source Coverage、Release Ledger；任何新会话先恢复项目事实再工作。
@@ -57,11 +87,11 @@ HT-CN 不是自动交易执行器，不以历史回看后的漂亮形态冒充�
 ### M6.5 — Source Coverage Freeze
 将三卷书全部关键能力归档为 Supported / Partial / Quarantined / Unsupported，并绑定 Source、spec、代码、测试与 decision。
 
-## 5. M7 以后推进原则
+## 6. M7 以后推进原则
 
 M6 完成后，默认停止横向扩功能。M7 优先积累未回看的 prospective cohort、Source Terminal、Type-I/II、right-censoring、5/10/20 traded-bar MFE/MAE 与市场环境分层。在满足预先冻结的样本和协议之前，不输出真实胜率、alpha 或盈利能力结论。
 
-## 6. 项目事实权威顺序
+## 7. 项目事实权威顺序
 
 1. canonical Git history / current source / tests；
 2. formal release & CI evidence；
