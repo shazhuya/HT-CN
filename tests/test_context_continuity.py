@@ -33,22 +33,22 @@ def test_project_state_is_machine_current_truth() -> None:
     state = load("governance/PROJECT_STATE.json")
     assert state["schema"] == 2
     assert state["current"]["milestone"] == "M6"
-    assert state["current"]["phase"] == "M6.1"
-    assert state["current"]["status"] == "closed"
-    assert state["current"]["active_change"] is None
+    assert state["current"]["phase"] == "M6.2"
+    assert state["current"]["status"] == "implementing"
+    assert state["current"]["active_change"] == "CR-0066"
     assert state["next_major_task"]["phase"] == "M6.2"
-    assert state["next_major_task"]["status"] == "ready_not_started"
+    assert state["next_major_task"]["status"] == "implementing"
     assert state["recovery_contract"]["chat_is_authoritative"] is False
     assert state["recovery_contract"]["important_fact_may_exist_only_in_chat"] is False
     assert state["recovery_contract"]["bootstrap_must_fail_on_state_drift"] is True
 
 
-def test_closed_change_and_required_specs_resolve() -> None:
+def test_active_change_and_required_specs_resolve() -> None:
     state = load("governance/PROJECT_STATE.json")
-    assert state["current"]["active_change"] is None
-    change = ROOT / "governance" / "changes" / "CR-0065-project-os-v2.md"
+    assert state["current"]["active_change"] == "CR-0066"
+    change = ROOT / "governance" / "changes" / "CR-0066-real-private-m1-closeout.md"
     assert change.exists()
-    assert "status: closed" in change.read_text(encoding="utf-8")
+    assert "status: implementing" in change.read_text(encoding="utf-8")
     for rel in state["required_specs"]:
         assert (ROOT / rel).exists(), rel
 
