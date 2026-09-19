@@ -1,6 +1,6 @@
 # M5 Phase 22 — Formal Main Release Integrity v1
 
-状态：**Frozen / PR→main hosted release gates green; push-main observation pending merge**
+状态：**Frozen / operationally closed on PR→main and push→main**
 
 ## 1. 背景
 
@@ -255,7 +255,7 @@ Phase22 不能替代后者。
 ## 13. Acceptance
 
 - [x] dedicated main-release-integrity job exists；
-- [ ] push main triggers formal release job；
+- [x] push main triggers formal release job；
 - [x] PR targeting main triggers formal release job；
 - [x] deterministic-tests is prerequisite；
 - [x] full-history checkout；
@@ -364,3 +364,44 @@ One acceptance item intentionally remains open before merge:
 - actual **push-to-main** execution of `formal-main-release-integrity`.
 
 The workflow predicate and self-regression already freeze that path, but Phase22 will observe the real push-main run created by the Phase22 merge before declaring the phase operationally complete.
+
+
+## 18. Post-merge push-main operational validation
+
+Phase22 merge commit:
+
+`56b6da0d30b951c3ff569ff4739ddbe6e5d3e695`
+
+The merge generated a real **push** event on `main`:
+
+- Actions **#1951 / 35430336154**;
+- event = `push`;
+- head_branch = `main`;
+- head_sha = Phase22 merge commit.
+
+Results:
+
+### deterministic-tests
+- status: success;
+- Python: **832 passed**, 1163 warnings.
+
+### formal-main-release-integrity
+- status: success;
+- release-lineage report: **ready**;
+- formal release existing Playwright: **24 passed**;
+- Phase18 Playwright: **1 passed**;
+- Phase18 evidence: valid;
+- Phase21 dynamic Playwright: **1 passed**;
+- Phase21 evidence: valid;
+- M4 methodology: **0 / 37 changed**, error_count=0;
+- M4 Outcome Engine: **0 / 4 changed**, error_count=0;
+- formal release artifact ID: **10579948344**.
+
+Therefore both operational trigger paths have been empirically observed:
+
+- PR targeting main → formal release gate: verified;
+- push to main → formal release gate: verified.
+
+Phase22 is now fully operationally closed.
+
+The only remaining external governance uncertainty is GitHub server-side branch-protection required-check configuration, which remains unreadable through the current integration and is not claimed.
