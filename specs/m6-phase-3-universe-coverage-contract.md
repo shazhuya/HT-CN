@@ -104,7 +104,11 @@ Required implementation:
   - deterministic layer definitions and hashes;
   - read-only catalog discovery;
   - optional formal-QFQ readiness assessment;
-  - invariant checks and gap reporting.
+  - invariant checks and gap reporting;
+  - iterable inputs must be materialized deterministically so list/tuple/generator
+    inputs cannot change hashes or deferred-scope reporting;
+  - candidate_set must be emitted as a downstream machine-readable set with
+    coverage_denominator=false.
 - `scripts/m6_universe_coverage.py`
   - writes `artifacts/reports/m6-universe-coverage.json`.
 - M5 operator precompute
@@ -118,6 +122,9 @@ Required implementation:
   - formal-QFQ is a subset;
   - operator/scanner mismatch fails;
   - deterministic hashes are stable;
+  - same-exchange invalid parentage fails closed and is reported explicitly;
+  - candidate_set is machine-readable but never a coverage denominator;
+  - list/tuple/generator inputs produce the same deterministic universe semantics;
   - unevaluated QFQ is represented as unknown, never falsely as zero-ready.
 
 ## 7. Acceptance gates
