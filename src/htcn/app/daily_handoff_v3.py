@@ -590,8 +590,25 @@ def verify_daily_handoff_bundle_v3(
                         errors.append(str(exc))
 
                 if base_manifest is not None and pipeline_payload is not None:
+                    base_binding = manifest.get("nested_v2_binding")
+                    if not isinstance(base_binding, dict):
+                        errors.append("nested_v2_binding_missing")
+                    else:
+                        if len(base_members) == 1:
+                            base_raw = archive.read(base_members[0])
+                            if _sha256_bytes(base_raw) != str(
+                                base_binding.get("bundle_sha256") or ""
+                            ):
+                                errors.append(
+                                    "nested_v2_binding_hash_mismatch"
+                                )
                     if int(base_manifest.get("schema_version") or 0) != BASE_V2_SCHEMA_VERSION:
                         errors.append("nested_v2_schema_mismatch")
+                    pipeline_raw = _canonical_json_bytes(pipeline_payload)
+                    if str(
+                        manifest.get("pipeline_report_sha256") or ""
+                    ) != _sha256_bytes(pipeline_raw):
+                        errors.append("pipeline_report_hash_mismatch")
                     for field in (
                         "m5_product_ready",
                         "m4_research_ready",
