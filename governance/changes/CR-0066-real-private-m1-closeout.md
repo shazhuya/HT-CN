@@ -194,3 +194,5 @@ The warning audit then eliminated the historical warning debt instead of merely 
 The first branch push attempt from `125872ed64415c09b6606dade08d091ef7413a7c` was blocked because the execution environment had no GitHub credential helper, token or authenticated GitHub CLI. No remote ref was created. This external-auth failure is preserved as A-20260919-0066-016 and is not represented as a code or CI failure.
 
 The first zero-warning full run passed all 872 tests but correctly failed the new quality gate on one remaining `StarletteDeprecationWarning`. Its class inherits from `UserWarning`, not `DeprecationWarning`; the narrow exact-message filter was corrected to the real Starlette category without relaxing the zero budget. This failed attempt is preserved as A-20260919-0066-017.
+
+The corrected clean run on `8f0b7ddcb42ba796766232bfcf3010a7ada3c6cd` passed 872 Python tests with zero warnings, Ruff debt 483, Project OS, both M4 freeze guards and the dependency lock. This is preserved as A-20260919-0066-018.

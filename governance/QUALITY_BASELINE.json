@@ -3,7 +3,7 @@
   "pytest": {
     "warning_budget": 0,
     "baseline_passed": 872,
-    "baseline_commit": "ff644f45f048bc38d2c55ce10aaac8db719d6195",
+    "baseline_commit": "8f0b7ddcb42ba796766232bfcf3010a7ada3c6cd",
     "baseline_workflow_run": 35445071382,
     "policy": "warnings fail; narrowly scoped locked-dependency import deprecations may be filtered explicitly; increases require an explicit CR and evidence"
   },
