@@ -5,12 +5,12 @@
       "id": "ISSUE-0061",
       "severity": "blocker",
       "type": "operational",
-      "status": "open",
+      "status": "in_progress",
       "title": "Real private-M1 Phase23 current-market closeout not yet produced",
       "blocks": [
         "M6.2 closeout"
       ],
-      "next_action": "Run the formal one-click gate only after M6.1 is closed on main."
+      "next_action": "Implement and merge M6.2 one-action verifier/evidence bundle, then run it once on the machine that owns private M1."
     },
     {
       "id": "ISSUE-0062",

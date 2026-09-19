@@ -28,6 +28,12 @@
       "title": "Project OS v2 — repository-state-driven continuity",
       "status": "active",
       "source": "governance/decisions/D-065-project-os-v2.md"
+    },
+    {
+      "id": "D-066",
+      "title": "Private-M1 closeout requires end-of-run main identity and one portable evidence bundle",
+      "status": "active",
+      "source": "governance/decisions/D-066-private-m1-evidence-bundle.md"
     }
   ],
   "rules": {

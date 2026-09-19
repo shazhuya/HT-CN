@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.1-CLOSED",
+  "state_id": "HTCN-M6.2-CR-0066",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -15,21 +15,23 @@
   },
   "governance_baseline": {
     "ref": "main",
-    "head": "ccf3592a7ea4d2e97e95d367a389e1a10c74aa4f",
-    "includes_m6_1_integrated_release": true
+    "head": "9e228d204082fe19d169e099da16ade11adac658",
+    "includes_m6_1_operational_closeout": true
   },
   "current": {
     "milestone": "M6",
-    "phase": "M6.1",
-    "title": "Project OS v2 / Cross-Conversation Lossless Continuity",
-    "status": "closed",
-    "active_change": null,
-    "work_branch": null,
+    "phase": "M6.2",
+    "title": "Real Private-M1 Closeout",
+    "status": "ready_to_merge",
+    "active_change": "CR-0066",
+    "work_branch": "m6/private-m1-closeout-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35436435722,
-      "event": "push",
-      "python_passed": 855,
+      "workflow_run": 35441597214,
+      "run_number": 2101,
+      "event": "pull_request",
+      "implementation_head": "0eed2c90ca3b75c98345155766df6c4f387f28bb",
+      "python_passed": 869,
       "warnings": 1163,
       "project_os_integrity": "success",
       "formal_main_release_integrity": "success",
@@ -38,7 +40,7 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10581534183
+      "artifact_id": 10583747910
     }
   },
   "private_m1": {
@@ -48,7 +50,7 @@
   "next_major_task": {
     "phase": "M6.2",
     "title": "Real Private-M1 Closeout",
-    "status": "ready_not_started",
+    "status": "ready_to_merge",
     "blocked_until": []
   },
   "freezes": {
@@ -67,8 +69,9 @@
     "bse_default_scope": "deferred"
   },
   "required_specs": [
-    "specs/m6-phase-1-project-os-v2.md",
+    "specs/m6-phase-2-real-private-m1-closeout.md",
     "specs/m5-phase-23-real-closeout-preflight.md",
+    "specs/m5-phase-21-main-real-m1-closeout.md",
     "specs/m4-phase-3-1-outcome-evidence-v2.md",
     "specs/m4-phase-2-12-source-clock-seed.md",
     "specs/m2-source-fidelity-repair.md",
