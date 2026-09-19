@@ -68,7 +68,8 @@ def main() -> int:
                 print(
                     "[HT-CN QUALITY] M6.3 violation: "
                     f"{filename}:{location.get('row')}:{location.get('column')} "
-                    f"{row.get('code')} {row.get('message')}",
+                    f"{row.get('code')} {row.get('message')} "
+                    f"fix={json.dumps(row.get('fix'), ensure_ascii=False)}",
                     file=sys.stderr,
                 )
         print(
