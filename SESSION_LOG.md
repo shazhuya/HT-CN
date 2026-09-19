@@ -1742,3 +1742,47 @@ Next:
   - browser evidence uploaded.
 - Phase19 implementation diff from Phase18 adds five files only; v4 transport/verifier, Visual Semantics, M4 methodology and Outcome Engine remained untouched.
 - Hosted CI validates orchestration with deterministic fakes; a real current-market delivery still requires a machine with the current M1 market database.
+
+
+## 2026-09-19 — M5 Phase 21 main real-M1 closeout acceptance mechanism
+
+- Refreshed GitHub state after the user reported repeated apparent task stalls; confirmed Phase18–20 had already advanced beyond stale local conversational checkpoints.
+- Adopted a fixed recovery rule: refresh PR/branch HEAD and PROJECT_CONTEXT before continuing; do not stop merely because a CI job is pending/in-progress.
+- Confirmed Phase20 PR #32 was green and merged it into main using a preserve-ancestry merge commit: `7ed0c56c2fe631f687a16cb8d4922030a21bc80a`.
+- Verified old main plus M2.31, M3, M4 methodology/outcome and M5 phase anchors remained real ancestors after merge.
+- Opened Phase21 branch `m5/main-real-closeout-v1` and draft PR #33 directly from formal main.
+- Added structural current-main/private-M1 delivery closeout:
+  - clean-main HEAD binding;
+  - Phase9 preflight/current-head binding;
+  - Phase19 latest-run anti-stale gate;
+  - pointer/current-pipeline SHA binding;
+  - outer portable bundle verification;
+  - immutable archive + convenience-alias hash closure;
+  - explicit warning semantics for context/M4/detail degradation.
+- Added dynamic Chromium audit over the exact latest Phase19 workspace:
+  - parses transported `#htcn-data`;
+  - loops every real delivered candidate;
+  - verifies topology/nodes/legs/PRZ component roles;
+  - prevents future-node rendering and Shark D;
+  - requires explicit detail errors to render;
+  - records one screenshot per actual schema;
+  - verifies page/console/network safety.
+- Added independent screenshot/evidence verifier and final structural/browser identity-bound closeout.
+- Added zero-candidate support and generated-workspace Git hygiene.
+- Added one-click `运行HT-CN主线真实A股最终验收.bat`.
+- Development CI #1915 caught legal-zero parsing in new Python evidence logic; fixed without removing tests.
+- CI #1921 progressed through Python/Web/Phase18 and exposed only a broad new Playwright locator; locator narrowed without removing semantic assertions.
+- CI #1923 demonstrated the full Phase21 product/browser mechanism green before freeze guards.
+- Phase21 freeze guards initially failed only because the normal deterministic checkout was shallow; changed methodology components were already empty. Added a Phase21 full-history fetch rather than weakening/removing the guard.
+- CI #1927 / 35428668864 final implementation validation:
+  - 824 Python passed;
+  - Web build success;
+  - 24 existing Playwright passed;
+  - Phase18 Playwright 1 passed / evidence valid;
+  - Phase21 dynamic Playwright 1 passed / evidence valid;
+  - 5 deterministic candidate fixtures across XABCD/ABCD/0XABC/FIVE_ZERO;
+  - 5 Phase21 screenshots;
+  - M4 methodology drift 0/37;
+  - Outcome Engine drift 0/4;
+  - browser evidence uploaded.
+- Hosted CI proves the acceptance mechanism only. Real current-market `full_closeout_ready` remains intentionally pending until Phase21 is merged to main and the private-M1 one-click gate runs locally.
