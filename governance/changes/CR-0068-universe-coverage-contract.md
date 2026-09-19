@@ -1,6 +1,6 @@
 # CR-0068 — M6.3 Universe Coverage Contract
 
-status: planned
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -38,3 +38,24 @@ See `specs/m6-phase-3-universe-coverage-contract.md`.
 No bulk data initialization, no QFQ repair/download, no BSE default enablement, no
 harmonic Source/PRZ/lifecycle changes, no M4 methodology/Outcome Engine changes, no
 trade execution, and no profitability/statistical claims.
+
+
+## First hosted candidate
+
+The initial implementation candidate on head `067ff916247d4ecd31ef170a679305057170bc6c`
+passed PR workflow `35459245173` / run #2245:
+
+- Project OS: success;
+- Ruff budget: success;
+- Python tests: success;
+- Web build: success;
+- existing browser acceptance: success;
+- Phase18 browser/evidence: success;
+- Phase21 dynamic browser/evidence: success;
+- M4 methodology freeze: success;
+- Outcome Engine freeze: success.
+
+After that green candidate, review identified one additional fail-closed requirement: same-default-exchange
+parentage errors must not be silently filtered. The branch now treats initialized-not-listed and
+formal-QFQ-not-initialized SSE/SZSE members as explicit invariant failures. A fresh hosted validation
+is required for the hardened tree before merge or closure.
