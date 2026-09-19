@@ -523,3 +523,77 @@ def test_v3_failure_short_circuits_before_v4(
     assert payload["failed_stage"] == "handoff_v3"
     assert called["v4"] is False
     assert not paths["output"].exists()
+
+
+
+def test_product_not_ready_fails_before_v3(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_v4_verifier(monkeypatch)
+    paths = _run_paths(tmp_path)
+    paths["pipeline_report"].parent.mkdir(parents=True, exist_ok=True)
+    paths["pipeline_report"].write_text(
+        json.dumps({"schema_version": 2, "m5_product_ready": False}) + "\n",
+        encoding="utf-8",
+    )
+    called = {"v3": False}
+
+    def should_not_run_v3(**kwargs):
+        called["v3"] = True
+        raise AssertionError("v3 must not run")
+
+    payload, code = delivery.run_daily_portable_delivery(
+        root=tmp_path,
+        **paths,
+        v3_runner=should_not_run_v3,
+        v4_builder=_fake_v4_builder,
+        workspace_writer=_fake_workspace_writer,
+        identity_factory=lambda repo: IDENTITY,
+        provider_factory=lambda repo: object(),
+    )
+
+    assert code == 2
+    assert payload["failed_stage"] == "pipeline_preflight"
+    assert "pipeline_m5_product_not_ready" in str(payload["error"])
+    assert called["v3"] is False
+    assert not paths["output"].exists()
+
+
+def test_workspace_failure_preserves_previous_successful_delivery(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_v4_verifier(monkeypatch)
+    paths = _run_paths(tmp_path)
+    _pipeline(paths["pipeline_report"])
+    for key in (
+        "output",
+        "latest_pointer",
+        "latest_workspace_alias",
+    ):
+        path = paths[key]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"previous-success")
+
+    def fail_workspace(**kwargs):
+        raise RuntimeError("synthetic-workspace-failure")
+
+    payload, code = delivery.run_daily_portable_delivery(
+        root=tmp_path,
+        **paths,
+        v3_runner=_fake_v3_runner,
+        v4_builder=_fake_v4_builder,
+        workspace_writer=fail_workspace,
+        identity_factory=lambda repo: IDENTITY,
+        provider_factory=lambda repo: object(),
+    )
+
+    assert code == 2
+    assert payload["failed_stage"] == "workspace"
+    assert paths["output"].read_bytes() == b"previous-success"
+    assert paths["latest_pointer"].read_bytes() == b"previous-success"
+    assert (
+        paths["latest_workspace_alias"].read_bytes()
+        == b"previous-success"
+    )
