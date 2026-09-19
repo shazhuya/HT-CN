@@ -857,10 +857,70 @@ def verify_private_m1_evidence_bundle(
                     errors.append("bundle_pipeline_report_identity_mismatch")
 
                 m6 = json_role("m6_verification")
+                project_state = json_role("project_state")
+                preflight = json_role("preflight")
+                phase19_run = json_role("phase19_run")
                 pointer = json_role("phase19_pointer")
+                structural = json_role("phase21_structural")
+                browser_source = json_role("browser_source")
                 archive_manifest = json_role("archive_manifest")
                 browser_verification = json_role("browser_verification")
                 final = json_role("phase21_final")
+
+                if project_state is not None:
+                    current = project_state.get("current")
+                    current = current if isinstance(current, dict) else {}
+                    if current.get("phase") != "M6.2":
+                        errors.append("bundle_project_state_phase_invalid")
+                    if current.get("active_change") != "CR-0066":
+                        errors.append("bundle_project_state_change_invalid")
+
+                if preflight is not None:
+                    if preflight.get("status") not in {"ready", "ready_with_warnings"}:
+                        errors.append("bundle_preflight_not_ready")
+                    if str(preflight.get("head") or "") != str(
+                        manifest.get("main_head") or ""
+                    ):
+                        errors.append("bundle_preflight_main_head_mismatch")
+
+                if phase19_run is not None:
+                    if phase19_run.get("status") not in {
+                        "complete_portable_delivery",
+                        "detail_degraded_portable_delivery",
+                    }:
+                        errors.append("bundle_phase19_run_not_complete")
+                    if phase19_run.get("exit_code") != 0:
+                        errors.append("bundle_phase19_run_exit_nonzero")
+                    if phase19_run.get("pipeline_report_unchanged") is not True:
+                        errors.append("bundle_phase19_pipeline_changed")
+
+                if structural is not None:
+                    if structural.get("status") not in {"ready", "ready_with_warnings"}:
+                        errors.append("bundle_structural_not_ready")
+                    if str(structural.get("trade_date") or "") != str(
+                        manifest.get("trade_date") or ""
+                    ):
+                        errors.append("bundle_structural_trade_date_mismatch")
+                    if str(structural.get("current_head") or "") != str(
+                        manifest.get("main_head") or ""
+                    ):
+                        errors.append("bundle_structural_main_head_mismatch")
+                    if str(structural.get("bundle_sha256") or "") != str(
+                        manifest.get("delivery_bundle_sha256") or ""
+                    ):
+                        errors.append("bundle_structural_delivery_identity_mismatch")
+
+                if browser_source is not None:
+                    if browser_source.get("mode") != "phase19_latest":
+                        errors.append("bundle_browser_source_mode_invalid")
+                    if str(browser_source.get("trade_date") or "") != str(
+                        manifest.get("trade_date") or ""
+                    ):
+                        errors.append("bundle_browser_source_trade_date_mismatch")
+                    if str(browser_source.get("source_identity") or "") != str(
+                        manifest.get("delivery_bundle_sha256") or ""
+                    ):
+                        errors.append("bundle_browser_source_identity_mismatch")
 
                 if m6 is not None:
                     if m6.get("full_closeout_ready") is not True:
