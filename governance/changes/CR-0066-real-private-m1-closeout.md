@@ -233,3 +233,11 @@ A fresh hosted validation and a fresh private-M1 closeout on the resulting curre
 - formal release artifact: `10588047315`.
 
 This validates the audit correction without changing harmonic identity, Source Raw PRZ, Source lifecycle, M4 methodology, Outcome Engine or trade semantics. M6.2 remains `awaiting_private_run`; a fresh real Private-M1 run on the resulting canonical main is still required before any closeout claim.
+
+## Dynamic Attempt-pointer continuity-test repair
+
+Final ledger-bearing PR run #2183 / `35455810195` failed after Project OS and Ruff succeeded because two tests still asserted the historical literal attempt `A-20260919-0066-023`. The machine state had correctly advanced to A-20260919-0066-029.
+
+The repair removes those stale numeric pins. Tests now validate the actual contract: state pointers resolve in the Attempt Ledger, belong to CR-0066, the hosted pointer is successful, and its workflow matches `latest_validation`. Runtime Project OS validation remains unchanged and fail-closed.
+
+The failed candidate is A-20260919-0066-030; the bounded test repair is A-20260919-0066-031. A fresh complete PR validation is required before merge.
