@@ -71,6 +71,10 @@ jobs:
         working-directory: apps/web
         run: npx playwright test tests/portable-visual-workspace.spec.ts --reporter=list
 
+      - name: Verify M5 Phase18 portable visual browser evidence
+        if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/')
+        run: python scripts/m5_verify_portable_visual_browser_evidence.py
+
       - name: Upload browser evidence
         if: always() && (startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/') || startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-') || startsWith(github.ref, 'refs/heads/m2/rsi-') || startsWith(github.head_ref, 'm2/rsi-'))
         uses: actions/upload-artifact@v4
