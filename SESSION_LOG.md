@@ -1718,3 +1718,27 @@ Next:
   - artifact upload success, ID 10579180470.
 - Handoff v4 transport/verifier, M4 methodology and Outcome Engine remained untouched.
 - Known next gap: real current-market v4 artifact is not yet automatically built and browser-audited by the daily close/handoff chain.
+
+
+## 2026-09-19 — M5 Phase 19 daily portable delivery v1
+
+- Started immediately after Phase18 closeout to address the larger daily-product gap rather than continue minor UI polish.
+- Added staged production orchestration from Phase9 product-ready report through Phase14 v3, current input identity, Phase16 v4, Phase17 Inspector/HTML and a verified outer portable ZIP.
+- Added outer portable-delivery verifier for member hashes, nested v4 verification, identity/date/count binding, Inspector v2 boundaries and offline HTML boundaries.
+- Added explicit valid `detail_degraded_portable_delivery` status for Phase16 detail-or-error exhaustive degradation.
+- Added pipeline-report hash stability gate.
+- Added immutable hash-addressed delivery archive with hidden-temp-directory publish.
+- Added Phase19-specific convenience aliases while leaving frozen Phase14/16 canonical aliases untouched.
+- Added run report for every attempt and latest-success pointer written only after full success.
+- Added one-click `运行HT-CN每日收盘并生成便携复盘包.bat`.
+- Added 9 Python regressions covering complete/degraded delivery, semantic tamper, successful archive/pointer publication, v3/v4/workspace/preflight failure preservation and pipeline drift.
+- Draft PR #31 opened against Phase18.
+- Hosted CI #1876 / 35426314518 green:
+  - Python 801 passed;
+  - Web build success;
+  - existing Playwright 24 passed;
+  - Phase18 Playwright 1 passed;
+  - Phase18 evidence verifier valid;
+  - browser evidence uploaded.
+- Phase19 implementation diff from Phase18 adds five files only; v4 transport/verifier, Visual Semantics, M4 methodology and Outcome Engine remained untouched.
+- Hosted CI validates orchestration with deterministic fakes; a real current-market delivery still requires a machine with the current M1 market database.
