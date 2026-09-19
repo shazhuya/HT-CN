@@ -44,10 +44,12 @@ test('M5 Phase18 portable visual workspace renders frozen semantics in a real br
   await page.goto('/portable-visual-fixture.html')
 
   await expect(page.getByRole('heading', { name: 'HT-CN v4 便携图形复盘' })).toBeVisible()
-  await expect(page.getByText(/Visual Semantics v2/)).toBeVisible()
-  await expect(page.getByText(/验证：valid/)).toBeVisible()
-  await expect(page.getByText('Queue候选').locator('..')).toContainText('5')
-  await expect(page.getByText('完整覆盖').locator('..')).toContainText('是')
+  await expect(
+    page.locator('.shell > .muted').filter({ hasText: 'Visual Semantics v2' }),
+  ).toBeVisible()
+  await expect(page.locator('#verify')).toContainText('验证：valid')
+  await expect(page.getByText('Queue候选', { exact: true }).locator('..')).toContainText('5')
+  await expect(page.getByText('完整覆盖', { exact: true }).locator('..')).toContainText('是')
 
   const screenshots: Array<Record<string, unknown>> = []
   const checks: string[] = []
