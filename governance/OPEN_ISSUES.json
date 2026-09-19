@@ -17,13 +17,13 @@
       "id": "ISSUE-0062",
       "severity": "high",
       "type": "coverage_semantics",
-      "status": "open",
+      "status": "closed",
       "title": "Universe coverage terms are not yet formally separated",
-      "blocks": [
-        "M6.3"
-      ],
-      "next_action": "Validate the hardened CR-0068 tree, merge with ancestry preserved, then close ISSUE-0062 only after main validation.",
-      "current_fact": "M6.3 CR-0068 now implements explicit listed/initialized/formal-QFQ/scanner/research-scanner/operator layers with deterministic hashes, catalog-backed initialized scope, BSE deferred, and fail-closed same-exchange parentage. Final hosted validation and integration remain."
+      "blocks": [],
+      "next_action": "None — M6.3 Universe Coverage Contract is integrated and main-validated.",
+      "current_fact": "M6.3 freezes explicit listed/initialized/formal-QFQ/product-scanner/research-scanner/operator/candidate-set semantics, uses catalog-backed initialized SSE/SZSE scope, keeps BSE deferred, and fails closed on invalid same-exchange parentage.",
+      "resolution": "Closed by CR-0068 after PR #49 merged as 9b1c11c796dc0292b4607f58bc5a46a1dea8ff38 and canonical main workflow 35460584553 / #2278 passed all required gates.",
+      "closed_in": "CR-0068"
     },
     {
       "id": "ISSUE-0063",

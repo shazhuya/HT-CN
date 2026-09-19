@@ -1,6 +1,6 @@
 # M6.3 — Universe Coverage Contract
 
-status: implementing
+status: closed
 
 ## 1. Objective
 
@@ -156,3 +156,15 @@ M6.3 does not:
 
 Those are separate operational/research decisions and must not be smuggled into a
 coverage terminology phase.
+
+
+## 9. Closure receipt
+
+M6.3 closed after PR #49 was merged as
+`9b1c11c796dc0292b4607f58bc5a46a1dea8ff38` and the resulting canonical-main
+workflow `35460584553` / #2278 passed all required gates.
+
+The accepted M6.2 fact remains explicit: 55 initialized SSE/SZSE instruments versus
+5218 listed SSE/SZSE instruments was a partial initialized-coverage condition, not
+full-A-share coverage. M6.3 freezes the vocabulary and invariants; it does not bulk
+initialize the remaining listed universe.

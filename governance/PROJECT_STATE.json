@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.3-IMPLEMENTING",
+  "state_id": "HTCN-M6.3-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
     "milestone": "M6",
     "phase": "M6.3",
     "title": "Universe Coverage Contract",
-    "status": "implementing",
-    "active_change": "CR-0068",
-    "active_spec": "specs/m6-phase-3-universe-coverage-contract.md",
-    "latest_attempt_id": "A-20260920-0068-003",
-    "latest_hosted_validation_attempt_id": "A-20260920-0068-003",
-    "work_branch": "m6/universe-coverage-contract-v1",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260920-0068-005",
+    "latest_hosted_validation_attempt_id": "A-20260920-0068-005",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35460305307,
-      "run_number": 2274,
-      "event": "pull_request",
-      "head": "e2a6b3321cf231e000ce7178fca6fee8cbd59aa0",
+      "workflow_run": 35460584553,
+      "run_number": 2278,
+      "event": "push",
+      "head": "9b1c11c796dc0292b4607f58bc5a46a1dea8ff38",
       "python_passed": 889,
       "warnings": 0,
       "ruff_observed": 481,
@@ -46,8 +46,8 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10589593462,
-      "scope": "Hardened M6.3 universe coverage contract with fail-closed parentage, deterministic iterable semantics and explicit downstream candidate-set boundary."
+      "artifact_id": 10588728848,
+      "scope": "M6.3 final integrated main validation after PR #49 merge; universe coverage contract closed."
     }
   },
   "private_m1": {
@@ -59,9 +59,9 @@
     "raw_private_m1_upload_required": false
   },
   "next_major_task": {
-    "phase": "M6.3",
-    "title": "Universe Coverage Contract",
-    "status": "implementing",
+    "phase": "M6.4",
+    "title": "Repository Governance",
+    "status": "ready_not_started",
     "blocked_until": []
   },
   "freezes": {

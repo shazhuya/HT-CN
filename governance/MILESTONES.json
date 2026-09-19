@@ -57,12 +57,12 @@
         {
           "id": "M6.3",
           "title": "Universe Coverage Contract",
-          "status": "implementing"
+          "status": "closed"
         },
         {
           "id": "M6.4",
           "title": "Repository Governance",
-          "status": "planned"
+          "status": "ready_not_started"
         },
         {
           "id": "M6.5",
