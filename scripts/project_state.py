@@ -195,6 +195,12 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
             errors.append(f"current phase missing from active milestone: {phase_id}")
 
     active_change = current.get("active_change")
+    if not active_change and current.get("status") not in {"closed", "ready", "ready_not_started"}:
+        errors.append(
+            "current state without active_change must be closed/ready/ready_not_started"
+        )
+    if active_change and current.get("status") == "closed":
+        errors.append("closed current state must not retain an active_change")
     if active_change:
         try:
             change_path = _find_change_file(str(active_change))
@@ -332,7 +338,7 @@ def build_resume_pack(state: dict[str, Any]) -> str:
         f"- last_integrated_release: `{release_commit}`",
         f"- current: **{current['phase']} — {current['title']}**",
         f"- status: `{current['status']}`",
-        f"- active_change: `{current.get('active_change')}`",
+        f"- active_change: `{current.get('active_change') or '(none)'}`",
         f"- next_major_task: **{state['next_major_task']['phase']} — {state['next_major_task']['title']}**\n",
         "## 恢复硬规则\n",
         "1. 先验证 PROJECT_STATE，不从聊天猜项目阶段。\n2. 只读取 state 引用的 active Change / required specs / active decisions / open blockers。\n3. state drift 必须先修复，禁止带着不一致继续核心开发。\n",

@@ -21,7 +21,9 @@ def test_project_os_runtime_validation_is_green() -> None:
     assert ok, errors
     assert not errors
     assert state["current"]["phase"] == "M6.1"
-    assert state["current"]["active_change"] == "CR-0065"
+    assert state["current"]["status"] == "closed"
+    assert state["current"]["active_change"] is None
+    assert state["next_major_task"]["phase"] == "M6.2"
     assert any("legacy PROJECT_CONTEXT" in item for item in warnings)
 
 
@@ -31,7 +33,7 @@ def test_resume_pack_is_compact_state_index_not_legacy_dump() -> None:
     assert ok, errors
     pack = module.build_resume_pack(state)
     assert "HT-CN Resume Pack v2" in pack
-    assert "CR-0065" in pack
+    assert "active_change: `(none)`" in pack
     assert "M6.2" in pack
     assert "FIVE_ZERO" in pack
     assert "## FILE: `SESSION_LOG.md`" not in pack

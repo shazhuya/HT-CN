@@ -1,36 +1,44 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.1-CR-0065",
+  "state_id": "HTCN-M6.1-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
   "last_integrated_release": {
-    "milestone": "M5",
-    "phase": "M5.23",
-    "title": "Real-M1 Final Closeout Preflight / Single-Action Safety v1",
-    "commit": "c309f782bd31ccf3e963be3bb65670f6e3788174",
-    "pr": 36,
-    "push_ci_run": 35433384021,
+    "milestone": "M6",
+    "phase": "M6.1",
+    "title": "Project OS v2 / Cross-Conversation Lossless Continuity",
+    "commit": "ccf3592a7ea4d2e97e95d367a389e1a10c74aa4f",
+    "pr": 37,
+    "push_ci_run": 35436435722,
     "release_status": "green"
   },
   "governance_baseline": {
-    "ref": "m5/phase23-postmerge-closeout",
-    "head": "29c88c41aa024a4ac00fecdf7e43a61a51e50ad1",
-    "includes_phase23_operational_closeout": true
+    "ref": "main",
+    "head": "ccf3592a7ea4d2e97e95d367a389e1a10c74aa4f",
+    "includes_m6_1_integrated_release": true
   },
   "current": {
     "milestone": "M6",
     "phase": "M6.1",
     "title": "Project OS v2 / Cross-Conversation Lossless Continuity",
-    "status": "validation_failed",
-    "active_change": "CR-0065",
-    "work_branch": "m6/project-os-v2",
+    "status": "closed",
+    "active_change": null,
+    "work_branch": null,
     "latest_validation": {
-      "result": "failed",
-      "workflow_run": 35436210906,
-      "stage": "pytest",
-      "blocker": "resume_pack_test_overconstrained_filename_mentions",
-      "next_action": "narrow_test_without_weakening_no_legacy_body_contract"
+      "result": "success",
+      "workflow_run": 35436435722,
+      "event": "push",
+      "python_passed": 855,
+      "warnings": 1163,
+      "project_os_integrity": "success",
+      "formal_main_release_integrity": "success",
+      "existing_playwright_passed": 24,
+      "phase18": "valid",
+      "phase21": "valid",
+      "m4_methodology": "frozen_match_37",
+      "outcome_engine": "frozen_match_4",
+      "artifact_id": 10581534183
     }
   },
   "private_m1": {
@@ -40,9 +48,8 @@
   "next_major_task": {
     "phase": "M6.2",
     "title": "Real Private-M1 Closeout",
-    "blocked_until": [
-      "M6.1 closed on formal main"
-    ]
+    "status": "ready_not_started",
+    "blocked_until": []
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -74,7 +81,7 @@
     "source_coverage": "governance/SOURCE_COVERAGE.json",
     "issues": "governance/OPEN_ISSUES.json",
     "attempts": "governance/attempts/2026-09.jsonl",
-    "releases": "governance/releases/c309f782bd31ccf3e963be3bb65670f6e3788174.json"
+    "releases": "governance/releases/ccf3592a7ea4d2e97e95d367a389e1a10c74aa4f.json"
   },
   "recovery_contract": {
     "chat_is_authoritative": false,

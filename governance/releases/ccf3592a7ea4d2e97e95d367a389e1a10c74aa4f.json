@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "release_id": "M6.1-project-os-v2-ccf3592",
+  "milestone": "M6",
+  "phase": "M6.1",
+  "title": "Project OS v2 / Cross-Conversation Lossless Continuity",
+  "commit": "ccf3592a7ea4d2e97e95d367a389e1a10c74aa4f",
+  "pr": 37,
+  "event": "push",
+  "branch": "main",
+  "workflow_run": 35436435722,
+  "deterministic_tests": {
+    "status": "success",
+    "python_passed": 855,
+    "warnings": 1163,
+    "project_os_integrity": "success",
+    "web_build": "success"
+  },
+  "formal_main_release_integrity": {
+    "status": "success",
+    "lineage": "ready",
+    "project_os_integrity": "success",
+    "existing_playwright_passed": 24,
+    "phase18": "1_passed_evidence_valid",
+    "phase21": "1_passed_evidence_valid",
+    "artifact_id": 10581534183
+  },
+  "freezes": {
+    "m4_methodology": {
+      "status": "frozen_match",
+      "components": 37
+    },
+    "outcome_engine": {
+      "status": "frozen_match",
+      "components": 4
+    }
+  },
+  "repository_hygiene": {
+    "historical_m5_draft_prs_closed": true,
+    "diverged_prs_18_19_closed_as_superseded": true
+  },
+  "claims": {
+    "project_os_v2_integrated": true,
+    "cross_conversation_current_truth_is_repository_state": true,
+    "private_m1_current_market_closeout_ready": false,
+    "profitability_claim_allowed": false,
+    "main_server_side_protection_enabled": false
+  }
+}
