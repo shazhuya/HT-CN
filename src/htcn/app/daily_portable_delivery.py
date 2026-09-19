@@ -740,7 +740,7 @@ def run_daily_portable_delivery(
 
             failed_stage = "handoff_v4"
             provider = provider_factory(repo)
-            v4_payload = v4_builder(
+            v4_builder(
                 v3_bundle=stage_v3,
                 analysis_provider=provider,
                 current_input_identity_fingerprint=current_identity,
