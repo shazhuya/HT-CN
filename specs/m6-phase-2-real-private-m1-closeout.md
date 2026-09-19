@@ -43,6 +43,15 @@ It MUST:
 
 No dependency installation, Git pull/fetch/reset, market-data repair, or browser installation is allowed in this entrypoint.
 
+## 3.1 Default exchange scope for the private-M1 closeout
+
+The M6.2 product/operator closeout uses the project's current default trading scope:
+
+- `SSE.*`
+- `SZSE.*`
+
+`BSE.*` remains deferred by Project State and MUST NOT be part of the default M5 operator-cache universe used by this closeout. This is an operational scope filter only: it does not delete local BSE market data and does not change harmonic Source methodology or M4 evidence.
+
 ## 4. End-of-run remote-main recheck
 
 Phase23 checks remote main before mutation. M6.2 MUST re-check `git ls-remote origin refs/heads/main` after the long real closeout.
