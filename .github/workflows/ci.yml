@@ -88,6 +88,14 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/')
         run: python scripts/m5_verify_main_real_browser_evidence.py
 
+      - name: Verify M4 methodology freeze for Phase21 closeout
+        if: startsWith(github.ref, 'refs/heads/m5/main-real-closeout') || startsWith(github.head_ref, 'm5/main-real-closeout')
+        run: python scripts/m4_methodology_freeze_guard.py
+
+      - name: Verify M4 Outcome Engine freeze for Phase21 closeout
+        if: startsWith(github.ref, 'refs/heads/m5/main-real-closeout') || startsWith(github.head_ref, 'm5/main-real-closeout')
+        run: python scripts/m4_outcome_engine_freeze_guard.py
+
       - name: Upload browser evidence
         if: always() && (startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/') || startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-') || startsWith(github.ref, 'refs/heads/m2/rsi-') || startsWith(github.head_ref, 'm2/rsi-'))
         uses: actions/upload-artifact@v4
