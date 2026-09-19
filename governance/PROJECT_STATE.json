@@ -1,0 +1,78 @@
+{
+  "schema": 2,
+  "state_id": "HTCN-M6.1-CR-0065",
+  "repository": "shazhuya/HT-CN",
+  "canonical_branch": "main",
+  "blueprint": "PROJECT_BLUEPRINT.md",
+  "last_integrated_release": {
+    "milestone": "M5",
+    "phase": "M5.23",
+    "title": "Real-M1 Final Closeout Preflight / Single-Action Safety v1",
+    "commit": "c309f782bd31ccf3e963be3bb65670f6e3788174",
+    "pr": 36,
+    "push_ci_run": 35433384021,
+    "release_status": "green"
+  },
+  "governance_baseline": {
+    "ref": "m5/phase23-postmerge-closeout",
+    "head": "29c88c41aa024a4ac00fecdf7e43a61a51e50ad1",
+    "includes_phase23_operational_closeout": true
+  },
+  "current": {
+    "milestone": "M6",
+    "phase": "M6.1",
+    "title": "Project OS v2 / Cross-Conversation Lossless Continuity",
+    "status": "implementing",
+    "active_change": "CR-0065",
+    "work_branch": "m6/project-os-v2"
+  },
+  "private_m1": {
+    "current_market_full_closeout_ready": false,
+    "next_gate": "M6.2"
+  },
+  "next_major_task": {
+    "phase": "M6.2",
+    "title": "Real Private-M1 Closeout",
+    "blocked_until": [
+      "M6.1 closed on formal main"
+    ]
+  },
+  "freezes": {
+    "m4_capture_methodology": {
+      "commit": "c774c54928c33361952bf1a612a8555633449625",
+      "components": 37,
+      "mutable": false
+    },
+    "m4_outcome_engine": {
+      "commit": "9cbc0d3d30ac5f0a87748a39788cbee04a44bcc8",
+      "components": 4,
+      "mutable": false
+    },
+    "five_zero_production": "quarantined",
+    "alternate_bat_production": "fail_closed",
+    "bse_default_scope": "deferred"
+  },
+  "required_specs": [
+    "specs/m6-phase-1-project-os-v2.md",
+    "specs/m5-phase-23-real-closeout-preflight.md",
+    "specs/m4-phase-3-1-outcome-evidence-v2.md",
+    "specs/m4-phase-2-12-source-clock-seed.md",
+    "specs/m2-source-fidelity-repair.md",
+    "specs/m2-book-golden-ledger.md",
+    "specs/m3-workbench.md"
+  ],
+  "ledgers": {
+    "milestones": "governance/MILESTONES.json",
+    "decisions": "governance/DECISION_INDEX.json",
+    "source_coverage": "governance/SOURCE_COVERAGE.json",
+    "issues": "governance/OPEN_ISSUES.json",
+    "attempts": "governance/attempts/2026-09.jsonl",
+    "releases": "governance/releases/c309f782bd31ccf3e963be3bb65670f6e3788174.json"
+  },
+  "recovery_contract": {
+    "chat_is_authoritative": false,
+    "important_fact_may_exist_only_in_chat": false,
+    "bootstrap_must_fail_on_state_drift": true,
+    "legacy_project_context_is_current_truth": false
+  }
+}
