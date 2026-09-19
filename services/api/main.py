@@ -9,6 +9,8 @@ from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from htcn.app.daily_review_digest import (
+    CHANGE_TYPE_ORDER,
+    WORKFLOW_REVIEW_ORDER,
     build_latest_daily_review_digest,
     filter_daily_review_digest,
 )
@@ -155,6 +157,19 @@ def operator_review_digest(
     change_type: str | None = Query(default=None),
     instrument_id: str | None = Query(default=None),
 ) -> dict[str, object]:
+    if (
+        workflow_bucket is not None
+        and workflow_bucket not in WORKFLOW_REVIEW_ORDER
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=f"unknown review workflow bucket: {workflow_bucket}",
+        )
+    if change_type is not None and change_type not in CHANGE_TYPE_ORDER:
+        raise HTTPException(
+            status_code=400,
+            detail=f"unknown review change type: {change_type}",
+        )
     try:
         digest = build_latest_daily_review_digest(
             history_root=str(OPERATOR_HISTORY_ROOT),
