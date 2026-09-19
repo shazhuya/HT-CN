@@ -556,3 +556,142 @@ def test_v3_verifier_detects_review_event_tamper_even_if_member_hash_updated(
         "transport_review_event_invalid" in error
         for error in checked.errors
     )
+
+
+def test_v3_transports_review_event_predecessor_chain_closure(
+    tmp_path: Path,
+) -> None:
+    pipeline, observation_id = _prepare_full(
+        tmp_path,
+        with_follow_up=False,
+    )
+    journal_root = (
+        tmp_path / "data" / "product" / "m5" / "review_journal"
+    )
+    history_root = (
+        tmp_path / "data" / "product" / "m5" / "operator_history"
+    )
+    append_review_event(
+        history_root=history_root,
+        journal_root=journal_root,
+        source_observation_id=observation_id,
+        display_key=KEY,
+        review_state="reviewed",
+        note="first review",
+        client_request_id="handoff-v3-chain-1",
+    )
+    append_review_event(
+        history_root=history_root,
+        journal_root=journal_root,
+        source_observation_id=observation_id,
+        display_key=KEY,
+        review_state="follow_up",
+        note="continue follow-up",
+        client_request_id="handoff-v3-chain-2",
+    )
+
+    output = tmp_path / "handoff-v3.zip"
+    payload = build_daily_handoff_bundle_v3(
+        root=tmp_path,
+        pipeline_summary=pipeline,
+        output=output,
+    )
+
+    assert payload["verification"]["status"] == "valid"
+    assert payload["review_session_binding"]["journal_event_count"] == 2
+
+    with zipfile.ZipFile(output) as archive:
+        event_names = [
+            name
+            for name in archive.namelist()
+            if name.startswith("m5/review_journal/")
+        ]
+    assert len(event_names) == 2
+
+
+def test_v3_verifier_rejects_forged_nested_v2_binding_manifest(
+    tmp_path: Path,
+) -> None:
+    pipeline, _ = _prepare_full(tmp_path)
+    output = tmp_path / "handoff-v3.zip"
+    build_daily_handoff_bundle_v3(
+        root=tmp_path,
+        pipeline_summary=pipeline,
+        output=output,
+    )
+
+    rebuilt = tmp_path / "forged-binding-v3.zip"
+    with zipfile.ZipFile(output, "r") as source:
+        blobs = {
+            info.filename: source.read(info.filename)
+            for info in source.infolist()
+        }
+    manifest = json.loads(
+        blobs["daily-handoff-v3-manifest.json"].decode("utf-8")
+    )
+    manifest["nested_v2_binding"]["bundle_sha256"] = "f" * 64
+    blobs["daily-handoff-v3-manifest.json"] = (
+        json.dumps(
+            manifest,
+            ensure_ascii=False,
+            sort_keys=True,
+            indent=2,
+        )
+        + "\n"
+    ).encode("utf-8")
+
+    with zipfile.ZipFile(
+        rebuilt,
+        "w",
+        compression=zipfile.ZIP_DEFLATED,
+    ) as target:
+        for name, data in blobs.items():
+            target.writestr(name, data)
+
+    checked = verify_daily_handoff_bundle_v3(rebuilt)
+    assert checked.status == "invalid"
+    assert "nested_v2_binding_hash_mismatch" in checked.errors
+
+
+def test_v3_verifier_rejects_forged_pipeline_hash_manifest(
+    tmp_path: Path,
+) -> None:
+    pipeline, _ = _prepare_full(tmp_path)
+    output = tmp_path / "handoff-v3.zip"
+    build_daily_handoff_bundle_v3(
+        root=tmp_path,
+        pipeline_summary=pipeline,
+        output=output,
+    )
+
+    rebuilt = tmp_path / "forged-pipeline-v3.zip"
+    with zipfile.ZipFile(output, "r") as source:
+        blobs = {
+            info.filename: source.read(info.filename)
+            for info in source.infolist()
+        }
+    manifest = json.loads(
+        blobs["daily-handoff-v3-manifest.json"].decode("utf-8")
+    )
+    manifest["pipeline_report_sha256"] = "e" * 64
+    blobs["daily-handoff-v3-manifest.json"] = (
+        json.dumps(
+            manifest,
+            ensure_ascii=False,
+            sort_keys=True,
+            indent=2,
+        )
+        + "\n"
+    ).encode("utf-8")
+
+    with zipfile.ZipFile(
+        rebuilt,
+        "w",
+        compression=zipfile.ZIP_DEFLATED,
+    ) as target:
+        for name, data in blobs.items():
+            target.writestr(name, data)
+
+    checked = verify_daily_handoff_bundle_v3(rebuilt)
+    assert checked.status == "invalid"
+    assert "pipeline_report_hash_mismatch" in checked.errors
