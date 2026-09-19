@@ -214,3 +214,13 @@ The first real private-M1 run after the portable-continuity repair reached the M
 Project State already freezes `bse_default_scope` as `deferred`. The bounded correction therefore excludes `BSE.*` from the default M5/M6.2 operator universe while preserving any local BSE files untouched. Generic instrument discovery remains capable of returning BSE when no exchange filter is requested.
 
 This correction does not alter harmonic identity, Source Raw PRZ, Source lifecycle, M4 evidence, Outcome Engine, or trading semantics. A fresh hosted validation and a fresh real private-M1 run on the resulting current main are required.
+
+## Private-M1 Phase21 forming-Shark audit correction
+
+The real private-M1 run on the post-BSE-scope main progressed through the dynamic Chromium audit and exposed a browser-test contract bug for a live forming Shark candidate. The transported visual semantics correctly reported schema `0XABC` with observed prefix ending at `B` and future `C` still missing, but the Phase21 Playwright test incorrectly treated `topology.observed_labels` as if it were the complete schema label set and unconditionally required the observed last label to be `C`.
+
+This is a test/audit defect, not a harmonic-identity defect. Existing source-aligned visual semantics already define Shark as expected topology `0-X-A-B-C`, permit `forming_prefix` observations such as `0-X-A-B`, require missing future labels to remain undrawn, and prohibit fabrication of `D`.
+
+The bounded correction makes Phase21 compare rendered nodes with `observed_labels`, separately verifies the canonical `expected_labels == [0,X,A,B,C]`, requires completed Shark to end at `C`, and requires forming Shark prefixes to report `C` among missing future labels. No product geometry, Source Raw PRZ, lifecycle, M4 evidence, or harmonic identity is changed.
+
+A fresh hosted validation and a fresh private-M1 closeout on the resulting current main are required.
