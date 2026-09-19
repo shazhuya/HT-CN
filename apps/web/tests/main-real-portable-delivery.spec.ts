@@ -88,7 +88,9 @@ test('M5 Phase21 audits the prepared latest portable workspace dynamically', asy
 
   await page.goto('/latest-real-portable-workspace.html')
   await expect(page.getByRole('heading', { name: 'HT-CN v4 便携图形复盘' })).toBeVisible()
-  await expect(page.getByText(/Visual Semantics v2/)).toBeVisible()
+  await expect(
+    page.locator('.muted').filter({ hasText: 'Visual Semantics v2' }).first(),
+  ).toBeVisible()
 
   const embeddedText = await page.locator('#htcn-data').textContent()
   expect(embeddedText).not.toBeNull()
