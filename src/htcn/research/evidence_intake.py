@@ -221,9 +221,11 @@ def audit_evidence_bundle(
             if committed and not baseline_present:
                 blockers.append("committed_chain_missing_frozen_baseline")
 
-            if expected_baseline_trade_date is not None:
-                if baseline_through != expected_baseline_trade_date:
-                    blockers.append("unexpected_frozen_baseline_trade_date")
+            if (
+                expected_baseline_trade_date is not None
+                and baseline_through != expected_baseline_trade_date
+            ):
+                blockers.append("unexpected_frozen_baseline_trade_date")
 
             if not committed:
                 blockers.append("no_post_baseline_committed_capture")
