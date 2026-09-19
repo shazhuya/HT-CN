@@ -601,3 +601,12 @@ def test_finalize_closeout_requires_structural_and_browser_same_identity() -> No
     )
     assert bad["full_closeout_ready"] is False
     assert "closeout_bundle_identity_mismatch" in bad["errors"]
+
+
+
+def test_generated_browser_workspaces_are_git_ignored() -> None:
+    root = Path(__file__).resolve().parents[2]
+    ignored = (root / ".gitignore").read_text(encoding="utf-8")
+
+    assert "apps/web/public/portable-visual-fixture.html" in ignored
+    assert "apps/web/public/latest-real-portable-workspace.html" in ignored
