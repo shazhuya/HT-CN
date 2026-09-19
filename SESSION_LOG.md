@@ -1524,3 +1524,56 @@ Next:
 - product workflow annotations only；
 - no lifecycle/action mutation, no trade execution, no alpha/win-rate/predictive ranking；
 - future handoff expansion must use a new versioned contract rather than mutating frozen Phase-10 handoff v2。
+
+
+## 2026-09-19 — M5 Phase 13 Review Session / Follow-up Journal v1 green
+
+Branch:
+`m5/review-followup-journal-v1`
+
+Validated code checkpoint:
+`4b015dfc0e72db0f1275e1e570d85959254550fa`
+
+Implementation:
+- added append-only review/follow-up journal under `data/product/m5/review_journal/`；
+- fixed user workflow states: unseen / reviewed / follow_up；
+- no event defaults the exact observation/display-key binding to unseen；
+- source binding is validated against Phase-11 history and a real Delta change；
+- client_request_id provides retry idempotency and replay-conflict protection；
+- notes are optional/normalized/capped at 1000 chars；
+- event records include self-integrity SHA, per-binding ordinals/links and per-display-key ordinals/links；
+- load/query fail closed on chain gaps or tampering；
+- same-day review state and cross-day active-follow-up state are intentionally separate；
+- yesterday reviewed never auto-marks today's new change as reviewed；
+- latest display-key follow_up stays active across observations/trade dates；
+- active follow-ups remain visible even when there is no new current-day Delta；
+- ending follow-up appends reviewed instead of deleting history；
+- added GET `/api/operator/review-session`；
+- added POST `/api/operator/review-session/event`；
+- added GET `/api/operator/review-journal` read-only audit；
+- write API hides local filesystem paths；
+- Workbench gained review-state filter, follow-up-only filter, note/state editor, persistent active-follow-up list, and end-follow-up action；
+- same-day active follow-up is labeled “跟踪中”; only older source dates are labeled “跨日跟踪中”；
+- added `scripts/m5_query_review_journal.py` and `运行HT-CN复盘跟踪查询.bat`；
+- Phase 13 deliberately does not join daily-close pipeline and never creates review events automatically；
+- Phase 12 digest endpoint/contract and Phase 10 handoff v2 remain unchanged。
+
+Validation:
+- CI #1766 / `35415053453`: Python 757 passed + Web build success + existing 23 Playwright passed; only new Phase-13 browser test had a strict locator ambiguity；
+- locator narrowed to a concrete follow-up row in `4b015dfc0e72db0f1275e1e570d85959254550fa`；
+- CI #1768 / `35415145067`: 757 Python + Web + 24 Playwright + browser evidence green。
+
+Freeze audit:
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-054；
+- `specs/m5-phase-13-review-followup-journal.md`；
+- PROJECT_CONTEXT top-level current stage advanced to Phase 13。
+
+Next:
+- Phase 14: Daily Handoff Bundle v3 / Review-State Transport；
+- carry validated Phase-11 history, Phase-12 digest and Phase-13 current review/follow-up context through a new versioned handoff；
+- do not mutate frozen Phase-10 handoff v2；
+- do not elevate review workflow state into M4 authority, ranking or trade execution。
