@@ -2083,3 +2083,36 @@ Phase 10 的 v2 已经正确解决“最终产品快照 + M4 nested evidence 如
 - screenshots 5/5;
 - evidence verifier valid;
 - artifact ID 10579180470.
+
+
+## D-060 — Phase19 latest pointer is published only after staged end-to-end verification
+
+日期：2026-09-19
+
+决定：
+
+1. Phase19 is an orchestration/portable-delivery layer and does not own harmonic identity, Source Raw PRZ, source lifecycle, Queue, history, review state or M4 evidence.
+2. Daily portable delivery must build Phase14 v3, Phase16 v4 and Phase17 Inspector/HTML in staging before any Phase19 latest artifact is promoted.
+3. The Phase9 pipeline report must be product-ready before v3 is attempted.
+4. The Phase9 pipeline report SHA-256 must remain identical throughout Phase19; drift invalidates the run and prevents promotion.
+5. Current input identity is recomputed between staged v3 and v4 and v4 retains its exact-identity fail-closed rule.
+6. The outer portable ZIP must independently verify member hashes, nested v4 validity, trade date, input identity, counts, Inspector v2 boundaries and offline HTML boundaries.
+7. A valid v4 with explicit detail errors maps to `detail_degraded_portable_delivery` and may be published; explicit degradation is preferable to silent omission.
+8. Immutable archive publication must use a temporary sibling directory followed by atomic rename into a hash-addressed final directory.
+9. Frozen Phase14/16 canonical aliases must not be overwritten by Phase19.
+10. Phase19 may maintain its own convenience aliases, but those aliases are updated only after the outer delivery and pipeline-stability gates pass.
+11. `m5-daily-portable-delivery-run.json` records every run, including failure.
+12. `m5-daily-portable-delivery-latest.json` is the authority for the latest successful Phase19 delivery and is written last.
+13. A failed run must preserve the previous latest pointer, previous successful aliases and immutable archives.
+14. Browser execution is not embedded in the production delivery runner; renderer semantics remain owned by the Phase18 hosted browser gate.
+15. Hosted deterministic orchestration tests do not constitute evidence that a real current-market portable delivery was generated.
+16. No predictive score, win rate, alpha, historical-outcome ranking or trade instruction is introduced.
+
+验证：
+- implementation checkpoint `e8d46855f775f57bf7e413575c82806b74b24aba`;
+- hosted CI #1876 / `35426314518`: success;
+- Python 801 passed;
+- Web build success;
+- existing Playwright 24 passed;
+- Phase18 Playwright 1 passed;
+- Phase18 evidence verifier valid.
