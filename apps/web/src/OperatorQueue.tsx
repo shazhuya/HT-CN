@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import OperatorDeltaPanel, { OperatorDeltaPayload } from './OperatorDelta'
 import OperatorHistory from './OperatorHistory'
+import DailyReviewDigest from './DailyReviewDigest'
 import './OperatorQueue.css'
 
 type OperatorQueueContract = {
@@ -449,6 +450,11 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
             <div><span>候选结构</span><strong>{payload.candidate_count}</strong></div>
             <div><span>数据错误</span><strong>{payload.failed_instrument_count}</strong></div>
           </div>
+
+          <DailyReviewDigest
+            apiBase={apiBase}
+            onSelectInstrument={onSelectInstrument}
+          />
 
           <OperatorHistory
             apiBase={apiBase}
