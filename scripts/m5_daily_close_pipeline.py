@@ -177,6 +177,9 @@ def main() -> int:
         "m5_operator_history_root": (
             "data/product/m5/operator_history"
         ),
+        "m5_daily_review_digest": (
+            "artifacts/reports/m5-daily-review-digest.json"
+        ),
         "m4_lifecycle_snapshot": (
             "artifacts/reports/m4-lifecycle-snapshot.json"
         ),
@@ -205,6 +208,7 @@ def main() -> int:
         f"m5_product_ready={summary['m5_product_ready']} "
         f"context_refresh={summary['m5_context_refresh_ready']} "
         f"history_ready={summary['m5_history_ready']} "
+        f"review_digest_ready={summary['m5_review_digest_ready']} "
         f"m4_research_ready={summary['m4_research_ready']}",
         flush=True,
     )
@@ -215,6 +219,15 @@ def main() -> int:
         print(
             "[HT-CN DAILY] M5 product is ready. "
             "Operator history is degraded independently.",
+            flush=True,
+        )
+    if (
+        summary["m5_product_ready"]
+        and not summary["m5_review_digest_ready"]
+    ):
+        print(
+            "[HT-CN DAILY] M5 product is ready. "
+            "Daily review digest is degraded independently.",
             flush=True,
         )
     if (
