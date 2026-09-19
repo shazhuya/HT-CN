@@ -13,6 +13,7 @@ from htcn.app.handoff_v4_portable_detail import (
     DAILY_HANDOFF_V4_SCHEMA_VERSION,
     verify_daily_handoff_bundle_v4,
 )
+from htcn.app.portable_visual_semantics import build_pattern_visual_semantics
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,6 +110,7 @@ def build_handoff_v4_inspection(bundle_path: str | Path) -> dict[str, Any]:
                     "warning": payload.get("warning"),
                     "bars": bars,
                     "pattern": pattern,
+                    "visual_semantics": build_pattern_visual_semantics(pattern),
                 }
 
         error_members = roles.get("m5_portable_detail_errors", [])
