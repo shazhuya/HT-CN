@@ -15,8 +15,8 @@
   },
   "governance_baseline": {
     "ref": "main",
-    "head": "ccf3592a7ea4d2e97e95d367a389e1a10c74aa4f",
-    "includes_m6_1_integrated_release": true
+    "head": "9e228d204082fe19d169e099da16ade11adac658",
+    "includes_m6_1_operational_closeout": true
   },
   "current": {
     "milestone": "M6",
