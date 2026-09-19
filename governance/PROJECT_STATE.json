@@ -15,8 +15,9 @@
   },
   "governance_baseline": {
     "ref": "main",
-    "head": "86fd17d01b3b9c2fc597d500723c6966c9a2250f",
-    "includes_m6_2_engineering_release": true
+    "head": "9e228d204082fe19d169e099da16ade11adac658",
+    "includes_m6_1_operational_closeout": true,
+    "note": "CR-0066 immutable starting baseline; latest integrated M6.2 release is tracked separately in last_integrated_release."
   },
   "current": {
     "milestone": "M6",
