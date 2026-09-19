@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "authority": "Scott M. Carney Harmonic Trading Volumes One/Two/Three + frozen HT-CN Source specs",
+  "items": [
+    {
+      "id": "ABCD",
+      "status": "supported",
+      "topology": "ABCD",
+      "notes": "Source structure and PRZ semantics implemented; standalone topology separate."
+    },
+    {
+      "id": "GARTLEY",
+      "status": "supported_frozen",
+      "topology": "XABCD"
+    },
+    {
+      "id": "BAT",
+      "status": "supported_frozen",
+      "topology": "XABCD"
+    },
+    {
+      "id": "CRAB",
+      "status": "supported_frozen",
+      "topology": "XABCD"
+    },
+    {
+      "id": "DEEP_CRAB",
+      "status": "supported_frozen",
+      "topology": "XABCD"
+    },
+    {
+      "id": "BUTTERFLY",
+      "status": "supported_frozen",
+      "topology": "XABCD"
+    },
+    {
+      "id": "SHARK",
+      "status": "supported_frozen",
+      "topology": "0XABC",
+      "constraints": [
+        "never fabricate D",
+        "reactive-first semantics"
+      ]
+    },
+    {
+      "id": "FIVE_ZERO",
+      "status": "quarantined",
+      "topology": "FIVE_ZERO",
+      "constraints": [
+        "not production identity",
+        "Volume Two/Three source-coordinate conflict unresolved"
+      ]
+    },
+    {
+      "id": "ALTERNATE_BAT",
+      "status": "fail_closed",
+      "topology": "XABCD",
+      "constraints": [
+        "no implicit promotion from standard Bat"
+      ]
+    },
+    {
+      "id": "RSI_BAMM",
+      "status": "supported_source_state_machine",
+      "constraints": [
+        "ordinary RSI is not BAMM",
+        "no-lookahead completion time"
+      ]
+    },
+    {
+      "id": "TYPE_I",
+      "status": "supported_source_clock",
+      "constraints": [
+        "first PRZ test",
+        "Terminal Price Bar observable",
+        "reaction semantics"
+      ]
+    },
+    {
+      "id": "TYPE_II",
+      "status": "supported_source_clock",
+      "constraints": [
+        "secondary original-PRZ retest",
+        "reversal semantics"
+      ]
+    },
+    {
+      "id": "HSI",
+      "status": "unsupported",
+      "constraints": [
+        "must not be represented as implemented"
+      ]
+    }
+  ],
+  "references": [
+    "specs/m2-source-fidelity-repair.md",
+    "specs/m2-book-golden-ledger.md",
+    "specs/m4-phase-2-12-source-clock-seed.md"
+  ]
+}
