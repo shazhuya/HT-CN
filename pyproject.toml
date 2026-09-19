@@ -32,7 +32,7 @@ where = ["src"]
 pythonpath = [".", "src"]
 testpaths = ["tests"]
 filterwarnings = [
-  "ignore:Using `httpx` with `starlette.testclient` is deprecated.*:DeprecationWarning",
+  "ignore:Using `httpx` with `starlette.testclient` is deprecated.*:starlette.exceptions.StarletteDeprecationWarning",
   "ignore:The anyio.abc.BlockingPortal alias is deprecated.*:DeprecationWarning"
 ]
 

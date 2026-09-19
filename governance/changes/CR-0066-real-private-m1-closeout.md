@@ -192,3 +192,5 @@ Clean local validation on `ff644f45f048bc38d2c55ce10aaac8db719d6195` passed 872 
 The warning audit then eliminated the historical warning debt instead of merely containing it: 1160 repeated Pandas test deprecations were corrected with explicit day units, the deliberate duplicate-member ZIP tamper test now asserts its warning, and two locked upstream import deprecations are filtered by exact message. The pytest warning budget is now zero.
 
 The first branch push attempt from `125872ed64415c09b6606dade08d091ef7413a7c` was blocked because the execution environment had no GitHub credential helper, token or authenticated GitHub CLI. No remote ref was created. This external-auth failure is preserved as A-20260919-0066-016 and is not represented as a code or CI failure.
+
+The first zero-warning full run passed all 872 tests but correctly failed the new quality gate on one remaining `StarletteDeprecationWarning`. Its class inherits from `UserWarning`, not `DeprecationWarning`; the narrow exact-message filter was corrected to the real Starlette category without relaxing the zero budget. This failed attempt is preserved as A-20260919-0066-017.
