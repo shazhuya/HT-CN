@@ -50,7 +50,10 @@ def test_resume_pack_is_compact_state_index_not_legacy_dump() -> None:
     assert "## FILE: `PROJECT_CONTEXT.md`" not in pack
     assert "# Core Context Files" not in pack
     assert "## Active Change Index" in pack
-    assert "full body: read the canonical file above" in pack
+    if state["current"].get("active_change"):
+        assert "full body: read the canonical file above" in pack
+    else:
+        assert "## Active Change Index\n\n(none)" in pack
     assert len(pack) < 30000
 
 
