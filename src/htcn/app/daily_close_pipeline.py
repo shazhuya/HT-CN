@@ -55,6 +55,12 @@ STEP_SPECS: dict[str, DailyCloseStep] = {
         "m5-daily-operator-history.log",
         "m5_product_history",
     ),
+    "m5_daily_review_digest": DailyCloseStep(
+        "m5_daily_review_digest",
+        ("scripts/m5_build_daily_review_digest.py",),
+        "m5-daily-review-digest.log",
+        "m5_product_review",
+    ),
     "m4_methodology_guard": DailyCloseStep(
         "m4_methodology_guard",
         ("scripts/m4_methodology_freeze_guard.py",),
@@ -334,6 +340,7 @@ def execute_daily_close_steps(
             history_code,
         )
     else:
+        history_code = 1
         results["m5_operator_history"] = _skipped(
             "m5_operator_history",
             (
@@ -341,6 +348,22 @@ def execute_daily_close_steps(
                 if market_data_ready
                 else "m1_update_failed"
             ),
+        )
+
+    # Phase 12 is a presentation/review derivative of validated Phase-11
+    # product history. Digest failure must never rewrite product/history/M4
+    # readiness, and the digest must not run from a failed history append.
+    if history_code == 0:
+        review_step = STEP_SPECS["m5_daily_review_digest"]
+        review_code = int(run_step(review_step))
+        results["m5_daily_review_digest"] = _ran(
+            review_step,
+            review_code,
+        )
+    else:
+        results["m5_daily_review_digest"] = _skipped(
+            "m5_daily_review_digest",
+            "m5_operator_history_not_ready",
         )
 
     return build_daily_close_summary(results)
@@ -369,6 +392,10 @@ def build_daily_close_summary(
     m5_history_ready = (
         m5_product_ready
         and passed("m5_operator_history")
+    )
+    m5_review_digest_ready = (
+        m5_history_ready
+        and passed("m5_daily_review_digest")
     )
     m4_research_ready = (
         market_data_ready
@@ -416,6 +443,10 @@ def build_daily_close_summary(
         "m5_history_degraded_but_product_allowed": (
             m5_product_ready and not m5_history_ready
         ),
+        "m5_review_digest_ready": m5_review_digest_ready,
+        "m5_review_digest_degraded_but_product_allowed": (
+            m5_product_ready and not m5_review_digest_ready
+        ),
         "m4_research_ready": m4_research_ready,
         "research_degraded_does_not_block_product_exit": True,
         "steps": {
@@ -432,6 +463,12 @@ def build_daily_close_summary(
             "m5_history_is_authoritative_evidence": False,
             "m5_history_writes_m4_evidence": False,
             "m5_history_uses_historical_outcome_for_ranking": False,
+            "m5_review_digest_runs_only_after_history": True,
+            "m5_review_digest_required_for_product_ready": False,
+            "m5_review_digest_is_authoritative_evidence": False,
+            "m5_review_digest_writes_m4_evidence": False,
+            "m5_review_digest_uses_historical_outcome_for_ranking": False,
+            "m5_review_digest_uses_predictive_score": False,
             "m5_cache_is_authoritative_evidence": False,
             "m5_cache_writes_m4_evidence": False,
             "m4_evidence_owned_by_authoritative_capture_chain": True,
