@@ -22,18 +22,21 @@
     "milestone": "M6",
     "phase": "M6.2",
     "title": "Real Private-M1 Closeout",
-    "status": "validation_green",
+    "status": "ready_to_merge",
     "active_change": "CR-0066",
     "work_branch": "m6/private-m1-closeout-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35437669271,
-      "event": "push",
-      "python_passed": 866,
-      "warnings": 1163,
+      "workflow_run": 35437784106,
+      "event": "pull_request",
       "project_os_integrity": "success",
-      "web_build": "success",
-      "formal_pr_release": "pending"
+      "formal_main_release_integrity": "success",
+      "existing_playwright_passed": 24,
+      "phase18": "valid",
+      "phase21": "valid",
+      "m4_methodology": "frozen_match_37",
+      "outcome_engine": "frozen_match_4",
+      "artifact_id": 10582497478
     }
   },
   "private_m1": {
@@ -43,7 +46,7 @@
   "next_major_task": {
     "phase": "M6.2",
     "title": "Real Private-M1 Closeout",
-    "status": "validation_green",
+    "status": "ready_to_merge",
     "blocked_until": []
   },
   "freezes": {
