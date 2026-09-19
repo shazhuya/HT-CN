@@ -723,9 +723,12 @@ def query_operator_history(
             )
         ]
 
-        if instrument_id is not None or display_key is not None:
-            if not items and not changes:
-                continue
+        if (
+            (instrument_id is not None or display_key is not None)
+            and not items
+            and not changes
+        ):
+            continue
 
         observations.append({
             "trade_date": trade_date,
