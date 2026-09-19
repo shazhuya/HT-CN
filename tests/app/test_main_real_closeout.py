@@ -649,3 +649,74 @@ def test_prepare_browser_source_supports_zero_candidate_day(
     assert payload["detail_available_count"] == 0
     assert payload["detail_error_count"] == 0
     assert payload["schema_counts"] == {}
+
+
+
+def test_browser_evidence_verifier_accepts_zero_candidate_day(
+    tmp_path: Path,
+) -> None:
+    screenshot = tmp_path / "artifacts" / "screenshots" / "zero.png"
+    screenshot.parent.mkdir(parents=True, exist_ok=True)
+    screenshot.write_bytes(b"Z" * 12_500)
+    source = tmp_path / "zero-source.json"
+    evidence = tmp_path / "zero-evidence.json"
+    _write_json(
+        source,
+        {
+            "schema_version": 1,
+            "mode": "phase19_latest",
+            "trade_date": TRADE_DATE,
+            "source_identity": "7" * 64,
+            "candidate_count": 0,
+            "detail_available_count": 0,
+            "detail_error_count": 0,
+            "schema_counts": {},
+        },
+    )
+    _write_json(
+        evidence,
+        {
+            "schema_version": 1,
+            "phase": "M5 Phase 21",
+            "browser": "chromium",
+            "trade_date": TRADE_DATE,
+            "source_identity": "7" * 64,
+            "candidate_count": 0,
+            "detail_available_count": 0,
+            "detail_error_count": 0,
+            "audited_detail_count": 0,
+            "explicit_error_count": 0,
+            "schema_counts": {},
+            "future_point_violation_count": 0,
+            "page_error_count": 0,
+            "console_error_count": 0,
+            "all_detail_geometry_matches_semantics": True,
+            "all_explicit_errors_rendered": True,
+            "layer_toggle_check_passed": True,
+            "no_network_fetch_observed": True,
+            "screenshots": [
+                {
+                    "file": str(screenshot.relative_to(tmp_path)),
+                    "size_bytes": screenshot.stat().st_size,
+                    "sha256": _sha(screenshot),
+                }
+            ],
+            "writes_m4_evidence": False,
+            "mutates_product_state": False,
+            "mutates_harmonic_identity": False,
+            "mutates_source_raw_prz": False,
+            "mutates_source_lifecycle": False,
+            "is_trade_instruction": False,
+        },
+    )
+
+    checked = browser.verify_main_real_browser_evidence(
+        root=tmp_path,
+        source_report=source,
+        evidence_report=evidence,
+    )
+
+    assert checked["status"] == "valid"
+    assert checked["candidate_count"] == 0
+    assert checked["detail_available_count"] == 0
+    assert checked["detail_error_count"] == 0
