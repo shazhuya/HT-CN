@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import product
-from typing import Protocol
+from typing import Protocol, Sequence
 
 
 class PRZComponentLike(Protocol):

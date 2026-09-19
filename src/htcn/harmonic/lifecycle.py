@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import math
 from dataclasses import asdict, dataclass
+import math
 
 import pandas as pd
 
@@ -165,7 +165,9 @@ def _rsi_confirmation_evidence(
         value = float(rsi.iloc[absolute])
         if not math.isfinite(value):
             continue
-        if direction is PatternDirection.BULLISH and value <= 30.0 or direction is PatternDirection.BEARISH and value >= 70.0:
+        if direction is PatternDirection.BULLISH and value <= 30.0:
+            extreme_positions.append(absolute)
+        elif direction is PatternDirection.BEARISH and value >= 70.0:
             extreme_positions.append(absolute)
 
     if not extreme_positions:

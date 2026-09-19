@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import math
-from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
+import math
+from typing import Iterable
 
 import pandas as pd
 
 from .indicators import wilder_rsi
+
 
 RSI_BAMM_SOURCE_DEFINITION = "rsi-bamm-source-v2"
 RSI_BAMM_PERIOD = 14

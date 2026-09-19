@@ -3,8 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .models import HarmonicPoint, PatternDirection
-from .prz import PotentialReversalZone, PRZComponent
+from .prz import PRZComponent, PotentialReversalZone
 from .ratios import leg_length
+
 
 _SOURCE_REFS = (
     "Volume Two Ch.3 pp.83-103: 50% BC retracement + Reciprocal AB=CD define the 5-0 PRZ",

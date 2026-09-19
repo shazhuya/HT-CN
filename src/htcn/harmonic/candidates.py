@@ -60,7 +60,7 @@ def iter_swing_windows(pivots: Sequence[Pivot], *, size: int) -> Iterator[SwingW
     if not pivots:
         return
     scale = pivots[0].scale
-    for start in range(len(pivots) - size + 1):
+    for start in range(0, len(pivots) - size + 1):
         chunk = tuple(pivots[start : start + size])
         if any(left.kind == right.kind for left, right in zip(chunk, chunk[1:])):
             continue

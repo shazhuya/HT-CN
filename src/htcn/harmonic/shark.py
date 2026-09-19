@@ -278,7 +278,7 @@ def scan_shark_pivots(
 
     for scale, raw in pivots_by_scale.items():
         pivots = tuple(raw)
-        for start in range(len(pivots) - 4):
+        for start in range(0, len(pivots) - 4):
             chunk = pivots[start : start + 5]
             if any(left.kind == right.kind for left, right in zip(chunk, chunk[1:])):
                 continue

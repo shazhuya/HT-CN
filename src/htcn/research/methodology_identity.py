@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
 
+
 METHODOLOGY_CONTRACT_VERSION = 4
 
 # Conservative file-level fingerprint for anything that can change candidate identity,

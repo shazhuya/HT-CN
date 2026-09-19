@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
+import math
 from typing import TypeAlias
 
 import pandas as pd
@@ -20,6 +20,7 @@ from .rsi_bamm import (
     confirm_rsi_bamm,
 )
 from .shark import SharkMatch
+
 
 HarmonicCompletedMatch: TypeAlias = CompletedMatch | ABCDMatch | SharkMatch | FiveZeroMatch
 

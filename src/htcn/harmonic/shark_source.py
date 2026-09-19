@@ -3,8 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .models import HarmonicPoint, PatternDirection
-from .prz import PotentialReversalZone, PRZComponent
+from .prz import PRZComponent, PotentialReversalZone
 from .ratios import leg_length
+
 
 _SOURCE_REFS = (
     "Volume Three pp.119-129: Shark 0B 0.886 minimum, 1.13 maximum/stop limit",
