@@ -54,8 +54,25 @@ def test_project_state_is_machine_current_truth() -> None:
     }
     assert state["current"]["active_change"] == "CR-0066"
     assert state["current"]["active_spec"] == "specs/m6-phase-2-real-private-m1-closeout.md"
-    assert state["current"]["latest_attempt_id"] == "A-20260919-0066-023"
-    assert state["current"]["latest_hosted_validation_attempt_id"] == ("A-20260919-0066-023")
+    attempts = [
+        json.loads(line)
+        for line in (ROOT / state["ledgers"]["attempts"]).read_text(
+            encoding="utf-8"
+        ).splitlines()
+        if line.strip()
+    ]
+    by_id = {row["attempt_id"]: row for row in attempts}
+    latest_attempt_id = state["current"]["latest_attempt_id"]
+    hosted_attempt_id = state["current"]["latest_hosted_validation_attempt_id"]
+    assert latest_attempt_id in by_id
+    assert hosted_attempt_id in by_id
+    assert by_id[latest_attempt_id]["change_id"] == "CR-0066"
+    assert by_id[hosted_attempt_id]["change_id"] == "CR-0066"
+    assert by_id[hosted_attempt_id]["result"] == "success"
+    assert (
+        by_id[hosted_attempt_id]["workflow_run"]
+        == state["current"]["latest_validation"]["workflow_run"]
+    )
     assert state["next_major_task"]["phase"] == "M6.2"
     assert state["next_major_task"]["status"] in {
         "implementing",
