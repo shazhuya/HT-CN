@@ -12,8 +12,15 @@
     "policy": "warnings fail; narrowly scoped locked-dependency import deprecations may be filtered explicitly; increases require an explicit CR and evidence"
   },
   "ruff": {
-    "violation_budget": 483,
+    "violation_budget": 186,
     "baseline_scope": "entire_repository",
-    "policy": "net_new_violations_fail; all newly added or materially edited Python files must be clean; reductions lower the budget"
+    "policy": "net_new_violations_fail; all newly added or materially edited Python files must be clean; reductions lower the budget",
+    "last_reduction": {
+      "from": 483,
+      "to": 186,
+      "method": "ruff safe autofix only",
+      "branch_head": "93f64e2581f96c0b7b3196a8992c985432f6c8ea",
+      "unsafe_fixes": false
+    }
   }
 }
