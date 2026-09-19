@@ -40,6 +40,12 @@
       "title": "Portable, receipt-gated continuity replaces full-chat rereading",
       "status": "active",
       "source": "governance/decisions/D-067-portable-chat-continuity.md"
+    },
+    {
+      "id": "D-068",
+      "title": "Universe layers are explicit, hashed and non-interchangeable",
+      "status": "active",
+      "source": "governance/decisions/D-068-universe-coverage-contract.md"
     }
   ],
   "rules": {
