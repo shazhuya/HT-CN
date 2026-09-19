@@ -1,6 +1,6 @@
 # CR-0069 — M6.4 Repository Governance
 
-status: planned
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -41,3 +41,13 @@ See `specs/m6-phase-4-repository-governance.md`.
 
 No harmonic detector/PRZ/lifecycle changes, no M4 capture/outcome changes, no universe expansion,
 no BSE enablement, no market-data repair, no trade execution and no profitability/statistical claims.
+
+
+## Progress evidence
+
+- Hosted branch CI run 35463650834 on head `b30c9d7043ff349302f6c816ff71f6d613f3f630` passed Project OS, mutable Ruff `0/0`, 890 Python tests, zero pytest warnings and Web build.
+- D-070 preserves immutable M4 capture/outcome components under the 37/37 and 4/4 byte-level freeze guards instead of lint rewriting them.
+- D-071 records exact-path/exact-rule behavior-sensitive legacy lint exceptions in `governance/QUALITY_EXCEPTIONS.json`; wildcard exceptions are prohibited.
+- Temporary autofix/report workflows were removed from the candidate branch.
+- Full PR-only browser/Phase18/Phase21/M4 freeze gates remain required before ISSUE-0068/M6.4 closure.
+- GitHub server facts remain: main protected=false; repository rulesets empty; branch-protection detail is inaccessible to the connected integration with HTTP 403; no administration write action is exposed.
