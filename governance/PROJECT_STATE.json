@@ -22,9 +22,15 @@
     "milestone": "M6",
     "phase": "M6.1",
     "title": "Project OS v2 / Cross-Conversation Lossless Continuity",
-    "status": "implementing",
+    "status": "validation_failed",
     "active_change": "CR-0065",
-    "work_branch": "m6/project-os-v2"
+    "work_branch": "m6/project-os-v2",
+    "latest_validation": {
+      "result": "failed",
+      "workflow_run": 35435986369,
+      "blocker": "project_os_parser_and_jsonl_format",
+      "next_action": "repair_without_weakening_gate"
+    }
   },
   "private_m1": {
     "current_market_full_closeout_ready": false,
