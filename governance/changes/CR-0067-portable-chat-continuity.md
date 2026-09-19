@@ -1,6 +1,6 @@
 # CR-0067 — Portable Chat / Cross-AI Continuity
 
-status: validation_green
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 704b0b631ffc6592e20f56324119068096da8bcd
 target: main
@@ -70,4 +70,7 @@ Gate or claim that real private-M1 acceptance occurred.
   succeeded;
 - failures A-20260919-0067-001 through 003 remain preserved and their guards were not weakened.
 
-Hosted PR and formal-main validation remain required before closure.
+Hosted PR #43 run `35451049509` / #2144 passed both deterministic tests and
+`formal-main-release-integrity`; artifact `10587105797` preserves the formal evidence. The
+portable bundle build/verification step passed in the hosted environment. Merge and post-merge
+main validation remain required before closure.
