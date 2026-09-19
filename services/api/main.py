@@ -8,6 +8,10 @@ import pandas as pd
 from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
+from htcn.app.daily_review_digest import (
+    build_latest_daily_review_digest,
+    filter_daily_review_digest,
+)
 from htcn.app.harmonic_service import DatasetNotFoundError
 from htcn.app.operator_delta import build_operator_delta
 from htcn.app.operator_history import query_operator_history
@@ -144,6 +148,29 @@ def operator_queue(
         payload,
         include_evidence_insufficient=include_evidence_insufficient,
     )
+
+@app.get("/api/operator/review-digest")
+def operator_review_digest(
+    workflow_bucket: str | None = Query(default=None),
+    change_type: str | None = Query(default=None),
+    instrument_id: str | None = Query(default=None),
+) -> dict[str, object]:
+    try:
+        digest = build_latest_daily_review_digest(
+            history_root=str(OPERATOR_HISTORY_ROOT),
+        )
+        return filter_daily_review_digest(
+            digest,
+            workflow_bucket=workflow_bucket,
+            change_type=change_type,
+            instrument_id=instrument_id,
+        )
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"daily review digest unavailable: {exc}",
+        ) from exc
+
 
 @app.get("/api/operator/history")
 def operator_history(
