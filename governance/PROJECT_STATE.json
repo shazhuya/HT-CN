@@ -26,16 +26,16 @@
     "status": "awaiting_private_run",
     "active_change": "CR-0066",
     "active_spec": "specs/m6-phase-2-real-private-m1-closeout.md",
-    "latest_attempt_id": "A-20260919-0066-023",
-    "latest_hosted_validation_attempt_id": "A-20260919-0066-023",
+    "latest_attempt_id": "A-20260919-0066-029",
+    "latest_hosted_validation_attempt_id": "A-20260919-0066-029",
     "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35449508107,
-      "run_number": 2141,
-      "event": "push",
-      "head": "e6dfccf18e52b10eb1e4520bcf60bc1d62430e41",
-      "python_passed": 872,
+      "workflow_run": 35455632325,
+      "run_number": 2179,
+      "event": "pull_request",
+      "head": "01e417129b8f48a287872737802d44b5917519c3",
+      "python_passed": 880,
       "warnings": 0,
       "project_os_integrity": "success",
       "formal_main_release_integrity": "success",
@@ -44,8 +44,8 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10585884027,
-      "scope": "Main-integrated Project OS continuity and zero-warning quality hardening; M6.2 product release remains 86fd17d01b3b9c2fc597d500723c6966c9a2250f"
+      "artifact_id": 10588047315,
+      "scope": "M6.2 BSE default-scope correction plus forming-Shark Phase21 audit hardening; canonical Shark remains 0-X-A-B-C, forming prefixes are allowed without future-node fabrication; real Private-M1 evidence ZIP still pending."
     }
   },
   "private_m1": {
