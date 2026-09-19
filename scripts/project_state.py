@@ -201,13 +201,15 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
             change_text = change_path.read_text(encoding="utf-8")
             if f"baseline_head: {state.get('governance_baseline', {}).get('head')}" not in change_text:
                 errors.append("active Change baseline_head does not match governance baseline")
-            status_match = re.search(r"^status:\\s*([a-z_]+)\\s*$", change_text, re.MULTILINE)
-            if not status_match:
-                errors.append("active Change has no parseable status")
-            elif status_match.group(1) not in ALLOWED_CHANGE_STATUS:
-                errors.append(
-                    f"active Change has invalid status: {status_match.group(1)}"
-                )
+            status_lines = [
+                line.split(":", 1)[1].strip()
+                for line in change_text.splitlines()
+                if line.startswith("status:")
+            ]
+            if len(status_lines) != 1:
+                errors.append("active Change must have exactly one parseable status")
+            elif status_lines[0] not in ALLOWED_CHANGE_STATUS:
+                errors.append(f"active Change has invalid status: {status_lines[0]}")
         except RuntimeError as exc:
             errors.append(str(exc))
 
