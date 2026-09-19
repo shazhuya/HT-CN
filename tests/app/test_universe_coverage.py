@@ -24,7 +24,6 @@ def test_coverage_contract_separates_every_universe_layer() -> None:
             "SSE.600001",
             "SZSE.000001",
             "BSE.920001",
-            "SSE.699999",
         ],
         qfq_ready_ids=["SSE.600001", "BSE.920001"],
         operator_ids=["SSE.600001", "SZSE.000001"],
@@ -58,6 +57,32 @@ def test_coverage_contract_separates_every_universe_layer() -> None:
     assert payload["invariants"]["operator_equals_scanner"] is True
     assert payload["invariants"]["bse_excluded_from_default_scope"] is True
     assert payload["status"] == "valid"
+
+
+def test_same_exchange_invalid_parentage_fails_closed() -> None:
+    payload = build_universe_coverage(
+        listed_ids=["SSE.600001", "SZSE.000001"],
+        initialized_ids=[
+            "SSE.600001",
+            "SZSE.000001",
+            "SSE.699999",
+        ],
+        qfq_ready_ids=[
+            "SSE.600001",
+            "SZSE.399999",
+        ],
+        operator_ids=["SSE.600001", "SZSE.000001"],
+    )
+
+    assert payload["status"] == "invalid"
+    assert payload["invariants"]["initialized_subset_of_listed"] is False
+    assert payload["invariants"]["formal_qfq_subset_of_initialized"] is False
+    assert payload["gaps"]["invalid_initialized_not_listed"]["instrument_ids"] == [
+        "SSE.699999"
+    ]
+    assert payload["gaps"]["invalid_formal_qfq_not_initialized"]["instrument_ids"] == [
+        "SZSE.399999"
+    ]
 
 
 def test_operator_mismatch_fails_the_contract() -> None:
