@@ -429,3 +429,156 @@ def test_bundle_semantics_reject_rehashed_pointer_identity_tamper(
     verified = verify_private_m1_evidence_bundle(rewritten)
     assert verified["status"] == "invalid"
     assert "bundle_pointer_manifest_mismatch:trade_date" in verified["errors"]
+
+
+def test_bundle_rejects_unlisted_and_unsafe_archive_members(tmp_path: Path) -> None:
+    _build_ready_fixture(tmp_path)
+    checked = _verify(tmp_path)
+    report = tmp_path / "artifacts" / "reports" / "m6-private-m1-closeout.json"
+    _write_json(report, checked.as_payload())
+    bundle = tmp_path / "artifacts" / "reports" / "evidence.zip"
+    build_private_m1_evidence_bundle(
+        root=tmp_path,
+        verification_report=report,
+        output=bundle,
+    )
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        with zipfile.ZipFile(bundle, "a") as archive:
+            archive.writestr("../unexpected.txt", b"not-listed")
+
+    verified = verify_private_m1_evidence_bundle(bundle)
+    assert verified["status"] == "invalid"
+    assert any(
+        error.startswith("bundle_unsafe_members:")
+        for error in verified["errors"]
+    )
+    assert any(
+        error.startswith("bundle_unlisted_members:")
+        for error in verified["errors"]
+    )
+
+
+def test_bundle_rejects_rehashed_browser_evidence_semantic_tamper(
+    tmp_path: Path,
+) -> None:
+    _build_ready_fixture(tmp_path)
+    checked = _verify(tmp_path)
+    report = tmp_path / "artifacts" / "reports" / "m6-private-m1-closeout.json"
+    _write_json(report, checked.as_payload())
+    bundle = tmp_path / "artifacts" / "reports" / "evidence.zip"
+    build_private_m1_evidence_bundle(
+        root=tmp_path,
+        verification_report=report,
+        output=bundle,
+    )
+
+    rewritten = tmp_path / "artifacts" / "reports" / "browser-rewritten.zip"
+    with zipfile.ZipFile(bundle, "r") as source:
+        contents = {name: source.read(name) for name in source.namelist()}
+
+    manifest_name = "m6-private-m1-closeout-manifest.json"
+    manifest = json.loads(contents[manifest_name].decode("utf-8"))
+    record = next(
+        item
+        for item in manifest["files"]
+        if item["role"] == "browser_evidence"
+    )
+    evidence = json.loads(contents[record["arcname"]].decode("utf-8"))
+    evidence["source_identity"] = "c" * 64
+    raw = (
+        json.dumps(evidence, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    ).encode("utf-8")
+    contents[record["arcname"]] = raw
+    record["size_bytes"] = len(raw)
+    record["sha256"] = sha256(raw).hexdigest()
+    contents[manifest_name] = (
+        json.dumps(
+            manifest,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    ).encode("utf-8")
+
+    with zipfile.ZipFile(rewritten, "w", compression=zipfile.ZIP_DEFLATED) as out:
+        for name, raw_member in contents.items():
+            out.writestr(name, raw_member)
+
+    verified = verify_private_m1_evidence_bundle(rewritten)
+    assert verified["status"] == "invalid"
+    assert "bundle_browser_evidence_identity_mismatch" in verified["errors"]
+
+
+def test_bundle_rejects_rehashed_workspace_without_browser_source_update(
+    tmp_path: Path,
+) -> None:
+    _build_ready_fixture(tmp_path)
+    checked = _verify(tmp_path)
+    report = tmp_path / "artifacts" / "reports" / "m6-private-m1-closeout.json"
+    _write_json(report, checked.as_payload())
+    bundle = tmp_path / "artifacts" / "reports" / "evidence.zip"
+    build_private_m1_evidence_bundle(
+        root=tmp_path,
+        verification_report=report,
+        output=bundle,
+    )
+
+    rewritten = tmp_path / "artifacts" / "reports" / "workspace-rewritten.zip"
+    with zipfile.ZipFile(bundle, "r") as source:
+        contents = {name: source.read(name) for name in source.namelist()}
+
+    manifest_name = "m6-private-m1-closeout-manifest.json"
+    manifest = json.loads(contents[manifest_name].decode("utf-8"))
+    record = next(
+        item
+        for item in manifest["files"]
+        if item["role"] == "workspace_html"
+    )
+    raw = b"<html>semantically-tampered-workspace</html>\n"
+    contents[record["arcname"]] = raw
+    record["size_bytes"] = len(raw)
+    record["sha256"] = sha256(raw).hexdigest()
+
+    archive_record = next(
+        item
+        for item in manifest["files"]
+        if item["role"] == "archive_manifest"
+    )
+    archive_manifest = json.loads(
+        contents[archive_record["arcname"]].decode("utf-8")
+    )
+    archive_manifest["files"]["workspace_html"]["sha256"] = sha256(raw).hexdigest()
+    archive_raw = (
+        json.dumps(
+            archive_manifest,
+            ensure_ascii=False,
+            sort_keys=True,
+            indent=2,
+        )
+        + "\n"
+    ).encode("utf-8")
+    contents[archive_record["arcname"]] = archive_raw
+    archive_record["size_bytes"] = len(archive_raw)
+    archive_record["sha256"] = sha256(archive_raw).hexdigest()
+
+    contents[manifest_name] = (
+        json.dumps(
+            manifest,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    ).encode("utf-8")
+
+    with zipfile.ZipFile(rewritten, "w", compression=zipfile.ZIP_DEFLATED) as out:
+        for name, raw_member in contents.items():
+            out.writestr(name, raw_member)
+
+    verified = verify_private_m1_evidence_bundle(rewritten)
+    assert verified["status"] == "invalid"
+    assert "bundle_browser_workspace_hash_mismatch" in verified["errors"]
+
