@@ -3,6 +3,7 @@ from __future__ import annotations
 from hashlib import sha256
 import json
 from pathlib import Path
+import warnings
 import zipfile
 
 from htcn.app.private_m1_closeout import (
@@ -329,8 +330,13 @@ def test_evidence_bundle_is_self_verifying_and_tamper_evident(
     assert built["verification"]["status"] == "valid"
     assert verify_private_m1_evidence_bundle(bundle)["status"] == "valid"
 
-    with zipfile.ZipFile(bundle, "a") as archive:
-        archive.writestr("evidence/project_state/PROJECT_STATE.json", b"tampered")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        with zipfile.ZipFile(bundle, "a") as archive:
+            archive.writestr(
+                "evidence/project_state/PROJECT_STATE.json",
+                b"tampered",
+            )
     tampered = verify_private_m1_evidence_bundle(bundle)
     assert tampered["status"] == "invalid"
     assert "bundle_duplicate_members" in tampered["errors"]
@@ -375,3 +381,51 @@ def test_m6_bat_is_one_action_and_never_auto_repairs() -> None:
         "playwright install",
     ):
         assert forbidden not in lower
+
+def test_bundle_semantics_reject_rehashed_pointer_identity_tamper(
+    tmp_path: Path,
+) -> None:
+    _build_ready_fixture(tmp_path)
+    checked = _verify(tmp_path)
+    report = tmp_path / "artifacts" / "reports" / "m6-private-m1-closeout.json"
+    _write_json(report, checked.as_payload())
+    bundle = tmp_path / "artifacts" / "reports" / "evidence.zip"
+    build_private_m1_evidence_bundle(
+        root=tmp_path,
+        verification_report=report,
+        output=bundle,
+    )
+
+    rewritten = tmp_path / "artifacts" / "reports" / "rewritten.zip"
+    with zipfile.ZipFile(bundle, "r") as source:
+        contents = {name: source.read(name) for name in source.namelist()}
+    manifest_name = "m6-private-m1-closeout-manifest.json"
+    manifest = json.loads(contents[manifest_name].decode("utf-8"))
+    pointer_record = next(
+        item for item in manifest["files"] if item["role"] == "phase19_pointer"
+    )
+    pointer = json.loads(contents[pointer_record["arcname"]].decode("utf-8"))
+    pointer["trade_date"] = "2026-09-18"
+    raw = (
+        json.dumps(pointer, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    ).encode("utf-8")
+    contents[pointer_record["arcname"]] = raw
+    pointer_record["size_bytes"] = len(raw)
+    pointer_record["sha256"] = sha256(raw).hexdigest()
+    contents[manifest_name] = (
+        json.dumps(
+            manifest,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    ).encode("utf-8")
+
+    with zipfile.ZipFile(rewritten, "w", compression=zipfile.ZIP_DEFLATED) as out:
+        for name, raw_member in contents.items():
+            out.writestr(name, raw_member)
+
+    verified = verify_private_m1_evidence_bundle(rewritten)
+    assert verified["status"] == "invalid"
+    assert "bundle_pointer_manifest_mismatch:trade_date" in verified["errors"]
