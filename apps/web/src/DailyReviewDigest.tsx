@@ -482,7 +482,11 @@ export default function DailyReviewDigest({
                           </span>
                           {item.review.active_follow_up && (
                             <span className="daily-review-digest__follow-badge">
-                              跨日跟踪中
+                              {(
+                                item.review.active_follow_up_origin_trade_date
+                                && payload.trade_date
+                                && item.review.active_follow_up_origin_trade_date < payload.trade_date
+                              ) ? '跨日跟踪中' : '跟踪中'}
                               {item.review.active_follow_up_origin_trade_date
                                 ? ` · 始于 ${item.review.active_follow_up_origin_trade_date}`
                                 : ''}
