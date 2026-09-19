@@ -1,6 +1,6 @@
 # CR-0067 — Portable Chat / Cross-AI Continuity
 
-status: postmerge_pending
+status: closed
 baseline_ref: main
 baseline_head: 704b0b631ffc6592e20f56324119068096da8bcd
 target: main
@@ -81,3 +81,13 @@ final hosted branch tree. An explicit main push validation is pending before clo
 The GitHub App merge/ref update did not emit a main push workflow. This connector limitation is
 preserved as A-20260919-0067-007; a final governance-only PR must validate the exact closeout
 candidate through `formal-main-release-integrity` before the Change can close.
+
+## Final closeout
+
+- implementation merge: PR #43 / `335414530850bd5b4d5acf030c7eff49cf5f9124`;
+- final implementation PR validation: run `35451245127` / #2146, success;
+- postmerge candidate validation: PR #44, run `35451544343` / #2150, success;
+- formal artifact: `10586688451`;
+- final closed-state candidate must pass the same two hosted jobs before PR #44 merges;
+- CR-0066 remains the active Change, M6.2 remains `awaiting_private_run`, and no real
+  private-M1 acceptance is claimed.
