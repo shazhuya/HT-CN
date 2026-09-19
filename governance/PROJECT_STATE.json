@@ -26,16 +26,16 @@
     "status": "implementing",
     "active_change": "CR-0068",
     "active_spec": "specs/m6-phase-3-universe-coverage-contract.md",
-    "latest_attempt_id": "A-20260920-0068-002",
-    "latest_hosted_validation_attempt_id": "A-20260920-0068-001",
+    "latest_attempt_id": "A-20260920-0068-003",
+    "latest_hosted_validation_attempt_id": "A-20260920-0068-003",
     "work_branch": "m6/universe-coverage-contract-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35459245173,
-      "run_number": 2245,
+      "workflow_run": 35460305307,
+      "run_number": 2274,
       "event": "pull_request",
-      "head": "067ff916247d4ecd31ef170a679305057170bc6c",
-      "python_passed": 886,
+      "head": "e2a6b3321cf231e000ce7178fca6fee8cbd59aa0",
+      "python_passed": 889,
       "warnings": 0,
       "ruff_observed": 481,
       "ruff_budget": 483,
@@ -46,7 +46,8 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "scope": "Initial M6.3 machine-readable universe coverage contract before final fail-closed parentage hardening."
+      "artifact_id": 10589593462,
+      "scope": "Hardened M6.3 universe coverage contract with fail-closed parentage, deterministic iterable semantics and explicit downstream candidate-set boundary."
     }
   },
   "private_m1": {
