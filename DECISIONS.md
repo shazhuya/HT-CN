@@ -2047,3 +2047,39 @@ Phase 10 的 v2 已经正确解决“最终产品快照 + M4 nested evidence 如
 - Python 792 passed;
 - Web build success;
 - Playwright 24 passed.
+
+
+## D-059 — Visual semantics completion requires real-browser evidence, not Python/HTML assertions alone
+
+日期：2026-09-19
+
+决定：
+
+1. A portable visual phase cannot be considered browser-validated merely because its Python semantics and generated HTML strings pass tests.
+2. Browser acceptance must exercise HTML produced by the same formal workspace builder used by the product.
+3. Phase18 uses deterministic fixture payloads for renderer semantics; fixture evidence is product QA and never M4/market evidence.
+4. XABCD complete/forming, standalone AB=CD, Shark and FIVE_ZERO must all be represented in the browser acceptance set.
+5. Browser acceptance must verify both positive rendering and prohibited rendering, especially:
+   - no future D for forming XABCD;
+   - no D for Shark;
+   - 5-0 61.8 cannot appear as Raw PRZ membership.
+6. Layer controls must be tested in Chromium rather than inferred from HTML source.
+7. Semantic SVG `data-*` hooks are allowed only as presentation/testability metadata and may not change geometry, lifecycle or PRZ semantics.
+8. SVG vertical/horizontal lines may be asserted by semantic DOM presence rather than Playwright `toBeVisible()`, because their valid rendered bounding box may have zero width/height.
+9. Screenshot evidence must be full-page, hashed and size-bound.
+10. A separate verifier must validate screenshot hashes and the required semantic-check set after Playwright completes.
+11. Existing browser gates remain mandatory; the Phase18 gate is additive, not a replacement.
+12. Handoff v4 transport/verifier, Source Truth, M4 methodology and Outcome Engine remain outside Phase18 ownership.
+13. Passing Phase18 does not prove visual correctness of a real current-market bundle; real-artifact integration remains a separate gate.
+
+验证：
+- implementation checkpoint `c3a67a11ba2aa61c3e047d585293a49acd7d11ff`;
+- hosted CI #1858 / `35425914613`: success;
+- Python 792 passed;
+- Web build success;
+- existing Playwright 24 passed;
+- Phase18 Playwright 1 passed;
+- required semantic checks 10/10;
+- screenshots 5/5;
+- evidence verifier valid;
+- artifact ID 10579180470.
