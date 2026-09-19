@@ -1,6 +1,6 @@
 # M5 Phase 18 — Portable Visual Browser Acceptance / Screenshot Evidence v1
 
-状态：**implementation in progress**
+状态：**Frozen / hosted CI green**
 
 ## 1. 目标
 
@@ -222,23 +222,70 @@ Phase18 不：
 
 ## 11. Acceptance
 
-- [ ] fixture 由正式 Phase17 builder 生成；
-- [ ] fixture 不读取 market DB；
-- [ ] completed XABCD browser semantics 通过；
-- [ ] forming XABCD browser semantics 通过；
-- [ ] AB=CD browser semantics 通过；
-- [ ] Shark 无 D browser semantics 通过；
-- [ ] 5-0 61.8 refinement browser semantics 通过；
-- [ ] layer toggles 在真实浏览器中生效；
-- [ ] Source Clock/price guides 在真实浏览器中存在；
-- [ ] 5 张 screenshot 生成；
-- [ ] screenshot SHA/size 写入 evidence；
-- [ ] evidence manifest 独立验证通过；
-- [ ] existing Python regressions green；
-- [ ] Web build green；
-- [ ] existing 24 Playwright green；
-- [ ] dedicated Phase18 Playwright green；
-- [ ] browser evidence artifact upload green；
-- [ ] handoff v4 transport/verifier drift=0；
-- [ ] M4 methodology drift=0；
-- [ ] Outcome Engine drift=0。
+- [x] fixture 由正式 Phase17 builder 生成；
+- [x] fixture 不读取 market DB；
+- [x] completed XABCD browser semantics 通过；
+- [x] forming XABCD browser semantics 通过；
+- [x] AB=CD browser semantics 通过；
+- [x] Shark 无 D browser semantics 通过；
+- [x] 5-0 61.8 refinement browser semantics 通过；
+- [x] layer toggles 在真实浏览器中生效；
+- [x] Source Clock/price guides 在真实浏览器中存在；
+- [x] 5 张 screenshot 生成；
+- [x] screenshot SHA/size 写入 evidence；
+- [x] evidence manifest 独立验证通过；
+- [x] existing Python regressions green；
+- [x] Web build green；
+- [x] existing 24 Playwright green；
+- [x] dedicated Phase18 Playwright green；
+- [x] browser evidence artifact upload green；
+- [x] handoff v4 transport/verifier drift=0；
+- [x] M4 methodology drift=0；
+- [x] Outcome Engine drift=0。
+
+
+## 12. Hosted validation closeout — 2026-09-19
+
+Validated implementation checkpoint:
+
+`c3a67a11ba2aa61c3e047d585293a49acd7d11ff`
+
+Hosted CI:
+
+- Actions **#1858 / 35425914613**: success;
+- Python: **792 passed**, 1163 warnings;
+- Web build: success;
+- existing deterministic Playwright: **24 passed**;
+- dedicated Phase18 Playwright: **1 passed**;
+- browser fixture: **5 cases**;
+- required semantic checks: **10 / 10**;
+- screenshot evidence: **5 / 5**;
+- independent evidence verifier: `status=valid`;
+- visual semantics version: 2;
+- transport schema version: 4;
+- browser evidence artifact upload: success;
+- artifact id: **10579180470**.
+
+Development failures retained as useful evidence:
+
+1. CI #1854 failed because one broad text locator matched both subtitle and footer.
+   - fixed by scoping the locator;
+   - no product/visual semantics change.
+
+2. CI #1856 failed because Playwright `toBeVisible()` treats zero-width/zero-height SVG `<line>` bounding boxes as hidden even when Chromium renders them.
+   - vertical/horizontal semantic lines are now asserted by exact DOM/data-hook presence;
+   - full-page screenshots remain the independent rendered-visual evidence;
+   - semantic coverage was not removed or weakened.
+
+Freeze audit against Phase17:
+
+- handoff v4 transport changed: 0;
+- handoff v4 verifier changed: 0;
+- portable visual semantics algorithm changed: 0;
+- only presentation-only SVG hooks were added to the workspace;
+- M4 methodology drift: 0;
+- Outcome Engine drift: 0.
+
+Limitation:
+
+Phase18 proves deterministic fixture rendering and interaction in Chromium. It does **not** claim that a real market v4 bundle has been visually audited end-to-end. That is a separate next-stage product integration/real-artifact gate.
