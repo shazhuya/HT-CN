@@ -751,6 +751,23 @@ def verify_private_m1_evidence_bundle(
         "inspector_json",
         "workspace_html",
     }
+    raw_by_role: dict[str, bytes] = {}
+    record_by_role: dict[str, dict[str, Any]] = {}
+
+    def json_role(role: str) -> dict[str, Any] | None:
+        raw = raw_by_role.get(role)
+        if raw is None:
+            return None
+        try:
+            value = json.loads(raw.decode("utf-8"))
+        except Exception as exc:
+            errors.append(f"bundle_json_unreadable:{role}:{type(exc).__name__}")
+            return None
+        if not isinstance(value, dict):
+            errors.append(f"bundle_json_not_object:{role}")
+            return None
+        return value
+
     try:
         with zipfile.ZipFile(path, "r") as archive:
             names = archive.namelist()
@@ -787,11 +804,18 @@ def verify_private_m1_evidence_bundle(
                     errors.append("bundle_main_head_invalid")
                 if not _is_hash64(manifest.get("delivery_bundle_sha256")):
                     errors.append("bundle_delivery_identity_invalid")
+                if not _is_hash64(manifest.get("input_identity_fingerprint")):
+                    errors.append("bundle_input_identity_invalid")
+                if not _is_hash64(manifest.get("pipeline_report_sha256")):
+                    errors.append("bundle_pipeline_identity_invalid")
 
                 records = manifest.get("files")
                 if not isinstance(records, list):
                     errors.append("bundle_files_invalid")
                     records = []
+                if int(manifest.get("file_count") or -1) != len(records):
+                    errors.append("bundle_file_count_mismatch")
+
                 roles: list[str] = []
                 for record in records:
                     if not isinstance(record, dict):
@@ -800,10 +824,13 @@ def verify_private_m1_evidence_bundle(
                     role = str(record.get("role") or "")
                     arcname = str(record.get("arcname") or "")
                     roles.append(role)
+                    if role:
+                        record_by_role[role] = record
                     if arcname not in names:
                         errors.append(f"bundle_member_missing:{role}")
                         continue
                     raw = archive.read(arcname)
+                    raw_by_role[role] = raw
                     if int(record.get("size_bytes") or -1) != len(raw):
                         errors.append(f"bundle_member_size_mismatch:{role}")
                     if str(record.get("sha256") or "") != _sha256_bytes(raw):
@@ -817,6 +844,104 @@ def verify_private_m1_evidence_bundle(
                     )
                 if not any(role.startswith("screenshot_") for role in roles):
                     errors.append("bundle_screenshot_evidence_missing")
+
+                portable_record = record_by_role.get("portable_delivery") or {}
+                if str(portable_record.get("sha256") or "") != str(
+                    manifest.get("delivery_bundle_sha256") or ""
+                ):
+                    errors.append("bundle_portable_delivery_identity_mismatch")
+                pipeline_record = record_by_role.get("pipeline") or {}
+                if str(pipeline_record.get("sha256") or "") != str(
+                    manifest.get("pipeline_report_sha256") or ""
+                ):
+                    errors.append("bundle_pipeline_report_identity_mismatch")
+
+                m6 = json_role("m6_verification")
+                pointer = json_role("phase19_pointer")
+                archive_manifest = json_role("archive_manifest")
+                browser_verification = json_role("browser_verification")
+                final = json_role("phase21_final")
+
+                if m6 is not None:
+                    if m6.get("full_closeout_ready") is not True:
+                        errors.append("bundle_m6_verification_not_ready")
+                    for field in (
+                        "status",
+                        "trade_date",
+                        "main_head",
+                        "remote_main_head",
+                        "delivery_bundle_sha256",
+                        "input_identity_fingerprint",
+                        "pipeline_report_sha256",
+                    ):
+                        if str(m6.get(field) or "") != str(
+                            manifest.get(field) or ""
+                        ):
+                            errors.append(f"bundle_m6_manifest_mismatch:{field}")
+
+                if pointer is not None:
+                    for pointer_field, manifest_field in (
+                        ("trade_date", "trade_date"),
+                        ("bundle_sha256", "delivery_bundle_sha256"),
+                        (
+                            "input_identity_fingerprint",
+                            "input_identity_fingerprint",
+                        ),
+                        ("pipeline_report_sha256", "pipeline_report_sha256"),
+                    ):
+                        if str(pointer.get(pointer_field) or "") != str(
+                            manifest.get(manifest_field) or ""
+                        ):
+                            errors.append(
+                                "bundle_pointer_manifest_mismatch:"
+                                + pointer_field
+                            )
+
+                if archive_manifest is not None:
+                    for archive_field, manifest_field in (
+                        ("trade_date", "trade_date"),
+                        ("bundle_sha256", "delivery_bundle_sha256"),
+                        (
+                            "input_identity_fingerprint",
+                            "input_identity_fingerprint",
+                        ),
+                        ("pipeline_report_sha256", "pipeline_report_sha256"),
+                    ):
+                        if str(archive_manifest.get(archive_field) or "") != str(
+                            manifest.get(manifest_field) or ""
+                        ):
+                            errors.append(
+                                "bundle_archive_manifest_mismatch:"
+                                + archive_field
+                            )
+
+                if browser_verification is not None:
+                    if browser_verification.get("status") != "valid":
+                        errors.append("bundle_browser_verification_invalid")
+                    if str(browser_verification.get("trade_date") or "") != str(
+                        manifest.get("trade_date") or ""
+                    ):
+                        errors.append("bundle_browser_trade_date_mismatch")
+                    if str(
+                        browser_verification.get("source_identity") or ""
+                    ) != str(manifest.get("delivery_bundle_sha256") or ""):
+                        errors.append("bundle_browser_identity_mismatch")
+
+                if final is not None:
+                    if final.get("full_closeout_ready") is not True:
+                        errors.append("bundle_phase21_final_not_ready")
+                    if str(final.get("trade_date") or "") != str(
+                        manifest.get("trade_date") or ""
+                    ):
+                        errors.append("bundle_final_trade_date_mismatch")
+                    if str(final.get("main_head") or "") != str(
+                        manifest.get("main_head") or ""
+                    ):
+                        errors.append("bundle_final_main_head_mismatch")
+                    if str(final.get("bundle_sha256") or "") != str(
+                        manifest.get("delivery_bundle_sha256") or ""
+                    ):
+                        errors.append("bundle_final_delivery_identity_mismatch")
     except (OSError, zipfile.BadZipFile):
         errors.append("bundle_not_readable_zip")
 
