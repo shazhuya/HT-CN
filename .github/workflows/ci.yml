@@ -86,6 +86,51 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  integration-readiness:
+    name: preserve-ancestry-integration-readiness
+    if: startsWith(github.ref, 'refs/heads/m5/integration-readiness') || startsWith(github.head_ref, 'm5/integration-readiness')
+    needs: deterministic-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout integration head with full history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Fetch exact main ref
+        run: git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+
+      - name: Verify preserve-ancestry integration graph
+        run: python scripts/m5_integration_readiness.py --main-ref origin/main
+
+      - name: Verify M4 methodology freeze at integration head
+        run: python scripts/m4_methodology_freeze_guard.py
+
+      - name: Verify M4 Outcome Engine freeze at integration head
+        run: python scripts/m4_outcome_engine_freeze_guard.py
+
+      - name: Upload integration readiness evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: htcn-integration-readiness-${{ github.sha }}
+          path: artifacts/reports/m5-integration-readiness.json
+          if-no-files-found: warn
+          retention-days: 30
+
   autonomous-research:
     name: autonomous-real-a-share-research
     if: >-
