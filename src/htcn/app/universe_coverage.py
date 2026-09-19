@@ -26,6 +26,7 @@ class UniverseCoverageContract:
     scanner_universe: str = "initialized_default_scope"
     research_scanner_universe: str = "formal_qfq_ready_subset"
     operator_universe: str = "exact_product_scanner_universe"
+    candidate_set: str = "downstream_harmonic_matches_not_coverage_denominator"
     presentation_defines_universe: bool = False
     bse_default_scope: str = "deferred"
     coverage_gap_is_product_failure: bool = False
@@ -81,23 +82,38 @@ def build_universe_coverage(
     initialized_ids: Iterable[str],
     qfq_ready_ids: Iterable[str] = (),
     operator_ids: Iterable[str] | None = None,
+    candidate_count: int | None = None,
     qfq_evaluated: bool = True,
     exchanges: tuple[str, ...] = DEFAULT_EXCHANGES,
     excluded_local_ids: Iterable[str] = (),
     initialization_errors: Iterable[dict[str, Any]] = (),
     qfq_errors: Iterable[dict[str, Any]] = (),
 ) -> dict[str, Any]:
-    listed = _default_scope(listed_ids, exchanges=exchanges)
+    listed_input = tuple(str(value) for value in listed_ids if str(value))
+    initialized_input = tuple(
+        str(value) for value in initialized_ids if str(value)
+    )
+    qfq_input = tuple(str(value) for value in qfq_ready_ids if str(value))
+    excluded_input = tuple(
+        str(value) for value in excluded_local_ids if str(value)
+    )
+    operator_input = (
+        None
+        if operator_ids is None
+        else tuple(str(value) for value in operator_ids if str(value))
+    )
+
+    listed = _default_scope(listed_input, exchanges=exchanges)
     listed_set = set(listed)
 
-    initialized_scope = _default_scope(initialized_ids, exchanges=exchanges)
+    initialized_scope = _default_scope(initialized_input, exchanges=exchanges)
     invalid_initialized_not_listed = sorted(set(initialized_scope) - listed_set)
     initialized = [
         value for value in initialized_scope if value in listed_set
     ]
     initialized_set = set(initialized)
 
-    qfq_scope = _default_scope(qfq_ready_ids, exchanges=exchanges)
+    qfq_scope = _default_scope(qfq_input, exchanges=exchanges)
     invalid_qfq_not_initialized = sorted(set(qfq_scope) - initialized_set)
     qfq_ready = [
         value for value in qfq_scope if value in initialized_set
@@ -107,8 +123,8 @@ def build_universe_coverage(
 
     actual_operator = (
         scanner
-        if operator_ids is None
-        else _default_scope(operator_ids, exchanges=exchanges)
+        if operator_input is None
+        else _default_scope(operator_input, exchanges=exchanges)
     )
     operator_matches_scanner = actual_operator == scanner
 
@@ -122,10 +138,10 @@ def build_universe_coverage(
     input_ids = {
         str(value)
         for values in (
-            listed_ids,
-            initialized_ids,
-            qfq_ready_ids,
-            excluded_local_ids,
+            listed_input,
+            initialized_input,
+            qfq_input,
+            excluded_input,
         )
         for value in values
         if str(value)
@@ -154,7 +170,7 @@ def build_universe_coverage(
         ),
         "deferred_bse": _layer(deferred_bse),
         "non_default_exchange": _layer(non_default_exchange),
-        "excluded_local_not_initialized": _layer(excluded_local_ids),
+        "excluded_local_not_initialized": _layer(excluded_input),
         "invalid_initialized_not_listed": _layer(
             invalid_initialized_not_listed
         ),
@@ -213,6 +229,9 @@ def build_universe_coverage(
         ),
         "operator_equals_scanner": operator_matches_scanner,
         "presentation_does_not_define_universe": True,
+        "candidate_set_excluded_from_coverage_denominator": (
+            downstream_sets["candidate_set"]["coverage_denominator"] is False
+        ),
         "bse_excluded_from_default_scope": not any(
             value.startswith("BSE.")
             for value in scanner + actual_operator
@@ -225,6 +244,25 @@ def build_universe_coverage(
     ]
     status = "valid" if all(hard_invariants) else "invalid"
 
+    downstream_sets = {
+        "candidate_set": {
+            "count": (
+                None if candidate_count is None else int(candidate_count)
+            ),
+            "status": (
+                "not_observed"
+                if candidate_count is None
+                else "observed"
+            ),
+            "coverage_denominator": False,
+            "defines_scanner_universe": False,
+            "definition": (
+                "扫描后产生的谐波候选集合；不是 universe，"
+                "不得用于计算 listed/initialized/scanner 覆盖率。"
+            ),
+        }
+    }
+
     return {
         "schema_version": UNIVERSE_COVERAGE_SCHEMA_VERSION,
         "status": status,
@@ -234,6 +272,7 @@ def build_universe_coverage(
         "layers": layers,
         "coverage": coverage,
         "gaps": gaps,
+        "downstream_sets": downstream_sets,
         "initialization_errors": list(initialization_errors),
         "qfq_errors": list(qfq_errors),
         "invariants": invariants,
