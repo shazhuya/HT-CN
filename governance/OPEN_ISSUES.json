@@ -22,7 +22,8 @@
       "blocks": [
         "M6.3"
       ],
-      "next_action": "Freeze listed/initialized/QFQ-ready/scanner/operator universe contract."
+      "next_action": "Validate the hardened CR-0068 tree, merge with ancestry preserved, then close ISSUE-0062 only after main validation.",
+      "current_fact": "M6.3 CR-0068 now implements explicit listed/initialized/formal-QFQ/scanner/research-scanner/operator layers with deterministic hashes, catalog-backed initialized scope, BSE deferred, and fail-closed same-exchange parentage. Final hosted validation and integration remain."
     },
     {
       "id": "ISSUE-0063",

@@ -8,15 +8,12 @@ from htcn.app.operator_input_identity import (
     build_analysis_code_identity,
     build_operator_cache_input_identity,
 )
-from htcn.app.operator_queue import discover_local_instruments
 from htcn.app.operator_snapshot import (
     build_or_load_operator_snapshot,
     latest_local_trade_date,
 )
-from htcn.app.source_clock_lifecycle_service import (
-    M3SourceClockHarmonicService,
-)
-
+from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
+from htcn.app.universe_coverage import build_universe_coverage, load_catalog_universes
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
@@ -94,11 +91,8 @@ def main() -> int:
     parser.add_argument("--workers", type=int, default=4)
     args = parser.parse_args()
 
-    instrument_ids = discover_local_instruments(
-        DATA_ROOT,
-        limit=0,
-        exchanges=("SSE", "SZSE"),
-    )
+    catalog_universes = load_catalog_universes(DATA_ROOT)
+    instrument_ids = list(catalog_universes["initialized_ids"])
     expected = latest_local_trade_date(DATA_ROOT / "catalog.duckdb")
     service = M3SourceClockHarmonicService(DATA_ROOT)
     analysis_code_identity = build_analysis_code_identity(
@@ -153,6 +147,15 @@ def main() -> int:
         payload,
         expected_trade_date=expected,
     )
+    universe_coverage = build_universe_coverage(
+        listed_ids=catalog_universes["listed_ids"],
+        initialized_ids=instrument_ids,
+        qfq_evaluated=False,
+        operator_ids=instrument_ids,
+        candidate_count=int(payload.get("candidate_count") or 0),
+        excluded_local_ids=catalog_universes["excluded_local_ids"],
+        initialization_errors=catalog_universes["initialization_errors"],
+    )
     report = {
         "schema_version": 2,
         **readiness,
@@ -172,6 +175,7 @@ def main() -> int:
         "product_cache": payload.get("product_cache"),
         "input_identity": input_identity.as_payload(),
         "build_execution": payload.get("build_execution"),
+        "universe_coverage": universe_coverage,
         "authoritative_evidence": False,
         "writes_m4_evidence": False,
         "is_trade_instruction": False,
