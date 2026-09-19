@@ -2326,3 +2326,41 @@ Hosted implementation validation:
 - formal release artifact ID **10582195249**.
 
 Integration closeout still requires PR #36 merge plus one observed push-main formal release run.
+
+
+### D-064 operational closeout — Phase23 merged and push-main release-gated
+
+Phase23 carrier PR #36 was merged to formal `main` with merge commit:
+
+`c309f782bd31ccf3e963be3bb65670f6e3788174`
+
+The merge-generated real main push produced:
+
+- Actions #1982 / `35433384021`;
+- event = push;
+- head_branch = main;
+- head_sha = Phase23 merge commit.
+
+Observed post-merge results:
+
+- deterministic-tests: success;
+- Python: 847 passed, 1163 warnings;
+- formal-main-release-integrity: success;
+- full-history release lineage: ready;
+- existing release Playwright: 24 passed;
+- Phase18 browser/evidence: valid;
+- Phase21 dynamic browser/evidence: valid;
+- M4 methodology drift: 0 / 37;
+- Outcome Engine drift: 0 / 4;
+- formal release artifact ID: 10581176575.
+
+Post-merge ancestry audit preserved the Phase23 final head, Phase22/21/20 merges, M4 methodology/outcome anchors, M3 and M2.31 as real ancestors.
+
+Therefore D-064 / Phase23 is operationally closed on the repository/integration side.
+
+The following is intentionally **not** claimed:
+- that the user's private local M1 has already passed Phase23 preflight;
+- that a real current-market `full_closeout_ready` has already been produced;
+- any profitability, win-rate or alpha inference.
+
+Those facts require the later single one-click run on the machine that owns private M1.
