@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `4b015dfc0e72db0f1275e1e570d85959254550fa`
-context_checkpoint_title: `M5 Phase 13 Review Session / Follow-up Journal v1 green`
+context_checkpoint: `c9de28d959b64043663a2bceccb17cc87b8f3756`
+context_checkpoint_title: `M5 Phase 14 Daily Handoff Bundle v3 green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -13,19 +13,20 @@ repository: `shazhuya/HT-CN`
 
 正式 `main` 仍以 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration** 为已合并基线；M4 prospective evidence 与 M5 只读产品层继续在独立分支演进。
 
-当前实际开发现场已经完成 **M5 Phase 13 — Review Session / Follow-up Journal v1**：
+当前实际开发现场已经完成 **M5 Phase 14 — Daily Handoff Bundle v3 / Review-State Transport**：
 
-- 当前分支：`m5/review-followup-journal-v1`
-- Phase 13 validated code checkpoint：`4b015dfc0e72db0f1275e1e570d85959254550fa`
-- hosted CI：run `35415145067` / #1768，overall success
-- Python：757 passed
+- 当前分支：`m5/daily-handoff-bundle-v3`
+- Phase 14 validated code checkpoint：`c9de28d959b64043663a2bceccb17cc87b8f3756`
+- hosted CI：run `35416336734` / #1790，overall success
+- Python：774 passed
 - Web build：success
 - Playwright：24 passed
 - browser evidence upload：success
+- Phase-10 handoff v2 changed files：0
 - M4 capture methodology drift：0 / 37
 - Outcome Engine drift：0 / 4
 
-M5 Phase 1–13 当前主线：
+M5 Phase 1–14 当前主线：
 
 1. Daily Operator Queue；
 2. Operator Delta / 今日变化；
@@ -39,9 +40,10 @@ M5 Phase 1–13 当前主线：
 10. Daily Handoff Bundle v2；
 11. append-only Daily Operator History / Change Journal；
 12. Daily Review Digest / Change Triage；
-13. Review Session / Follow-up Journal：独立人工复盘状态、append-only event、跨日持续跟踪清单和审计查询。
+13. Review Session / Follow-up Journal；
+14. Daily Handoff Bundle v3：以冻结 v2 为嵌套基础，把 current history、review digest、review-session snapshot 与其引用的 journal event closure 绑定成新的可离线验证 transport。
 
-M5 仍是**只读实战产品层 + 人工复盘工作流层**，不拥有 harmonic identity、Source Raw PRZ、canonical lifecycle 或 action state，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 13 的 reviewed/follow_up 只代表人工复盘进度，不代表交易判断。
+M5 仍是**只读实战产品层 + 人工复盘工作流 + transport 层**，不拥有 harmonic identity、Source Raw PRZ、canonical lifecycle 或 action state，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 14 只运输这些状态，不改变它们的语义。
 
 ## 正式 main 基线 — M3
 
@@ -2012,3 +2014,90 @@ Phase 14 应建立新的 versioned transport contract，把 Phase 11/12/13 的�
 - 必要的 hashes / source binding / portable paths。
 
 Phase 14 不得修改 Phase 10 handoff v2，不得把 mutable review journal 伪装成 M4 authoritative evidence，也不得因 follow-up/reviewed 状态改变产品排序或交易含义。
+
+
+## M5 Phase 14 — Daily Handoff Bundle v3 / Review-State Transport
+
+Current branch:
+`m5/daily-handoff-bundle-v3`
+
+Validated code checkpoint:
+`c9de28d959b64043663a2bceccb17cc87b8f3756`
+
+Hosted validation:
+- draft PR #26 is only a CI/diff carrier；
+- first code CI run `35416245508` / #1788：success；
+- Python 771 passed；
+- Web build success；
+- Playwright 24 passed；
+- final hardening CI run `35416336734` / #1790：success；
+- Python 774 passed；
+- Web build success；
+- Playwright 24 passed；
+- browser evidence upload success。
+
+Frozen implementation:
+- v3 is a new schema/versioned transport and does not modify Phase-10 v2；
+- v3 builds a verified v2 only inside a temporary directory and nests it as `base/htcn-daily-handoff-v2.zip`；
+- existing v2 ZIP/report are never overwritten；
+- outer manifest cross-checks nested-v2 schema/status/product binding/bundle SHA；
+- outer pipeline hash is checked against the exact raw pipeline member inside nested v2；
+- product/history/digest/M4 readiness are inherited from the same pipeline report；
+- digest-ready requires history-ready；history-ready requires product-ready；
+- current Phase-11 history record must bind to the exact nested-v2 product report/snapshot hashes and trade date；
+- history transport is bounded to current + direct previous trade-date observation + direct previous same-day revision when needed；
+- current delta is independently rebuilt from previous/current queues when a previous trade-date baseline exists；
+- Phase-12 digest is recomputed from transported current history and must exactly match semantic core；
+- Phase-13 review-session snapshot is captured under the existing review-journal process lock；
+- removing Phase-13-specific review fields from session must project exactly back to the Phase-12 digest；
+- only journal events referenced by current session roots are transported；
+- previous binding/display-key event links are recursively included until chain start；
+- included event set must exactly equal the root closure：no missing predecessor and no unrelated extra event；
+- each event is revalidated with Phase-13 event verifier；
+- current review event and active-follow-up source/state/note are cross-checked against the session snapshot；
+- v3 write is temp -> verify -> atomic replace -> verify again；
+- v3 runner/report are fully isolated from pipeline readiness；
+- new outputs:
+  - `artifacts/reports/htcn-daily-handoff-v3.zip`
+  - `artifacts/reports/m5-daily-handoff-v3.json`
+- one-click: `运行HT-CN每日交接包v3.bat`；
+- old v2 entrypoints remain frozen and separate。
+
+Boundary:
+- schema_version=3；
+- transport_only=true；
+- authoritative_evidence=false；
+- writes_m4_evidence=false；
+- is_trade_instruction=false；
+- alpha_inference_allowed=false；
+- predictive_score_used=false；
+- historical_outcome_used_for_ranking=false；
+- review_state_changes_product_ranking=false；
+- M4 authority remains nested in the frozen v2 capture chain；
+- reviewed/follow_up gain no new ranking/lifecycle/trade meaning from transport。
+
+Freeze audit:
+- Phase-10 handoff v2 files: 0 changed；
+- M4 capture methodology: 0 / 37 changed；
+- Outcome Engine: 0 / 4 changed。
+
+Governance:
+- D-055；
+- `specs/m5-phase-14-daily-handoff-bundle-v3.md`。
+
+### 下一步
+
+Phase 14 已经解决“如何把当前产品观察 + history + 每日 digest + 人工 review/follow-up 状态完整、安全地带走”。下一阶段优先进入 **M5 Phase 15 — Handoff v3 Inspector / Portable Review Workspace v1**。
+
+Phase 15 应做到：
+- 只读打开一个 v3 ZIP；
+- 先完成 v3/v2/nested-M4 全链验证；
+- 不依赖本机 market database 就能浏览 transported current Operator snapshot、current/previous history、daily digest、review-session 和 active follow-ups；
+- 提供中文优先的 portable summary / drill-down；
+- 可以按 instrument/display-key 浏览 transport 内的当前状态；
+- 不把 v3 内容自动导入本地 Queue/history/review journal；
+- 不产生新的 reviewed/follow_up event；
+- 不修改 M4 evidence；
+- 不做收益、胜率、alpha 或交易排序。
+
+如果未来要支持显式 import/merge，必须是 Phase 15 之后独立的新 contract，并处理冲突/幂等/来源身份，不能把“只读 inspector”偷偷变成写入器。
