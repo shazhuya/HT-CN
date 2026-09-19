@@ -30,10 +30,8 @@ def test_warning_baseline_is_bound_to_remote_equivalent_validated_commit() -> No
     assert payload["pytest"]["warning_budget"] == 0
     assert payload["pytest"]["baseline_passed"] == 872
     assert payload["pytest"]["baseline_commit"] == (
-        "8848d859b712ece8416abcaf2c26ecba74426ad1"
+        "4b664bd947565742577201f9be5af48539c386b2"
     )
-    assert payload["pytest"]["baseline_attempt_id"] == "A-20260919-0066-019"
-    assert payload["pytest"]["baseline_workflow_run"] is None
-    assert payload["pytest"]["hosted_validation_status"] == (
-        "pending_rerun_after_A-20260919-0066-020"
-    )
+    assert payload["pytest"]["baseline_attempt_id"] == "A-20260919-0066-021"
+    assert payload["pytest"]["baseline_workflow_run"] == 35448896046
+    assert payload["pytest"]["hosted_validation_status"] == "success"
