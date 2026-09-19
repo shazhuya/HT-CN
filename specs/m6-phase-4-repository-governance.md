@@ -1,6 +1,6 @@
 # M6.4 — Repository Governance
 
-status: ready_not_started
+status: implementing
 
 ## 1. Objective
 
