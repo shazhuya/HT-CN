@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `56b6da0d30b951c3ff569ff4739ddbe6e5d3e695`
-context_checkpoint_title: `M5 Phase 22 Formal Main Release Integrity operationally closed`
+context_checkpoint: `47c9e4f2d525632d37f6aec0cf2c83e7300e0760`
+context_checkpoint_title: `M5 Phase 23 Real-M1 preflight implementation gates green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -32,7 +32,22 @@ repository: `shazhuya/HT-CN`
 
 因此 Phase22 已 operationally closed：正式 main 现在不会再比 feature branch 少一层浏览器/冻结验收。
 
-Phase21 的真实 current-market/private-M1 `full_closeout_ready` 仍然是独立本地门禁：只有持有当前私有 M1 的机器运行 `运行HT-CN主线真实A股最终验收.bat` 才能建立该证据。
+当前正在完成 **M5 Phase 23 — Real-M1 Final Closeout Preflight / Single-Action Safety v1**。
+
+- branch：`m5/real-closeout-preflight-v1`；
+- PR：#36 → formal `main`；
+- validated implementation checkpoint：`47c9e4f2d525632d37f6aec0cf2c83e7300e0760`；
+- Actions #1973 / `35432978519`：deterministic + formal-main-release-integrity success；
+- Python：847 passed；
+- existing Playwright：24 passed；
+- Phase18 browser/evidence：green；
+- Phase21 dynamic browser/evidence：green；
+- M4 methodology drift：0 / 37；
+- Outcome Engine drift：0 / 4。
+
+Phase23 把最终本地验收改为“**先只读 preflight，再允许 daily close / Phase19 / Phase21**”。它在任何真实 M1/product/research 变更前检查：本地 main 是否等于远端 main、worktree、Python/.venv、M1 DuckDB/Parquet/delta、provider、Node/npm/Playwright/Chromium、写权限与磁盘空间。
+
+Phase21 的真实 current-market/private-M1 `full_closeout_ready` 仍然是独立本地结果：Phase23 hosted CI 只验证 preflight 机制；只有持有当前私有 M1 的机器在 Phase23 合入 main 后运行一次 `运行HT-CN主线真实A股最终验收.bat`，才能建立真实当日 `full_closeout_ready`。
 
 Phase20 已正式完成并合入 main，关键整合事实：
 
@@ -50,7 +65,7 @@ Phase20 已正式完成并合入 main，关键整合事实：
 - M4 capture methodology drift：0 / 37
 - Outcome Engine drift：0 / 4
 
-M5 Phase 1–22 当前主线：
+M5 Phase 1–23 当前主线：
 
 1. Daily Operator Queue；
 2. Operator Delta / 今日变化；
@@ -74,6 +89,7 @@ M5 Phase 1–22 当前主线：
 20. Preserve-Ancestry Integration Readiness：full-history Git gate、关键 provenance ancestor 守卫、main-only change 审计、merge-only carrier PR #32，并已通过 merge commit `7ed0c56c...` 正式进入 main；
 21. Main Real-M1 Closeout / Current Delivery Acceptance：绑定当前 clean main HEAD、Phase9 pipeline、Phase19 latest run/pointer/archive/aliases，并对 exact latest workspace 做动态 Chromium 全候选审计与截图/hash evidence；已通过 merge commit `d8687f2b...` 正式进入 main；hosted CI 只证明验收机制，本地 private-M1 才能产生 real-market `full_closeout_ready`；
 22. Formal Main Release Integrity：对 push main / PR→main 建立独立 full-history release job，强制 lineage、24 browser、Phase18、Phase21、M4 methodology freeze、Outcome Engine freeze 全链重新验收。
+23. Real-M1 Final Closeout Preflight / Single-Action Safety：在一键真实验收触发任何 M1/product/research 变更前，先以只读方式验证 exact remote main、active M1 catalog/Parquet/delta integrity、provider、Python/.venv、Node/Playwright/Chromium、write capability 与 disk margin；blocker 时立即停止，partial full-market coverage 仍只作 warning，不改变现有 initialized-universe 语义。
 
 M5 仍是**只读实战产品层 + 人工复盘工作流 + transport / portable delivery 层**，不拥有 harmonic identity、Source Raw PRZ、canonical lifecycle 或 action state，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 19 只编排和封装已验证的 Phase9/14/16/17 产物，不改变这些状态的语义。
 
@@ -2691,3 +2707,91 @@ Operational closeout:
 Phase22 is **operationally closed on both PR→main and push→main**.
 
 Phase22 does not modify harmonic identity, Source Raw PRZ, source lifecycle, Phase19/21 product semantics or M4 authoritative evidence.
+
+
+## M5 Phase 23 closeout — Real-M1 Final Closeout Preflight / Single-Action Safety v1
+
+Current branch:
+`m5/real-closeout-preflight-v1`
+
+Carrier PR:
+- #36;
+- base = formal `main` at `a3f02615d47d91c60580a0feeedc0bdb3f4dd58d`.
+
+Validated implementation checkpoint:
+`47c9e4f2d525632d37f6aec0cf2c83e7300e0760`
+
+Purpose:
+- preserve the user's single-action local workflow;
+- fail before any M1/product/M4 mutation when the environment is predictably unable to complete Phase21 real closeout;
+- avoid using the user machine as a routine development/test runner.
+
+Implemented:
+- `src/htcn/app/real_closeout_preflight.py`;
+- `scripts/m5_real_closeout_preflight.py`;
+- `tests/app/test_real_closeout_preflight.py`;
+- `specs/m5-phase-23-real-closeout-preflight.md`;
+- Phase23 preflight inserted at step 0 of `运行HT-CN主线真实A股最终验收.bat`.
+
+Fail-closed Git/environment gate:
+- branch must be `main`;
+- worktree clean;
+- read-only `git ls-remote origin refs/heads/main`;
+- local HEAD == exact remote main SHA;
+- Phase22 main merge remains ancestor;
+- Python 3.13 from project `.venv`;
+- duckdb/pandas/pyarrow/htcn importable.
+
+M1 read-only integrity:
+- catalog opened with DuckDB `read_only=True`;
+- required tables present;
+- at least one current listed SSE/SZSE and one active initialized dataset;
+- active base Parquet exists, PyArrow metadata opens, required columns exist and metadata row count exactly matches catalog row_count;
+- existing daily-delta Parquet files open and contain required columns;
+- trade calendar non-empty;
+- inactive/delisted retained historical datasets are counted but do not block, matching Phase9 active listed-universe semantics;
+- full listed-market coverage is warning-only, not a new product prerequisite;
+- BSE remains deferred.
+
+Runtime preconditions:
+- bounded read-only provider trade-calendar liveness via AkShare/Sina/BaoStock failover family;
+- node/npm/npx present;
+- npm dependency tree valid;
+- `@playwright/test` resolvable;
+- Chromium executable exists;
+- real ephemeral headless Chromium launch/close succeeds;
+- report/daily-delta/product paths writable without creating probe files;
+- free disk: <1 GiB block, 1–5 GiB warning, >=5 GiB recommended pass.
+
+No-auto-repair boundary:
+- no git pull/fetch;
+- no checkout/reset/merge;
+- no pip/npm install;
+- no Playwright install;
+- no M1 update;
+- no Phase19 start;
+- no M4 evidence write;
+- preflight writes only its diagnostic report.
+
+Hosted validation:
+- Actions #1973 / `35432978519`: success;
+- Python **847 passed**, 1163 warnings;
+- Web build success;
+- existing Playwright **24 passed**;
+- Phase18 Playwright/evidence valid;
+- Phase21 dynamic Playwright/evidence valid;
+- formal-main-release-integrity success;
+- release-lineage status=ready;
+- M4 methodology drift **0 / 37**;
+- Outcome Engine drift **0 / 4**;
+- deterministic browser artifact ID 10581870545;
+- formal release artifact ID 10582195249.
+
+Empirical boundary:
+- hosted CI does not possess the user's private M1 and therefore does not claim a real local preflight or current-market `full_closeout_ready`;
+- the first real local Phase23 run is intentionally deferred until after merge, and should be the only irreducible user-machine action for this closeout workflow.
+
+Pending integration closeout:
+- final governance HEAD must rerun both CI layers;
+- PR #36 must merge to main;
+- merge-generated push-main formal release gate must be observed green.

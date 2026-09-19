@@ -1862,3 +1862,60 @@ Next:
   - push→main: verified.
 - Phase22 is operationally closed.
 - GitHub server-side branch-protection required-check policy remains unobservable because the current integration receives 403 on the protection endpoint; no claim is made about that admin setting.
+
+
+## 2026-09-19 — M5 Phase 23 real-M1 final closeout preflight
+
+- Started Phase23 from formal main after Phase22 operational closeout.
+- Goal: keep the user's final private-M1 acceptance as one action while moving predictable failures before any M1/product/M4 mutation.
+- Added `src/htcn/app/real_closeout_preflight.py`.
+- Added `scripts/m5_real_closeout_preflight.py`.
+- Updated `运行HT-CN主线真实A股最终验收.bat` so Phase23 preflight is step 0 and daily close/Phase19 cannot start after a blocker.
+- Frozen no-auto-repair behavior:
+  - no git pull/fetch;
+  - no checkout/reset/merge;
+  - no dependency install;
+  - no Playwright install;
+  - no M1/product/M4 mutation.
+- Git preflight now requires:
+  - branch=main;
+  - clean worktree;
+  - read-only origin/main ls-remote;
+  - local HEAD exact remote-main match;
+  - Phase22 main merge ancestor.
+- Python preflight requires Python 3.13 from project .venv plus duckdb/pandas/pyarrow/htcn imports.
+- M1 catalog is opened directly with DuckDB read_only=True to avoid DataCatalog schema-initialization side effects.
+- Active current listed SSE/SZSE initialized datasets are checked for:
+  - metadata validity;
+  - real Parquet existence;
+  - PyArrow readability;
+  - required daily columns;
+  - positive rows;
+  - catalog row_count equality.
+- Existing daily-delta Parquet files are checked similarly at metadata/schema level.
+- Trade calendar must be non-empty.
+- Full listed-market initialization is intentionally warning-only; Phase23 does not redefine the existing initialized-universe product contract.
+- Initial implementation review found an over-strict edge: retained inactive/delisted historical datasets were being treated as blockers although Phase9 excludes them from the active universe. Corrected before freeze; added regression proving inactive retained history is nonblocking.
+- Provider liveness runs in a bounded read-only subprocess using the production AkShare/Sina/BaoStock failover family.
+- Node/npm/npx, npm dependency tree, @playwright/test, Chromium executable and a real ephemeral headless launch are all required.
+- Writability checks do not create probe files.
+- Disk policy: <1 GiB block; 1-5 GiB warning; >=5 GiB recommended pass.
+- Added extensive deterministic tests including real temporary DuckDB + Parquet, row-count mismatch, corrupt delta, inactive historical dataset, warning/blocker policy and BAT ordering/no-install contract.
+- Created `specs/m5-phase-23-real-closeout-preflight.md`.
+- Created D-064.
+- Opened PR #36: `m5/real-closeout-preflight-v1 -> main`.
+- Implementation checkpoint `47c9e4f2d525632d37f6aec0cf2c83e7300e0760`.
+- PR Actions #1973 / 35432978519 succeeded:
+  - Python 847 passed, 1163 warnings;
+  - Web build success;
+  - existing Playwright 24 passed;
+  - Phase18 Playwright/evidence valid;
+  - Phase21 dynamic Playwright/evidence valid;
+  - formal-main-release-integrity success;
+  - release-lineage ready;
+  - M4 methodology drift 0/37;
+  - Outcome Engine drift 0/4;
+  - browser artifact ID 10581870545;
+  - formal release artifact ID 10582195249.
+- Hosted CI validates the mechanism only; no real private-M1 preflight/current-market full_closeout_ready is claimed.
+- Next: final governance HEAD CI, merge PR #36, then observe the merge-generated push-main release gate.
