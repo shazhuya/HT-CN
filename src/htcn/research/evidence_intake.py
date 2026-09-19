@@ -640,14 +640,13 @@ def audit_evidence_bundle(
                 blockers.append(
                     "outcome_snapshot_missing_for_enrolled_cohort"
                 )
-            if latest_outcome is not None and committed:
-                if (
-                    str(latest_outcome.get("outcome_as_of_trade_date") or "")
-                    < str(committed[-1].get("as_of_trade_date") or "")
-                ):
-                    blockers.append(
-                        "latest_outcome_predates_latest_capture"
-                    )
+            if latest_outcome is not None and committed and (
+                str(latest_outcome.get("outcome_as_of_trade_date") or "")
+                < str(committed[-1].get("as_of_trade_date") or "")
+            ):
+                blockers.append(
+                    "latest_outcome_predates_latest_capture"
+                )
 
             included_outcome = _json_member(
                 archive,

@@ -13,6 +13,7 @@ from htcn.harmonic.models import HarmonicPoint, Pivot
 from htcn.harmonic.pivots import collapse_same_kind_pivots, detect_pivot_events
 from htcn.harmonic.scanner import classify_completed_xabcd, project_forming_xabcd
 from htcn.harmonic.shark import evaluate_shark, project_forming_shark
+import itertools
 
 DEFAULT_FORWARD_HORIZON = 60
 DEFAULT_WALK_FORWARD_SCALES = (3, 5, 8, 13, 21)
@@ -87,7 +88,7 @@ def _frontier_candidates(scale: int, pivots: list[Pivot]) -> list[dict[str, Any]
     out: list[dict[str, Any]] = []
     if len(pivots) >= 4:
         latest4 = tuple(pivots[-4:])
-        if not any(left.kind == right.kind for left, right in zip(latest4, latest4[1:])):
+        if not any(left.kind == right.kind for left, right in itertools.pairwise(latest4)):
             window = SwingWindow(scale=scale, pivots=latest4)
             points = window.harmonic_points()
             for projection in project_forming_xabcd(window):
@@ -150,7 +151,7 @@ def _frontier_candidates(scale: int, pivots: list[Pivot]) -> list[dict[str, Any]
 
     if len(pivots) >= 3:
         latest3 = tuple(pivots[-3:])
-        if not any(left.kind == right.kind for left, right in zip(latest3, latest3[1:])):
+        if not any(left.kind == right.kind for left, right in itertools.pairwise(latest3)):
             abcd_points = _harmonic_points(latest3, ("A", "B", "C"))
             try:
                 abcd = project_forming_abcd(abcd_points)  # type: ignore[arg-type]
@@ -182,7 +183,7 @@ def _completed_candidates(scale: int, pivots: list[Pivot]) -> list[dict[str, Any
     out: list[dict[str, Any]] = []
     if len(pivots) >= 5:
         latest5 = tuple(pivots[-5:])
-        if not any(left.kind == right.kind for left, right in zip(latest5, latest5[1:])):
+        if not any(left.kind == right.kind for left, right in itertools.pairwise(latest5)):
             window = SwingWindow(scale=scale, pivots=latest5)
             standard_points = window.harmonic_points()
             for evaluation in classify_completed_xabcd(window):
@@ -230,7 +231,7 @@ def _completed_candidates(scale: int, pivots: list[Pivot]) -> list[dict[str, Any
 
     if len(pivots) >= 4:
         latest4 = tuple(pivots[-4:])
-        if not any(left.kind == right.kind for left, right in zip(latest4, latest4[1:])):
+        if not any(left.kind == right.kind for left, right in itertools.pairwise(latest4)):
             abcd_points = _harmonic_points(latest4, ("A", "B", "C", "D"))
             try:
                 abcd = evaluate_abcd(abcd_points)  # type: ignore[arg-type]
@@ -299,7 +300,7 @@ def _serialize_signal(
         "signal_bar": int(signal_bar),
         "signal_trade_date": pd.Timestamp(dates.iloc[signal_bar]).date().isoformat(),
         "source_scale": int(candidate["scale"]),
-        "signal_scales": sorted(set(int(value) for value in signal_scales)),
+        "signal_scales": sorted({int(value) for value in signal_scales}),
         "prefix_points": [
             {
                 "label": point.label,
@@ -439,7 +440,7 @@ def walk_forward_forming_signals(
         raise ValueError(f"walk-forward frame missing columns: {sorted(missing)}")
     if horizon < 1:
         raise ValueError("horizon must be >= 1")
-    normalized_scales = tuple(sorted(set(int(scale) for scale in scales)))
+    normalized_scales = tuple(sorted({int(scale) for scale in scales}))
     if not normalized_scales or any(scale < 1 for scale in normalized_scales):
         raise ValueError("scales must contain positive integers")
     if frame.empty:

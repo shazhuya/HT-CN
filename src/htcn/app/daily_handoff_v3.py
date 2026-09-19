@@ -1363,8 +1363,8 @@ def build_daily_handoff_bundle_v3(
                     raise RuntimeError("current_history_delta_mismatch")
                 members.append(
                     (
-                        "m5/history/previous/"
-                        f"{previous_date}/{previous_path.name}",
+                        ("m5/history/previous/"
+                        f"{previous_date}/{previous_path.name}"),
                         previous_bytes,
                         "m5_previous_history_record",
                     )
@@ -1394,8 +1394,8 @@ def build_daily_handoff_bundle_v3(
                 )
                 members.append(
                     (
-                        "m5/history/previous_same_day/"
-                        f"{trade_date}/{same_path.name}",
+                        ("m5/history/previous_same_day/"
+                        f"{trade_date}/{same_path.name}"),
                         same_bytes,
                         "m5_previous_same_day_history_record",
                     )

@@ -204,8 +204,7 @@ def _run(
         encoding="utf-8",
         errors="replace",
         stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
         timeout=timeout,
     )

@@ -166,7 +166,7 @@ def build_type_i_exit_timing_report(
     }
 
     boundary = _boundaries(terminal_bar_calibration)
-    robust = set(str(name) for name in robustness_report.get("robust_candidates") or [])
+    robust = {str(name) for name in robustness_report.get("robust_candidates") or []}
     prerequisites = bool(
         terminal_bar_calibration.get("status") == "terminal_bar_calibration_holdout_sealed"
         and early_path_report.get("status") == "type_i_early_path_evidence_holdout_sealed"

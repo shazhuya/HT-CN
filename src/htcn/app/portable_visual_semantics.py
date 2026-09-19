@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from typing import Any
+import itertools
 
 VISUAL_SEMANTICS_VERSION = 2
 
@@ -135,7 +136,7 @@ def _topology(pattern: dict[str, Any]) -> dict[str, Any]:
         status = "invalid_non_prefix"
 
     legs: list[dict[str, Any]] = []
-    for ordinal, (left, right) in enumerate(zip(points, points[1:]), start=1):
+    for ordinal, (left, right) in enumerate(itertools.pairwise(points), start=1):
         left_label = str(left.get("label") or "")
         right_label = str(right.get("label") or "")
         left_price = _number(left.get("price"))
