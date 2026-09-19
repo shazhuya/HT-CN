@@ -2182,3 +2182,53 @@ Hosted validation:
 - Phase21 dynamic Playwright/evidence valid;
 - M4 methodology drift 0 / 37;
 - Outcome Engine drift 0 / 4.
+
+
+## D-063 — Formal main releases require an independent full-history release gate
+
+日期：2026-09-19
+
+决定：
+
+1. After Phase21 entered formal `main`, repository audit found that heavy browser/freeze validation was still primarily feature-branch-predicate driven. Formal main must not be validated less strictly than its feature branches.
+2. Add an independent CI job named `main-release-integrity` / display name `formal-main-release-integrity`.
+3. The job runs only for:
+   - push to `main`;
+   - pull requests whose base is `main`.
+4. The job is additive and must depend on `deterministic-tests`; it does not replace the full Python regression or the ordinary Web build.
+5. Formal main release validation uses `fetch-depth: 0` and the exact PR head / push SHA. Provenance checks must never depend on shallow history.
+6. Every formal main release candidate must preserve the following real ancestors:
+   - M2.31 source fidelity;
+   - M3 merge;
+   - M4 methodology freeze;
+   - M4 Outcome Engine anchor;
+   - Phase20 main merge;
+   - Phase21 main merge.
+7. Release-lineage integrity is verified by `m5_main_release_integrity.py`; loss of any required ancestor or a dirty tracked worktree blocks the release job.
+8. The release job must rerun the existing 24 Playwright browser tests even if the same commit previously passed them on a feature branch.
+9. The release job must rebuild/run/verify Phase18 browser evidence.
+10. The release job must prepare/run/verify the Phase21 dynamic browser audit.
+11. The release job must rerun both M4 freeze guards on full history:
+    - methodology changed components must remain 0 / 37;
+    - Outcome Engine changed components must remain 0 / 4.
+12. Release evidence is uploaded independently under `htcn-main-release-integrity-<github.sha>` and includes the lineage report plus browser screenshots/reports.
+13. The workflow contract itself is frozen by Python regression reading `.github/workflows/ci.yml`; deleting or weakening the formal main release job must cause the deterministic suite to fail.
+14. Hosted browser evidence remains product QA and does not become M4 authoritative evidence.
+15. Phase22 does not run private M1 and does not replace Phase21's real current-market `full_closeout_ready` gate.
+16. GitHub server-side branch-protection/required-check policy is an administration concern distinct from repository workflow code. The current GitHub integration returned 403 when reading `main` protection, so no claim is made that `formal-main-release-integrity` is currently configured as a server-side required status check.
+17. PR→main execution has been observed successfully. Push→main execution must be observed on the Phase22 merge before operational closeout.
+
+验证（PR→main）：
+- implementation checkpoint `a3ee750a0bb069caf68fddb84b7e6ad74de735f1`;
+- PR #34;
+- Actions #1942 / `35429893144`;
+- deterministic-tests: success;
+- Python 832 passed;
+- existing Playwright 24 passed;
+- Phase18 Playwright/evidence valid;
+- Phase21 dynamic Playwright/evidence valid;
+- formal-main-release-integrity: success;
+- release-lineage report status=ready;
+- M4 methodology drift 0 / 37;
+- Outcome Engine drift 0 / 4;
+- release evidence artifact ID 10580297443.

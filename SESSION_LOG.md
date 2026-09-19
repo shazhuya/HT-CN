@@ -1786,3 +1786,50 @@ Next:
   - Outcome Engine drift 0/4;
   - browser evidence uploaded.
 - Hosted CI proves the acceptance mechanism only. Real current-market `full_closeout_ready` remains intentionally pending until Phase21 is merged to main and the private-M1 one-click gate runs locally.
+
+
+## 2026-09-19 — M5 Phase 22 formal main release integrity
+
+- After Phase21 final governance CI #1934 succeeded, PR #33 was marked Ready and merged to formal main with merge commit `d8687f2bcc8d4a9d9b37eeac1430f6f88ff563d3`.
+- Post-merge ancestry audit confirmed Phase20 merge, Phase21 head, M4 methodology freeze, M4 Outcome Engine anchor, M3 merge and M2.31 all remained real ancestors of main.
+- Identified a new structural CI gap: formal main itself did not have an independent heavy release gate; browser/freeze steps were mainly feature-branch-predicate driven.
+- Opened `m5/main-release-integrity-v1` from the Phase21 main merge and created PR #34 directly to main.
+- Added `src/htcn/app/main_release_integrity.py` and `scripts/m5_main_release_integrity.py`.
+- Required release ancestors:
+  - M2.31;
+  - M3;
+  - M4 methodology freeze;
+  - M4 Outcome Engine anchor;
+  - Phase20 main merge;
+  - Phase21 main merge.
+- Added workflow self-regression that reads `.github/workflows/ci.yml` and freezes the main-release job contract.
+- Added dedicated CI job `formal-main-release-integrity` for push main / PR→main, with:
+  - dependency on deterministic-tests;
+  - full-history checkout;
+  - lineage integrity report;
+  - Web build;
+  - existing 24 browser tests;
+  - Phase18 fixture/browser/evidence;
+  - Phase21 fixture/dynamic-browser/evidence;
+  - M4 methodology freeze;
+  - M4 Outcome Engine freeze;
+  - independent release artifact upload.
+- PR #34 successfully exercised the actual PR→main trigger path in Actions #1942 / 35429893144.
+- Deterministic prerequisite:
+  - 832 Python passed;
+  - Web build success;
+  - 24 existing Playwright passed;
+  - Phase18 1 passed / evidence valid;
+  - Phase21 1 passed / evidence valid;
+  - browser artifact ID 10580576017.
+- Formal main release job:
+  - lineage report status=ready;
+  - Web build success;
+  - 24 existing Playwright passed;
+  - Phase18 browser/evidence valid;
+  - Phase21 dynamic browser/evidence valid;
+  - methodology drift 0/37;
+  - Outcome Engine drift 0/4;
+  - release artifact ID 10580297443.
+- Attempted to read GitHub server-side main branch protection. The current GitHub integration returned 403 `Resource not accessible by integration`; branch-protection required-check policy therefore remains unobserved and is not claimed.
+- Phase22 still requires one post-merge operational observation: the merge-generated push to main must actually launch and pass `formal-main-release-integrity`.
