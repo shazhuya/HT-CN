@@ -26,16 +26,16 @@
     "status": "closed",
     "active_change": null,
     "active_spec": null,
-    "latest_attempt_id": "A-20260920-0066-034",
-    "latest_hosted_validation_attempt_id": "A-20260919-0066-029",
+    "latest_attempt_id": "A-20260920-0066-035",
+    "latest_hosted_validation_attempt_id": "A-20260920-0066-035",
     "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35455632325,
-      "run_number": 2179,
+      "workflow_run": 35457509102,
+      "run_number": 2211,
       "event": "pull_request",
-      "head": "01e417129b8f48a287872737802d44b5917519c3",
-      "python_passed": 880,
+      "head": "12971a5e20863b287dab31949456e2c186e8374d",
+      "python_passed": 881,
       "warnings": 0,
       "project_os_integrity": "success",
       "formal_main_release_integrity": "success",
@@ -44,8 +44,8 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10588047315,
-      "scope": "M6.2 BSE default-scope correction plus forming-Shark Phase21 audit hardening; canonical Shark remains 0-X-A-B-C, forming prefixes are allowed without future-node fabrication; real Private-M1 evidence ZIP still pending."
+      "artifact_id": 10588810587,
+      "scope": "M6.2 empirical Private-M1 acceptance closure plus phase-dynamic Project OS continuity regression hardening."
     },
     "closeout_acceptance": {
       "result": "accepted",
