@@ -46,6 +46,12 @@
       "title": "Universe layers are explicit, hashed and non-interchangeable",
       "status": "active",
       "source": "governance/decisions/D-068-universe-coverage-contract.md"
+    },
+    {
+      "id": "D-069",
+      "title": "TradingView-class chart foundation is an M6.6 gate before M7",
+      "status": "active",
+      "source": "governance/decisions/D-069-interactive-chart-m6-6.md"
     }
   ],
   "rules": {

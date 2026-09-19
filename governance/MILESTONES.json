@@ -68,6 +68,20 @@
           "id": "M6.5",
           "title": "Source Coverage Freeze",
           "status": "planned"
+        },
+        {
+          "id": "M6.6",
+          "title": "Interactive Harmonic Chart Foundation",
+          "status": "planned",
+          "exit_gate": [
+            "M6.4 Repository Governance and M6.5 Source Coverage Freeze are complete",
+            "interactive candlestick pan/zoom/time-axis/price-axis/crosshair foundation is production-bound",
+            "XABCD/ABCD/0XABC overlays are anchored to canonical bar/time/price coordinates with no viewport drift",
+            "Source Raw PRZ/PEZ/T1/T2/Terminal/T+1/Type-I/Type-II overlays share the same coordinate system",
+            "viewport transforms do not rerun or mutate harmonic identity; data changes trigger controlled recomputation",
+            "browser acceptance verifies pan/zoom/recompute/forming-pattern alignment and future-node non-fabrication",
+            "M7 large-scale prospective accumulation is not started before this phase closes"
+          ]
         }
       ]
     },
