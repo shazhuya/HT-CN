@@ -173,7 +173,8 @@ BSE 仍 deferred。
 - parquet_path 非空；
 - catalog row_count > 0；
 - first/last trade date 存在且有序；
-- dataset 必须属于当前 listed SSE/SZSE security；
+- 只对当前 listed SSE/SZSE 的 active initialized dataset 做 hard integrity gate；
+- 已保留但当前 inactive/delisted 的历史 dataset 只计数，不阻塞，保持与 Phase9 daily pipeline 的 active-universe 选择一致；
 - Parquet 文件存在且 size > 0；
 - PyArrow metadata 可打开；
 - required columns 存在：
@@ -343,7 +344,8 @@ Phase23 v1 只有两项 warning-only：
 - warning whitelist exact match；
 - real temporary DuckDB + Parquet valid path；
 - catalog row_count mismatch detection；
-- corrupt daily-delta detection。
+- corrupt daily-delta detection；
+- inactive/delisted historical dataset remains nonblocking, matching Phase9 active scope。
 
 ## 18. Explicit non-goals
 
