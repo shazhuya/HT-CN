@@ -610,3 +610,42 @@ def test_generated_browser_workspaces_are_git_ignored() -> None:
 
     assert "apps/web/public/portable-visual-fixture.html" in ignored
     assert "apps/web/public/latest-real-portable-workspace.html" in ignored
+
+
+
+def test_prepare_browser_source_supports_zero_candidate_day(
+    tmp_path: Path,
+) -> None:
+    workspace = tmp_path / "workspace.html"
+    inspection = tmp_path / "inspection.json"
+    output = tmp_path / "public" / "latest.html"
+    report = tmp_path / "reports" / "source.json"
+    workspace.write_text("<html>zero candidate</html>", encoding="utf-8")
+    _write_json(
+        inspection,
+        {
+            "schema_version": 2,
+            "contract": {"visual_semantics_version": 2},
+            "summary": {"status": "complete_detail_transport"},
+            "portable_items": [],
+            "details_by_display_key": {},
+        },
+    )
+
+    payload = browser.prepare_main_real_browser_source(
+        root=tmp_path,
+        workspace_source=workspace,
+        inspection_source=inspection,
+        output_html=output,
+        source_report=report,
+        mode="phase19_latest",
+        trade_date=TRADE_DATE,
+        source_identity="5" * 64,
+        structural_closeout_status="ready",
+        structural_closeout_report_sha256="6" * 64,
+    )
+
+    assert payload["candidate_count"] == 0
+    assert payload["detail_available_count"] == 0
+    assert payload["detail_error_count"] == 0
+    assert payload["schema_counts"] == {}
