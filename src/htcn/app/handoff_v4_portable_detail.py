@@ -378,7 +378,13 @@ def verify_daily_handoff_bundle_v4(
                         manifest.get("input_identity_fingerprint") or ""
                     ) != expected_identity:
                         errors.append("input_identity_mismatch")
-                    if int(manifest.get("queue_display_key_count") or -1) != queue_count:
+                    try:
+                        declared_queue_count = int(
+                            manifest.get("queue_display_key_count")
+                        )
+                    except (TypeError, ValueError):
+                        declared_queue_count = -1
+                    if declared_queue_count != queue_count:
                         errors.append("queue_display_key_count_mismatch")
 
                     detail_keys: set[str] = set()
@@ -467,9 +473,21 @@ def verify_daily_handoff_bundle_v4(
                         errors.append("detail_coverage_not_exhaustive")
                     detail_count = len(detail_keys)
                     error_count = len(error_keys)
-                    if int(manifest.get("detail_display_key_count") or -1) != detail_count:
+                    try:
+                        declared_detail_count = int(
+                            manifest.get("detail_display_key_count")
+                        )
+                    except (TypeError, ValueError):
+                        declared_detail_count = -1
+                    try:
+                        declared_error_count = int(
+                            manifest.get("error_display_key_count")
+                        )
+                    except (TypeError, ValueError):
+                        declared_error_count = -1
+                    if declared_detail_count != detail_count:
                         errors.append("detail_display_key_count_mismatch")
-                    if int(manifest.get("error_display_key_count") or -1) != error_count:
+                    if declared_error_count != error_count:
                         errors.append("error_display_key_count_mismatch")
                     expected_status = (
                         "complete_detail_transport"
