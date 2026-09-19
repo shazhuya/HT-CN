@@ -34,6 +34,12 @@
       "title": "Private-M1 closeout requires end-of-run main identity and one portable evidence bundle",
       "status": "active",
       "source": "governance/decisions/D-066-private-m1-evidence-bundle.md"
+    },
+    {
+      "id": "D-067",
+      "title": "Portable, receipt-gated continuity replaces full-chat rereading",
+      "status": "active",
+      "source": "governance/decisions/D-067-portable-chat-continuity.md"
     }
   ],
   "rules": {

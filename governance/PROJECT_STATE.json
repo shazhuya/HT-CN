@@ -80,6 +80,7 @@
     "bse_default_scope": "deferred"
   },
   "required_specs": [
+    "specs/m6-phase-2-portable-chat-continuity.md",
     "specs/m6-phase-2-real-private-m1-closeout.md",
     "specs/m5-phase-23-real-closeout-preflight.md",
     "specs/m5-phase-21-main-real-m1-closeout.md",

@@ -65,11 +65,23 @@ HT-CN 是面向中国 A 股的本地优先谐波研究与人工辅助决策系�
 检查HT-CN续接状态.bat
 ```
 
-生成动态续接包：
+生成普通 ChatGPT / 跨 AI 便携续接包：
 
 ```text
 生成HT-CN续接包.bat
 ```
+
+该入口一次生成：
+
+- 首选上传文件：`artifacts/reports/htcn-chat-continuation-bundle.zip`；
+- ZIP 不可读时的备选：`logs/context/HTCN_CHAT_HANDOFF.md`；
+- 新聊天第一条提示词：`logs/context/HTCN_NEW_CHAT_PROMPT.md`。
+
+在新 ChatGPT 窗口上传首选文件并粘贴提示词。新 AI 必须先返回 Bootstrap Receipt，
+证明它已经恢复 HEAD、阶段、Gate、冻结边界、最近 Attempt 和下一步，再开始修改。
+不需要每次通读全部旧聊天；旧对话只用于定向找回尚未落库的具体用户选择。完整协议
+见 [`CHAT_CONTINUATION.md`](CHAT_CONTINUATION.md)。可用
+`验证HT-CN续接包.bat` 独立检查 ZIP 是否与当前 HEAD 一致。
 
 当前 M6.2 真实私有收口：
 
