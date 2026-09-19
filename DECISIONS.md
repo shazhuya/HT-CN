@@ -1783,3 +1783,95 @@ Phase 2 已能回答“今天相对上一快照变了什么”，但浏览器 lo
 原因：
 
 Phase 11 解决了“跨日产品状态如何可靠保存”，Phase 12 解决的是“每天打开工具后如何快速看清到底变了什么”。这个阶段最容易出现的错误，是把历史变化偷偷转化为胜率、机会评分或买卖优先级。D-053 因此把完整 Delta、透明 workflow order、源总数不变、presentation-only filter 和 no-alpha/no-ranking 边界一次冻结。
+
+
+## D-054 — Review Session / Follow-up Journal 必须与 canonical lifecycle/action 完全隔离，并用 append-only 事件表达人工复盘工作流
+
+**状态：Frozen M5 Phase 13 review workflow boundary**
+
+正式决定：
+
+1. Phase 13 只记录用户复盘工作流，不是 harmonic/research/lifecycle/action authority；
+2. 固定 review states 为 `unseen` / `reviewed` / `follow_up`；
+3. 对新的 `source_observation_id + display_key`，没有 event 时默认 `unseen`，默认未看不需要写事件；
+4. `reviewed` 只表示用户已复核该产品变化，不等于看多/看空/通过/失败/买入/卖出；
+5. `follow_up` 只表示需要继续人工复盘，不得改变 Queue 排序或 lifecycle/action；
+6. 每个写 event 必须绑定精确 `source_observation_id + display_key`；
+7. 写入前必须从 Phase 11 validated history 证明 observation 存在且 display key 是该 observation 的真实 Delta change；
+8. 不存在的 source binding 必须拒绝；
+9. 当前交易日 review state 按 observation binding 计算；昨天 reviewed 不得让今天的新变化自动变 reviewed；
+10. active follow-up 按 display key 的 latest review event 计算；
+11. latest event=follow_up 时 active follow-up 可以跨 observation / trade date 持续；
+12. 第二天即使没有新 Delta，active follow-up 仍必须出现在独立持续跟踪清单；
+13. latest display-key event 变为 reviewed 或 unseen 后，active follow-up 结束；
+14. 结束跟踪必须追加新 event，不删除旧 follow-up event；
+15. runtime root 固定为 `data/product/m5/review_journal/`；
+16. event path 固定为 `<trade_date>/<binding_id>/<event_id>.json`；
+17. `binding_id=SHA256(source_observation_id + display_key)`；
+18. event store 永久 append-only，不覆盖旧 event；
+19. append 使用跨进程 OS advisory lock；
+20. 所有写请求必须带 `client_request_id`；
+21. 同 request id + 相同 payload 返回 `idempotent_existing`；
+22. 同 request id + 不同 payload 必须报 replay conflict；
+23. note 可为空、换行正规化、trim、最大 1000 字符；
+24. note 只是人工文本，不做 sentiment / alpha / outcome 解析；
+25. 每个 event 必须保存 self-integrity SHA-256；
+26. 每个 event 必须保存 binding event ordinal 与 previous binding event link；
+27. 每个 event 必须保存 display-key event ordinal 与 previous display-key event link；
+28. journal load/query 必须 fail closed 验证 schema / boundary / binding / state / note / request id / event id / filename / directory / self hash / ordinal / chain；
+29. client request id 必须在 journal 中唯一；
+30. 中间 event 删除、链断裂或内容篡改必须报告 `review_journal_integrity_failure`；
+31. Workbench 必须区分“今天这条变化是否已看”和“该结构是否仍在持续跟踪”，不能合并为一个字段；
+32. 同日 follow-up 显示“跟踪中”；来源交易日早于当前交易日时才显示“跨日跟踪中”；
+33. Workbench 必须提供独立持续跟踪清单，不能要求标的当天必须重新出现 Delta；
+34. active follow-up item 必须可进入单票工作台；
+35. active follow-up 必须可显式“结束跟踪”；
+36. GET `/api/operator/review-session` 是 enriched product review session，不修改 Phase 12 digest contract；
+37. review-session filter 支持 workflow/change-type/instrument/review-state/follow-up-only；
+38. review filter 只能改变 filtered sections/count，不得改写源 change count / review counts / active follow-up count；
+39. POST `/api/operator/review-session/event` 是唯一产品写入口；
+40. write API 不得向前端暴露本地 filesystem path；
+41. GET `/api/operator/review-journal` 是只读审计查询；
+42. `scripts/m5_query_review_journal.py` 与 `运行HT-CN复盘跟踪查询.bat` 只读；
+43. Phase 13 不加入 daily-close pipeline；
+44. 没有用户明确操作时，系统不得自动制造 reviewed/follow_up event；
+45. Phase 13 failure 不得改写 Phase 9 product、Phase 11 history、Phase 12 digest 或 M4 research readiness；
+46. review state / follow-up state 永久禁止用于 Queue 排序；
+47. review state / follow-up state 永久禁止用于 win rate / alpha / predictive score / quality score；
+48. review state / follow-up state 永久禁止生成 trade instruction；
+49. contract 必须保持：
+    - authoritative_transition=false；
+    - authoritative_evidence=false；
+    - writes_m4_evidence=false；
+    - predictive_score_used=false；
+    - historical_outcome_used_for_ranking=false；
+    - alpha_inference_allowed=false；
+    - is_trade_instruction=false；
+    - mutates_operator_queue=false；
+    - mutates_operator_history=false；
+    - mutates_action_state=false；
+    - mutates_lifecycle=false；
+    - mutates_harmonic_identity=false；
+    - mutates_source_raw_prz=false；
+50. Phase 10 handoff v2 冻结不变；若未来运输 Phase 11/12/13 artifacts 必须创建新的 versioned handoff contract；
+51. 首轮 hosted CI #1766 / `35415053453`：
+    - Python 757 passed；
+    - Web build success；
+    - 原有 23 Playwright passed；
+    - 新 Phase-13 browser test 仅 locator strict ambiguity 失败；
+52. locator 已在 `4b015dfc0e72db0f1275e1e570d85959254550fa` 收窄到具体 follow-up row；
+53. final validated code checkpoint：
+    `4b015dfc0e72db0f1275e1e570d85959254550fa`；
+54. final code CI #1768 / `35415145067`：
+    - overall success；
+    - Python 757 passed；
+    - Web build success；
+    - Playwright 24 passed；
+    - browser evidence upload success；
+55. draft PR #25 只是 hosted-CI / diff audit carrier，不代表已经合并；
+56. M4 capture methodology drift：0 / 37；
+57. Outcome Engine drift：0 / 4。
+
+原因：
+
+Phase 12 已经能回答“今天变了什么”，但如果没有独立 review workflow，用户仍然无法可靠记录“哪些已经看过、哪些要继续跟踪”。Phase 13 用 append-only event journal 把人工复盘进度保存下来，同时把当天 review state 与跨日 follow-up 连续性拆开，避免昨天的“已看”污染今天的新变化，也避免“后续跟踪”因为第二天没有新 Delta 而消失。整个层级只服务复盘流程，不获得任何 lifecycle、研究或交易权力。
