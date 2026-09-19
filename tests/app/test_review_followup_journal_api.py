@@ -181,3 +181,57 @@ def test_review_event_api_maps_validation_and_integrity_errors(
         })
     assert integrity.value.status_code == 500
     assert "review journal unavailable" in str(integrity.value.detail)
+
+
+def test_review_journal_api_passes_filters_and_stays_read_only(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_query(**kwargs):
+        captured.update(kwargs)
+        return {
+            "schema_version": 1,
+            "event_count": 1,
+            "events": [{"event_id": "a" * 64}],
+            "authoritative_evidence": False,
+            "writes_m4_evidence": False,
+            "historical_outcome_used_for_ranking": False,
+            "predictive_score_used": False,
+            "alpha_inference_allowed": False,
+            "is_trade_instruction": False,
+        }
+
+    monkeypatch.setattr(api, "query_review_journal", fake_query)
+    monkeypatch.setattr(api, "REVIEW_JOURNAL_ROOT", tmp_path)
+
+    payload = api.operator_review_journal(
+        display_key="key",
+        instrument_id="sse.688256",
+        source_observation_id="b" * 64,
+        review_state="follow_up",
+        limit=25,
+    )
+
+    assert payload["event_count"] == 1
+    assert captured["journal_root"] == tmp_path
+    assert captured["display_key"] == "key"
+    assert captured["instrument_id"] == "sse.688256"
+    assert captured["source_observation_id"] == "b" * 64
+    assert captured["review_state"] == "follow_up"
+    assert captured["limit"] == 25
+
+
+def test_review_journal_api_rejects_unknown_state() -> None:
+    with pytest.raises(HTTPException) as raised:
+        api.operator_review_journal(
+            display_key=None,
+            instrument_id=None,
+            source_observation_id=None,
+            review_state="strong_buy",
+            limit=20,
+        )
+
+    assert raised.value.status_code == 400
+    assert "unknown review state" in str(raised.value.detail)
