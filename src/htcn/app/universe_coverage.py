@@ -11,7 +11,6 @@ import duckdb
 
 from htcn.app.harmonic_service import LocalHarmonicService
 
-
 UNIVERSE_COVERAGE_SCHEMA_VERSION = 1
 UNIVERSE_COVERAGE_CONTRACT_VERSION = 1
 DEFAULT_EXCHANGES = ("SSE", "SZSE")
