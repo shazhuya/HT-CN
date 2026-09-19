@@ -367,7 +367,7 @@ def test_catalog_probe_uses_read_only_metadata_and_validates_real_parquet(
     assert payload["listed_scope_count"] == 1
     assert payload["initialized_scope_count"] == 1
     assert payload["invalid_metadata_count"] == 0
-    assert payload["orphan_dataset_count"] == 0
+    assert payload["inactive_dataset_count"] == 0
     assert payload["invalid_parquet_count"] == 0
     assert payload["row_count_mismatch_count"] == 0
     assert payload["delta_file_count"] == 1
@@ -400,3 +400,40 @@ def test_catalog_probe_detects_corrupt_daily_delta(
     assert payload["delta_file_count"] == 1
     assert payload["invalid_delta_count"] == 1
     assert payload["invalid_delta_examples"]
+
+
+
+def test_catalog_probe_ignores_inactive_historical_dataset_like_daily_pipeline(
+    tmp_path: Path,
+) -> None:
+    _build_catalog_fixture(tmp_path)
+    catalog_path = tmp_path / "data" / "market" / "catalog.duckdb"
+    con = duckdb.connect(str(catalog_path))
+    try:
+        con.execute(
+            """
+            INSERT INTO security_master VALUES (
+                'SZSE.000001', '000001', 'SZSE', 'inactive', 'MAIN',
+                DATE '1991-04-03', DATE '2026-01-01', FALSE, 'delisted',
+                'fixture', CURRENT_TIMESTAMP
+            )
+            """
+        )
+        con.execute(
+            """
+            INSERT INTO daily_dataset VALUES (
+                'SZSE.000001', 'fixture', 'missing-inactive.parquet', 999,
+                DATE '1991-04-03', DATE '2025-12-31', CURRENT_TIMESTAMP
+            )
+            """
+        )
+    finally:
+        con.close()
+
+    payload = _catalog_probe(tmp_path)
+
+    assert payload["listed_scope_count"] == 1
+    assert payload["initialized_scope_count"] == 1
+    assert payload["inactive_dataset_count"] == 1
+    assert payload["invalid_metadata_count"] == 0
+    assert payload["invalid_parquet_count"] == 0
