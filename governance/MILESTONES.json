@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "active": "M6",
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "Engineering Foundation",
+      "status": "complete"
+    },
+    {
+      "id": "M1",
+      "title": "A-share Data Engine",
+      "status": "established"
+    },
+    {
+      "id": "M2",
+      "title": "Carney Source Fidelity / Harmonic Core",
+      "status": "core_frozen"
+    },
+    {
+      "id": "M3",
+      "title": "Source Lifecycle + A-share Workbench",
+      "status": "integrated"
+    },
+    {
+      "id": "M4",
+      "title": "Prospective Evidence Architecture",
+      "status": "architecture_frozen_evidence_accumulating"
+    },
+    {
+      "id": "M5",
+      "title": "Daily Operator / Review / Portable Delivery",
+      "status": "phase_1_23_integrated"
+    },
+    {
+      "id": "M6",
+      "title": "Operational Closeout & Integrity",
+      "status": "active",
+      "phases": [
+        {
+          "id": "M6.1",
+          "title": "Project OS v2 / Cross-Conversation Lossless Continuity",
+          "status": "validation_green",
+          "exit_gate": [
+            "machine-readable project state validates",
+            "dynamic resume pack derives active specs/decisions/issues from state",
+            "change/attempt/source/release ledgers exist",
+            "CI fails closed on state inconsistency",
+            "blank-session recovery contract is testable"
+          ]
+        },
+        {
+          "id": "M6.2",
+          "title": "Real Private-M1 Closeout",
+          "status": "planned"
+        },
+        {
+          "id": "M6.3",
+          "title": "Universe Coverage Contract",
+          "status": "planned"
+        },
+        {
+          "id": "M6.4",
+          "title": "Repository Governance",
+          "status": "planned"
+        },
+        {
+          "id": "M6.5",
+          "title": "Source Coverage Freeze",
+          "status": "planned"
+        }
+      ]
+    },
+    {
+      "id": "M7",
+      "title": "Prospective Evidence Accumulation",
+      "status": "planned"
+    },
+    {
+      "id": "M8",
+      "title": "Evidence-based Decision Calibration",
+      "status": "planned"
+    },
+    {
+      "id": "M9",
+      "title": "Stable Research/Product Release",
+      "status": "planned"
+    }
+  ]
+}

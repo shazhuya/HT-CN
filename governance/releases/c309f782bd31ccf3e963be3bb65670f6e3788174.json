@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "release_id": "M5-P23-main-c309f782",
+  "milestone": "M5",
+  "phase": "M5.23",
+  "commit": "c309f782bd31ccf3e963be3bb65670f6e3788174",
+  "pr": 36,
+  "event": "push",
+  "branch": "main",
+  "workflow_run": 35433384021,
+  "deterministic_tests": {
+    "status": "success",
+    "python_passed": 847,
+    "warnings": 1163
+  },
+  "formal_main_release_integrity": {
+    "status": "success",
+    "lineage": "ready",
+    "existing_playwright_passed": 24,
+    "phase18": "valid",
+    "phase21": "valid"
+  },
+  "freezes": {
+    "m4_methodology_drift": "0/37",
+    "outcome_engine_drift": "0/4"
+  },
+  "claims": {
+    "repository_integration_closed": true,
+    "private_m1_current_market_closeout_ready": false,
+    "profitability_claim_allowed": false
+  }
+}

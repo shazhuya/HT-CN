@@ -1,117 +1,104 @@
-# HT-CN Agent / 跨对话续接协议
+# HT-CN Agent Protocol v2 — Repository-State-Driven Continuity
 
-本文件是 HT-CN 的 AI/Agent 工作入口。任何新的 ChatGPT / Codex / 其他 Agent 会话，只要任务是“继续 HT-CN”，都必须先执行本协议，再开始改代码。
+本文件是任何 ChatGPT / Codex / Agent 继续 HT-CN 前的强制入口。核心规则：**聊天不是项目状态；仓库才是。**
 
 ## 1. 权威顺序
 
-项目事实按以下优先级判断，禁止用旧聊天覆盖新仓库事实：
+1. canonical Git history、当前源码与测试；
+2. formal release / GitHub CI evidence；
+3. `governance/PROJECT_STATE.json`；
+4. `PROJECT_BLUEPRINT.md`；
+5. active Change / Decision / Issue / Source Coverage ledgers；
+6. `PROJECT_STATE.required_specs` 指向的当前规范；
+7. historical `PROJECT_CONTEXT.md` / `DECISIONS.md` / `SESSION_LOG.md` / PR / commit；
+8. 聊天记忆、旧对话、截图。
 
-1. 当前 Git `HEAD` 与实际源码 / 测试；
-2. `PROJECT_CONTEXT.md` 的当前项目状态与约束；
-3. `DECISIONS.md` 的已冻结设计决策；
-4. `specs/` 中当前有效规范；
-5. `README.md`；
-6. Git 历史提交、PR、CI 结果；
-7. 聊天记忆、旧对话、截图中的历史表述。
+低层信息不得覆盖高层事实。D-065 起，`PROJECT_CONTEXT.md` 是历史深层材料，不再拥有 current-state authority。
 
-若上层与下层冲突，以上层为准，并在本次会话中明确指出冲突来源。
+## 2. Blank-session Bootstrap（强制）
 
-## 2. 新会话 Bootstrap（强制）
+收到“继续 HTCN”后，在任何实现前：
 
-新会话开始后，在做任何实现前至少完成：
+1. refresh canonical Git `main` / 当前工作分支 / latest formal release；
+2. 运行 `python scripts/project_state.py`；
+3. 读取 `governance/PROJECT_STATE.json` 与 `PROJECT_BLUEPRINT.md`；
+4. 读取 active Change；
+5. 读取 Decision Index、Open Issues、Source Coverage；
+6. 只读取 `required_specs` 中与当前 Gate 相关的规范；
+7. 查看 latest CI / PR / release；
+8. 能准确说明：current phase、active change、Gate、blocker、freeze、next task、最近成功/失败 attempt；
+9. 若 state/Git/ledger 任一不一致，先修 Project OS，禁止继续 Source/Product 核心开发。
 
-1. 读取 `PROJECT_CONTEXT.md`；
-2. 读取 `DECISIONS.md`；
-3. 读取 `README.md`；
-4. 获取当前 `HEAD`、当前分支、最近 10~20 个提交；
-5. 检查 `PROJECT_CONTEXT.md` 中的 `context_checkpoint` 到当前 `HEAD` 之间的提交与改动文件；
-6. 读取与“当前 Gate / 下一步”直接相关的 `specs/` 文件；
-7. 查看最新 CI 状态；
-8. 在确认“当前阶段、已冻结约束、未解决问题、下一步”之后再改代码。
-
-如果本地工作区可用，优先运行：
+本地可运行：
 
 ```text
+检查HT-CN续接状态.bat
 生成HT-CN续接包.bat
 ```
 
-它会生成 `logs/context/HTCN_CONTEXT_PACK.md`，把本次恢复所需的仓库状态、提交差异和核心上下文打包在一个文件中。
+Resume Pack 是动态索引，不再整包复制所有历史长文档。
 
-## 3. 禁止事项
+## 3. No Important Fact Only in Chat
 
-- 禁止仅凭聊天记忆判断当前版本或当前阶段。
-- 禁止把已经被新规范推翻的旧方案重新引入。
-- 禁止为了“让功能跑起来”而绕过 Source Fidelity / fail-closed 规则。
-- 禁止把 HT-CN 工程近似、A 股增强、统计评分伪装成 Carney 原始定义。
-- 禁止修改或重算已经冻结/消费的历史研究结果来美化新版本表现。
-- 禁止在没有读取相关 `specs/` 与测试的情况下大范围重构核心谐波逻辑。
-- 北交所（BSE）当前不属于默认工作范围，除非用户重新明确开启。
+以下任何事实出现后，必须在本工作单元结束前进入 Change / Decision / Issue / Attempt / State 至少一个 ledger：
 
-## 4. 会话内工作规则
+- 用户修改或否定需求；
+- 新 bug / Source conflict / data issue；
+- 测试或 CI 成功/失败；
+- 失败方案与失败原因；
+- 新约束、defer、quarantine；
+- Gate / Phase / next action 变化；
+- merge / release / real-M1 验收结果。
 
-一次会话应尽量完成一个可验收的开发单元，而不是不断让用户做碎片确认。
+没有落库的信息视为**未完成交接**。
 
-每个开发单元至少包含：
+## 4. Change-driven Execution
 
-- 目标与 Gate；
-- 实现；
-- 自动测试 / 回归；
-- 必要的浏览器或数据验收；
-- 结果记录；
-- 下一步。
+任何非琐碎修改必须有 CR ID。CR 至少记录 baseline、目标、非目标、验收标准、状态。
 
-如发生设计变化，必须同步更新 `DECISIONS.md`；如阶段/Gate/下一步变化，必须同步更新 `PROJECT_CONTEXT.md`。
+标准状态：
+`planned -> implementing -> validation_failed|validation_green -> ready_to_merge -> merged -> postmerge_pending -> closed`，以及 `blocked`。
 
-### 4.1 无静默执行协议（强制）
+每个有意义的实现/CI/运行尝试写入 append-only Attempt Ledger；失败不得只在聊天里解释后消失。
 
-HT-CN 的长任务不得让用户长时间只看到“正在思考”而不知道项目状态。
+## 5. Source / Research 永久禁区
 
-执行规则：
+- 禁止 score rescue identity；
+- 禁止改写 Source Raw PRZ 迎合 A 股；
+- 禁止用 retrospective D 冒充 observable Source Terminal；
+- Shark 不得发明 D；
+- 5-0 production quarantine 保持，除非新 Source Decision 明确解除；
+- Alternate Bat fail-closed 保持；
+- ordinary RSI 不得冒充 RSI BAMM；
+- M4 frozen methodology / Outcome Engine 不得因产品开发漂移；
+- 前瞻证据不足时禁止胜率/alpha/盈利能力结论；
+- 不执行证券交易。
 
-1. 在开始多步骤开发时，先用一句话说明当前目标和接下来要做的主要步骤；
-2. 每完成一个有意义的阶段（实现提交、deterministic tests、浏览器验收、真实 A 股研究、PR/merge）必须给出一次用户可见的进度更新；
-3. 连续工具调用较多时，至少每 2~3 个关键工具调用或状态发生实质变化时更新一次，不得把十几次诊断调用藏在一个长时间无反馈的“思考”状态里；
-4. CI 一旦变成 `failure` / `cancelled` / `timed_out`，优先读取失败 job/log 并立即说明失败点，再继续修复；不得继续长时间盲查而不报告；
-5. 同一工具/接口连续失败两次，必须切换获取方式或先报告当前已确认事实，禁止无限重试；
-6. 远端 CI 如果预计需要数分钟且当前没有其他可执行工作，不得通过持续静默轮询占住一个超长回合。应明确说明“正在等哪一个 job、最后确认到哪一步”；普通对话无法在回复结束后自动继续后台开发，因此不得伪装成后台持续 Agent；
-7. “CI 通过”不是开发单元的默认停止条件，但如果继续推进需要等待远端结果，必须保持状态透明；
-8. 用户询问“是不是卡住”时，第一动作是读取当前 HEAD / workflow run / job 状态，而不是重新解释旧计划。
+## 6. 工作单元 Closeout（强制）
 
-目标：用户任何时候都能知道 **现在在哪、正在等什么、最近一次成功/失败是什么、下一动作是什么**。
+结束、切换对话、接近上下文上限、Gate 改变或 milestone 完成前：
 
-## 5. Session Closeout（强制）
+1. 实现与测试有可定位 commit；
+2. Attempt Ledger 记录结果；
+3. CR 状态更新；
+4. 新长期规则写 Decision + Index；
+5. 新 blocker 写 Open Issues；
+6. Gate/next task 变化更新 PROJECT_STATE；
+7. 运行 `python scripts/project_state.py --resume`；
+8. CI Project OS gate 通过；
+9. merge 后必须做 post-merge state closeout，不能让 PROJECT_STATE 永久停在 feature-branch 状态。
 
-在以下任一情况发生前执行收尾：
+## 7. 无损恢复验收
 
-- 对话接近上下文上限；
-- 用户准备另开新对话；
-- 完成一个里程碑 / Gate；
-- 做出会影响后续实现的重要设计决策；
-- 结束当天开发。
+一个完全空白的新对话，不读取旧聊天全文，仅凭项目必须能回答：
 
-收尾至少完成：
+- canonical release/HEAD 是什么？
+- current Milestone/Phase 是什么？
+- active CR 及其状态是什么？
+- 当前 Gate / blocker / next task 是什么？
+- 哪些 Source/Methodology freeze 不可变？
+- 最近一次成功/失败 attempt 是什么？
+- latest CI 与 state 是否一致？
+- 哪些能力是 supported/quarantined/unsupported？
 
-1. 确保实现、测试和文档已经提交；
-2. 更新 `PROJECT_CONTEXT.md`：当前阶段、Gate、已完成、未解决、下一步；
-3. 必要时追加 `DECISIONS.md`；
-4. 追加 `SESSION_LOG.md`；
-5. 把 `context_checkpoint` 更新到本次收尾前最后一个“功能/研究事实”提交；
-6. 生成续接包并检查其能解释 `context_checkpoint..HEAD` 的全部变化；
-7. 新会话不得直接相信旧聊天，应再次执行 Bootstrap。
-
-说明：`context_checkpoint` 不要求等于包含上下文文档自身的最后一个提交。它应优先锚定最近一次已经验收的功能/研究状态；其后的文档提交会由续接包作为 delta 显示。
-
-## 6. 无损续接的判定标准
-
-新会话能够在不阅读旧聊天全文的情况下回答以下问题，才算恢复完成：
-
-- 当前真正的开发阶段是什么？
-- 当前 Gate 是什么，为什么存在？
-- 哪些东西已经通过验收，哪些只是研究中？
-- 哪些架构/方法论决定已经冻结，不能随意反悔？
-- 当前有哪些明确未解决问题？
-- 下一步唯一主任务是什么？
-- 最近提交改变了什么？
-- 最新 CI 是否通过？
-
-只要这 8 个问题不能从仓库恢复出来，就不得宣称“已无缝续接”。
+任何一项回答不了，都不得宣称“无缝续接”。

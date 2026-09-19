@@ -1,5 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
+> **Project OS v2 notice:** 本文件自 D-065 起属于历史/深层审计资料，不再拥有 current-state authority。当前阶段、active Change、Gate、blocker 与 next task 必须读取 `governance/PROJECT_STATE.json`；长期方向读取 `PROJECT_BLUEPRINT.md`。聊天与本文件中的旧“当前/下一步”段落不得覆盖机器状态。
+
+
 context_schema: `1`
 context_checkpoint: `47c9e4f2d525632d37f6aec0cf2c83e7300e0760`
 context_checkpoint_title: `M5 Phase 23 Real-M1 preflight implementation gates green`

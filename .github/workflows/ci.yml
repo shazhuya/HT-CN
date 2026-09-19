@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
@@ -33,6 +35,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e '.[dev]'
+
+      - name: Verify Project OS v2 state integrity
+        run: python scripts/project_state.py
 
       - name: Run Python tests
         run: python -m pytest -q
@@ -138,6 +143,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e '.[dev]'
+
+      - name: Verify Project OS v2 state integrity for formal release
+        run: python scripts/project_state.py
 
       - name: Verify formal main release lineage
         run: python scripts/m5_main_release_integrity.py

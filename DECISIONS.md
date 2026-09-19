@@ -1,5 +1,8 @@
 # HT-CN Decision Ledger — 设计决策账本
 
+> **Project OS v2 notice:** 本文件自 D-065 起属于历史/深层审计资料，不再拥有 current-state authority。当前阶段、active Change、Gate、blocker 与 next task 必须读取 `governance/PROJECT_STATE.json`；长期方向读取 `PROJECT_BLUEPRINT.md`。聊天与本文件中的旧“当前/下一步”段落不得覆盖机器状态。
+
+
 本文件记录会影响后续实现方向的“为什么”。它采用 append-only 风格：后续若推翻旧决定，应新增 supersede 记录，而不是静默改掉历史原因。
 
 ## D-001 — Carney source fidelity 高于工程便利
@@ -2326,3 +2329,41 @@ Hosted implementation validation:
 - formal release artifact ID **10582195249**.
 
 Integration closeout still requires PR #36 merge plus one observed push-main formal release run.
+
+
+### D-064 operational closeout — Phase23 merged and push-main release-gated
+
+Phase23 carrier PR #36 was merged to formal `main` with merge commit:
+
+`c309f782bd31ccf3e963be3bb65670f6e3788174`
+
+The merge-generated real main push produced:
+
+- Actions #1982 / `35433384021`;
+- event = push;
+- head_branch = main;
+- head_sha = Phase23 merge commit.
+
+Observed post-merge results:
+
+- deterministic-tests: success;
+- Python: 847 passed, 1163 warnings;
+- formal-main-release-integrity: success;
+- full-history release lineage: ready;
+- existing release Playwright: 24 passed;
+- Phase18 browser/evidence: valid;
+- Phase21 dynamic browser/evidence: valid;
+- M4 methodology drift: 0 / 37;
+- Outcome Engine drift: 0 / 4;
+- formal release artifact ID: 10581176575.
+
+Post-merge ancestry audit preserved the Phase23 final head, Phase22/21/20 merges, M4 methodology/outcome anchors, M3 and M2.31 as real ancestors.
+
+Therefore D-064 / Phase23 is operationally closed on the repository/integration side.
+
+The following is intentionally **not** claimed:
+- that the user's private local M1 has already passed Phase23 preflight;
+- that a real current-market `full_closeout_ready` has already been produced;
+- any profitability, win-rate or alpha inference.
+
+Those facts require the later single one-click run on the machine that owns private M1.
