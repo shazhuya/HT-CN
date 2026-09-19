@@ -283,3 +283,35 @@ def test_presentation_filter_does_not_change_source_totals() -> None:
     assert filtered["filtered_workflow_sections"][0]["items"][0][
         "instrument_id"
     ] == "SSE.2"
+
+
+def test_digest_rejects_non_exhaustive_history_delta() -> None:
+    source = _history([
+        _change(
+            instrument="SSE.1",
+            key="k1",
+            change_types=["lifecycle_state_changed"],
+            previous_action="waiting",
+            current_action="reaction_observation",
+        )
+    ])
+    source["observations"][0]["delta_total_change_count"] = 2
+
+    with pytest.raises(ValueError, match="not an exhaustive"):
+        build_daily_review_digest(source)
+
+
+def test_presentation_filter_rejects_unknown_bucket_and_change_type() -> None:
+    source = build_daily_review_digest(_history([]))
+
+    with pytest.raises(ValueError, match="unknown review workflow bucket"):
+        filter_daily_review_digest(
+            source,
+            workflow_bucket="best_opportunity",
+        )
+
+    with pytest.raises(ValueError, match="unknown review change type"):
+        filter_daily_review_digest(
+            source,
+            change_type="profit_probability_changed",
+        )
