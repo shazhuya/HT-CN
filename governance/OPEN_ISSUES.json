@@ -53,12 +53,14 @@
       "id": "ISSUE-0065",
       "severity": "medium",
       "type": "warning_noise",
-      "status": "open",
+      "status": "closed",
       "title": "Python warning volume is high and can hide regressions",
       "blocks": [
         "M6.4"
       ],
-      "next_action": "Freeze warning baseline and require explanation for net-new warnings."
+      "next_action": "Keep warning budget at zero; any new warning fails CI.",
+      "current_fact": "1160 repeated Pandas test deprecations were corrected, the intentional duplicate-ZIP warning is asserted explicitly, and two locked-dependency import deprecations are narrowly filtered by exact message.",
+      "resolution": "Warning budget reduced from 1163 to zero; pytest warning growth gate remains active."
     },
     {
       "id": "ISSUE-0066",
@@ -81,6 +83,18 @@
         "FIVE_ZERO production support"
       ],
       "next_action": "Keep quarantined until a new explicit Source decision resolves the conflict."
+    },
+    {
+      "id": "ISSUE-0068",
+      "severity": "medium",
+      "type": "lint_debt",
+      "status": "baseline_frozen_reduction_pending",
+      "title": "Repository-wide Ruff debt remains above clean baseline",
+      "blocks": [
+        "M6.4 quality closeout"
+      ],
+      "next_action": "Reduce Ruff violations in bounded mechanical batches; every verified reduction must lower governance/QUALITY_BASELINE.json.",
+      "current_fact": "The current branch reduces the repository-wide count from 493 to 483, keeps all newly added and materially edited files clean, and adds a no-net-growth CI gate."
     }
   ]
 }

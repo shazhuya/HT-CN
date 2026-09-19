@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import zipfile
+from pathlib import Path
 
 import pytest
 
@@ -11,7 +11,6 @@ from htcn.app.daily_handoff import (
     verify_daily_handoff_bundle,
 )
 from htcn.app.operator_snapshot import OPERATOR_SNAPSHOT_CONTRACT_VERSION
-
 
 FP_A = "a" * 64
 FP_B = "b" * 64
@@ -275,7 +274,10 @@ def test_handoff_verifier_detects_tampered_bound_snapshot(tmp_path: Path) -> Non
         output=output,
     )
 
-    with zipfile.ZipFile(output, "a") as archive:
+    with (
+        pytest.warns(UserWarning, match="Duplicate name"),
+        zipfile.ZipFile(output, "a") as archive,
+    ):
         archive.writestr(
             "m5/operator_snapshots/2026-09-18__b420__s3-5-8-13.json",
             b"tampered",

@@ -40,6 +40,33 @@ ALLOWED_CHANGE_STATUS = {
     "blocked",
 }
 
+ALLOWED_STATE_STATUS = {
+    "implementing",
+    "validation_failed",
+    "validation_green",
+    "ready_to_merge",
+    "merged",
+    "postmerge_pending",
+    "awaiting_private_run",
+    "real_run_in_progress",
+    "blocked",
+    "closed",
+    "ready",
+    "ready_not_started",
+}
+
+CHANGE_STATE_COMPATIBILITY = {
+    "planned": {"ready_not_started"},
+    "implementing": {"implementing", "real_run_in_progress"},
+    "validation_failed": {"validation_failed", "blocked"},
+    "validation_green": {"validation_green"},
+    "ready_to_merge": {"ready_to_merge"},
+    "merged": {"merged", "postmerge_pending"},
+    "postmerge_pending": {"postmerge_pending", "awaiting_private_run", "real_run_in_progress"},
+    "closed": {"closed", "ready", "ready_not_started"},
+    "blocked": {"blocked", "awaiting_private_run"},
+}
+
 
 def read_json(path: Path) -> dict[str, Any]:
     if not path.exists():
@@ -49,7 +76,7 @@ def read_json(path: Path) -> dict[str, Any]:
     except Exception as exc:
         raise RuntimeError(f"invalid JSON {path.relative_to(ROOT)}: {exc}") from exc
     if not isinstance(payload, dict):
-        raise RuntimeError(f"JSON root must be object: {path.relative_to(ROOT)}")
+        raise TypeError(f"JSON root must be object: {path.relative_to(ROOT)}")
     return payload
 
 
@@ -61,6 +88,7 @@ def run_git(*args: str, allow_failure: bool = False) -> str:
         text=True,
         encoding="utf-8",
         errors="replace",
+        check=False,
     )
     if proc.returncode != 0 and not allow_failure:
         detail = proc.stderr.strip() or proc.stdout.strip() or f"git {' '.join(args)} failed"
@@ -74,6 +102,7 @@ def git_commit_exists(sha: str) -> bool:
         cwd=ROOT,
         capture_output=True,
         text=True,
+        check=False,
     )
     return proc.returncode == 0
 
@@ -84,6 +113,7 @@ def git_is_ancestor(base: str, head: str) -> bool:
         cwd=ROOT,
         capture_output=True,
         text=True,
+        check=False,
     )
     return proc.returncode == 0
 
@@ -95,6 +125,22 @@ def _find_change_file(change_id: str) -> Path:
             f"active change {change_id} must resolve to exactly one file; found {len(matches)}"
         )
     return matches[0]
+
+
+def _single_status(path: Path, label: str, errors: list[str]) -> str | None:
+    rows = [
+        line.split(":", 1)[1].strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.startswith("status:")
+    ]
+    if len(rows) != 1:
+        errors.append(f"{label} must have exactly one parseable status")
+        return None
+    return rows[0]
+
+
+def _commit_from_attempt(record: dict[str, Any]) -> str:
+    return str(record.get("merge_commit") or record.get("head") or "")
 
 
 def _validate_release(state: dict[str, Any], errors: list[str]) -> None:
@@ -183,6 +229,9 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
             errors.append(f"current phase missing from active milestone: {phase_id}")
 
     active_change = current.get("active_change")
+    current_status = str(current.get("status", ""))
+    if current_status not in ALLOWED_STATE_STATUS:
+        errors.append(f"current state has invalid status: {current_status}")
     if not active_change and current.get("status") not in {"closed", "ready", "ready_not_started"}:
         errors.append(
             "current state without active_change must be closed/ready/ready_not_started"
@@ -195,21 +244,34 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
             change_text = change_path.read_text(encoding="utf-8")
             if f"baseline_head: {state.get('governance_baseline', {}).get('head')}" not in change_text:
                 errors.append("active Change baseline_head does not match governance baseline")
-            status_lines = [
-                line.split(":", 1)[1].strip()
-                for line in change_text.splitlines()
-                if line.startswith("status:")
-            ]
-            if len(status_lines) != 1:
-                errors.append("active Change must have exactly one parseable status")
-            elif status_lines[0] not in ALLOWED_CHANGE_STATUS:
-                errors.append(f"active Change has invalid status: {status_lines[0]}")
+            change_status = _single_status(change_path, "active Change", errors)
+            if change_status and change_status not in ALLOWED_CHANGE_STATUS:
+                errors.append(f"active Change has invalid status: {change_status}")
+            elif change_status and current_status not in CHANGE_STATE_COMPATIBILITY[change_status]:
+                errors.append(
+                    "active Change status is incompatible with current state: "
+                    f"change={change_status} current={current_status}"
+                )
         except RuntimeError as exc:
             errors.append(str(exc))
 
     for rel in state.get("required_specs", []):
         if not (ROOT / rel).exists():
             errors.append(f"required spec missing: {rel}")
+
+    active_spec = current.get("active_spec")
+    if active_change:
+        if not active_spec:
+            errors.append("current.active_spec is required while a change is active")
+        elif active_spec not in state.get("required_specs", []):
+            errors.append("current.active_spec must be present in required_specs")
+        elif (ROOT / active_spec).exists():
+            spec_status = _single_status(ROOT / active_spec, "active spec", errors)
+            if spec_status and spec_status != current_status:
+                errors.append(
+                    "active spec status does not match current state: "
+                    f"spec={spec_status} current={current_status}"
+                )
 
     ledger_map = state.get("ledgers") or {}
     for name, rel in ledger_map.items():
@@ -245,6 +307,8 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
     if attempts_rel and active_change:
         attempt_path = ROOT / attempts_rel
         seen_active_attempt = False
+        attempts: list[dict[str, Any]] = []
+        attempt_ids: set[str] = set()
         if attempt_path.exists():
             for line_no, raw in enumerate(
                 attempt_path.read_text(encoding="utf-8").splitlines(), start=1
@@ -253,15 +317,83 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
                     continue
                 try:
                     record = json.loads(raw)
-                except Exception as exc:
+                except json.JSONDecodeError as exc:
                     errors.append(
                         f"attempt ledger invalid JSON at line {line_no}: {exc}"
                     )
                     continue
+                attempt_id = str(record.get("attempt_id", ""))
+                if not attempt_id:
+                    errors.append(f"attempt ledger missing attempt_id at line {line_no}")
+                elif attempt_id in attempt_ids:
+                    errors.append(f"duplicate attempt_id in attempt ledger: {attempt_id}")
+                else:
+                    attempt_ids.add(attempt_id)
+                attempts.append(record)
                 if record.get("change_id") == active_change:
                     seen_active_attempt = True
         if not seen_active_attempt:
             errors.append(f"attempt ledger has no record for active change {active_change}")
+
+        latest_attempt_id = str(current.get("latest_attempt_id", ""))
+        latest_matches = [
+            row for row in attempts if row.get("attempt_id") == latest_attempt_id
+        ]
+        if not latest_attempt_id:
+            errors.append("current.latest_attempt_id is required while a change is active")
+        elif len(latest_matches) != 1:
+            errors.append(
+                "current.latest_attempt_id must resolve to exactly one attempt: "
+                f"{latest_attempt_id}"
+            )
+        else:
+            latest_attempt = latest_matches[0]
+            if latest_attempt.get("change_id") != active_change:
+                errors.append("latest attempt does not belong to active change")
+            if latest_attempt.get("result") not in {"success", "failed", "blocked", "cancelled"}:
+                errors.append("latest attempt has invalid result")
+            attempt_commit = _commit_from_attempt(latest_attempt)
+            if not re.fullmatch(r"[0-9a-f]{40}", attempt_commit):
+                errors.append("latest attempt must bind a full head or merge_commit SHA")
+            elif not git_commit_exists(attempt_commit):
+                errors.append(f"latest attempt commit missing from Git history: {attempt_commit}")
+            elif not git_is_ancestor(attempt_commit, run_git("rev-parse", "HEAD")):
+                errors.append("latest attempt commit is not an ancestor of HEAD")
+
+        hosted_attempt_id = str(current.get("latest_hosted_validation_attempt_id", ""))
+        hosted_matches = [
+            row for row in attempts if row.get("attempt_id") == hosted_attempt_id
+        ]
+        if not hosted_attempt_id:
+            errors.append(
+                "current.latest_hosted_validation_attempt_id is required while a change is active"
+            )
+        elif len(hosted_matches) != 1:
+            errors.append(
+                "current.latest_hosted_validation_attempt_id must resolve to exactly one attempt: "
+                f"{hosted_attempt_id}"
+            )
+        else:
+            hosted_attempt = hosted_matches[0]
+            hosted_commit = _commit_from_attempt(hosted_attempt)
+            latest_validation = current.get("latest_validation") or {}
+            validation_commit = str(
+                latest_validation.get("merge_commit")
+                or latest_validation.get("head")
+                or ""
+            )
+            if hosted_attempt.get("change_id") != active_change:
+                errors.append("latest hosted validation attempt does not belong to active change")
+            if hosted_attempt.get("result") != "success":
+                errors.append("latest hosted validation attempt must be successful")
+            if not isinstance(hosted_attempt.get("workflow_run"), int):
+                errors.append("latest hosted validation attempt must bind a workflow_run")
+            if latest_validation.get("result") != "success":
+                errors.append("latest_validation must be successful")
+            if validation_commit != hosted_commit:
+                errors.append("latest_validation commit does not match hosted attempt commit")
+            if hosted_attempt.get("workflow_run") != latest_validation.get("workflow_run"):
+                errors.append("latest_validation workflow_run does not match hosted attempt")
 
     _validate_release(state, errors)
     _validate_freezes(state, errors)
@@ -316,6 +448,16 @@ def build_resume_pack(state: dict[str, Any]) -> str:
     decisions = read_json(DECISIONS_PATH)
     issues = read_json(ISSUES_PATH)
     source = read_json(SOURCE_PATH)
+    recovery_questions = """## Blank-session recovery questions
+
+- 当前 canonical release 是什么？
+- 当前 Milestone/Phase 与 active Change 是什么？
+- 当前 Gate / blocker / next major task 是什么？
+- 哪些 Source/Methodology 冻结不能改？
+- 最近一次失败/成功尝试是什么？
+- 最新 CI / Git 状态是否与 PROJECT_STATE 一致？
+任何一项回答不了，都不得宣称已无损续接。
+"""
 
     parts = [
         "# HT-CN Resume Pack v2 — 项目状态续接包\n",
@@ -339,14 +481,7 @@ def build_resume_pack(state: dict[str, Any]) -> str:
         "## Recent commits\n\n```text\n" + (recent or "(none)") + "\n```\n",
         "## Commits after last integrated release\n\n```text\n" + (delta or "(none)") + "\n```\n",
         "## Changed files after last integrated release\n\n```text\n" + (changed or "(none)") + "\n```\n",
-        "## Blank-session recovery questions\n\n"
-        "- 当前 canonical release 是什么？\n"
-        "- 当前 Milestone/Phase 与 active Change 是什么？\n"
-        "- 当前 Gate / blocker / next major task 是什么？\n"
-        "- 哪些 Source/Methodology 冻结不能改？\n"
-        "- 最近一次失败/成功尝试是什么？\n"
-        "- 最新 CI / Git 状态是否与 PROJECT_STATE 一致？\n"
-        "任何一项回答不了，都不得宣称已无损续接。\n",
+        recovery_questions,
     ]
     return "\n".join(parts).rstrip() + "\n"
 

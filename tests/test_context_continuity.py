@@ -13,8 +13,13 @@ REQUIRED_FILES = [
     "governance/DECISION_INDEX.json",
     "governance/SOURCE_COVERAGE.json",
     "governance/OPEN_ISSUES.json",
+    "governance/QUALITY_BASELINE.json",
+    "uv.lock",
+    "requirements-dev.lock",
     "scripts/project_state.py",
     "scripts/context_pack.py",
+    "scripts/pytest_with_warning_budget.py",
+    "scripts/ruff_with_budget.py",
     "生成HT-CN续接包.bat",
     "检查HT-CN续接状态.bat",
 ]
@@ -44,6 +49,11 @@ def test_project_state_is_machine_current_truth() -> None:
         "real_run_in_progress",
     }
     assert state["current"]["active_change"] == "CR-0066"
+    assert state["current"]["active_spec"] == "specs/m6-phase-2-real-private-m1-closeout.md"
+    assert state["current"]["latest_attempt_id"] == "A-20260919-0066-021"
+    assert state["current"]["latest_hosted_validation_attempt_id"] == (
+        "A-20260919-0066-021"
+    )
     assert state["next_major_task"]["phase"] == "M6.2"
     assert state["next_major_task"]["status"] in {
         "implementing",
@@ -64,13 +74,13 @@ def test_active_change_and_required_specs_resolve() -> None:
     change_text = change.read_text(encoding="utf-8")
     assert any(
         f"status: {value}" in change_text
-        for value in {
+        for value in (
             "implementing",
             "validation_green",
             "ready_to_merge",
             "merged",
             "postmerge_pending",
-        }
+        )
     )
     for rel in state["required_specs"]:
         assert (ROOT / rel).exists(), rel
@@ -127,3 +137,5 @@ def test_project_state_engine_is_fail_closed_and_checks_ancestry() -> None:
     assert "active decision source missing" in text
     assert "return 2" in text
     assert text.count("ALLOWED_CHANGE_STATUS = {") == 1
+    assert "active spec status does not match current state" in text
+    assert "latest_validation commit does not match hosted attempt commit" in text

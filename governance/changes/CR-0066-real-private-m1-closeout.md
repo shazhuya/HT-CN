@@ -155,3 +155,50 @@ This cleanup:
 - does not alter M2/M3/M4/M5 implementation;
 - keeps M6.2 in `awaiting_private_run`;
 - is recorded as A-20260919-0066-010.
+
+## Final cleanup lifecycle closure
+
+The cleanup lifecycle is now completely preserved instead of stopping at the first local success:
+
+- A-20260919-0066-011: failed, workflow `35444796422`, literal `\\n` caused pytest collection `SyntaxError`;
+- A-20260919-0066-012: failed, workflow `35444858864`, first repair did not actually replace the literal escape;
+- the exact source was repaired and verified before the final merge;
+- PR #41 merged as `cffe3956f4a053581a512a3df24413f400ab3be5`;
+- push-main workflow `35445071382` / run #2133 completed successfully;
+- deterministic tests and formal-main-release-integrity both succeeded;
+- the verified final success is recorded as A-20260919-0066-013.
+
+`86fd17d01b3b9c2fc597d500723c6966c9a2250f` remains the latest integrated M6.2 product release. `cffe3956f4a053581a512a3df24413f400ab3be5` is the latest successful governance validation. This distinction is explicit and M6.2 remains `awaiting_private_run`.
+
+## Stage-audit continuity and quality hardening
+
+The 2026-09-19 stage audit found that the prior Project OS checks could still pass while the active spec status or final attempt pointer lagged behind Git/CI. This bounded hardening closes that gap without changing M1–M5 product or research semantics:
+
+- `PROJECT_STATE.current.active_spec` must resolve through `required_specs` and its status must equal the current machine state;
+- Change lifecycle status must be compatible with the current machine state;
+- `PROJECT_STATE.current.latest_attempt_id` must resolve to one unique attempt belonging to the active CR;
+- a successful latest attempt must bind the same commit and workflow run as `latest_validation`;
+- attempt IDs are unique and the referenced attempt commit must be an ancestor of the current checkout;
+- M6.2 spec now correctly states `awaiting_private_run`;
+- the final PR #41 / push-main success is recorded as A-20260919-0066-013;
+- Python dependency resolution is locked through `uv.lock` and `requirements-dev.lock`;
+- the 1163-warning and repository-wide Ruff debt baselines are fail-on-growth CI gates;
+- README now exposes current state, operator entrypoints, authority order, data boundaries and Source support limits.
+
+The warning/lint budgets are containment gates, not debt closure claims. Existing debt remains tracked for bounded reduction. The real private-M1 run remains the only M6.2 empirical blocker.
+
+Clean local validation on `ff644f45f048bc38d2c55ce10aaac8db719d6195` passed 872 Python tests with the warning budget unchanged at 1163. Ruff debt was 485, all newly added/materially edited Project OS files were clean, both M4 freeze guards matched, and the dependency lock validated. This is recorded as A-20260919-0066-015. Hosted branch validation remains required before merge.
+
+The warning audit then eliminated the historical warning debt instead of merely containing it: 1160 repeated Pandas test deprecations were corrected with explicit day units, the deliberate duplicate-member ZIP tamper test now asserts its warning, and two locked upstream import deprecations are filtered by exact message. The pytest warning budget is now zero.
+
+The first branch push attempt from `125872ed64415c09b6606dade08d091ef7413a7c` was blocked because the execution environment had no GitHub credential helper, token or authenticated GitHub CLI. No remote ref was created. This external-auth failure is preserved as A-20260919-0066-016 and is not represented as a code or CI failure.
+
+The first zero-warning full run passed all 872 tests but correctly failed the new quality gate on one remaining `StarletteDeprecationWarning`. Its class inherits from `UserWarning`, not `DeprecationWarning`; the narrow exact-message filter was corrected to the real Starlette category without relaxing the zero budget. This failed attempt is preserved as A-20260919-0066-017.
+
+The corrected clean run on `8f0b7ddcb42ba796766232bfcf3010a7ada3c6cd` passed 872 Python tests with zero warnings, Ruff debt 483, Project OS, both M4 freeze guards and the dependency lock. This is preserved as A-20260919-0066-018.
+
+The final local release candidate `482a005e498e7b63ea57015074f9c689a56a0367` additionally passed the Web production build with the same 872/0 Python result, Ruff 483 budget, Project OS, both freeze guards and dependency lock. This is preserved as A-20260919-0066-019. The branch is frozen locally pending authenticated push and formal hosted validation.
+
+The connected GitHub integration then published the six local commits as an equivalent hosted commit chain. GitHub API commit creation preserved every file tree and commit boundary but produced new commit-object SHAs. The first hosted run #2135 / `35448689280` therefore failed closed at Project OS because A-019 still named local-only commit `482a005e498e7b63ea57015074f9c689a56a0367`. This expected continuity failure is preserved as A-20260919-0066-020. The zero-warning baseline is rebound to remote-equivalent commit `8848d859b712ece8416abcaf2c26ecba74426ad1`, whose tree is identical to the validated local A-019 state; ancestry checks remain strict and a new hosted run is required.
+
+The corrected hosted PR run #2137 / `35448896046` succeeded on remote head `4b664bd947565742577201f9be5af48539c386b2`: Project OS ready, 872 Python tests / 0 warnings, Ruff 483, Web production build, 24 deterministic browser tests, Phase18 and Phase21 acceptance, M4 methodology frozen-match (37), Outcome Engine frozen-match (4), and formal release artifact `10586213144`. This is preserved as A-20260919-0066-021. PR #42 is formally green and ready for review/merge; M6.2 remains `awaiting_private_run`.

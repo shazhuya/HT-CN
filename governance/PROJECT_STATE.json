@@ -25,15 +25,18 @@
     "title": "Real Private-M1 Closeout",
     "status": "awaiting_private_run",
     "active_change": "CR-0066",
+    "active_spec": "specs/m6-phase-2-real-private-m1-closeout.md",
+    "latest_attempt_id": "A-20260919-0066-021",
+    "latest_hosted_validation_attempt_id": "A-20260919-0066-021",
     "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35443729796,
-      "run_number": 2108,
-      "event": "push",
-      "merge_commit": "86fd17d01b3b9c2fc597d500723c6966c9a2250f",
-      "python_passed": 869,
-      "warnings": 1163,
+      "workflow_run": 35448896046,
+      "run_number": 2137,
+      "event": "pull_request",
+      "head": "4b664bd947565742577201f9be5af48539c386b2",
+      "python_passed": 872,
+      "warnings": 0,
       "project_os_integrity": "success",
       "formal_main_release_integrity": "success",
       "existing_playwright_passed": 24,
@@ -41,7 +44,8 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10584915975
+      "artifact_id": 10586213144,
+      "scope": "Project OS continuity and zero-warning quality hardening branch validation; M6.2 product release remains 86fd17d01b3b9c2fc597d500723c6966c9a2250f"
     }
   },
   "private_m1": {
@@ -90,6 +94,7 @@
     "decisions": "governance/DECISION_INDEX.json",
     "source_coverage": "governance/SOURCE_COVERAGE.json",
     "issues": "governance/OPEN_ISSUES.json",
+    "quality": "governance/QUALITY_BASELINE.json",
     "attempts": "governance/attempts/2026-09.jsonl",
     "releases": "governance/releases/86fd17d01b3b9c2fc597d500723c6966c9a2250f.json"
   },

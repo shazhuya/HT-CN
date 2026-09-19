@@ -17,7 +17,9 @@ def _records() -> list[dict]:
                 {
                     "instrument_id": symbol,
                     "signal_trade_date": signal_date.date().isoformat(),
-                    "observation_end_trade_date": (signal_date + pd.Timedelta(days=3)).date().isoformat(),
+                    "observation_end_trade_date": (
+                        signal_date + pd.Timedelta(3, unit="D")
+                    ).date().isoformat(),
                     "signal_bar": index,
                     "pattern_id": "bat" if symbol_index % 2 == 0 else "gartley",
                     "schema": "XABCD",

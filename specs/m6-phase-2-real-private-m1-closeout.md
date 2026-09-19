@@ -1,6 +1,6 @@
 # M6 Phase 2 — Real Private-M1 Closeout / Identity-Bound Evidence Bundle v1
 
-status: implementing
+status: awaiting_private_run
 change: CR-0066
 decision: D-066
 
