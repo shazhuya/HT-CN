@@ -1,6 +1,6 @@
 # M5 Phase 15 — Handoff v3 Inspector / Portable Review Workspace v1
 
-状态：**implementation in progress**
+状态：**Frozen / hosted CI green**
 
 ## 1. 目标
 
@@ -173,20 +173,20 @@ Phase 15 v1 是严格只读 Inspector。
 
 Phase 15 v1 最低验收：
 
-- [ ] valid v3 可构建 inspection model；
-- [ ] invalid/tampered v3 在解析前 fail closed；
-- [ ] current Queue 可离线浏览；
-- [ ] current/previous history 可离线浏览；
-- [ ] digest 可离线浏览；
-- [ ] review-session / active follow-up 可离线浏览；
-- [ ] instrument/display-key drill-down；
-- [ ] 单文件中文 HTML；
-- [ ] HTML 无网络 fetch、无 review write action；
-- [ ] inspector 不访问 market database；
-- [ ] Python regression green；
-- [ ] existing Web build / Playwright gates 不回归；
-- [ ] M4 methodology 0 drift；
-- [ ] Outcome Engine 0 drift。
+- [x] valid v3 可构建 inspection model；
+- [x] invalid/tampered v3 在解析前 fail closed；
+- [x] current Queue 可离线浏览；
+- [x] current/previous history 可离线浏览；
+- [x] digest 可离线浏览；
+- [x] review-session / active follow-up 可离线浏览；
+- [x] instrument/display-key drill-down；
+- [x] 单文件中文 HTML；
+- [x] HTML 无网络 fetch、无 review write action；
+- [x] inspector 不访问 market database；
+- [x] Python regression green；
+- [x] existing Web build / Playwright gates 不回归；
+- [x] M4 methodology 0 drift；
+- [x] Outcome Engine 0 drift。
 
 ## 9. 后续候选
 
@@ -198,3 +198,30 @@ Phase 15 v1 完成后再评估：
 - Git 主线 integration plan。
 
 以上均不得阻塞当前只读 Inspector closeout。
+
+
+## 10. Hosted validation closeout — 2026-09-19
+
+Validated implementation checkpoint:
+
+`4534e4ed16a9b5aabca9245ceeab271a561b5f4b`
+
+GitHub Actions:
+
+- workflow: `HT-CN CI`;
+- run: **#1805 / 35419145630**;
+- Python: **779 passed**, 1163 warnings;
+- Web build: success;
+- Playwright: **24 passed**;
+- browser evidence upload: success.
+
+Phase-14 base diff audit:
+
+- Phase-15 branch is 5 commits ahead / 0 behind the Phase-14 branch at the implementation checkpoint;
+- only 5 Phase-15 files were added;
+- no existing M4 methodology component was modified;
+- no Outcome Engine component was modified.
+
+Interpretation:
+
+**Phase 15 v1 read-only portable inspector is code-complete and regression-green.**
