@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "issues": [
+    {
+      "id": "ISSUE-0061",
+      "severity": "blocker",
+      "type": "operational",
+      "status": "open",
+      "title": "Real private-M1 Phase23 current-market closeout not yet produced",
+      "blocks": [
+        "M6.2 closeout"
+      ],
+      "next_action": "Run the formal one-click gate only after M6.1 is closed on main."
+    },
+    {
+      "id": "ISSUE-0062",
+      "severity": "high",
+      "type": "coverage_semantics",
+      "status": "open",
+      "title": "Universe coverage terms are not yet formally separated",
+      "blocks": [
+        "M6.3"
+      ],
+      "next_action": "Freeze listed/initialized/QFQ-ready/scanner/operator universe contract."
+    },
+    {
+      "id": "ISSUE-0063",
+      "severity": "medium",
+      "type": "repository_governance",
+      "status": "open",
+      "title": "main branch server-side protection is disabled/unconfirmed as a required gate",
+      "blocks": [
+        "M6.4"
+      ],
+      "next_action": "Enable required checks if permissions allow; otherwise record admin blocker without claiming protection."
+    },
+    {
+      "id": "ISSUE-0064",
+      "severity": "medium",
+      "type": "repository_hygiene",
+      "status": "open",
+      "title": "Historical stacked M5 draft PRs remain open after preserve-ancestry integration",
+      "blocks": [
+        "M6.4"
+      ],
+      "next_action": "Close as historical/superseded after Project OS merge."
+    },
+    {
+      "id": "ISSUE-0065",
+      "severity": "medium",
+      "type": "warning_noise",
+      "status": "open",
+      "title": "Python warning volume is high and can hide regressions",
+      "blocks": [
+        "M6.4"
+      ],
+      "next_action": "Freeze warning baseline and require explanation for net-new warnings."
+    },
+    {
+      "id": "ISSUE-0066",
+      "severity": "research",
+      "type": "empirical",
+      "status": "open",
+      "title": "Prospective outcome sample is insufficient for win-rate/alpha/profitability claims",
+      "blocks": [
+        "M7 statistical conclusions"
+      ],
+      "next_action": "Accumulate frozen prospective evidence; do not infer alpha early."
+    },
+    {
+      "id": "ISSUE-0067",
+      "severity": "research",
+      "type": "source",
+      "status": "open",
+      "title": "5-0 Source conflict remains unresolved",
+      "blocks": [
+        "FIVE_ZERO production support"
+      ],
+      "next_action": "Keep quarantined until a new explicit Source decision resolves the conflict."
+    }
+  ]
+}
