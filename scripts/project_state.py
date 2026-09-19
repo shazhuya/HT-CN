@@ -40,18 +40,6 @@ ALLOWED_CHANGE_STATUS = {
     "blocked",
 }
 
-ALLOWED_CHANGE_STATUS = {
-    "planned",
-    "implementing",
-    "validation_failed",
-    "validation_green",
-    "ready_to_merge",
-    "merged",
-    "postmerge_pending",
-    "closed",
-    "blocked",
-}
-
 
 def read_json(path: Path) -> dict[str, Any]:
     if not path.exists():

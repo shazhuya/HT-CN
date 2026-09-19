@@ -126,3 +126,4 @@ def test_project_state_engine_is_fail_closed_and_checks_ancestry() -> None:
     assert "required spec missing" in text
     assert "active decision source missing" in text
     assert "return 2" in text
+    assert text.count("ALLOWED_CHANGE_STATUS = {") == 1
