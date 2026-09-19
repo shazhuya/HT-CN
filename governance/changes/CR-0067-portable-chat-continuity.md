@@ -77,3 +77,7 @@ main validation remain required before closure.
 
 PR #43 was squash-merged as `335414530850bd5b4d5acf030c7eff49cf5f9124` with the exact
 final hosted branch tree. An explicit main push validation is pending before closure.
+
+The GitHub App merge/ref update did not emit a main push workflow. This connector limitation is
+preserved as A-20260919-0067-007; a final governance-only PR must validate the exact closeout
+candidate through `formal-main-release-integrity` before the Change can close.
