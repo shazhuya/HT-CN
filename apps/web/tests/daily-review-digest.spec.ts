@@ -170,7 +170,23 @@ const allSections = [
 ]
 
 function digest(filtered = false) {
-  const sections = filtered ? [allSections[1]] : allSections
+  const addReview = (section: typeof allSections[number]) => ({
+    ...section,
+    items: section.items.map((item) => ({
+      ...item,
+      review: {
+        review_state: 'unseen',
+        note: '',
+        current_event_id: null,
+        active_follow_up: false,
+        active_follow_up_event_id: null,
+        active_follow_up_origin_observation_id: null,
+        active_follow_up_origin_trade_date: null,
+      },
+    })),
+  })
+  const fullSections = allSections.map(addReview)
+  const sections = filtered ? [addReview(allSections[1])] : fullSections
   return {
     schema_version: 1,
     status: 'changes_ready',
@@ -192,12 +208,24 @@ function digest(filtered = false) {
       reaction_observation: 1,
       disappeared_candidate: 1,
     },
-    workflow_sections: allSections,
+    workflow_sections: fullSections,
     filtered_change_count: filtered ? 1 : 3,
     filtered_workflow_sections: sections,
     analysis_incomplete_count: 0,
     analysis_incomplete_instruments: [],
     source_change_count_unchanged: 3,
+    review_state_counts: {
+      unseen: 3,
+      reviewed: 0,
+      follow_up: 0,
+    },
+    active_follow_up_count: 0,
+    source_review_state_counts_unchanged: {
+      unseen: 3,
+      reviewed: 0,
+      follow_up: 0,
+    },
+    source_active_follow_up_count_unchanged: 0,
     authoritative_evidence: false,
     writes_m4_evidence: false,
     historical_outcome_used_for_ranking: false,
@@ -230,7 +258,7 @@ test('M5 daily review digest keeps source totals while presentation filters dril
   await page.route('**/api/operator/history?**', async (route) => {
     await route.fulfill({ json: historyPayload })
   })
-  await page.route('**/api/operator/review-digest**', async (route) => {
+  await page.route('**/api/operator/review-session**', async (route) => {
     const url = new URL(route.request().url())
     const workflow = url.searchParams.get('workflow_bucket')
     const changeType = url.searchParams.get('change_type')
