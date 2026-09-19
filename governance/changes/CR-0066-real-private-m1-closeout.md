@@ -1,6 +1,6 @@
 # CR-0066 — M6.2 Real Private-M1 Closeout
 
-status: ready_to_merge
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -83,3 +83,17 @@ CR-0066 engineering is ready to merge. The empirical private-M1 run remains inte
 - Outcome Engine: **frozen_match / 4 components**.
 
 This supersedes the earlier #2080 validation pointer. No implementation changes occurred after this validation.
+
+## Evidence-bundle hardening audit
+
+Independent pre-merge review found that ordinary manifest hash verification could be stricter against a malicious re-packed ZIP whose outer hashes were recomputed. The verifier was hardened without changing any market/research semantics:
+
+- reject unsafe archive paths;
+- reject unlisted/extra archive members;
+- independently re-bind browser evidence trade date and source identity;
+- bind every screenshot record to the actual bundled screenshot bytes;
+- bind browser-source workspace / inspector / structural hashes to bundled members;
+- bind immutable Phase19 archive member hashes to bundled members;
+- add regression tests for unlisted unsafe members, rehashed browser-evidence semantic tamper, and rehashed workspace tamper.
+
+After this implementation change, prior ready-to-merge validation is historical only. A new frozen-head validation is required.
