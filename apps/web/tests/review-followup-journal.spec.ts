@@ -84,8 +84,8 @@ const history = {
   is_trade_instruction: false,
 }
 
-function session(saved: boolean) {
-  const review = saved
+function session(state: 'unseen' | 'follow_up' | 'reviewed') {
+  const review = state === 'follow_up'
     ? {
         review_state: 'follow_up',
         note: '继续观察下一关键价',
@@ -95,7 +95,17 @@ function session(saved: boolean) {
         active_follow_up_origin_observation_id: observationId,
         active_follow_up_origin_trade_date: '2026-09-19',
       }
-    : {
+    : state === 'reviewed'
+      ? {
+          review_state: 'reviewed',
+          note: '',
+          current_event_id: 'c'.repeat(64),
+          active_follow_up: false,
+          active_follow_up_event_id: null,
+          active_follow_up_origin_observation_id: null,
+          active_follow_up_origin_trade_date: null,
+        }
+      : {
         review_state: 'unseen',
         note: '',
         current_event_id: null,
@@ -148,14 +158,34 @@ function session(saved: boolean) {
     analysis_incomplete_count: 0,
     analysis_incomplete_instruments: [],
     source_change_count_unchanged: 1,
-    review_state_counts: saved
+    review_state_counts: state === 'follow_up'
       ? { unseen: 0, reviewed: 0, follow_up: 1 }
-      : { unseen: 1, reviewed: 0, follow_up: 0 },
-    active_follow_up_count: saved ? 1 : 0,
-    source_review_state_counts_unchanged: saved
+      : state === 'reviewed'
+        ? { unseen: 0, reviewed: 1, follow_up: 0 }
+        : { unseen: 1, reviewed: 0, follow_up: 0 },
+    active_follow_ups: state === 'follow_up'
+      ? [{
+          display_key: key,
+          instrument_id: 'SSE.688256',
+          source_observation_id: observationId,
+          source_trade_date: '2026-09-19',
+          source_revision_ordinal: 1,
+          source_change_types: ['lifecycle_state_changed', 'next_key_changed'],
+          event_id: 'b'.repeat(64),
+          created_at_utc: '2026-09-19T01:10:00+00:00',
+          note: '继续观察下一关键价',
+          review_state: 'follow_up',
+          in_current_digest: true,
+        }]
+      : [],
+    active_follow_up_count: state === 'follow_up' ? 1 : 0,
+    active_follow_up_in_current_digest_count: state === 'follow_up' ? 1 : 0,
+    source_review_state_counts_unchanged: state === 'follow_up'
       ? { unseen: 0, reviewed: 0, follow_up: 1 }
-      : { unseen: 1, reviewed: 0, follow_up: 0 },
-    source_active_follow_up_count_unchanged: saved ? 1 : 0,
+      : state === 'reviewed'
+        ? { unseen: 0, reviewed: 1, follow_up: 0 }
+        : { unseen: 1, reviewed: 0, follow_up: 0 },
+    source_active_follow_up_count_unchanged: state === 'follow_up' ? 1 : 0,
     authoritative_evidence: false,
     writes_m4_evidence: false,
     historical_outcome_used_for_ranking: false,
@@ -166,8 +196,8 @@ function session(saved: boolean) {
 }
 
 test('M5 review session saves follow-up without changing source review totals', async ({ page }) => {
-  let saved = false
-  let posted: Record<string, unknown> | null = null
+  let state: 'unseen' | 'follow_up' | 'reviewed' = 'unseen'
+  const posts: Record<string, unknown>[] = []
 
   await page.route('**/api/health', async (route) => {
     await route.fulfill({
@@ -188,16 +218,20 @@ test('M5 review session saves follow-up without changing source review totals', 
   await page.route('**/api/operator/history?**', async (route) => {
     await route.fulfill({ json: history })
   })
+  await page.route('**/api/operator/review-session**', async (route) => {
+    await route.fulfill({ json: session(state) })
+  })
   await page.route('**/api/operator/review-session/event', async (route) => {
-    posted = route.request().postDataJSON() as Record<string, unknown>
-    saved = true
+    const posted = route.request().postDataJSON() as Record<string, unknown>
+    posts.push(posted)
+    state = posted.review_state === 'reviewed' ? 'reviewed' : 'follow_up'
     await route.fulfill({
       json: {
         schema_version: 1,
         status: 'appended',
         event: {
-          event_id: 'b'.repeat(64),
-          review_state: 'follow_up',
+          event_id: state === 'reviewed' ? 'c'.repeat(64) : 'b'.repeat(64),
+          review_state: state,
         },
         waited_for_lock: false,
         wait_seconds: 0,
@@ -206,9 +240,6 @@ test('M5 review session saves follow-up without changing source review totals', 
         is_trade_instruction: false,
       },
     })
-  })
-  await page.route('**/api/operator/review-session**', async (route) => {
-    await route.fulfill({ json: session(saved) })
   })
 
   await page.goto('/')
@@ -234,10 +265,24 @@ test('M5 review session saves follow-up without changing source review totals', 
   await expect(summary.getByText('持续跟踪中').locator('..')).toContainText('1')
   await expect(review.getByText('跟踪中 · 始于 2026-09-19')).toBeVisible()
 
-  expect(posted).not.toBeNull()
-  expect(posted?.source_observation_id).toBe(observationId)
-  expect(posted?.display_key).toBe(key)
-  expect(posted?.review_state).toBe('follow_up')
-  expect(posted?.note).toBe('继续观察下一关键价')
-  expect(String(posted?.client_request_id ?? '')).not.toBe('')
+  expect(posts).toHaveLength(1)
+  expect(posts[0].source_observation_id).toBe(observationId)
+  expect(posts[0].display_key).toBe(key)
+  expect(posts[0].review_state).toBe('follow_up')
+  expect(posts[0].note).toBe('继续观察下一关键价')
+  expect(String(posts[0].client_request_id ?? '')).not.toBe('')
+
+  const followups = page.getByLabel('active-follow-ups')
+  await expect(followups).toBeVisible()
+  await expect(followups.getByText('今日有新变化')).toBeVisible()
+  await followups.getByRole('button', { name: '结束跟踪' }).click()
+
+  await expect(followups).toHaveCount(0)
+  await expect(summary.getByText('源变化总数').locator('..')).toContainText('1')
+  await expect(summary.getByText('已看').locator('..')).toContainText('1')
+  await expect(summary.getByText('持续跟踪中').locator('..')).toContainText('0')
+  expect(posts).toHaveLength(2)
+  expect(posts[1].review_state).toBe('reviewed')
+  expect(posts[1].source_observation_id).toBe(observationId)
+  expect(posts[1].display_key).toBe(key)
 })
