@@ -1,6 +1,6 @@
 # M5 Phase 17 — Portable Visual Semantics / Chart Fidelity v2
 
-状态：**implementation in progress**
+状态：**Frozen / hosted CI green**
 
 ## 1. 目标
 
@@ -340,24 +340,50 @@ Source membership 只能来自：
 
 ## 14. Acceptance
 
-- [ ] Visual semantics 为纯函数，不读取行情数据库；
-- [ ] Inspector schema version=2；
-- [ ] v4 transport schema/verifier 0 change；
-- [ ] XABCD complete topology 正确；
-- [ ] XABCD forming 不画 D；
-- [ ] ABCD topology 独立；
-- [ ] Shark 只允许 0XABC，不生成 D；
-- [ ] 5-0 61.8 refinement 不属于 Raw PRZ；
-- [ ] Source Raw PRZ / Ideal Core / Envelope 三层独立；
-- [ ] Source membership 只由 source component_names 决定；
-- [ ] ratios 按 schema 显示；
-- [ ] Source Clock events 按 bar 顺序展示；
-- [ ] price guides 明确不是 pattern geometry；
-- [ ] identity conflicts 不叠到主图；
-- [ ] layer controls 可独立开关；
-- [ ] HTML 无 fetch / review write；
-- [ ] Python regression green；
-- [ ] Web build green；
-- [ ] existing Playwright green；
-- [ ] M4 methodology drift = 0；
-- [ ] Outcome Engine drift = 0。
+- [x] Visual semantics 为纯函数，不读取行情数据库；
+- [x] Inspector schema version=2；
+- [x] v4 transport schema/verifier 0 change；
+- [x] XABCD complete topology 正确；
+- [x] XABCD forming 不画 D；
+- [x] ABCD topology 独立；
+- [x] Shark 只允许 0XABC，不生成 D；
+- [x] 5-0 61.8 refinement 不属于 Raw PRZ；
+- [x] Source Raw PRZ / Ideal Core / Envelope 三层独立；
+- [x] Source membership 只由 source component_names 决定；
+- [x] ratios 按 schema 显示；
+- [x] Source Clock events 按 bar 顺序展示；
+- [x] price guides 明确不是 pattern geometry；
+- [x] identity conflicts 不叠到主图；
+- [x] layer controls 可独立开关；
+- [x] HTML 无 fetch / review write；
+- [x] Python regression green；
+- [x] Web build green；
+- [x] existing Playwright green；
+- [x] M4 methodology drift = 0；
+- [x] Outcome Engine drift = 0。
+
+
+## 15. Hosted validation closeout — 2026-09-19
+
+Validated implementation checkpoint:
+
+`5f6a44f1c3108bb89ad7133ef1ef471d10efb8ea`
+
+Hosted CI:
+
+- Actions **#1839 / 35421868066**: success;
+- Python **792 passed**, 1163 warnings;
+- Web build: success;
+- Playwright: **24 passed**;
+- browser evidence upload: success.
+
+Diff audit against Phase16:
+
+- status: ahead-only;
+- handoff v4 transport/verifier implementation changed: 0;
+- M4 methodology drift: 0;
+- Outcome Engine drift: 0.
+
+Interpretation:
+
+**Phase17 visual semantics v2 is code-complete and hosted-CI-green.**
