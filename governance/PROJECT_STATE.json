@@ -1,36 +1,36 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.2-CR-0066",
+  "state_id": "HTCN-M6.2-AWAITING-PRIVATE-RUN",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
   "last_integrated_release": {
     "milestone": "M6",
-    "phase": "M6.1",
-    "title": "Project OS v2 / Cross-Conversation Lossless Continuity",
-    "commit": "ccf3592a7ea4d2e97e95d367a389e1a10c74aa4f",
-    "pr": 37,
-    "push_ci_run": 35436435722,
+    "phase": "M6.2",
+    "title": "Real Private-M1 identity-bound closeout and evidence bundle",
+    "commit": "86fd17d01b3b9c2fc597d500723c6966c9a2250f",
+    "pr": 39,
+    "push_ci_run": 35443729796,
     "release_status": "green"
   },
   "governance_baseline": {
     "ref": "main",
-    "head": "9e228d204082fe19d169e099da16ade11adac658",
-    "includes_m6_1_operational_closeout": true
+    "head": "86fd17d01b3b9c2fc597d500723c6966c9a2250f",
+    "includes_m6_2_engineering_release": true
   },
   "current": {
     "milestone": "M6",
     "phase": "M6.2",
     "title": "Real Private-M1 Closeout",
-    "status": "ready_to_merge",
+    "status": "awaiting_private_run",
     "active_change": "CR-0066",
-    "work_branch": "m6/private-m1-closeout-v1",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35441597214,
-      "run_number": 2101,
-      "event": "pull_request",
-      "implementation_head": "0eed2c90ca3b75c98345155766df6c4f387f28bb",
+      "workflow_run": 35443729796,
+      "run_number": 2108,
+      "event": "push",
+      "merge_commit": "86fd17d01b3b9c2fc597d500723c6966c9a2250f",
       "python_passed": 869,
       "warnings": 1163,
       "project_os_integrity": "success",
@@ -40,18 +40,24 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10583747910
+      "artifact_id": 10584915975
     }
   },
   "private_m1": {
     "current_market_full_closeout_ready": false,
-    "next_gate": "M6.2"
+    "next_gate": "run_current_main_on_private_m1_and_upload_m6_evidence_zip",
+    "one_action_entry": "运行HT-CN M6.2真实Private-M1最终收口.bat",
+    "expected_evidence": "artifacts/reports/htcn-m6-private-m1-closeout-evidence.zip",
+    "raw_private_m1_upload_required": false
   },
   "next_major_task": {
     "phase": "M6.2",
     "title": "Real Private-M1 Closeout",
-    "status": "ready_to_merge",
-    "blocked_until": []
+    "status": "awaiting_private_run",
+    "blocked_until": [
+      "real private-M1 evidence ZIP is produced by current formal main",
+      "evidence ZIP passes independent M6.2 verifier and manual acceptance"
+    ]
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -84,7 +90,7 @@
     "source_coverage": "governance/SOURCE_COVERAGE.json",
     "issues": "governance/OPEN_ISSUES.json",
     "attempts": "governance/attempts/2026-09.jsonl",
-    "releases": "governance/releases/ccf3592a7ea4d2e97e95d367a389e1a10c74aa4f.json"
+    "releases": "governance/releases/86fd17d01b3b9c2fc597d500723c6966c9a2250f.json"
   },
   "recovery_contract": {
     "chat_is_authoritative": false,
