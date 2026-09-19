@@ -2116,3 +2116,36 @@ Phase 10 的 v2 已经正确解决“最终产品快照 + M4 nested evidence 如
 - existing Playwright 24 passed;
 - Phase18 Playwright 1 passed;
 - Phase18 evidence verifier valid.
+
+
+## D-061 — Main integration must preserve the complete M2/M4/M5 ancestry
+
+日期：2026-09-19
+
+决定：
+
+1. The current M2→M3→M4→M5 lineage is provenance-bearing history, not disposable feature-branch noise.
+2. Final integration into main must use a merge commit. Squash, rebase and force-update are forbidden.
+3. Phase20 freezes the audited main HEAD `e25fd9584008d35ec464c73f91854d12a66f79ff`. If main moves before merge, integration readiness becomes stale and must be rerun.
+4. The audited merge base is `edec5e21fb9e873daf8fb77fceaa0d89dbbd5b25`.
+5. At audit time main has exactly one independent commit, the README cleanup commit, and its change scope is README-only.
+6. The integration head must preserve M2.31, M3, the M4 methodology freeze, M4 Outcome Engine anchor and M5 Phase14–19 checkpoints as real Git ancestors.
+7. A minimum lineage-only commit count is used as an anti-collapse sanity check; ancestry checks remain the authority.
+8. Full-history Git readiness is an additive hosted CI job and does not replace the full deterministic product/browser suite.
+9. M4 methodology and Outcome Engine freeze guards must be rerun at the integration head.
+10. PR #32 is the single carrier intended to integrate the stacked lineage into main.
+11. Historical phase-local PRs remain useful audit/review records and do not need to be individually merged into main.
+12. Phase20 does not modify harmonic identity, Source Raw PRZ, source lifecycle, M4 evidence, v3/v4 transport or Phase19 delivery semantics.
+13. The GitHub Actions Node 20 deprecation warning observed during Phase20 is non-blocking maintenance because current actions are successfully forced to Node 24; dependency-version cleanup is deferred.
+
+验证：
+- implementation checkpoint `9082230dea8d509c8596059c541c5236a141971e`;
+- hosted CI #1890 / `35426649834`: success;
+- Python 808 passed;
+- existing Playwright 24 passed;
+- Phase18 Playwright 1 passed;
+- readiness status=ready;
+- lineage-only commits=630;
+- main-only commits=1;
+- methodology drift=0;
+- Outcome Engine drift=0.
