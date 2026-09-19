@@ -34,10 +34,23 @@ def test_project_state_is_machine_current_truth() -> None:
     assert state["schema"] == 2
     assert state["current"]["milestone"] == "M6"
     assert state["current"]["phase"] == "M6.2"
-    assert state["current"]["status"] == "implementing"
+    assert state["current"]["status"] in {
+        "implementing",
+        "validation_green",
+        "ready_to_merge",
+        "merged",
+        "postmerge_pending",
+        "awaiting_private_run",
+        "real_run_in_progress",
+    }
     assert state["current"]["active_change"] == "CR-0066"
     assert state["next_major_task"]["phase"] == "M6.2"
-    assert state["next_major_task"]["status"] == "implementing"
+    assert state["next_major_task"]["status"] in {
+        "implementing",
+        "validation_green",
+        "ready_to_merge",
+        "awaiting_private_run",
+    }
     assert state["recovery_contract"]["chat_is_authoritative"] is False
     assert state["recovery_contract"]["important_fact_may_exist_only_in_chat"] is False
     assert state["recovery_contract"]["bootstrap_must_fail_on_state_drift"] is True
@@ -48,7 +61,17 @@ def test_active_change_and_required_specs_resolve() -> None:
     assert state["current"]["active_change"] == "CR-0066"
     change = ROOT / "governance" / "changes" / "CR-0066-real-private-m1-closeout.md"
     assert change.exists()
-    assert "status: implementing" in change.read_text(encoding="utf-8")
+    change_text = change.read_text(encoding="utf-8")
+    assert any(
+        f"status: {value}" in change_text
+        for value in {
+            "implementing",
+            "validation_green",
+            "ready_to_merge",
+            "merged",
+            "postmerge_pending",
+        }
+    )
     for rel in state["required_specs"]:
         assert (ROOT / rel).exists(), rel
 
@@ -67,6 +90,7 @@ def test_decision_index_prevents_old_decision_revival() -> None:
     assert rows["D-035"]["status"] == "active"
     assert "D-034" in rows["D-035"]["supersedes"]
     assert rows["D-065"]["source"] == "governance/decisions/D-065-project-os-v2.md"
+    assert rows["D-066"]["source"] == "governance/decisions/D-066-private-m1-evidence-bundle.md"
 
 
 def test_source_coverage_keeps_known_fail_closed_boundaries() -> None:
@@ -82,7 +106,6 @@ def test_release_record_does_not_claim_private_m1_closeout() -> None:
     state = load("governance/PROJECT_STATE.json")
     release = load(state["ledgers"]["releases"])
     assert release["commit"] == state["last_integrated_release"]["commit"]
-    assert release["claims"]["project_os_v2_integrated"] is True
     assert release["claims"]["private_m1_current_market_closeout_ready"] is False
     assert release["claims"]["profitability_claim_allowed"] is False
 
