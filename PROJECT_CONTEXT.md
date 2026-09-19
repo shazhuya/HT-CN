@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `c9de28d959b64043663a2bceccb17cc87b8f3756`
-context_checkpoint_title: `M5 Phase 14 Daily Handoff Bundle v3 green`
+context_checkpoint: `e8d46855f775f57bf7e413575c82806b74b24aba`
+context_checkpoint_title: `M5 Phase 19 Daily Portable Delivery implementation green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -13,20 +13,23 @@ repository: `shazhuya/HT-CN`
 
 正式 `main` 仍以 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration** 为已合并基线；M4 prospective evidence 与 M5 只读产品层继续在独立分支演进。
 
-当前实际开发现场已经完成 **M5 Phase 14 — Daily Handoff Bundle v3 / Review-State Transport**：
+当前实际开发现场已经完成 **M5 Phase 19 — Daily Portable Delivery Bundle / One-Click Closeout v1**：
 
-- 当前分支：`m5/daily-handoff-bundle-v3`
-- Phase 14 validated code checkpoint：`c9de28d959b64043663a2bceccb17cc87b8f3756`
-- hosted CI：run `35416336734` / #1790，overall success
-- Python：774 passed
+- 当前分支：`m5/daily-portable-delivery-v1`
+- Phase 19 validated implementation checkpoint：`e8d46855f775f57bf7e413575c82806b74b24aba`
+- hosted CI：run `35426314518` / #1876，overall success
+- Python：801 passed
 - Web build：success
-- Playwright：24 passed
-- browser evidence upload：success
-- Phase-10 handoff v2 changed files：0
+- existing Playwright：24 passed
+- Phase18 portable visual Playwright：1 passed
+- Phase18 semantic checks：10 / 10
+- Phase18 screenshots：5 / 5
+- handoff v4 transport/verifier drift：0
+- Visual Semantics v2 drift：0
 - M4 capture methodology drift：0 / 37
 - Outcome Engine drift：0 / 4
 
-M5 Phase 1–14 当前主线：
+M5 Phase 1–19 当前主线：
 
 1. Daily Operator Queue；
 2. Operator Delta / 今日变化；
@@ -41,9 +44,14 @@ M5 Phase 1–14 当前主线：
 11. append-only Daily Operator History / Change Journal；
 12. Daily Review Digest / Change Triage；
 13. Review Session / Follow-up Journal；
-14. Daily Handoff Bundle v3：以冻结 v2 为嵌套基础，把 current history、review digest、review-session snapshot 与其引用的 journal event closure 绑定成新的可离线验证 transport。
+14. Daily Handoff Bundle v3：以冻结 v2 为嵌套基础，把 current history、review digest、review-session snapshot 与其引用的 journal event closure 绑定成新的可离线验证 transport；
+15. Handoff v3 Inspector / Portable Review Workspace：verified v3 的离线只读复盘工作区；
+16. Handoff v4 Portable Pattern Detail：为 current Queue 全量绑定 exact bars + pattern payload，detail-or-explicit-error 覆盖守恒；
+17. Portable Visual Semantics v2：schema-specific topology、Raw PRZ / Ideal Core / Envelope 分层、Source Clock 与非几何 guides；
+18. Portable Visual Browser Acceptance：真实 Chromium + 5 场景截图/哈希证据 + 独立 evidence verifier；
+19. Daily Portable Delivery v1：staged v3 → exact-identity v4 → Inspector/HTML → verified outer ZIP → immutable archive → latest pointer last。
 
-M5 仍是**只读实战产品层 + 人工复盘工作流 + transport 层**，不拥有 harmonic identity、Source Raw PRZ、canonical lifecycle 或 action state，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 14 只运输这些状态，不改变它们的语义。
+M5 仍是**只读实战产品层 + 人工复盘工作流 + transport / portable delivery 层**，不拥有 harmonic identity、Source Raw PRZ、canonical lifecycle 或 action state，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 19 只编排和封装已验证的 Phase9/14/16/17 产物，不改变这些状态的语义。
 
 ## 正式 main 基线 — M3
 
@@ -2364,3 +2372,75 @@ Known boundary:
 - Phase18 uses deterministic fixture data. It proves renderer/browser semantics, not end-to-end visual quality of a real current-market v4 artifact.
 
 Phase18 v1 is **code-complete / hosted-CI-green**.
+
+
+## M5 Phase 19 closeout — Daily Portable Delivery Bundle / One-Click Closeout v1
+
+Current branch:
+`m5/daily-portable-delivery-v1`
+
+Validated implementation checkpoint:
+`e8d46855f775f57bf7e413575c82806b74b24aba`
+
+Draft PR:
+- #31;
+- base = `m5/portable-visual-browser-acceptance-v1`.
+
+Major product gap closed:
+- before Phase19, daily close, v3, v4 and portable workspace were separate commands/artifacts;
+- Phase19 adds one production-side staged chain and one portable ZIP suitable for storage/transfer/offline review.
+
+Production semantics:
+- Phase9 pipeline report must exist and have `m5_product_ready=true`;
+- Phase14 v3 is built into staging, never directly into frozen canonical aliases;
+- current Phase7 input identity is recomputed;
+- Phase16 v4 must bind exactly to the staged v3 identity/date;
+- Phase17 Inspector JSON + Visual Semantics v2 HTML are built in staging;
+- outer delivery ZIP independently verifies nested v4, Inspector and HTML semantics;
+- Phase9 pipeline SHA-256 must remain identical before/after delivery;
+- only then can immutable archive + Phase19 aliases be promoted;
+- `m5-daily-portable-delivery-latest.json` is written last and is the authority for the latest successful Phase19 delivery.
+
+Outputs:
+- `artifacts/reports/htcn-daily-portable-delivery-v1.zip`;
+- `artifacts/reports/m5-daily-portable-v4.zip`;
+- `artifacts/reports/m5-daily-portable-inspector.json`;
+- `artifacts/reports/m5-daily-portable-workspace.html`;
+- `artifacts/reports/m5-daily-portable-delivery-run.json`;
+- `artifacts/reports/m5-daily-portable-delivery-latest.json`;
+- immutable archive under `artifacts/deliveries/m5/<trade_date>/<bundle_sha_prefix>/`.
+
+Failure safety:
+- all v3/v4/workspace/outer work occurs in staging;
+- failure updates the run report only;
+- previous successful latest pointer remains unchanged;
+- previous successful Phase19 aliases remain unchanged;
+- frozen Phase14/16 aliases are never overwritten;
+- immutable archive publishes through hidden temp directory → atomic rename;
+- archive collision fails closed.
+
+Explicit degradation:
+- a valid v4 with explicit detail errors remains a valid `detail_degraded_portable_delivery`;
+- explicit error coverage is allowed because Phase16 already enforces detail-or-error exhaustiveness;
+- silent omission remains invalid.
+
+One-click:
+- `运行HT-CN每日收盘并生成便携复盘包.bat` runs Phase9 daily close then Phase19 delivery;
+- M4 research degradation follows the existing Phase9 product/research separation and does not block a valid M5 product-ready delivery.
+
+Validation:
+- Actions #1876 / `35426314518`: success;
+- Python 801 passed;
+- Web build success;
+- existing Playwright 24 passed;
+- Phase18 portable visual Playwright 1 passed;
+- Phase18 evidence verifier valid.
+
+Freeze audit:
+- Phase19 implementation adds five files only from the Phase18 base;
+- v4 transport/verifier drift: 0;
+- Visual Semantics v2 drift: 0;
+- M4 methodology drift: 0;
+- Outcome Engine drift: 0.
+
+Hosted CI uses deterministic fakes for Phase19 orchestration. It does not claim a real current-market delivery was produced on GitHub-hosted CI.
