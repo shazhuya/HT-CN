@@ -1,5 +1,8 @@
 # HT-CN Decision Ledger — 设计决策账本
 
+> **Project OS v2 notice:** 本文件自 D-065 起属于历史/深层审计资料，不再拥有 current-state authority。当前阶段、active Change、Gate、blocker 与 next task 必须读取 `governance/PROJECT_STATE.json`；长期方向读取 `PROJECT_BLUEPRINT.md`。聊天与本文件中的旧“当前/下一步”段落不得覆盖机器状态。
+
+
 本文件记录会影响后续实现方向的“为什么”。它采用 append-only 风格：后续若推翻旧决定，应新增 supersede 记录，而不是静默改掉历史原因。
 
 ## D-001 — Carney source fidelity 高于工程便利
