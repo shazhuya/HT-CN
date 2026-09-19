@@ -30,5 +30,5 @@ def test_warning_baseline_is_bound_to_latest_verified_main() -> None:
     assert payload["pytest"]["warning_budget"] == 0
     assert payload["pytest"]["baseline_passed"] == 872
     assert payload["pytest"]["baseline_commit"] == (
-        "8f0b7ddcb42ba796766232bfcf3010a7ada3c6cd"
+        "482a005e498e7b63ea57015074f9c689a56a0367"
     )

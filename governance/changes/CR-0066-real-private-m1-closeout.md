@@ -196,3 +196,5 @@ The first branch push attempt from `125872ed64415c09b6606dade08d091ef7413a7c` wa
 The first zero-warning full run passed all 872 tests but correctly failed the new quality gate on one remaining `StarletteDeprecationWarning`. Its class inherits from `UserWarning`, not `DeprecationWarning`; the narrow exact-message filter was corrected to the real Starlette category without relaxing the zero budget. This failed attempt is preserved as A-20260919-0066-017.
 
 The corrected clean run on `8f0b7ddcb42ba796766232bfcf3010a7ada3c6cd` passed 872 Python tests with zero warnings, Ruff debt 483, Project OS, both M4 freeze guards and the dependency lock. This is preserved as A-20260919-0066-018.
+
+The final local release candidate `482a005e498e7b63ea57015074f9c689a56a0367` additionally passed the Web production build with the same 872/0 Python result, Ruff 483 budget, Project OS, both freeze guards and dependency lock. This is preserved as A-20260919-0066-019. The branch is frozen locally pending authenticated push and formal hosted validation.
