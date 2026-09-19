@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -159,7 +159,7 @@ def main() -> int:
         if committed
         else None
     )
-    payload["generated_at_utc"] = datetime.now(timezone.utc).isoformat()
+    payload["generated_at_utc"] = datetime.now(UTC).isoformat()
     payload["journal_path"] = str(args.journal)
     payload["manifest_path"] = str(args.manifest)
     payload["transaction_root"] = str(args.transaction_root)

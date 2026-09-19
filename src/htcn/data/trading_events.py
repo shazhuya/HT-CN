@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Protocol
 
@@ -81,7 +81,7 @@ def upsert_security_daily_events(
     if not records:
         return 0
     ensure_security_daily_event_schema(catalog_path)
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(UTC).replace(tzinfo=None)
     rows = [
         [
             record.instrument_id,
@@ -139,7 +139,7 @@ def record_daily_event_sync_audit(
     audit: DailyEventSyncAudit,
 ) -> None:
     ensure_security_daily_event_schema(catalog_path)
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(UTC).replace(tzinfo=None)
     with duckdb.connect(str(catalog_path)) as con:
         con.execute(
             """

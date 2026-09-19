@@ -10,7 +10,6 @@ from htcn.harmonic.abcd_source import abcd_bc_layering_example, with_abcd_source
 from htcn.harmonic.models import HarmonicPoint
 from htcn.harmonic.source_prz_evidence import SOURCE_PRZ_EVIDENCE
 
-
 ROOT = Path(__file__).resolve().parents[2]
 LEDGER = ROOT / "research" / "book-source-prz-abcd-cases-v1.json"
 

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, time as clock_time, timedelta
+from datetime import date, datetime, timedelta
+from datetime import time as clock_time
 from zoneinfo import ZoneInfo
 
 from htcn.data.provider import MarketDataProvider
-
 
 SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 POST_CLOSE_CUTOFF = clock_time(16, 30)

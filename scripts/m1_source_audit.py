@@ -6,7 +6,6 @@ from htcn.data.audit import compare_daily_sources
 from htcn.data.providers import AkShareSinaProvider, BaoStockProvider
 from htcn.data.validation import normalize_daily
 
-
 SYMBOLS = ["SSE.688256", "SZSE.300820", "SSE.688300"]
 
 

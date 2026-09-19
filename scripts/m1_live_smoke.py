@@ -10,7 +10,6 @@ from htcn.data.store import ParquetDailyStore
 from htcn.data.sync import sync_daily
 from htcn.data.validation import normalize_daily
 
-
 SYMBOLS = ["SSE.688256", "SZSE.300820", "SSE.688300"]
 
 

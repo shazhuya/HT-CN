@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from hashlib import sha256
 import json
+import zipfile
+from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
-import zipfile
 
 import pytest
 
 from htcn.app import daily_portable_delivery as delivery
-
 
 IDENTITY = "a" * 64
 PIPELINE_HASH_PLACEHOLDER = "b" * 64

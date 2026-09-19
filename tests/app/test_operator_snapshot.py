@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
 import json
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 from htcn.app.operator_input_identity import (
     ANALYSIS_CODE_IDENTITY_CONTRACT_VERSION,
@@ -13,13 +13,13 @@ from htcn.app.operator_input_identity import (
     DataInputIdentity,
     OperatorCacheInputIdentity,
 )
+from htcn.app.operator_process_lock import ProcessLockAcquisition
 from htcn.app.operator_snapshot import (
     OPERATOR_SNAPSHOT_CONTRACT_VERSION,
     _process_lock_path,
     build_or_load_operator_snapshot,
     operator_universe_hash,
 )
-from htcn.app.operator_process_lock import ProcessLockAcquisition
 
 
 def _input_identity(

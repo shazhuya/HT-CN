@@ -9,7 +9,6 @@ from htcn.harmonic.rules import CARNEY_RULES
 from htcn.harmonic.source_prz import SOURCE_PRZ_PROFILES
 from htcn.harmonic.source_prz_evidence import SOURCE_PRZ_EVIDENCE
 
-
 ROOT = Path(__file__).resolve().parents[2]
 LEDGER = ROOT / "research" / "book-source-prz-cases-v1.json"
 

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Iterable
+from typing import Any
 
 import pandas as pd
 
 from .quality_layers import pattern_family
 from .time_split import assign_purged_split, derive_boundaries
-
 
 DEFAULT_TERMINAL_REACTION_HORIZON = 20
 DEFAULT_TERMINAL_SAMPLE_FLOOR = 60

@@ -9,12 +9,12 @@ from typing import Any
 import duckdb
 import pandas as pd
 
-from htcn.app.evidence_identity import read_code_identity
 from htcn.app.a_share_execution_context import (
     build_a_share_execution_context,
     load_daily_trading_metadata,
     load_security_metadata,
 )
+from htcn.app.evidence_identity import read_code_identity
 from htcn.data.delta import DailyHistoryView, MarketDailyDeltaStore
 from htcn.data.store import ParquetDailyStore
 

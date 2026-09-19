@@ -6,7 +6,6 @@ from pathlib import Path
 
 from htcn.research.completed_reaction_robustness import build_completed_reaction_robustness_report
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "artifacts" / "ci-research" / "m2-confirmed-completed-reactions.json"
 DEFAULT_QUALITY = ROOT / "artifacts" / "ci-research" / "m2-completed-reaction-quality.json"

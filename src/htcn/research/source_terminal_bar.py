@@ -18,7 +18,6 @@ from .terminal_bar import (
     audit_projected_terminal_price_bar,
 )
 
-
 SOURCE_TERMINAL_RESEARCH_DEFINITION = "m2-source-prz-v6"
 
 

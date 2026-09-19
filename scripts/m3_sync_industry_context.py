@@ -15,7 +15,6 @@ from htcn.data.sectors import (
     sync_industry_memberships,
 )
 
-
 SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
 

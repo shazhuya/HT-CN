@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
 from typing import Any
-
 
 OUTCOME_PROTOCOL_V1_ID = "m4-outcome-v1"
 OUTCOME_PROTOCOL_V1_SCHEMA_VERSION = 1

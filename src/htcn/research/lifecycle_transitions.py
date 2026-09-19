@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 from collections import Counter
-from typing import Any, Iterable
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
+from typing import Any
 
 from .lifecycle_journal import prospective_outcome_gate
 

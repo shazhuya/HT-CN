@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
-from pathlib import Path
 import subprocess
 import sys
+from datetime import UTC, datetime
+from pathlib import Path
 
 from htcn.app.daily_close_pipeline import (
     DailyCloseStep,
     execute_daily_close_steps,
 )
 from htcn.app.daily_close_runner import evaluate_daily_close_preflight
-
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT_ROOT = ROOT / "artifacts" / "reports"
@@ -128,7 +127,7 @@ def _write_report(payload: dict[str, object]) -> None:
 
 
 def main() -> int:
-    generated_at = datetime.now(timezone.utc).isoformat()
+    generated_at = datetime.now(UTC).isoformat()
     preflight = _resolve_preflight()
 
     if not preflight.product_lane_ready:

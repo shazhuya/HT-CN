@@ -14,7 +14,6 @@ from htcn.harmonic.rsi_bamm_confluence import (
 )
 from htcn.research.snapshot_cache import load_research_snapshot
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "research" / "a-share-research-universe-v1.json"
 DATA_DIR = ROOT / "artifacts" / "ci-research" / "data"

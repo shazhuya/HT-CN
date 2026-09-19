@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from .models import RatioMeasurement
 
-
 RECIPROCAL_ABCD: dict[float, tuple[float, ...]] = {
     0.382: (2.24, 2.618),
     0.500: (2.0,),

@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 import io
 import json
-from pathlib import Path
 import zipfile
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from htcn.app import handoff_v3_inspector as inspector
-
 
 KEY = "SSE.688256:bat:XABCD:bullish:S5:2026-09-01-2026-09-19"
 

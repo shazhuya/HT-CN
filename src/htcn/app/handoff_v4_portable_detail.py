@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from hashlib import sha256
-import io
 import json
-from pathlib import Path, PurePosixPath
 import tempfile
-from typing import Any, Protocol
 import zipfile
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from hashlib import sha256
+from pathlib import Path, PurePosixPath
+from typing import Any, Protocol
 
 from htcn.app.daily_handoff_v3 import verify_daily_handoff_bundle_v3
 from htcn.app.handoff_v3_inspector import build_handoff_v3_inspection
-
 
 DAILY_HANDOFF_V4_SCHEMA_VERSION = 4
 PORTABLE_DETAIL_SCHEMA_VERSION = 1
@@ -647,7 +645,7 @@ def build_daily_handoff_bundle_v4(
     manifest = {
         "schema_version": DAILY_HANDOFF_V4_SCHEMA_VERSION,
         "status": status,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "contract": HandoffV4Contract().as_payload(),
         "trade_date": trade_date,
         "bars": int(bars),

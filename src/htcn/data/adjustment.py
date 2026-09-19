@@ -7,7 +7,6 @@ import pandas as pd
 
 from .validation import normalize_daily
 
-
 FACTOR_COLUMNS = ["instrument_id", "trade_date", "price_factor", "mode", "source"]
 
 

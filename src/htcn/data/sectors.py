@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
 import duckdb
 import pandas as pd
-
 
 INDUSTRY_KIND = "industry"
 INDUSTRY_SOURCE = "akshare_eastmoney_industry"
@@ -48,7 +47,7 @@ class SectorSnapshotRecord:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def ensure_sector_schema(catalog_path: str | Path) -> None:

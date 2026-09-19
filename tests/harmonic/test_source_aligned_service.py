@@ -6,7 +6,7 @@ import pytest
 import htcn.app.source_aligned_service as source_service
 from htcn.app.source_aligned_service import SourceAlignedHarmonicService
 from htcn.harmonic.models import PatternDirection
-from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
+from htcn.harmonic.prz import PotentialReversalZone, PRZComponent
 
 
 def _component(low: float = 90.0, high: float = 100.0) -> PRZComponent:

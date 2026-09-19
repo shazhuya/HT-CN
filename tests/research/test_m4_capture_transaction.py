@@ -8,7 +8,6 @@ from htcn.research.capture_transaction import (
     read_frozen_legacy_baseline,
 )
 
-
 TEST_METHODOLOGY_CONTRACT_VERSION = 1
 TEST_METHODOLOGY_FINGERPRINT = "a" * 64
 

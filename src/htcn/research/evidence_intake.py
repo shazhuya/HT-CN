@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import json
+import zipfile
 from collections import Counter
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
-import json
-import zipfile
 
 import pandas as pd
 

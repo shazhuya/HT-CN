@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PREREG = ROOT / "research" / "m2-type-i-holdout-prereg-v1.json"
 AUTHORIZATION = ROOT / "research" / "m2-type-i-holdout-open-v1.json"

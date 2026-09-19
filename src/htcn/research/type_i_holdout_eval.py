@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from collections import Counter, defaultdict
+from collections.abc import Iterable
 from math import sqrt
-from typing import Any, Iterable
+from typing import Any
 
 from .time_split import assign_purged_split
-from .type_i_confirmation import DEFAULT_TYPE_I_LANDMARK_BAR, _bar_value, _boundaries, _terminal_events
-
+from .type_i_confirmation import (
+    DEFAULT_TYPE_I_LANDMARK_BAR,
+    _bar_value,
+    _boundaries,
+    _terminal_events,
+)
 
 DEFAULT_REACTION_HORIZON = 20
 

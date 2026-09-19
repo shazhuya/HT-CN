@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from statistics import mean
-from typing import Any, Iterable
-
+from typing import Any
 
 DEFAULT_OBSERVATION_HORIZON = 20
 

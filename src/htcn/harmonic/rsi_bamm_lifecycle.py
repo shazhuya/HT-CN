@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
-from typing import Iterable
 
 import pandas as pd
 
-from .rsi_bamm import RSIBammDirection, RSIBammProfile, RSIBammSequence, scan_rsi_bamm_frame
+from .rsi_bamm import RSIBammDirection, RSIBammSequence, scan_rsi_bamm_frame
 
 
 @dataclass(frozen=True, slots=True)

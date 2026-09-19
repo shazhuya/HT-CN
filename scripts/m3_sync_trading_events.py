@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import date, datetime, time as clock_time, timedelta
+from datetime import date, datetime, timedelta
+from datetime import time as clock_time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -10,7 +11,6 @@ import duckdb
 
 from htcn.data.providers import AkShareProvider
 from htcn.data.trading_events import sync_daily_trading_events
-
 
 SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 POST_CLOSE_CUTOFF = clock_time(16, 30)

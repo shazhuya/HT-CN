@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from hashlib import sha256
 import json
 import math
+from hashlib import sha256
 from typing import Any
 
 import pandas as pd
 
 from htcn.harmonic.execution import observe_source_execution
 from htcn.harmonic.models import PatternDirection
-from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
+from htcn.harmonic.prz import PotentialReversalZone, PRZComponent
 from htcn.harmonic.source_lifecycle import derive_source_lifecycle
 
 from .outcome_engine_identity import build_outcome_engine_identity
@@ -18,7 +18,6 @@ from .outcome_protocol import (
     load_outcome_protocol,
     validate_outcome_protocol,
 )
-
 
 OUTCOME_RESULT_SCHEMA_VERSION = 1
 _REQUIRED_MARKET_COLUMNS = {

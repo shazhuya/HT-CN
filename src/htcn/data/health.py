@@ -10,7 +10,6 @@ from .catalog import DataCatalog
 from .universe import SUPPORTED_INITIAL_DAILY_PREFIXES
 from .validation import DataValidationError, normalize_daily
 
-
 ProgressCallback = Callable[[int, int, str], None]
 
 

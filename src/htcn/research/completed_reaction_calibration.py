@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Iterable, Sequence
 from copy import deepcopy
-from typing import Any, Iterable, Sequence
+from typing import Any
 
 import pandas as pd
 
 from .time_split import assign_purged_split, derive_boundaries
-
 
 ACTIONABLE_COMPLETED_OUTCOMES = {
     "t2_within_horizon",

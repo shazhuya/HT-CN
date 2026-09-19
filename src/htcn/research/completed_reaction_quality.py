@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable, Iterable
 from math import ceil
-from typing import Any, Callable, Iterable
+from typing import Any
 
 import pandas as pd
 
 from .completed_reaction_calibration import ACTIONABLE_COMPLETED_OUTCOMES
-
 
 GatePredicate = Callable[[dict[str, Any], dict[str, float]], bool]
 

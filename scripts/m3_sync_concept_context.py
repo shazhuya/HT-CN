@@ -15,7 +15,6 @@ from htcn.data.concepts import (
 )
 from htcn.data.providers import AkShareProvider
 
-
 SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 
 

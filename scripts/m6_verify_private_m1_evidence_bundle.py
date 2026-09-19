@@ -6,7 +6,6 @@ from pathlib import Path
 
 from htcn.app.private_m1_closeout import verify_private_m1_evidence_bundle
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT = (
     ROOT

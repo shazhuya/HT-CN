@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from concurrent.futures import Future
-from copy import deepcopy
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import os
+from collections.abc import Callable, Iterable
+from concurrent.futures import Future
+from copy import deepcopy
+from datetime import UTC, datetime
+from hashlib import sha256
 from pathlib import Path
 from threading import Lock, get_ident
-from typing import Any, Callable, Iterable
+from typing import Any
 
 import duckdb
 
@@ -20,7 +21,6 @@ from .operator_queue import (
     OperatorProgressCallback,
     build_operator_queue,
 )
-
 
 OPERATOR_SNAPSHOT_SCHEMA_VERSION = 1
 OPERATOR_SNAPSHOT_CONTRACT_VERSION = 2
@@ -427,7 +427,7 @@ def build_or_load_operator_snapshot(
             service_factory=service_factory,
             progress_callback=progress_callback,
         )
-        generated_at = datetime.now(timezone.utc).isoformat()
+        generated_at = datetime.now(UTC).isoformat()
 
         if cache_path is None and queue.get("as_of_trade_date"):
             cache_path = cache_dir / _cache_filename(

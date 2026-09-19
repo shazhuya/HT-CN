@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 SUPPORTED_INITIAL_DAILY_PREFIXES = ("SSE.", "SZSE.")
 
 

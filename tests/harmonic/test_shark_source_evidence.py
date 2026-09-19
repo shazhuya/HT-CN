@@ -7,7 +7,6 @@ from htcn.harmonic.models import HarmonicPoint
 from htcn.harmonic.shark_source import build_shark_source_contract
 from htcn.harmonic.source_prz_evidence import source_prz_evidence
 
-
 ROOT = Path(__file__).resolve().parents[2]
 LEDGER = ROOT / "research" / "book-source-prz-shark-cases-v1.json"
 

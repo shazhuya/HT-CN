@@ -6,7 +6,6 @@ import pandas as pd
 
 from .models import Pivot, PivotKind
 
-
 REQUIRED_COLUMNS = {"high", "low"}
 
 

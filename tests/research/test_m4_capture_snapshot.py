@@ -28,6 +28,7 @@ def test_partial_universe_is_diagnostic_only() -> None:
     # The authoritative capture contract must never treat max_symbols as full coverage.
     # This test intentionally checks the source-level contract without requiring M1.
     import inspect
+
     from scripts import m4_capture_lifecycle_snapshot as capture
 
     source = inspect.getsource(capture.run)
@@ -135,6 +136,7 @@ def test_suspension_gap_does_not_accept_non_trade_day_only_gap() -> None:
 
 def test_authoritative_capture_requires_formal_qfq_price_basis() -> None:
     import inspect
+
     from scripts import m4_capture_lifecycle_snapshot as capture
 
     source = inspect.getsource(capture.run)

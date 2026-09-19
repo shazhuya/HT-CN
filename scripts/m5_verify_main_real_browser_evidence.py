@@ -7,7 +7,6 @@ from htcn.app.main_real_browser_audit import (
     verify_main_real_browser_evidence,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (
     ROOT

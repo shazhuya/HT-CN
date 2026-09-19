@@ -8,7 +8,6 @@ from htcn.research.type_i_live_evidence import (
     frozen_type_i_t5_reference,
 )
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 

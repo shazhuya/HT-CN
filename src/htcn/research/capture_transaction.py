@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from hashlib import sha256
-from pathlib import Path
 import json
 import math
 import os
-from typing import Any, Iterable
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
+from hashlib import sha256
+from pathlib import Path
+from typing import Any
 
 from .cohort_followup import enrolled_outcome_cohort
-
 
 CAPTURE_TRANSACTION_SCHEMA_VERSION = 5
 LEGACY_BASELINE_SCHEMA_VERSION = 1

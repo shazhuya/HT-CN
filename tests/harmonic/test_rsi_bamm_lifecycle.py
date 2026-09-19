@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
 import pandas as pd
 
 import htcn.harmonic.rsi_bamm_lifecycle as lifecycle

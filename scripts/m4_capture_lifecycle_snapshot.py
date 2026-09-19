@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import replace
-from collections import Counter
-from datetime import datetime, timezone
 import json
+from collections import Counter
+from dataclasses import replace
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -211,7 +211,7 @@ def run(
     identity = read_code_identity()
     result: dict[str, Any] = {
         "schema_version": 1,
-        "captured_at_utc": datetime.now(timezone.utc).isoformat(),
+        "captured_at_utc": datetime.now(UTC).isoformat(),
         "code_head": identity.head,
         "worktree_clean": identity.worktree_clean,
         "dirty_paths": list(identity.dirty_paths),

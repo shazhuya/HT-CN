@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 from htcn.research.outcome_engine_identity import (
     OUTCOME_ENGINE_CONTRACT_VERSION,
@@ -14,7 +14,6 @@ from htcn.research.outcome_protocol import (
     OUTCOME_PROTOCOL_V2_CANONICAL_SHA256,
     load_outcome_protocol,
 )
-
 
 FROZEN_OUTCOME_ENGINE_COMMIT = "9cbc0d3d30ac5f0a87748a39788cbee04a44bcc8"
 EXPECTED_ENGINE_CONTRACT_VERSION = 1

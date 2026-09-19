@@ -16,7 +16,6 @@ from htcn.research.type_i_prospective import (
     update_registry,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
 PROTOCOL_PATH = ROOT / "research" / "m2-type-i-prospective-protocol-v1.json"

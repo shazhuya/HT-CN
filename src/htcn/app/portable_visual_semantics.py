@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Any
 
-
 VISUAL_SEMANTICS_VERSION = 2
 
 
@@ -411,7 +410,7 @@ def _schema_specific(pattern: dict[str, Any]) -> dict[str, Any]:
     if schema == "FIVE_ZERO":
         output["five_zero_boundary"] = {
             "raw_prz_members": list(
-                ((pattern.get("source_contract") or {}).get("raw_prz_members") or [])
+                (pattern.get("source_contract") or {}).get("raw_prz_members") or []
             )
             if isinstance(pattern.get("source_contract"), dict)
             else [],

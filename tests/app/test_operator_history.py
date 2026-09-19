@@ -12,7 +12,6 @@ from htcn.app.operator_history import (
 )
 from htcn.app.operator_snapshot import OPERATOR_SNAPSHOT_CONTRACT_VERSION
 
-
 FP_A = "a" * 64
 FP_B = "b" * 64
 

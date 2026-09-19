@@ -6,7 +6,6 @@ from pathlib import Path
 
 from htcn.app.review_followup_journal import query_review_journal
 
-
 ROOT = Path(__file__).resolve().parents[1]
 JOURNAL_ROOT = ROOT / "data" / "product" / "m5" / "review_journal"
 

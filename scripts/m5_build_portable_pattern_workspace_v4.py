@@ -12,7 +12,6 @@ from htcn.app.operator_input_identity import (
 )
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
 

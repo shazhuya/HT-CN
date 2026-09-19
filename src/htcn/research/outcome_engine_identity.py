@@ -4,7 +4,6 @@ from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
 
-
 OUTCOME_ENGINE_CONTRACT_VERSION = 1
 
 # Outcome semantics are versioned independently from capture methodology.

@@ -10,7 +10,6 @@ from htcn.research.terminal_bar import build_terminal_bar_calibration
 from htcn.research.type_i_holdout_eval import evaluate_preregistered_type_i_holdout
 from htcn.research.walk_forward import walk_forward_forming_signals
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "research" / "a-share-research-universe-v1.json"
 PREREG = ROOT / "research" / "m2-type-i-holdout-prereg-v1.json"

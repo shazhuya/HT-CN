@@ -9,7 +9,7 @@ from htcn.app.harmonic_service import LocalHarmonicService
 from htcn.harmonic.abcd_source import abcd_bc_layering_example, with_abcd_source_prz
 from htcn.harmonic.execution import observe_source_execution
 from htcn.harmonic.models import PatternDirection
-from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
+from htcn.harmonic.prz import PotentialReversalZone, PRZComponent
 from htcn.harmonic.rsi_bamm import RSIBammDirection, scan_rsi_bamm_frame
 from htcn.harmonic.rsi_bamm_confluence import (
     confirm_rsi_bamm_with_source_execution,

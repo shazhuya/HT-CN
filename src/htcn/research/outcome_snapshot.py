@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from hashlib import sha256
 import json
 import os
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
+from hashlib import sha256
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import pandas as pd
 
 from .outcome_evaluator import canonical_market_path_hash
-
 
 OUTCOME_SNAPSHOT_SCHEMA_VERSION = 2
 _PROHIBITED_RESULT_KEYS = {

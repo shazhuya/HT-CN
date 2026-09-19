@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from math import inf
 
 from .models import HarmonicPoint, PatternDirection, PatternState, Pivot, RatioMeasurement
-from .prz import PRZComponent, PotentialReversalZone
+from .prz import PotentialReversalZone, PRZComponent
 from .ratios import RECIPROCAL_ABCD, leg_length
 
 
@@ -364,7 +364,7 @@ def iter_abcd_points(pivots: tuple[Pivot, ...] | list[Pivot]) -> tuple[tuple[Har
         raise ValueError("AB=CD candidate generation must operate on one scale")
 
     out: list[tuple[HarmonicPoint, ...]] = []
-    for start in range(0, len(ordered) - 3):
+    for start in range(len(ordered) - 3):
         chunk = ordered[start : start + 4]
         if any(left.kind == right.kind for left, right in zip(chunk, chunk[1:])):
             continue

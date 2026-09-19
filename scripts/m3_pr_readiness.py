@@ -4,7 +4,7 @@ import argparse
 import json
 import subprocess
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -363,7 +363,7 @@ def evaluate(
 
     return {
         "schema_version": 1,
-        "evaluated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "evaluated_at_utc": datetime.now(UTC).isoformat(),
         "code_head": current_head,
         "pr_ready": pr_ready,
         "status": "ready_with_warnings" if pr_ready and warnings else "ready" if pr_ready else "not_ready",

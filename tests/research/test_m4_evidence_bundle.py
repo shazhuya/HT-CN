@@ -1,19 +1,19 @@
 from __future__ import annotations
 
-from hashlib import sha256
 import json
-from pathlib import Path
 import zipfile
+from hashlib import sha256
+from pathlib import Path
 
 import pandas as pd
 
-from htcn.research.evidence_bundle import verify_evidence_bundle
-from htcn.research.evidence_intake import audit_evidence_bundle
 from htcn.research.capture_transaction import (
     build_committed_capture,
     commit_capture_transaction,
     freeze_legacy_baseline,
 )
+from htcn.research.evidence_bundle import verify_evidence_bundle
+from htcn.research.evidence_intake import audit_evidence_bundle
 from htcn.research.outcome_evaluator import canonical_market_path_hash
 from htcn.research.outcome_snapshot import (
     build_outcome_snapshot,

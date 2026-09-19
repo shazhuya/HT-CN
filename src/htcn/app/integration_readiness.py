@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import json
+import subprocess
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-import subprocess
-from typing import Any, Iterable
-
+from typing import Any
 
 INTEGRATION_READINESS_SCHEMA_VERSION = 1
 

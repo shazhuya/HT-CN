@@ -35,7 +35,6 @@ from htcn.research.snapshot_cache import (
 )
 from htcn.research.walk_forward import walk_forward_forming_signals
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "research" / "a-share-research-universe-v1.json"
 OUT_DIR = ROOT / "artifacts" / "ci-research"

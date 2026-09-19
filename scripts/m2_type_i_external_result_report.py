@@ -4,7 +4,6 @@ import hashlib
 import json
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PREREG = ROOT / "research" / "m2-type-i-external-replication-prereg-v1.json"
 AUTHORIZATION = ROOT / "research" / "m2-type-i-external-replication-open-v1.json"

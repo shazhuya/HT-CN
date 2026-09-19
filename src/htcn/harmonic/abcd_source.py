@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from .models import HarmonicPoint, PatternDirection
-from .prz import PRZComponent, PotentialReversalZone
+from .prz import PotentialReversalZone
 from .ratios import leg_length
 
 

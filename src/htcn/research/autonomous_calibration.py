@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 import pandas as pd
 
@@ -24,7 +25,6 @@ from .time_split import (
 from .type_i_confirmation import build_type_i_early_path_report
 from .type_i_exit_timing import build_type_i_exit_timing_report
 from .type_i_robustness import build_type_i_early_path_robustness_report
-
 
 _TERMINAL_AUDIT_REQUIRED_FIELDS = {
     "pattern_id",

@@ -11,7 +11,6 @@ from htcn.data.providers import AkShareProvider, BaoStockProvider
 from htcn.data.store import ParquetDailyStore
 from htcn.data.validation import normalize_daily
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
 CATALOG_PATH = DATA_ROOT / "catalog.duckdb"

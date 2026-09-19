@@ -5,7 +5,6 @@ from pathlib import Path
 
 from htcn.app.daily_portable_delivery import run_daily_portable_delivery
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REPORTS = ROOT / "artifacts" / "reports"
 

@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from hashlib import sha256
-import io
 import json
-from pathlib import Path, PurePosixPath
 import shutil
 import tempfile
-from typing import Any, Callable, Protocol
 import zipfile
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from hashlib import sha256
+from pathlib import Path, PurePosixPath
+from typing import Any, Protocol
 
 from htcn.app.daily_handoff_v3_runner import run_daily_handoff_bundle_v3
 from htcn.app.handoff_v4_inspector import write_portable_pattern_workspace
@@ -24,7 +24,6 @@ from htcn.app.operator_input_identity import (
 from htcn.app.source_clock_lifecycle_service import (
     M3SourceClockHarmonicService,
 )
-
 
 PORTABLE_DELIVERY_SCHEMA_VERSION = 1
 PORTABLE_DELIVERY_RUN_REPORT_SCHEMA_VERSION = 1
@@ -600,7 +599,7 @@ def build_daily_portable_delivery_bundle(
     manifest = {
         "schema_version": PORTABLE_DELIVERY_SCHEMA_VERSION,
         "status": status,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "contract": PortableDeliveryContract().as_payload(),
         "trade_date": trade_date,
         "input_identity_fingerprint": identity,
@@ -689,7 +688,7 @@ def run_daily_portable_delivery(
     latest_workspace_path = resolve(latest_workspace_alias)
     archive_root_path = resolve(archive_root)
 
-    generated_at = datetime.now(timezone.utc).isoformat()
+    generated_at = datetime.now(UTC).isoformat()
     before_hash: str | None = None
     after_hash: str | None = None
     current_identity: str | None = None

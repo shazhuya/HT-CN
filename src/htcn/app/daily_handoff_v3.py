@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from hashlib import sha256
 import io
 import json
-from pathlib import Path, PurePosixPath
 import tempfile
-from typing import Any
 import zipfile
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from hashlib import sha256
+from pathlib import Path, PurePosixPath
+from typing import Any
 
 from htcn.app.daily_handoff import (
     build_daily_handoff_bundle,
@@ -27,7 +27,6 @@ from htcn.app.review_followup_journal import (
     query_review_journal,
     verify_review_journal_event,
 )
-
 
 DAILY_HANDOFF_V3_SCHEMA_VERSION = 3
 BASE_V2_SCHEMA_VERSION = 2
@@ -1537,7 +1536,7 @@ def build_daily_handoff_bundle_v3(
     manifest: dict[str, Any] = {
         "schema_version": DAILY_HANDOFF_V3_SCHEMA_VERSION,
         "status": status,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "transport_only": True,
         "authoritative_evidence": False,
         "writes_m4_evidence": False,

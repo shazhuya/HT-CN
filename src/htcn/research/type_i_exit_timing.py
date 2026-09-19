@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from .time_split import assign_purged_split
-from .type_i_confirmation import DEFAULT_TYPE_I_LANDMARK_BAR, _bar_value, _boundaries, _terminal_events
-
+from .type_i_confirmation import (
+    DEFAULT_TYPE_I_LANDMARK_BAR,
+    _bar_value,
+    _boundaries,
+    _terminal_events,
+)
 
 DEFAULT_MIN_EXCLUSIVE_TRAIN = 60
 DEFAULT_MIN_EXCLUSIVE_VALIDATION = 20

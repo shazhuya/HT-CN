@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import json
-from pathlib import Path
 import subprocess
-from typing import Any, Iterable
-
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any
 
 MAIN_RELEASE_INTEGRITY_SCHEMA_VERSION = 1
 

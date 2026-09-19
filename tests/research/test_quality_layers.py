@@ -7,7 +7,6 @@ from htcn.research.quality_layers import (
     pattern_family,
 )
 
-
 THRESHOLDS = {
     "prz_width_ratio": [0.10, 0.20, 0.30],
     "distance_to_prz_ratio": [0.10, 0.20, 0.30],

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
-from typing import Iterator
 
 import pandas as pd
 

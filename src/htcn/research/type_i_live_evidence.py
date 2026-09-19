@@ -8,7 +8,6 @@ import pandas as pd
 from .terminal_bar import DEFAULT_TERMINAL_REACTION_HORIZON, audit_projected_terminal_price_bar
 from .walk_forward import DEFAULT_FORWARD_HORIZON, walk_forward_forming_signals
 
-
 TYPE_I_T5_EVIDENCE_VERSION = "m2-type-i-holdout-v1"
 TYPE_I_T5_EXTERNAL_REPLICATION_VERSION = "m2-type-i-external-replication-v1"
 

@@ -6,7 +6,6 @@ from .models import HarmonicPoint, PatternDirection
 from .rules import PatternRule, RatioConstraint
 from .source_prz import select_source_prz
 
-
 _PRICE_FLOOR = 1e-9
 
 

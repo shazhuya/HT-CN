@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
-from .quality_layers import pattern_family
 from .type_i_confirmation import _terminal_events
 from .type_i_holdout_eval import newcombe_difference_interval
-
 
 DEFAULT_LANDMARK_BAR = 5
 DEFAULT_REACTION_HORIZON = 20

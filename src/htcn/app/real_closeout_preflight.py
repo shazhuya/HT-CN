@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import date
 import importlib
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
-from typing import Any, Iterable, Literal
-
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
+from datetime import date
+from pathlib import Path
+from typing import Any, Literal
 
 REAL_CLOSEOUT_PREFLIGHT_SCHEMA_VERSION = 1
 PHASE22_MAIN_MERGE = "56b6da0d30b951c3ff569ff4739ddbe6e5d3e695"

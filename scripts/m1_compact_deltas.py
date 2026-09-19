@@ -8,7 +8,6 @@ from htcn.data.catalog import DataCatalog
 from htcn.data.delta import MarketDailyDeltaStore, compact_daily_deltas
 from htcn.data.store import ParquetDailyStore
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
 CATALOG_PATH = DATA_ROOT / "catalog.duckdb"

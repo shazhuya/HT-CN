@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
+import zipfile
+from datetime import UTC, datetime
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
-import zipfile
 
 from htcn.app.evidence_identity import read_code_identity
 from htcn.research.capture_transaction import read_committed_captures
@@ -18,7 +18,6 @@ from htcn.research.outcome_engine_identity import (
 )
 from htcn.research.outcome_protocol import load_outcome_protocol
 from htcn.research.outcome_snapshot import read_outcome_snapshots
-
 
 BUNDLE_SCHEMA_VERSION = 1
 
@@ -192,7 +191,7 @@ def build_bundle(
             if int(health.get("blocker_count") or 0) > 0
             else "transport_bundle_ready"
         ),
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "code_head": identity.head,
         "worktree_clean": identity.worktree_clean,
         "methodology_contract_version": methodology.contract_version,

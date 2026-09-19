@@ -11,7 +11,6 @@ import pandas as pd
 
 from htcn.data.validation import normalize_daily
 
-
 SNAPSHOT_META_SCHEMA_VERSION = 1
 
 

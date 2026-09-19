@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import date
-from pathlib import Path
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import UTC, date
+from pathlib import Path
 from typing import Any
 
 import duckdb
@@ -20,7 +20,6 @@ from htcn.data.sectors import (
     persist_sector_snapshots,
 )
 
-
 CONCEPT_KIND = "concept"
 CONCEPT_SOURCE = "akshare_eastmoney_concept"
 
@@ -35,8 +34,8 @@ def _record_sync(
     error_message: str | None,
 ) -> None:
     ensure_sector_schema(catalog_path)
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    from datetime import datetime
+    now = datetime.now(UTC).replace(tzinfo=None)
     with duckdb.connect(str(catalog_path)) as con:
         con.execute("""
             INSERT INTO sector_membership_sync VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -79,8 +78,8 @@ def _replace_concepts(
     if not records:
         raise ValueError("refuse to replace concept membership with empty snapshot")
     ensure_sector_schema(catalog_path)
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    from datetime import datetime
+    now = datetime.now(UTC).replace(tzinfo=None)
     rows = [[
         item.instrument_id, item.sector_kind, item.sector_code, item.sector_name,
         item.source, item.observed_on, now

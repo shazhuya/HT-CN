@@ -7,7 +7,6 @@ import pandas as pd
 
 from htcn.research.quality_gate import evaluate_gate_library
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CAL_DIR = ROOT / "artifacts" / "calibration"
 SPLIT_JSON = CAL_DIR / "m2-time-split-calibration.json"
