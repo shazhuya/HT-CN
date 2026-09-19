@@ -206,3 +206,11 @@ The corrected hosted PR run #2137 / `35448896046` succeeded on remote head `4b66
 The evidence-sync head `0d0c045df6ec41bdaffab04528a9a21590751503` then passed the final PR run #2139 / `35449160235` and was squash-merged through PR #42 as main commit `38ce7b45a67de66d2654c135c4b2691b736749ef`. Its file tree is identical to the validated PR head. The first main push #2140 / `35449318110` failed closed because the squash merge does not retain PR-branch commits as ancestors while `latest_attempt_id` still named one. This governance-continuity failure is preserved as A-20260919-0066-022; ancestry enforcement remains strict and a bounded main-line evidence sync is required.
 
 The bounded main-line governance sync `e6dfccf18e52b10eb1e4520bcf60bc1d62430e41` then passed push workflow #2141 / `35449508107`: Project OS ready, 872 Python tests / 0 warnings, Ruff 483, Web production build, 24 deterministic browser tests, Phase18 and Phase21 acceptance, both M4 freeze guards, and formal artifact `10585884027`. This is preserved as A-20260919-0066-023. Quality hardening is integrated and main is green; M6.2 still awaits only the real private-M1 evidence ZIP and independent acceptance.
+
+## Private-M1 BSE default-scope correction
+
+The first real private-M1 run after the portable-continuity repair reached the M5 operator-cache finalization step and correctly failed closed because the initialized local universe contained `BSE.920001` at trade date `2026-09-15` while the active SSE/SZSE data were current through `2026-09-18`. All 56 instruments analyzed successfully; the blocker was mixed-as-of cache identity, not an instrument-analysis failure.
+
+Project State already freezes `bse_default_scope` as `deferred`. The bounded correction therefore excludes `BSE.*` from the default M5/M6.2 operator universe while preserving any local BSE files untouched. Generic instrument discovery remains capable of returning BSE when no exchange filter is requested.
+
+This correction does not alter harmonic identity, Source Raw PRZ, Source lifecycle, M4 evidence, Outcome Engine, or trading semantics. A fresh hosted validation and a fresh real private-M1 run on the resulting current main are required.

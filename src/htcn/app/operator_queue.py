@@ -62,11 +62,23 @@ def discover_local_instruments(
     data_root: str | Path,
     *,
     limit: int = 0,
+    exchanges: tuple[str, ...] | None = None,
 ) -> list[str]:
     daily_root = Path(data_root) / "daily"
     if not daily_root.exists():
         return []
     items = sorted(path.stem for path in daily_root.glob("*.parquet"))
+    if exchanges is not None:
+        prefixes = tuple(
+            f"{str(exchange).strip().upper()}."
+            for exchange in exchanges
+            if str(exchange).strip()
+        )
+        items = [
+            item
+            for item in items
+            if prefixes and item.upper().startswith(prefixes)
+        ]
     return items if limit <= 0 else items[:limit]
 
 

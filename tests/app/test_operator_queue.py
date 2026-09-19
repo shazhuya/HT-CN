@@ -5,6 +5,7 @@ import threading
 from htcn.app.operator_queue import (
     WORKFLOW_BUCKET_ORDER,
     build_operator_queue,
+    discover_local_instruments,
     filter_operator_queue_payload,
 )
 
@@ -70,6 +71,32 @@ def _analysis(*patterns: dict) -> dict:
         "completed": [],
         "forming": list(patterns),
     }
+
+
+
+
+def test_discover_local_instruments_can_limit_exchange_scope(tmp_path) -> None:
+    daily_root = tmp_path / "daily"
+    daily_root.mkdir()
+    for name in (
+        "BSE.920001.parquet",
+        "SSE.600000.parquet",
+        "SZSE.000001.parquet",
+    ):
+        (daily_root / name).touch()
+
+    assert discover_local_instruments(tmp_path) == [
+        "BSE.920001",
+        "SSE.600000",
+        "SZSE.000001",
+    ]
+    assert discover_local_instruments(
+        tmp_path,
+        exchanges=("SSE", "SZSE"),
+    ) == [
+        "SSE.600000",
+        "SZSE.000001",
+    ]
 
 
 def test_operator_queue_uses_workflow_bucket_not_predictive_score() -> None:

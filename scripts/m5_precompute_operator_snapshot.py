@@ -97,6 +97,7 @@ def main() -> int:
     instrument_ids = discover_local_instruments(
         DATA_ROOT,
         limit=0,
+        exchanges=("SSE", "SZSE"),
     )
     expected = latest_local_trade_date(DATA_ROOT / "catalog.duckdb")
     service = M3SourceClockHarmonicService(DATA_ROOT)
