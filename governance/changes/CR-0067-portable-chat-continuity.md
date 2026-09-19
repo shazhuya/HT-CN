@@ -1,6 +1,6 @@
 # CR-0067 — Portable Chat / Cross-AI Continuity
 
-status: ready_to_merge
+status: postmerge_pending
 baseline_ref: main
 baseline_head: 704b0b631ffc6592e20f56324119068096da8bcd
 target: main
@@ -74,3 +74,6 @@ Hosted PR #43 run `35451049509` / #2144 passed both deterministic tests and
 `formal-main-release-integrity`; artifact `10587105797` preserves the formal evidence. The
 portable bundle build/verification step passed in the hosted environment. Merge and post-merge
 main validation remain required before closure.
+
+PR #43 was squash-merged as `335414530850bd5b4d5acf030c7eff49cf5f9124` with the exact
+final hosted branch tree. An explicit main push validation is pending before closure.

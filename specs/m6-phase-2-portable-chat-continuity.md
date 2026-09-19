@@ -1,6 +1,6 @@
 # M6 Phase 2 — Portable Chat / Cross-AI Continuity v1
 
-status: ready_to_merge
+status: postmerge_pending
 change: CR-0067
 decision: D-067
 
