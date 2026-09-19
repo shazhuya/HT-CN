@@ -22,13 +22,18 @@
     "milestone": "M6",
     "phase": "M6.2",
     "title": "Real Private-M1 Closeout",
-    "status": "implementing",
+    "status": "validation_green",
     "active_change": "CR-0066",
     "work_branch": "m6/private-m1-closeout-v1",
     "latest_validation": {
-      "result": "bootstrap_verified",
-      "main_closeout_ci_run": 35436828712,
-      "main_closeout_ci_status": "success"
+      "result": "success",
+      "workflow_run": 35437669271,
+      "event": "push",
+      "python_passed": 866,
+      "warnings": 1163,
+      "project_os_integrity": "success",
+      "web_build": "success",
+      "formal_pr_release": "pending"
     }
   },
   "private_m1": {
@@ -38,7 +43,7 @@
   "next_major_task": {
     "phase": "M6.2",
     "title": "Real Private-M1 Closeout",
-    "status": "implementing",
+    "status": "validation_green",
     "blocked_until": []
   },
   "freezes": {
