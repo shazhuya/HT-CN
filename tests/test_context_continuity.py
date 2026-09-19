@@ -50,7 +50,7 @@ def test_project_state_is_machine_current_truth() -> None:
     }
     assert state["current"]["active_change"] == "CR-0066"
     assert state["current"]["active_spec"] == "specs/m6-phase-2-real-private-m1-closeout.md"
-    assert state["current"]["latest_attempt_id"] == "A-20260919-0066-019"
+    assert state["current"]["latest_attempt_id"] == "A-20260919-0066-020"
     assert state["current"]["latest_hosted_validation_attempt_id"] == (
         "A-20260919-0066-013"
     )

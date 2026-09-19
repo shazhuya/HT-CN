@@ -23,12 +23,17 @@ def test_warning_parser_reads_pytest_summary_without_summing_duplicate_lines() -
     assert module.parse_warning_count(["869 passed in 10.0s\n"]) == 0
 
 
-def test_warning_baseline_is_bound_to_latest_verified_main() -> None:
+def test_warning_baseline_is_bound_to_remote_equivalent_validated_commit() -> None:
     payload = json.loads(
         (ROOT / "governance" / "QUALITY_BASELINE.json").read_text(encoding="utf-8")
     )
     assert payload["pytest"]["warning_budget"] == 0
     assert payload["pytest"]["baseline_passed"] == 872
     assert payload["pytest"]["baseline_commit"] == (
-        "482a005e498e7b63ea57015074f9c689a56a0367"
+        "8848d859b712ece8416abcaf2c26ecba74426ad1"
+    )
+    assert payload["pytest"]["baseline_attempt_id"] == "A-20260919-0066-019"
+    assert payload["pytest"]["baseline_workflow_run"] is None
+    assert payload["pytest"]["hosted_validation_status"] == (
+        "pending_rerun_after_A-20260919-0066-020"
     )
