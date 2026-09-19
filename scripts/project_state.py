@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import subprocess
 import sys
@@ -27,6 +26,18 @@ ALLOWED_SOURCE_STATUS = {
     "supported_source_state_machine",
     "supported_source_clock",
     "unsupported",
+}
+
+ALLOWED_CHANGE_STATUS = {
+    "planned",
+    "implementing",
+    "validation_failed",
+    "validation_green",
+    "ready_to_merge",
+    "merged",
+    "postmerge_pending",
+    "closed",
+    "blocked",
 }
 
 ALLOWED_CHANGE_STATUS = {
