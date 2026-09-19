@@ -6,7 +6,6 @@ from pathlib import Path
 
 from htcn.app.universe_coverage import build_live_universe_coverage
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
 REPORT_PATH = ROOT / "artifacts" / "reports" / "m6-universe-coverage.json"
