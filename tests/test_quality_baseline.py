@@ -30,14 +30,12 @@ def test_warning_baseline_is_bound_to_remote_equivalent_validated_commit() -> No
     assert payload["pytest"]["warning_budget"] == 0
     assert payload["pytest"]["baseline_passed"] == 872
     assert payload["pytest"]["baseline_commit"] == (
-        "38ce7b45a67de66d2654c135c4b2691b736749ef"
+        "e6dfccf18e52b10eb1e4520bcf60bc1d62430e41"
     )
-    assert payload["pytest"]["baseline_attempt_id"] == "A-20260919-0066-021"
-    assert payload["pytest"]["baseline_workflow_run"] is None
+    assert payload["pytest"]["baseline_attempt_id"] == "A-20260919-0066-023"
+    assert payload["pytest"]["baseline_workflow_run"] == 35449508107
     assert payload["pytest"]["source_branch_validation_head"] == (
         "0d0c045df6ec41bdaffab04528a9a21590751503"
     )
     assert payload["pytest"]["source_branch_validation_workflow_run"] == 35449160235
-    assert payload["pytest"]["hosted_validation_status"] == (
-        "source_branch_success_main_push_recovery_pending"
-    )
+    assert payload["pytest"]["hosted_validation_status"] == "success"
