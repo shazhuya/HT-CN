@@ -613,6 +613,74 @@ def _review_state_index(
     return result
 
 
+def query_review_journal(
+    *,
+    journal_root: str | Path,
+    display_key: str | None = None,
+    instrument_id: str | None = None,
+    source_observation_id: str | None = None,
+    review_state: str | None = None,
+    limit: int = 200,
+) -> dict[str, Any]:
+    if review_state is not None and review_state not in REVIEW_STATES:
+        raise ValueError(f"unknown review state: {review_state}")
+    normalized_instrument = (
+        instrument_id.strip().upper()
+        if instrument_id
+        else None
+    )
+    events = _load_valid_events(Path(journal_root).resolve())
+    events.sort(
+        key=lambda event: (
+            str(event.get("created_at_utc") or ""),
+            str(event.get("event_id") or ""),
+        ),
+        reverse=True,
+    )
+
+    matched: list[dict[str, Any]] = []
+    for event in events:
+        source = event.get("source") or {}
+        if display_key is not None and source.get("display_key") != display_key:
+            continue
+        if (
+            normalized_instrument is not None
+            and str(source.get("instrument_id") or "").upper()
+            != normalized_instrument
+        ):
+            continue
+        if (
+            source_observation_id is not None
+            and source.get("observation_id") != source_observation_id
+        ):
+            continue
+        if review_state is not None and event.get("review_state") != review_state:
+            continue
+        matched.append(event)
+        if len(matched) >= max(1, int(limit)):
+            break
+
+    return {
+        "schema_version": 1,
+        "contract": ReviewFollowupJournalContract().as_payload(),
+        "filter": {
+            "display_key": display_key,
+            "instrument_id": normalized_instrument,
+            "source_observation_id": source_observation_id,
+            "review_state": review_state,
+            "limit": max(1, int(limit)),
+        },
+        "event_count": len(matched),
+        "events": matched,
+        "authoritative_evidence": False,
+        "writes_m4_evidence": False,
+        "historical_outcome_used_for_ranking": False,
+        "predictive_score_used": False,
+        "alpha_inference_allowed": False,
+        "is_trade_instruction": False,
+    }
+
+
 def query_active_follow_ups(
     *,
     journal_root: str | Path,
