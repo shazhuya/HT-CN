@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 from typing import Any
 import zipfile
@@ -173,6 +173,15 @@ def _is_sha(value: object) -> bool:
 
 def _is_hash64(value: object) -> bool:
     return bool(re.fullmatch(r"[0-9a-f]{64}", str(value or "")))
+
+
+def _safe_archive_member(name: str) -> bool:
+    if not name or "\\" in name:
+        return False
+    path = PurePosixPath(name)
+    if path.is_absolute():
+        return False
+    return all(part not in {"", ".", ".."} for part in path.parts)
 
 
 def verify_private_m1_closeout(
@@ -773,6 +782,9 @@ def verify_private_m1_evidence_bundle(
             names = archive.namelist()
             if len(names) != len(set(names)):
                 errors.append("bundle_duplicate_members")
+            unsafe_names = sorted(name for name in names if not _safe_archive_member(name))
+            if unsafe_names:
+                errors.append("bundle_unsafe_members:" + ",".join(unsafe_names))
             manifest_name = "m6-private-m1-closeout-manifest.json"
             if names.count(manifest_name) != 1:
                 errors.append("bundle_manifest_missing_or_duplicate")
@@ -845,6 +857,20 @@ def verify_private_m1_evidence_bundle(
                 if not any(role.startswith("screenshot_") for role in roles):
                     errors.append("bundle_screenshot_evidence_missing")
 
+                expected_archive_names = {manifest_name}
+                expected_archive_names.update(
+                    str(record.get("arcname") or "")
+                    for record in records
+                    if isinstance(record, dict)
+                )
+                if set(names) != expected_archive_names:
+                    extra = sorted(set(names) - expected_archive_names)
+                    absent = sorted(expected_archive_names - set(names))
+                    if extra:
+                        errors.append("bundle_unlisted_members:" + ",".join(extra))
+                    if absent:
+                        errors.append("bundle_listed_members_missing:" + ",".join(absent))
+
                 portable_record = record_by_role.get("portable_delivery") or {}
                 if str(portable_record.get("sha256") or "") != str(
                     manifest.get("delivery_bundle_sha256") or ""
@@ -863,6 +889,7 @@ def verify_private_m1_evidence_bundle(
                 pointer = json_role("phase19_pointer")
                 structural = json_role("phase21_structural")
                 browser_source = json_role("browser_source")
+                browser_evidence = json_role("browser_evidence")
                 archive_manifest = json_role("archive_manifest")
                 browser_verification = json_role("browser_verification")
                 final = json_role("phase21_final")
@@ -921,6 +948,77 @@ def verify_private_m1_evidence_bundle(
                         manifest.get("delivery_bundle_sha256") or ""
                     ):
                         errors.append("bundle_browser_source_identity_mismatch")
+
+                    workspace_record = record_by_role.get("workspace_html") or {}
+                    inspector_record = record_by_role.get("inspector_json") or {}
+                    structural_record = record_by_role.get("phase21_structural") or {}
+                    if str(browser_source.get("workspace_source_sha256") or "") != str(
+                        workspace_record.get("sha256") or ""
+                    ):
+                        errors.append("bundle_browser_workspace_hash_mismatch")
+                    if str(browser_source.get("inspection_source_sha256") or "") != str(
+                        inspector_record.get("sha256") or ""
+                    ):
+                        errors.append("bundle_browser_inspector_hash_mismatch")
+                    if str(
+                        browser_source.get("structural_closeout_report_sha256") or ""
+                    ) != str(structural_record.get("sha256") or ""):
+                        errors.append("bundle_browser_structural_hash_mismatch")
+
+                if browser_evidence is not None:
+                    if str(browser_evidence.get("trade_date") or "") != str(
+                        manifest.get("trade_date") or ""
+                    ):
+                        errors.append("bundle_browser_evidence_trade_date_mismatch")
+                    if str(browser_evidence.get("source_identity") or "") != str(
+                        manifest.get("delivery_bundle_sha256") or ""
+                    ):
+                        errors.append("bundle_browser_evidence_identity_mismatch")
+                    screenshots = browser_evidence.get("screenshots")
+                    if not isinstance(screenshots, list) or not screenshots:
+                        errors.append("bundle_browser_evidence_screenshots_invalid")
+                    else:
+                        for index, screenshot in enumerate(screenshots):
+                            if not isinstance(screenshot, dict):
+                                errors.append(
+                                    f"bundle_browser_evidence_screenshot_record_invalid:{index}"
+                                )
+                                continue
+                            role = f"screenshot_{index:03d}"
+                            record = record_by_role.get(role) or {}
+                            raw = raw_by_role.get(role)
+                            if raw is None:
+                                errors.append(f"bundle_browser_screenshot_missing:{index}")
+                                continue
+                            if str(screenshot.get("sha256") or "") != _sha256_bytes(raw):
+                                errors.append(f"bundle_browser_screenshot_hash_mismatch:{index}")
+                            try:
+                                expected_size = int(screenshot.get("size_bytes") or -1)
+                            except (TypeError, ValueError):
+                                expected_size = -1
+                            if expected_size != len(raw):
+                                errors.append(f"bundle_browser_screenshot_size_mismatch:{index}")
+                            if str(record.get("sha256") or "") != _sha256_bytes(raw):
+                                errors.append(f"bundle_browser_screenshot_record_hash_mismatch:{index}")
+
+                if archive_manifest is not None:
+                    archive_files = archive_manifest.get("files")
+                    archive_files = archive_files if isinstance(archive_files, dict) else {}
+                    for role in (
+                        "portable_delivery",
+                        "handoff_v4",
+                        "inspector_json",
+                        "workspace_html",
+                    ):
+                        source_record = archive_files.get(role)
+                        bundle_record = record_by_role.get(role) or {}
+                        if not isinstance(source_record, dict):
+                            errors.append(f"bundle_archive_role_invalid:{role}")
+                            continue
+                        if str(source_record.get("sha256") or "") != str(
+                            bundle_record.get("sha256") or ""
+                        ):
+                            errors.append(f"bundle_archive_role_hash_mismatch:{role}")
 
                 if m6 is not None:
                     if m6.get("full_closeout_ready") is not True:
