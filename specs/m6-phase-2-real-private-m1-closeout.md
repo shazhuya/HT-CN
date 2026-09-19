@@ -203,3 +203,16 @@ Only after that evidence is accepted may:
 - CR-0066 close;
 - M6.2 close;
 - M6.3 become next active task.
+
+## 12. Evidence bundle tamper-hardening
+
+The standalone ZIP verifier MUST remain valid even when the uploaded artifact is inspected outside the original private-M1 machine. Therefore it rejects more than simple byte/hash mismatches:
+
+- archive member names must be safe relative POSIX paths;
+- every archive payload member must be listed in the manifest and no extra member is accepted;
+- browser evidence trade date/source identity must match the M6 manifest;
+- screenshot size/hash records must match the actual bundled screenshots;
+- browser source workspace, inspector and structural hashes must match bundled members;
+- immutable Phase19 archive member hashes must match the corresponding bundled members.
+
+This prevents a re-packed ZIP from becoming valid merely because an attacker recomputed the outer manifest hashes after altering inner semantic evidence.
