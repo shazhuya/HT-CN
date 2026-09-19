@@ -1692,3 +1692,94 @@ M5 已经进入全 universe、并行、缓存和 single-flight 的实战产品�
 原因：
 
 Phase 2 已能回答“今天相对上一快照变了什么”，但浏览器 localStorage 不能承担长期、可审计的跨日产品历史。Phase 11 将每天最终产品状态保存为 append-only observation，并让同日 input-identity 更新形成 revision 而非覆盖；同时用 hash 和链关系对删除/篡改 fail closed。它提升的是产品复盘与可追溯性，不获得 M4 的研究证据权力，也不允许从历史观察直接推导胜率、alpha 或交易排序。
+
+
+## D-053 — Daily Review Digest 必须是完整 Phase-11 Delta 的透明产品复盘，不得把历史变化转成预测排名
+
+**状态：Frozen M5 Phase 12 daily review digest boundary**
+
+正式决定：
+
+1. Daily Review Digest 是 Phase 11 Operator History 的 product review derivative，不是新的 evidence authority；
+2. digest 唯一 source 是 latest valid Phase-11 history revision；
+3. history integrity failure 时 digest 必须 fail closed，不允许从剩余文件拼一个“部分正常”的摘要；
+4. digest 只能从未过滤、完整的 latest Delta 构建；
+5. `delta_total_change_count`、observation `change_count` 与实际 `changes[]` 长度必须完全一致；
+6. 任何 count mismatch 必须拒绝生成 digest；
+7. digest 永久保留所有变化 item 与每个 item 的完整 `change_types[]`；
+8. 固定 review workflow order：
+   - execution_evaluation；
+   - reaction_observation；
+   - waiting；
+   - evidence_insufficient；
+   - disappeared_candidate；
+9. 上述顺序只是产品工作流导航，不是预期收益、成功率、alpha、买卖优先级或机会质量排名；
+10. contract 必须声明 `ordering_is_product_workflow_not_expected_return=true`；
+11. change-type vocabulary 固定为：
+   - new_candidate；
+   - disappeared_candidate；
+   - action_state_changed；
+   - lifecycle_state_changed；
+   - pattern_state_changed；
+   - next_key_changed；
+   - execution_gate_changed；
+   - context_cautions_changed；
+12. digest 必须输出 `change_count` / `change_type_counts` / `workflow_bucket_counts`；
+13. current-analysis-error disappearance suppression 继续沿用 Phase 2/11，不得因为 digest 层重新制造候选消失；
+14. comparison-incomplete instruments 必须独立显示为 analysis gaps；
+15. analysis gap 不得被解释为看空、恶化、退出或候选消失；
+16. digest status 允许：
+   - no_history；
+   - baseline；
+   - no_changes；
+   - no_changes_with_analysis_gaps；
+   - changes_ready；
+   - changes_ready_with_analysis_gaps；
+17. baseline 表示首个产品观察日，没有上一交易日 Delta baseline，不是失败；
+18. 每日流水线中 Phase 12 只能运行在 Phase 11 history append 成功之后；
+19. `m5_daily_review_digest` failure 不得改写 `m5_product_ready`；
+20. digest failure 不得改写 `m5_history_ready`；
+21. digest failure 不得改写 `m4_research_ready`；
+22. digest failure 只影响 `m5_review_digest_ready`；
+23. API presentation filter 只允许改变 `filtered_change_count` / `filtered_workflow_sections`；
+24. 原始 source `change_count` 必须保持不变并显式暴露 `source_change_count_unchanged`；
+25. 未知 workflow bucket / change type 必须显式报参数错误，不得静默返回 0 条；
+26. instrument filter 只是展示过滤，不改变 source digest；
+27. Workbench 必须同时显示“源变化总数”和“当前筛选命中”，避免把筛选结果误当成当天全部变化；
+28. Workbench 必须显示 trade date / previous trade date / revision；
+29. Workbench 必须可展示 lifecycle/action/next-key before -> after；
+30. Workbench item 可以跳转单票深度工作台，但不得生成买卖按钮/交易指令；
+31. one-click `运行HT-CN每日变化复盘.bat` 只构建 review digest，不重跑 daily pipeline；
+32. report 固定为 `artifacts/reports/m5-daily-review-digest.json`；
+33. Phase 10 handoff v2 冻结不变；未来若运输 Phase 11/12 artifacts 必须建立新 versioned handoff contract；
+34. Phase 12 contract 永久声明：
+    - semantics=product_change_triage_only；
+    - authoritative_transition=false；
+    - authoritative_evidence=false；
+    - writes_m4_evidence=false；
+    - predictive_score_used=false；
+    - historical_outcome_used_for_ranking=false；
+    - alpha_inference_allowed=false；
+    - is_trade_instruction=false；
+    - mutates_harmonic_identity=false；
+    - mutates_source_raw_prz=false；
+    - owns_lifecycle=false；
+35. 首轮 hosted CI #1725 / `35413513169`：
+    - Python 733 passed；
+    - Web build success；
+    - Playwright 23 passed；
+36. final validated code checkpoint：
+    `84c7d8a0f2d46cd8ed9b79dcd638cb727d165465`；
+37. final code CI #1733 / `35413656027`：
+    - overall success；
+    - Python 736 passed；
+    - Web build success；
+    - Playwright 23 passed；
+    - browser evidence upload success；
+38. draft PR #24 只是 hosted-CI / diff audit carrier，不代表已经合并；
+39. M4 capture methodology drift：0 / 37；
+40. Outcome Engine drift：0 / 4。
+
+原因：
+
+Phase 11 解决了“跨日产品状态如何可靠保存”，Phase 12 解决的是“每天打开工具后如何快速看清到底变了什么”。这个阶段最容易出现的错误，是把历史变化偷偷转化为胜率、机会评分或买卖优先级。D-053 因此把完整 Delta、透明 workflow order、源总数不变、presentation-only filter 和 no-alpha/no-ranking 边界一次冻结。
