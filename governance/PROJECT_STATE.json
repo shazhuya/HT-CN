@@ -27,16 +27,17 @@
     "work_branch": "m6/private-m1-closeout-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35437784106,
+      "workflow_run": 35437936795,
+      "run_number": 2086,
       "event": "pull_request",
+      "head": "4a87dcaa967b573ef80691f99e9fa57a38f5aaab",
       "project_os_integrity": "success",
       "formal_main_release_integrity": "success",
       "existing_playwright_passed": 24,
       "phase18": "valid",
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
-      "outcome_engine": "frozen_match_4",
-      "artifact_id": 10582497478
+      "outcome_engine": "frozen_match_4"
     }
   },
   "private_m1": {
