@@ -116,8 +116,8 @@ npm run build
 
 - Project OS 状态必须一致；
 - Python 测试必须通过；
-- Python warnings 当前冻结上限为 1163，只允许下降，不允许无变更记录地增加；
-- Ruff 历史债务当前冻结上限为 485，只允许下降；新增和实质修改的 Python 文件必须保持干净；
+- Python warning 预算为 0；任何新增 warning 都会使 CI 失败；
+- Ruff 历史债务当前冻结上限为 483，只允许下降；新增和实质修改的 Python 文件必须保持干净；
 - Web 必须构建成功；
 - 正式主线运行浏览器验收、Phase18、Phase21、M4 methodology freeze 和 Outcome Engine freeze；
 - 托管 fixture 只证明机制，不能代替真实市场或私有 M1 证据。

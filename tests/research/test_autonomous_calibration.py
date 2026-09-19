@@ -44,11 +44,10 @@ def test_enrich_walk_forward_records_uses_exact_future_trade_date() -> None:
 
 
 def _record(index: int) -> dict:
-    signal = pd.Timestamp("2020-01-01") + pd.Timedelta(days=index)
-    observation_end = signal + pd.Timedelta(days=3)
+    signal = pd.Timestamp("2020-01-01") + pd.Timedelta(index, unit="D")
+    observation_end = signal + pd.Timedelta(3, unit="D")
     touched = index % 3 == 0
     completed = index % 17 == 0
-    retired = not touched
     return {
         "instrument_id": f"SSE.{600000 + (index % 4):06d}",
         "signal_trade_date": signal.date().isoformat(),

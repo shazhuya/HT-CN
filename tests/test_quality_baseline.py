@@ -27,7 +27,7 @@ def test_warning_baseline_is_bound_to_latest_verified_main() -> None:
     payload = json.loads(
         (ROOT / "governance" / "QUALITY_BASELINE.json").read_text(encoding="utf-8")
     )
-    assert payload["pytest"]["warning_budget"] == 1163
+    assert payload["pytest"]["warning_budget"] == 0
     assert payload["pytest"]["baseline_passed"] == 872
     assert payload["pytest"]["baseline_commit"] == (
         "ff644f45f048bc38d2c55ce10aaac8db719d6195"

@@ -17,5 +17,5 @@ def load_module():
 
 def test_ruff_budget_and_parser() -> None:
     module = load_module()
-    assert module.violation_budget() == 485
+    assert module.violation_budget() == 483
     assert module.parse_violations('[{"code":"F401"}]') == [{"code": "F401"}]

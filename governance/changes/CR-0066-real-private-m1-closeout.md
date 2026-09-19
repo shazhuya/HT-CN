@@ -188,3 +188,7 @@ The 2026-09-19 stage audit found that the prior Project OS checks could still pa
 The warning/lint budgets are containment gates, not debt closure claims. Existing debt remains tracked for bounded reduction. The real private-M1 run remains the only M6.2 empirical blocker.
 
 Clean local validation on `ff644f45f048bc38d2c55ce10aaac8db719d6195` passed 872 Python tests with the warning budget unchanged at 1163. Ruff debt was 485, all newly added/materially edited Project OS files were clean, both M4 freeze guards matched, and the dependency lock validated. This is recorded as A-20260919-0066-015. Hosted branch validation remains required before merge.
+
+The warning audit then eliminated the historical warning debt instead of merely containing it: 1160 repeated Pandas test deprecations were corrected with explicit day units, the deliberate duplicate-member ZIP tamper test now asserts its warning, and two locked upstream import deprecations are filtered by exact message. The pytest warning budget is now zero.
+
+The first branch push attempt from `125872ed64415c09b6606dade08d091ef7413a7c` was blocked because the execution environment had no GitHub credential helper, token or authenticated GitHub CLI. No remote ref was created. This external-auth failure is preserved as A-20260919-0066-016 and is not represented as a code or CI failure.
