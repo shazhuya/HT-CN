@@ -126,3 +126,25 @@ def test_review_digest_api_surfaces_history_integrity_failure(
 
     assert raised.value.status_code == 500
     assert "daily review digest unavailable" in str(raised.value.detail)
+
+
+def test_review_digest_api_rejects_unknown_presentation_filters() -> None:
+    with pytest.raises(HTTPException) as workflow_error:
+        api.operator_review_digest(
+            workflow_bucket="best_opportunity",
+            change_type=None,
+            instrument_id=None,
+        )
+    assert workflow_error.value.status_code == 400
+    assert "unknown review workflow bucket" in str(
+        workflow_error.value.detail
+    )
+
+    with pytest.raises(HTTPException) as change_error:
+        api.operator_review_digest(
+            workflow_bucket=None,
+            change_type="profit_probability_changed",
+            instrument_id=None,
+        )
+    assert change_error.value.status_code == 400
+    assert "unknown review change type" in str(change_error.value.detail)
