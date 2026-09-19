@@ -5,12 +5,13 @@
       "id": "ISSUE-0061",
       "severity": "blocker",
       "type": "operational",
-      "status": "in_progress",
-      "title": "Real private-M1 Phase23 current-market closeout not yet produced",
+      "status": "awaiting_private_run",
+      "title": "Real private-M1 current-market closeout evidence not yet produced",
       "blocks": [
         "M6.2 closeout"
       ],
-      "next_action": "Implement and merge M6.2 one-action verifier/evidence bundle, then run it once on the machine that owns private M1."
+      "next_action": "On the machine that owns private M1, update to current formal main and run exactly one entry: 运行HT-CN M6.2真实Private-M1最终收口.bat. If it finishes READY, upload only artifacts/reports/htcn-m6-private-m1-closeout-evidence.zip for independent acceptance.",
+      "current_fact": "M6.2 engineering is integrated on main commit 86fd17d01b3b9c2fc597d500723c6966c9a2250f and main push run 35443729796 is green. Raw private M1 upload is not required."
     },
     {
       "id": "ISSUE-0062",
