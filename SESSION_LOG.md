@@ -1694,3 +1694,27 @@ Next:
   - 24 Playwright passed;
   - browser evidence uploaded.
 - M4 methodology and Outcome Engine remained untouched.
+
+
+## 2026-09-19 — M5 Phase 18 portable visual browser acceptance v1
+
+- Added a deterministic five-scenario browser fixture built by the formal Phase17 semantics/workspace builders.
+- Added dedicated Playwright for completed XABCD, forming XABCD, standalone AB=CD, Shark and FIVE_ZERO.
+- Added presentation-only semantic SVG data hooks for layers, legs, nodes, PRZ components, lifecycle events and price guides.
+- Added five full-page screenshots with size/SHA-256 evidence.
+- Added a machine-readable browser evidence manifest.
+- Added an independent Python verifier for required checks, exact screenshot set, hashes and boundary flags.
+- Added CI steps to build fixture, run dedicated browser acceptance, verify evidence and upload artifacts.
+- CI #1854 exposed a broad locator ambiguity; locator was scoped.
+- CI #1856 exposed Playwright SVG line visibility/bounding-box behavior; semantic line assertions were changed to DOM presence while retaining screenshots as rendered evidence.
+- CI #1858 / 35425914613 green:
+  - Python 792 passed;
+  - Web build success;
+  - existing Playwright 24 passed;
+  - Phase18 Playwright 1 passed;
+  - 10 required semantic checks;
+  - 5 screenshots;
+  - independent evidence verifier valid;
+  - artifact upload success, ID 10579180470.
+- Handoff v4 transport/verifier, M4 methodology and Outcome Engine remained untouched.
+- Known next gap: real current-market v4 artifact is not yet automatically built and browser-audited by the daily close/handoff chain.
