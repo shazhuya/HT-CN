@@ -1,6 +1,6 @@
 # M5 Phase 19 — Daily Portable Delivery Bundle / One-Click Closeout v1
 
-状态：**implementation in progress**
+状态：**Frozen / hosted CI green**
 
 ## 1. 目标
 
@@ -221,25 +221,61 @@ Phase18 已负责 renderer semantics 的 hosted browser QA。
 
 ## 15. Acceptance
 
-- [ ] Phase9 product not ready -> fail before v3；
-- [ ] v3 failure -> no v4/workspace/outer promotion；
-- [ ] input identity invalid/mismatch -> fail closed；
-- [ ] v4 failure -> previous latest pointer preserved；
-- [ ] workspace failure -> previous latest pointer preserved；
-- [ ] pipeline report changes during delivery -> no promotion；
-- [ ] outer bundle verifier validates nested v4；
-- [ ] outer bundle validates Inspector identity/date/version；
-- [ ] outer bundle validates HTML offline boundary；
-- [ ] valid detail-degraded v4 -> valid degraded outer bundle；
-- [ ] success publishes immutable hash-addressed archive；
-- [ ] success updates Phase19 aliases；
-- [ ] latest pointer written last；
-- [ ] frozen Phase14/16 aliases untouched；
-- [ ] one-click daily-close + delivery entry；
-- [ ] Python regression green；
-- [ ] Web build green；
-- [ ] existing browser gates green；
-- [ ] Phase18 browser gate remains green；
-- [ ] v4 transport/verifier drift=0；
-- [ ] M4 methodology drift=0；
-- [ ] Outcome Engine drift=0。
+- [x] Phase9 product not ready -> fail before v3；
+- [x] v3 failure -> no v4/workspace/outer promotion；
+- [x] input identity invalid/mismatch -> fail closed；
+- [x] v4 failure -> previous latest pointer preserved；
+- [x] workspace failure -> previous latest pointer preserved；
+- [x] pipeline report changes during delivery -> no promotion；
+- [x] outer bundle verifier validates nested v4；
+- [x] outer bundle validates Inspector identity/date/version；
+- [x] outer bundle validates HTML offline boundary；
+- [x] valid detail-degraded v4 -> valid degraded outer bundle；
+- [x] success publishes immutable hash-addressed archive；
+- [x] success updates Phase19 aliases；
+- [x] latest pointer written last；
+- [x] frozen Phase14/16 aliases untouched；
+- [x] one-click daily-close + delivery entry；
+- [x] Python regression green；
+- [x] Web build green；
+- [x] existing browser gates green；
+- [x] Phase18 browser gate remains green；
+- [x] v4 transport/verifier drift=0；
+- [x] M4 methodology drift=0；
+- [x] Outcome Engine drift=0。
+
+
+## 16. Hosted validation closeout — 2026-09-19
+
+Validated implementation checkpoint:
+
+`e8d46855f775f57bf7e413575c82806b74b24aba`
+
+Hosted CI:
+
+- Actions **#1876 / 35426314518**: success;
+- Python: **801 passed**, 1163 warnings;
+- Web build: success;
+- existing deterministic Playwright: **24 passed**;
+- Phase18 portable visual Playwright: **1 passed**;
+- Phase18 semantic checks: **10 / 10**;
+- Phase18 screenshots: **5 / 5**;
+- Phase18 evidence verifier: valid;
+- browser evidence artifact upload: success;
+- artifact ID: **10579530605**.
+
+Diff audit against Phase18:
+
+- branch is ahead-only;
+- Phase19 implementation adds five files only;
+- existing Phase18 implementation files changed: 0;
+- handoff v4 transport/verifier drift: 0;
+- Visual Semantics v2 drift: 0;
+- M4 methodology drift: 0;
+- Outcome Engine drift: 0.
+
+Interpretation:
+
+**Phase19 daily portable delivery v1 is code-complete and hosted-CI-green.**
+
+The hosted validation proves orchestration/failure-safety semantics with deterministic fakes. It does not claim that GitHub CI generated a real current-market portable delivery from the user's local market database.
