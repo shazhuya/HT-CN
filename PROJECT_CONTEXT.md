@@ -2285,3 +2285,82 @@ Freeze audit:
 - Outcome Engine drift: 0.
 
 Phase17 v2 is **code-complete / hosted-CI-green**.
+
+
+## M5 Phase 18 closeout — Portable Visual Browser Acceptance / Screenshot Evidence v1
+
+Current branch:
+`m5/portable-visual-browser-acceptance-v1`
+
+Validated implementation checkpoint:
+`c3a67a11ba2aa61c3e047d585293a49acd7d11ff`
+
+Draft PR:
+- #30;
+- base = `m5/portable-visual-semantics-v2`.
+
+Purpose:
+- Phase17 had contract/Python coverage for Visual Semantics v2;
+- Phase18 adds a real Chromium gate over HTML produced by the formal Phase17 builder;
+- no new harmonic algorithm or transport version is introduced.
+
+Implemented:
+- `scripts/m5_build_portable_visual_browser_fixture.py`;
+- `apps/web/tests/portable-visual-workspace.spec.ts`;
+- `scripts/m5_verify_portable_visual_browser_evidence.py`;
+- `specs/m5-phase-18-portable-visual-browser-acceptance.md`;
+- CI fixture/build/browser/evidence-verification gates;
+- presentation-only semantic SVG hooks in `portable_visual_workspace_v2.py`.
+
+Deterministic browser scenarios:
+1. completed XABCD;
+2. forming XABCD;
+3. standalone AB=CD;
+4. Shark 0XABC;
+5. FIVE_ZERO.
+
+Browser-verified semantics:
+- completed XABCD has X/A/B/C/D + XA/AB/BC/CD;
+- Source Raw PRZ and Ideal Core default visible;
+- Component Envelope default hidden and toggleable;
+- Source Raw PRZ independently toggleable;
+- Source Clock events and non-geometry price guides are present;
+- identity conflicts are disclosed without overlaying a second primary geometry;
+- forming XABCD has no D and no CD leg;
+- standalone AB=CD has no X and uses its own reciprocal vocabulary;
+- Shark is 0-X-A-B-C with no D;
+- FIVE_ZERO 61.8 V3 boundary is displayed as execution refinement and not Raw PRZ membership;
+- PRZ component layer toggle works.
+
+Evidence chain:
+- Playwright generates five full-page screenshots;
+- evidence JSON records semantic checks, file sizes and screenshot SHA-256;
+- independent Python verifier checks required check set, exact screenshot set, file presence, size, hash and frozen boundary flags;
+- evidence is uploaded by the existing browser artifact job.
+
+Validation:
+- CI #1858 / `35425914613`: success;
+- Python 792 passed;
+- Web build success;
+- existing Playwright 24 passed;
+- Phase18 Playwright 1 passed;
+- semantic checks 10/10;
+- screenshot evidence 5/5;
+- evidence verifier status=valid;
+- artifact ID 10579180470.
+
+Development notes:
+- #1854 exposed a strict locator ambiguity;
+- #1856 exposed Playwright's SVG line bounding-box visibility semantics;
+- both were test-harness defects, fixed without removing semantic assertions.
+
+Freeze audit:
+- v4 transport/verifier drift: 0;
+- Visual Semantics algorithm drift: 0;
+- M4 methodology drift: 0;
+- Outcome Engine drift: 0.
+
+Known boundary:
+- Phase18 uses deterministic fixture data. It proves renderer/browser semantics, not end-to-end visual quality of a real current-market v4 artifact.
+
+Phase18 v1 is **code-complete / hosted-CI-green**.
