@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any
@@ -13,7 +14,6 @@ from htcn.harmonic.models import HarmonicPoint, Pivot
 from htcn.harmonic.pivots import collapse_same_kind_pivots, detect_pivot_events
 from htcn.harmonic.scanner import classify_completed_xabcd, project_forming_xabcd
 from htcn.harmonic.shark import evaluate_shark, project_forming_shark
-import itertools
 
 DEFAULT_FORWARD_HORIZON = 60
 DEFAULT_WALK_FORWARD_SCALES = (3, 5, 8, 13, 21)
