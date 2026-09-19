@@ -2264,3 +2264,65 @@ Therefore the workflow-side release contract is empirically verified for both:
 2. push to main.
 
 The unresolved administration-only boundary remains unchanged: current GitHub integration cannot read server-side branch protection (403), so required-status-check policy is still not claimed.
+
+
+## D-064 — Private-M1 final closeout must pass a read-only no-auto-repair preflight before any state mutation
+
+日期：2026-09-19
+
+决定：
+
+1. Phase23 inserts a mandatory read-only preflight before the existing Phase21 one-click private-M1 final closeout.
+2. The only recommended user action remains `运行HT-CN主线真实A股最终验收.bat`; Phase23 does not add a second manual preparation command.
+3. The preflight must run before Phase9 daily close, M1 update, Phase19 delivery, M4 capture/outcome, or any product-state mutation.
+4. Any Phase23 blocker exits immediately with `next_action=stop_before_any_m1_or_product_mutation`.
+5. Phase23 may write only its diagnostic report `artifacts/reports/m5-real-closeout-preflight.json`; that report is not M4 authoritative evidence.
+6. Phase23 must never auto-repair the local repository or environment:
+   - no `git pull`;
+   - no `git fetch`;
+   - no checkout/reset/merge;
+   - no pip/npm dependency install;
+   - no Playwright install.
+7. Repository freshness is established using read-only `git ls-remote origin refs/heads/main`; current branch must be `main`, worktree clean, local HEAD exactly equal remote main, and Phase22 main merge `56b6da0d30b951c3ff569ff4739ddbe6e5d3e695` must remain an ancestor.
+8. Python must be 3.13 and must be the project's `.venv`; required imports duckdb/pandas/pyarrow/htcn must succeed before mutation starts.
+9. The M1 catalog must be opened with DuckDB `read_only=True`. Phase23 may not instantiate a catalog helper whose constructor initializes schema as part of a read-only check.
+10. M1 hard integrity is evaluated over the same active current listed SSE/SZSE initialized universe consumed by Phase9. Retained inactive/delisted historical datasets are diagnostic only and do not become a new blocker.
+11. Phase23 must not redefine full-market initialization as a new product prerequisite. `initialized_scope_count < listed_scope_count` remains a visible warning, not a blocker.
+12. For active initialized datasets, base Parquet validation includes:
+    - catalog metadata validity;
+    - file existence/non-empty;
+    - PyArrow metadata open;
+    - required daily columns;
+    - positive row count;
+    - exact catalog row_count vs Parquet metadata row-count match.
+13. Existing daily-delta Parquet files must be readable, non-empty and contain the required daily columns. No delta files is valid.
+14. Trading calendar must be non-empty. Local calendar does not need to be current before daily update because the updater itself owns latest-closed-session determination.
+15. Provider liveness is checked before mutation through the same AkShare/Sina/BaoStock failover family using a bounded read-only trade-calendar request.
+16. Node/npm/npx, npm dependency tree, `@playwright/test`, Playwright Chromium executable and a real ephemeral headless Chromium launch must all succeed before daily close begins.
+17. Writability diagnostics may inspect permissions only; they must not create probe files. Required targets are reports, market daily-delta and M5 product paths.
+18. Free disk <1 GiB is a blocker. 1–5 GiB is warning-only. >=5 GiB passes the recommended margin.
+19. Phase23 v1 warning-only checks are frozen to exactly:
+    - `m1_full_listed_coverage`;
+    - `free_disk_recommended`.
+    All other defined checks are blockers.
+20. Phase23 does not replace Phase21 structural binding or dynamic browser acceptance. A successful preflight only permits the existing chain to start.
+21. Hosted CI validates the implementation/contract with deterministic and temporary DuckDB/Parquet fixtures. It does not prove the user's private local M1 is ready.
+22. Phase23 changes no harmonic identity, Source Raw PRZ, source lifecycle, Phase19 transport semantics, Phase21 browser semantics, M4 capture methodology or Outcome Engine.
+23. Phase23 introduces no predictive score, win rate, alpha, outcome ranking, P&L inference or trade execution.
+
+Hosted implementation validation:
+- branch checkpoint `47c9e4f2d525632d37f6aec0cf2c83e7300e0760`;
+- PR #36;
+- Actions #1973 / `35432978519`;
+- Python **847 passed**, 1163 warnings;
+- Web build success;
+- existing Playwright **24 passed**;
+- Phase18 Playwright/evidence valid;
+- Phase21 dynamic Playwright/evidence valid;
+- formal-main-release-integrity success;
+- formal release lineage status=ready;
+- M4 methodology drift **0 / 37**;
+- Outcome Engine drift **0 / 4**;
+- formal release artifact ID **10582195249**.
+
+Integration closeout still requires PR #36 merge plus one observed push-main formal release run.
