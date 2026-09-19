@@ -2232,3 +2232,35 @@ Hosted validation:
 - M4 methodology drift 0 / 37;
 - Outcome Engine drift 0 / 4;
 - release evidence artifact ID 10580297443.
+
+
+### D-063 operational closeout — push-main observed
+
+Phase22 was merged into formal main with merge commit:
+
+`56b6da0d30b951c3ff569ff4739ddbe6e5d3e695`
+
+The merge-generated real push event created Actions:
+
+- #1951 / `35430336154`;
+- event = push;
+- head_branch = main;
+- head_sha = Phase22 merge commit.
+
+Observed results:
+- deterministic-tests success;
+- Python 832 passed;
+- formal-main-release-integrity success;
+- release-lineage report status=ready;
+- existing release Playwright 24 passed;
+- Phase18 browser/evidence valid;
+- Phase21 dynamic browser/evidence valid;
+- M4 methodology drift 0 / 37;
+- Outcome Engine drift 0 / 4;
+- formal release artifact ID 10579948344.
+
+Therefore the workflow-side release contract is empirically verified for both:
+1. PR targeting main;
+2. push to main.
+
+The unresolved administration-only boundary remains unchanged: current GitHub integration cannot read server-side branch protection (403), so required-status-check policy is still not claimed.
