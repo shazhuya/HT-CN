@@ -40,20 +40,21 @@ def test_project_os_v2_contract_files_exist() -> None:
 
 def test_project_state_is_machine_current_truth() -> None:
     state = load("governance/PROJECT_STATE.json")
+    milestones = load("governance/MILESTONES.json")
     assert state["schema"] == 2
-    assert state["current"]["milestone"] == "M6"
-    assert state["current"]["phase"] == "M6.2"
-    assert state["current"]["status"] in {
-        "implementing",
-        "validation_green",
-        "ready_to_merge",
-        "merged",
-        "postmerge_pending",
-        "awaiting_private_run",
-        "real_run_in_progress",
-    }
-    assert state["current"]["active_change"] == "CR-0066"
-    assert state["current"]["active_spec"] == "specs/m6-phase-2-real-private-m1-closeout.md"
+
+    current = state["current"]
+    assert current["milestone"] == milestones["active"]
+    milestone = next(
+        row for row in milestones["milestones"]
+        if row["id"] == current["milestone"]
+    )
+    phase = next(
+        row for row in milestone["phases"]
+        if row["id"] == current["phase"]
+    )
+    assert phase["status"] == current["status"]
+
     attempts = [
         json.loads(line)
         for line in (ROOT / state["ledgers"]["attempts"]).read_text(
@@ -62,24 +63,27 @@ def test_project_state_is_machine_current_truth() -> None:
         if line.strip()
     ]
     by_id = {row["attempt_id"]: row for row in attempts}
-    latest_attempt_id = state["current"]["latest_attempt_id"]
-    hosted_attempt_id = state["current"]["latest_hosted_validation_attempt_id"]
+    latest_attempt_id = current["latest_attempt_id"]
+    hosted_attempt_id = current["latest_hosted_validation_attempt_id"]
     assert latest_attempt_id in by_id
     assert hosted_attempt_id in by_id
-    assert by_id[latest_attempt_id]["change_id"] == "CR-0066"
-    assert by_id[hosted_attempt_id]["change_id"] == "CR-0066"
-    assert by_id[hosted_attempt_id]["result"] == "success"
-    assert (
-        by_id[hosted_attempt_id]["workflow_run"]
-        == state["current"]["latest_validation"]["workflow_run"]
-    )
-    assert state["next_major_task"]["phase"] == "M6.2"
-    assert state["next_major_task"]["status"] in {
-        "implementing",
-        "validation_green",
-        "ready_to_merge",
-        "awaiting_private_run",
-    }
+
+    active_change = current.get("active_change")
+    if active_change:
+        assert by_id[latest_attempt_id]["change_id"] == active_change
+        assert by_id[hosted_attempt_id]["change_id"] == active_change
+        assert by_id[hosted_attempt_id]["result"] == "success"
+        assert (
+            by_id[hosted_attempt_id]["workflow_run"]
+            == current["latest_validation"]["workflow_run"]
+        )
+        assert current.get("active_spec")
+    else:
+        assert current["status"] in {"closed", "ready", "ready_not_started"}
+        assert current.get("active_spec") is None
+
+    assert state["next_major_task"]["phase"] != ""
+    assert state["next_major_task"]["status"] != ""
     assert state["recovery_contract"]["chat_is_authoritative"] is False
     assert state["recovery_contract"]["important_fact_may_exist_only_in_chat"] is False
     assert state["recovery_contract"]["bootstrap_must_fail_on_state_drift"] is True
@@ -87,20 +91,20 @@ def test_project_state_is_machine_current_truth() -> None:
 
 def test_active_change_and_required_specs_resolve() -> None:
     state = load("governance/PROJECT_STATE.json")
-    assert state["current"]["active_change"] == "CR-0066"
-    change = ROOT / "governance" / "changes" / "CR-0066-real-private-m1-closeout.md"
-    assert change.exists()
-    change_text = change.read_text(encoding="utf-8")
-    assert any(
-        f"status: {value}" in change_text
-        for value in (
-            "implementing",
-            "validation_green",
-            "ready_to_merge",
-            "merged",
-            "postmerge_pending",
+    current = state["current"]
+    active_change = current.get("active_change")
+
+    if active_change:
+        matches = sorted(
+            (ROOT / "governance" / "changes").glob(f"{active_change}-*.md")
         )
-    )
+        assert len(matches) == 1
+        assert current.get("active_spec") in state["required_specs"]
+        assert (ROOT / current["active_spec"]).exists()
+    else:
+        assert current["status"] in {"closed", "ready", "ready_not_started"}
+        assert current.get("active_spec") is None
+
     for rel in state["required_specs"]:
         assert (ROOT / rel).exists(), rel
 
@@ -130,6 +134,25 @@ def test_source_coverage_keeps_known_fail_closed_boundaries() -> None:
     assert rows["FIVE_ZERO"]["status"] == "quarantined"
     assert rows["ALTERNATE_BAT"]["status"] == "fail_closed"
     assert rows["HSI"]["status"] == "unsupported"
+
+
+def test_m6_2_empirical_acceptance_is_persisted_when_closed() -> None:
+    state = load("governance/PROJECT_STATE.json")
+    if state["current"]["phase"] != "M6.2" or state["current"]["status"] != "closed":
+        return
+
+    assert state["private_m1"]["current_market_full_closeout_ready"] is True
+    assert state["next_major_task"]["phase"] == "M6.3"
+    receipt_path = state["private_m1"]["accepted_evidence_receipt"]
+    receipt = load(receipt_path)
+    assert receipt["status"] == "accepted"
+    assert receipt["source_main_head"] == receipt["end_remote_main_head"]
+    assert receipt["m6_verification"]["full_closeout_ready"] is True
+    assert receipt["m6_verification"]["error_count"] == 0
+
+    issues = load("governance/OPEN_ISSUES.json")
+    issue = next(row for row in issues["issues"] if row["id"] == "ISSUE-0061")
+    assert issue["status"] == "closed"
 
 
 def test_release_record_does_not_claim_private_m1_closeout() -> None:
