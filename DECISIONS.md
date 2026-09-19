@@ -1967,3 +1967,27 @@ Phase 12 已经能回答“今天变了什么”，但如果没有独立 review 
 原因：
 
 Phase 10 的 v2 已经正确解决“最终产品快照 + M4 nested evidence 如何安全交接”，后续不能为了加入 Phase 11–13 而重写 v2。Phase 14 因此把 v2 当成冻结的可验证基础层，再在外层新增 history/digest/review-state 的绑定链。通过 bounded history、digest 独立重建、session->digest 投影以及 review-event closure，v3 可以证明这些状态确实来自同一个最终产品观察，而不是把几个看起来相关的 JSON 粗暴拼在一起。
+
+
+## D-056 — Phase 15 portable inspector is a verified read-only consumer
+
+日期：2026-09-19
+
+决定：
+
+1. Phase 15 v1 consumes only the frozen Phase-14 `htcn-daily-handoff-v3.zip`.
+2. The existing v3 verifier is a mandatory gate. Invalid or tampered transport fails closed before inspection.
+3. The inspector must not depend on the local M1/market database and must not scan local product stores to fill transport gaps.
+4. Transported Queue/History/Review state is display-only and is never imported or merged into local stores.
+5. Generating the JSON/HTML presentation artifacts is allowed; those artifacts are not product authority or research evidence.
+6. The inspector cannot create `reviewed` / `follow_up` events and exposes no review-write surface.
+7. Instrument/display-key drill-down is presentation filtering only and cannot affect Queue ranking, lifecycle or harmonic identity.
+8. No predictive score, historical-outcome ranking, alpha inference or trade instruction is permitted.
+9. Any future import/merge workflow requires a separate versioned contract with explicit provenance, conflict and idempotency semantics.
+
+验证：
+- implementation checkpoint `4534e4ed16a9b5aabca9245ceeab271a561b5f4b`;
+- Actions #1805 / `35419145630`: success;
+- Python 779 passed;
+- Web build success;
+- Playwright 24 passed.
