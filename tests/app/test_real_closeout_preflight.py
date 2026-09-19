@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
+
+import duckdb
+import pandas as pd
 
 from htcn.app.real_closeout_preflight import (
     REQUIRED_CHECK_SEVERITY,
     RealCloseoutPreflightContract,
+    _catalog_probe,
     evaluate_real_closeout_preflight,
     make_check,
 )
@@ -223,3 +228,175 @@ def test_warning_severity_is_limited_to_non_authoritative_capacity_diagnostics()
         "m1_full_listed_coverage",
         "free_disk_recommended",
     }
+
+
+
+def _build_catalog_fixture(
+    root: Path,
+    *,
+    catalog_row_count: int = 2,
+    corrupt_delta: bool = False,
+) -> None:
+    market = root / "data" / "market"
+    daily = market / "daily"
+    delta = market / "daily_delta"
+    daily.mkdir(parents=True)
+    delta.mkdir(parents=True)
+    catalog_path = market / "catalog.duckdb"
+
+    base_frame = pd.DataFrame(
+        {
+            "instrument_id": ["SSE.600000", "SSE.600000"],
+            "trade_date": ["2026-09-17", "2026-09-18"],
+            "open": [10.0, 10.2],
+            "high": [10.3, 10.5],
+            "low": [9.9, 10.1],
+            "close": [10.2, 10.4],
+            "volume": [1000.0, 1200.0],
+        }
+    )
+    base_path = daily / "SSE.600000.parquet"
+    base_frame.to_parquet(base_path, index=False)
+
+    delta_path = delta / "2026-09-19.parquet"
+    if corrupt_delta:
+        delta_path.write_bytes(b"not-a-parquet")
+    else:
+        pd.DataFrame(
+            {
+                "instrument_id": ["SSE.600000"],
+                "trade_date": ["2026-09-19"],
+                "open": [10.4],
+                "high": [10.6],
+                "low": [10.3],
+                "close": [10.5],
+                "volume": [1300.0],
+            }
+        ).to_parquet(delta_path, index=False)
+
+    con = duckdb.connect(str(catalog_path))
+    try:
+        con.execute(
+            """
+            CREATE TABLE daily_dataset (
+                instrument_id VARCHAR PRIMARY KEY,
+                source VARCHAR NOT NULL,
+                parquet_path VARCHAR NOT NULL,
+                row_count BIGINT NOT NULL,
+                first_trade_date DATE,
+                last_trade_date DATE,
+                updated_at TIMESTAMP NOT NULL
+            )
+            """
+        )
+        con.execute(
+            """
+            CREATE TABLE security_master (
+                instrument_id VARCHAR PRIMARY KEY,
+                symbol VARCHAR NOT NULL,
+                exchange VARCHAR NOT NULL,
+                name VARCHAR NOT NULL,
+                board VARCHAR NOT NULL,
+                list_date DATE,
+                delist_date DATE,
+                is_st BOOLEAN NOT NULL,
+                status VARCHAR NOT NULL,
+                source VARCHAR NOT NULL,
+                updated_at TIMESTAMP NOT NULL
+            )
+            """
+        )
+        con.execute(
+            """
+            CREATE TABLE trade_calendar (
+                trade_date DATE PRIMARY KEY,
+                source VARCHAR NOT NULL,
+                updated_at TIMESTAMP NOT NULL
+            )
+            """
+        )
+        con.execute(
+            """
+            CREATE TABLE sync_task (
+                instrument_id VARCHAR PRIMARY KEY,
+                status VARCHAR NOT NULL,
+                error_message VARCHAR,
+                attempt_count INTEGER NOT NULL DEFAULT 0,
+                updated_at TIMESTAMP NOT NULL
+            )
+            """
+        )
+        con.execute(
+            """
+            INSERT INTO security_master VALUES (
+                'SSE.600000', '600000', 'SSE', 'fixture', 'MAIN',
+                DATE '1999-11-10', NULL, FALSE, 'listed', 'fixture', CURRENT_TIMESTAMP
+            )
+            """
+        )
+        con.execute(
+            """
+            INSERT INTO daily_dataset VALUES (
+                'SSE.600000', 'fixture', ?, ?,
+                DATE '2026-09-17', DATE '2026-09-18', CURRENT_TIMESTAMP
+            )
+            """,
+            [str(base_path), catalog_row_count],
+        )
+        con.execute(
+            """
+            INSERT INTO trade_calendar VALUES
+                (DATE '2026-09-17', 'fixture', CURRENT_TIMESTAMP),
+                (DATE '2026-09-18', 'fixture', CURRENT_TIMESTAMP),
+                (DATE '2026-09-19', 'fixture', CURRENT_TIMESTAMP)
+            """
+        )
+    finally:
+        con.close()
+
+
+def test_catalog_probe_uses_read_only_metadata_and_validates_real_parquet(
+    tmp_path: Path,
+) -> None:
+    _build_catalog_fixture(tmp_path)
+
+    payload = _catalog_probe(tmp_path)
+
+    assert payload["read_only_open"] is True
+    assert payload["error"] is None
+    assert payload["listed_scope_count"] == 1
+    assert payload["initialized_scope_count"] == 1
+    assert payload["invalid_metadata_count"] == 0
+    assert payload["orphan_dataset_count"] == 0
+    assert payload["invalid_parquet_count"] == 0
+    assert payload["row_count_mismatch_count"] == 0
+    assert payload["delta_file_count"] == 1
+    assert payload["invalid_delta_count"] == 0
+    assert payload["calendar_count"] == 3
+
+
+def test_catalog_probe_detects_base_parquet_row_count_mismatch(
+    tmp_path: Path,
+) -> None:
+    _build_catalog_fixture(tmp_path, catalog_row_count=99)
+
+    payload = _catalog_probe(tmp_path)
+
+    assert payload["invalid_parquet_count"] == 1
+    assert payload["row_count_mismatch_count"] == 1
+    assert any(
+        "row_count_mismatch=2!=99" in value
+        for value in payload["invalid_parquet_examples"]
+    )
+
+
+def test_catalog_probe_detects_corrupt_daily_delta(
+    tmp_path: Path,
+) -> None:
+    _build_catalog_fixture(tmp_path, corrupt_delta=True)
+
+    payload = _catalog_probe(tmp_path)
+
+    assert payload["delta_file_count"] == 1
+    assert payload["invalid_delta_count"] == 1
+    assert payload["invalid_delta_examples"]
