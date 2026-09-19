@@ -1,5 +1,8 @@
 # HT-CN Session Log — 会话交接记录
 
+> **Project OS v2 notice:** 本文件自 D-065 起属于历史/深层审计资料，不再拥有 current-state authority。当前阶段、active Change、Gate、blocker 与 next task 必须读取 `governance/PROJECT_STATE.json`；长期方向读取 `PROJECT_BLUEPRINT.md`。聊天与本文件中的旧“当前/下一步”段落不得覆盖机器状态。
+
+
 本文件只记录每个开发 Session 最后停在哪里。详细技术事实仍以源码、测试、`PROJECT_CONTEXT.md`、`DECISIONS.md`、`specs/` 为准。
 
 ## 2026-09-17 — M2.31 RSI BAMM Source-Terminal Phase 4 收口
