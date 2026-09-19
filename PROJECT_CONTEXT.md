@@ -2153,3 +2153,71 @@ Freeze audit:
 - Outcome Engine drift from this phase: 0.
 
 Phase 15 v1 is therefore **code-complete / hosted-CI-green**.
+
+
+## M5 Phase 16 closeout — Handoff v4 / Portable Pattern Drill-down Transport v1
+
+Current branch:
+`m5/handoff-v4-portable-pattern-detail-v1`
+
+Validated implementation checkpoint:
+`348fd5b47341fbc01e74085530c4fd8dec9aed28`
+
+Draft PR:
+- #28;
+- base = `m5/handoff-v3-inspector-v1`;
+- Phase16 code is isolated from frozen Phase14/15 implementation.
+
+Why v4 exists:
+- v3 carries Queue/history/digest/review state but not full bars + pattern.points;
+- therefore truthful offline XABCD/0XABC visualization cannot be reconstructed from v3 alone;
+- Phase16 does not modify v3. It nests the exact verified v3 and adds bounded portable detail for the exact current Queue inclusion set.
+
+Implemented:
+- `src/htcn/app/handoff_v4_portable_detail.py`;
+- `src/htcn/app/handoff_v4_inspector.py`;
+- `scripts/m5_build_portable_pattern_workspace_v4.py`;
+- `tests/app/test_handoff_v4_portable_detail.py`;
+- `specs/m5-phase-16-handoff-v4-portable-pattern-detail.md`;
+- `运行HT-CN便携图形复盘v4.bat`.
+
+Frozen semantics:
+- v3 must verify before v4 build;
+- local input identity must exactly match the identity of the v3 current product snapshot;
+- analysis trade date must exactly match v3 trade date;
+- inclusion set is every current Queue display key, with no top-N/ranking;
+- every Queue key must resolve to exact portable detail or an explicit detail error;
+- verifier re-derives display key from transported pattern points;
+- no silent omission and no extra detail outside current Queue;
+- no Queue/history/review/M4 mutation;
+- no review event creation;
+- no score/win-rate/alpha/trade instruction.
+
+Portable visual workspace:
+- transported K-bars;
+- actual existing pattern points connected as solid geometry;
+- node labels show letter + price;
+- Source PRZ shading;
+- T-Bar / T+1 / T1 / T2 / Type-II T-Bar / II Exit event lines where present;
+- next key price is shown only as a dashed guide and explicitly not a predicted pattern leg;
+- forming structures never fabricate a future D.
+
+Default outputs:
+- `artifacts/reports/htcn-daily-handoff-v4.zip`;
+- `artifacts/reports/m5-handoff-v4-inspector.json`;
+- `artifacts/reports/m5-handoff-v4-pattern-workspace.html`.
+
+Validation:
+- first CI #1820 exposed a Phase16 zero-count verifier bug and failed closed;
+- fix checkpoint `348fd5b47341fbc01e74085530c4fd8dec9aed28`;
+- final implementation CI #1822 / `35419647193`: success;
+- Python 784 passed;
+- Web build success;
+- Playwright 24 passed;
+- browser evidence uploaded.
+
+Freeze audit:
+- M4 methodology drift: 0;
+- Outcome Engine drift: 0.
+
+Phase16 v1 is **code-complete / hosted-CI-green**.
