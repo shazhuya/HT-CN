@@ -2221,3 +2221,67 @@ Freeze audit:
 - Outcome Engine drift: 0.
 
 Phase16 v1 is **code-complete / hosted-CI-green**.
+
+
+## M5 Phase 17 closeout — Portable Visual Semantics / Chart Fidelity v2
+
+Current branch:
+`m5/portable-visual-semantics-v2`
+
+Validated implementation checkpoint:
+`5f6a44f1c3108bb89ad7133ef1ef471d10efb8ea`
+
+Draft PR:
+- #29;
+- base = `m5/handoff-v4-portable-pattern-detail-v1`.
+
+Why Phase17 does not create v5:
+- Phase16 v4 already transports exact bars, pattern.points, metrics, PRZ components/layers and source lifecycle;
+- Phase17 therefore derives a deterministic presentation model from the already-verified payload;
+- v4 ZIP schema and verifier remain frozen.
+
+Implemented:
+- `src/htcn/app/portable_visual_semantics.py`;
+- `src/htcn/app/portable_visual_workspace_v2.py`;
+- `tests/app/test_portable_visual_semantics.py`;
+- `tests/app/test_portable_visual_semantics_additional.py`;
+- `specs/m5-phase-17-portable-visual-semantics-v2.md`;
+- `src/htcn/app/handoff_v4_inspector.py` upgraded to inspection schema/contract v2 and default Visual Semantics v2 HTML.
+
+Frozen visual semantics:
+- XABCD, ABCD, Shark 0XABC and FIVE_ZERO use independent expected node topology;
+- only transported adjacent pattern.points form solid geometry;
+- forming patterns report missing future labels but never draw them;
+- Shark never receives a synthetic D;
+- node labels include price;
+- metrics use schema-specific ratio vocabulary;
+- Source Raw PRZ / HT-CN Ideal Core / Component Envelope are separate layers;
+- Source Raw PRZ membership is determined only by transported source_prz.component_names;
+- non-source components remain audit-only;
+- 5-0 61.8 V3 boundary remains execution refinement and never becomes a Raw PRZ member;
+- Source Clock event lines come only from transported source_lifecycle;
+- Type-I targets / next-key price are dashed guides with is_pattern_geometry=false;
+- identity conflicts are disclosed but not overlaid onto the selected primary chart.
+
+Workspace behavior:
+- Source Raw PRZ default ON;
+- Ideal Core default ON;
+- Component Envelope default OFF;
+- PRZ component lines default ON;
+- Source Clock default ON;
+- target/next-key guides default ON;
+- layer controls are presentation only.
+
+Hosted validation:
+- Actions #1839 / `35421868066`: success;
+- Python 792 passed;
+- Web build success;
+- Playwright 24 passed;
+- browser evidence uploaded.
+
+Freeze audit:
+- handoff v4 transport/verifier drift from Phase17: 0;
+- M4 methodology drift: 0;
+- Outcome Engine drift: 0.
+
+Phase17 v2 is **code-complete / hosted-CI-green**.
