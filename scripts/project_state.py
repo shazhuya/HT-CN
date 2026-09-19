@@ -29,6 +29,18 @@ ALLOWED_SOURCE_STATUS = {
     "unsupported",
 }
 
+ALLOWED_CHANGE_STATUS = {
+    "planned",
+    "implementing",
+    "validation_failed",
+    "validation_green",
+    "ready_to_merge",
+    "merged",
+    "postmerge_pending",
+    "closed",
+    "blocked",
+}
+
 
 def read_json(path: Path) -> dict[str, Any]:
     if not path.exists():
@@ -178,8 +190,13 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
             change_text = change_path.read_text(encoding="utf-8")
             if f"baseline_head: {state.get('governance_baseline', {}).get('head')}" not in change_text:
                 errors.append("active Change baseline_head does not match governance baseline")
-            if "status:" not in change_text:
-                errors.append("active Change has no status")
+            status_match = re.search(r"^status:\\s*([a-z_]+)\\s*$", change_text, re.MULTILINE)
+            if not status_match:
+                errors.append("active Change has no parseable status")
+            elif status_match.group(1) not in ALLOWED_CHANGE_STATUS:
+                errors.append(
+                    f"active Change has invalid status: {status_match.group(1)}"
+                )
         except RuntimeError as exc:
             errors.append(str(exc))
 
@@ -216,6 +233,28 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
     issue_ids = [row.get("id") for row in issues.get("issues", [])]
     if len(issue_ids) != len(set(issue_ids)):
         errors.append("duplicate OPEN_ISSUES IDs")
+
+    attempts_rel = ledger_map.get("attempts")
+    if attempts_rel and active_change:
+        attempt_path = ROOT / attempts_rel
+        seen_active_attempt = False
+        if attempt_path.exists():
+            for line_no, raw in enumerate(
+                attempt_path.read_text(encoding="utf-8").splitlines(), start=1
+            ):
+                if not raw.strip():
+                    continue
+                try:
+                    record = json.loads(raw)
+                except Exception as exc:
+                    errors.append(
+                        f"attempt ledger invalid JSON at line {line_no}: {exc}"
+                    )
+                    continue
+                if record.get("change_id") == active_change:
+                    seen_active_attempt = True
+        if not seen_active_attempt:
+            errors.append(f"attempt ledger has no record for active change {active_change}")
 
     _validate_release(state, errors)
     _validate_freezes(state, errors)
