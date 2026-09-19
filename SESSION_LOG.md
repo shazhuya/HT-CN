@@ -1671,3 +1671,26 @@ Next:
   - 24 Playwright passed;
   - browser evidence uploaded.
 - M4 methodology and Outcome Engine remained untouched.
+
+
+## 2026-09-19 — M5 Phase 17 portable visual semantics v2
+
+- Confirmed Phase16 v4 already contains enough exact detail; no v5 transport was introduced.
+- Added deterministic Visual Semantics v2 over the verified v4 payload.
+- Added independent schema topology for XABCD / ABCD / Shark 0XABC / FIVE_ZERO.
+- Added solid observed leg semantics and explicit missing-future-label reporting without projecting future nodes.
+- Added schema-specific ratio panels.
+- Split Source Raw PRZ, Ideal Core and Component Envelope into separate layers.
+- Added explicit PRZ component membership/role labeling.
+- Preserved 5-0 61.8 as execution refinement outside Raw PRZ.
+- Added Source Clock event timeline and non-geometry target/next-key guides.
+- Added conflict disclosure without multi-identity overlay.
+- Added Visual Semantics v2 layer controls and made it the default portable workspace HTML.
+- Inspector presentation schema/contract advanced to v2; v4 transport/verifier remained unchanged.
+- Draft PR #29 opened against the Phase16 branch.
+- Hosted CI #1839 / 35421868066 green:
+  - 792 Python passed;
+  - Web build success;
+  - 24 Playwright passed;
+  - browser evidence uploaded.
+- M4 methodology and Outcome Engine remained untouched.
