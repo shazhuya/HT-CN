@@ -89,17 +89,18 @@ def build_universe_coverage(
 ) -> dict[str, Any]:
     listed = _default_scope(listed_ids, exchanges=exchanges)
     listed_set = set(listed)
+
+    initialized_scope = _default_scope(initialized_ids, exchanges=exchanges)
+    invalid_initialized_not_listed = sorted(set(initialized_scope) - listed_set)
     initialized = [
-        value
-        for value in _default_scope(initialized_ids, exchanges=exchanges)
-        if value in listed_set
+        value for value in initialized_scope if value in listed_set
     ]
     initialized_set = set(initialized)
 
+    qfq_scope = _default_scope(qfq_ready_ids, exchanges=exchanges)
+    invalid_qfq_not_initialized = sorted(set(qfq_scope) - initialized_set)
     qfq_ready = [
-        value
-        for value in _default_scope(qfq_ready_ids, exchanges=exchanges)
-        if value in initialized_set
+        value for value in qfq_scope if value in initialized_set
     ]
     scanner = list(initialized)
     research_scanner = list(qfq_ready) if qfq_evaluated else []
@@ -154,6 +155,12 @@ def build_universe_coverage(
         "deferred_bse": _layer(deferred_bse),
         "non_default_exchange": _layer(non_default_exchange),
         "excluded_local_not_initialized": _layer(excluded_local_ids),
+        "invalid_initialized_not_listed": _layer(
+            invalid_initialized_not_listed
+        ),
+        "invalid_formal_qfq_not_initialized": _layer(
+            invalid_qfq_not_initialized
+        ),
     }
 
     layers: dict[str, Any] = {
@@ -198,10 +205,8 @@ def build_universe_coverage(
     }
 
     invariants = {
-        "initialized_subset_of_listed": initialized_set.issubset(listed_set),
-        "formal_qfq_subset_of_initialized": (
-            set(qfq_ready).issubset(initialized_set)
-        ),
+        "initialized_subset_of_listed": not invalid_initialized_not_listed,
+        "formal_qfq_subset_of_initialized": not invalid_qfq_not_initialized,
         "scanner_equals_initialized": scanner == initialized,
         "research_scanner_equals_formal_qfq": (
             research_scanner == qfq_ready if qfq_evaluated else None
