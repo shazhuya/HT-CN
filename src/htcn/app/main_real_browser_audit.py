@@ -249,14 +249,28 @@ def verify_main_real_browser_evidence(
     ):
         errors.append("browser_evidence_schema_counts_mismatch")
 
-    if int(evidence.get("audited_detail_count") or -1) != int(
-        source.get("detail_available_count") or 0
+    for evidence_field, source_field, error_code in (
+        (
+            "audited_detail_count",
+            "detail_available_count",
+            "browser_evidence_audited_detail_count_mismatch",
+        ),
+        (
+            "explicit_error_count",
+            "detail_error_count",
+            "browser_evidence_explicit_error_count_mismatch",
+        ),
     ):
-        errors.append("browser_evidence_audited_detail_count_mismatch")
-    if int(evidence.get("explicit_error_count") or -1) != int(
-        source.get("detail_error_count") or 0
-    ):
-        errors.append("browser_evidence_explicit_error_count_mismatch")
+        try:
+            evidence_count = int(evidence.get(evidence_field))
+            source_count = int(source.get(source_field))
+        except (TypeError, ValueError):
+            errors.append(
+                f"browser_evidence_count_invalid:{evidence_field}"
+            )
+            continue
+        if evidence_count != source_count:
+            errors.append(error_code)
     zero_required_fields = (
         ("future_point_violation_count", "browser_evidence_future_point_violation"),
         ("page_error_count", "browser_evidence_page_errors"),
