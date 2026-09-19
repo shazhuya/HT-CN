@@ -146,6 +146,15 @@ def build_daily_review_digest(
         _normalized_change(dict(value))
         for value in (observation.get("changes") or [])
     ]
+    declared_total = int(
+        observation.get("delta_total_change_count") or 0
+    )
+    declared_visible = int(observation.get("change_count") or 0)
+    if declared_total != len(changes) or declared_visible != len(changes):
+        raise ValueError(
+            "operator history latest observation is not an exhaustive "
+            "unfiltered delta"
+        )
     incomplete = sorted({
         str(value)
         for value in (
@@ -266,6 +275,19 @@ def filter_daily_review_digest(
     instrument_id: str | None = None,
 ) -> dict[str, Any]:
     """Presentation-only filtering; never changes source digest totals."""
+    if (
+        workflow_bucket is not None
+        and workflow_bucket not in WORKFLOW_REVIEW_ORDER
+    ):
+        raise ValueError(
+            f"unknown review workflow bucket: {workflow_bucket}"
+        )
+    if (
+        change_type is not None
+        and change_type not in CHANGE_TYPE_ORDER
+    ):
+        raise ValueError(f"unknown review change type: {change_type}")
+
     sections: list[dict[str, Any]] = []
     filtered_count = 0
 
