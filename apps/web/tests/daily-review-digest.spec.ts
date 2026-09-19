@@ -219,7 +219,9 @@ function digest(filtered = false) {
       reviewed: 0,
       follow_up: 0,
     },
+    active_follow_ups: [],
     active_follow_up_count: 0,
+    active_follow_up_in_current_digest_count: 0,
     source_review_state_counts_unchanged: {
       unseen: 3,
       reviewed: 0,
