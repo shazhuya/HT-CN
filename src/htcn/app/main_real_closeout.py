@@ -192,8 +192,12 @@ def verify_main_real_closeout(
             warnings.append("pipeline_m4_research_degraded")
 
     if run is not None:
+        try:
+            phase19_exit_code = int(run.get("exit_code"))
+        except (TypeError, ValueError):
+            phase19_exit_code = -1
         checks["phase19_latest_run_success"] = (
-            int(run.get("exit_code") or -1) == 0
+            phase19_exit_code == 0
             and str(run.get("status") or "") in (
                 "complete_portable_delivery",
                 "detail_degraded_portable_delivery",
