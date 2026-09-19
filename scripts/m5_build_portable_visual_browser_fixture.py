@@ -384,6 +384,31 @@ def _shark_completed() -> dict[str, Any]:
     }
 
 
+def _shark_forming() -> dict[str, Any]:
+    pattern = _shark_completed()
+    pattern = {
+        **pattern,
+        "state": "forming",
+        "identity_conflicts": ["shark@S8"],
+        "points": list(pattern["points"][:-1]),
+        "metrics": {
+            "a_0x": 0.5,
+            "b_xa": 1.588,
+        },
+        "source_lifecycle": _lifecycle(
+            state="approaching_source_prz",
+            source_low=94.1,
+            source_high=95.4,
+            terminal_bar=None,
+            execution_start_bar=None,
+            next_key_price=94.1,
+            next_key_price_role="source_prz_entry_edge",
+        ),
+        "decision_narrative": {"action_state": "waiting"},
+    }
+    return pattern
+
+
 def _five_zero_completed() -> dict[str, Any]:
     return {
         "pattern_id": "five_zero",
@@ -550,6 +575,12 @@ def build_fixture() -> dict[str, Any]:
             "SSE.600004",
             _shark_completed(),
             "Shark 已完成",
+        ),
+        (
+            "phase18-shark-forming",
+            "SSE.600006",
+            _shark_forming(),
+            "Shark 形成中，C 尚未发生",
         ),
         (
             "phase18-five-zero",
