@@ -257,12 +257,19 @@ def verify_main_real_browser_evidence(
         source.get("detail_error_count") or 0
     ):
         errors.append("browser_evidence_explicit_error_count_mismatch")
-    if int(evidence.get("future_point_violation_count") or -1) != 0:
-        errors.append("browser_evidence_future_point_violation")
-    if int(evidence.get("page_error_count") or -1) != 0:
-        errors.append("browser_evidence_page_errors")
-    if int(evidence.get("console_error_count") or -1) != 0:
-        errors.append("browser_evidence_console_errors")
+    zero_required_fields = (
+        ("future_point_violation_count", "browser_evidence_future_point_violation"),
+        ("page_error_count", "browser_evidence_page_errors"),
+        ("console_error_count", "browser_evidence_console_errors"),
+    )
+    for field, error_code in zero_required_fields:
+        try:
+            value = int(evidence.get(field))
+        except (TypeError, ValueError):
+            errors.append(f"browser_evidence_count_invalid:{field}")
+            continue
+        if value != 0:
+            errors.append(error_code)
 
     if evidence.get("all_detail_geometry_matches_semantics") is not True:
         errors.append("browser_evidence_geometry_not_exhaustive")
