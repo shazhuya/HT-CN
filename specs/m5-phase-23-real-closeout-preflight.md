@@ -1,6 +1,6 @@
 # M5 Phase 23 — Real-M1 Final Closeout Preflight / Single-Action Safety v1
 
-状态：**implementation in progress**
+状态：**Frozen / implementation + PR→main hosted release gates green; merge/push-main pending**
 
 ## 1. 目标
 
@@ -364,42 +364,112 @@ Phase23 不：
 
 ## 19. Acceptance
 
-- [ ] read-only preflight core；
-- [ ] CLI；
-- [ ] final BAT preflight-first；
-- [ ] no git pull/fetch；
-- [ ] no dependency install；
-- [ ] branch main gate；
-- [ ] remote main exact SHA gate；
-- [ ] Phase22 ancestor gate；
-- [ ] clean worktree gate；
-- [ ] Python 3.13 + project venv gate；
-- [ ] dependency import gate；
-- [ ] catalog read-only open；
-- [ ] required tables；
-- [ ] initialized SSE/SZSE scope；
-- [ ] partial full-market coverage warning-only；
-- [ ] base Parquet metadata integrity；
-- [ ] daily delta integrity；
-- [ ] calendar present；
-- [ ] provider liveness；
-- [ ] node/npm/npx；
-- [ ] npm dependency tree；
-- [ ] Playwright package；
-- [ ] Chromium executable；
-- [ ] real headless launch；
-- [ ] write-capability diagnostics；
-- [ ] disk hard/recommended thresholds；
-- [ ] report schema；
-- [ ] failure stops before daily close；
-- [ ] Phase21 chain still executed after preflight；
-- [ ] Python regressions green；
-- [ ] Web build green；
-- [ ] existing Playwright green；
-- [ ] Phase18 green；
-- [ ] Phase21 green；
-- [ ] formal-main-release-integrity green on PR→main；
-- [ ] M4 methodology drift 0/37；
-- [ ] Outcome Engine drift 0/4；
+- [x] read-only preflight core；
+- [x] CLI；
+- [x] final BAT preflight-first；
+- [x] no git pull/fetch；
+- [x] no dependency install；
+- [x] branch main gate；
+- [x] remote main exact SHA gate；
+- [x] Phase22 ancestor gate；
+- [x] clean worktree gate；
+- [x] Python 3.13 + project venv gate；
+- [x] dependency import gate；
+- [x] catalog read-only open；
+- [x] required tables；
+- [x] initialized SSE/SZSE scope；
+- [x] partial full-market coverage warning-only；
+- [x] base Parquet metadata integrity；
+- [x] daily delta integrity；
+- [x] calendar present；
+- [x] provider liveness；
+- [x] node/npm/npx；
+- [x] npm dependency tree；
+- [x] Playwright package；
+- [x] Chromium executable；
+- [x] real headless launch；
+- [x] write-capability diagnostics；
+- [x] disk hard/recommended thresholds；
+- [x] report schema；
+- [x] failure stops before daily close；
+- [x] Phase21 chain still executed after preflight；
+- [x] Python regressions green；
+- [x] Web build green；
+- [x] existing Playwright green；
+- [x] Phase18 green；
+- [x] Phase21 green；
+- [x] formal-main-release-integrity green on PR→main；
+- [x] M4 methodology drift 0/37；
+- [x] Outcome Engine drift 0/4；
 - [ ] merge to main；
 - [ ] push-main formal release gate green。
+
+
+## 20. Hosted implementation validation — 2026-09-19
+
+Validated branch checkpoint:
+
+`47c9e4f2d525632d37f6aec0cf2c83e7300e0760`
+
+Carrier PR:
+
+- #36；
+- head = `m5/real-closeout-preflight-v1`；
+- base = formal `main` at `a3f02615d47d91c60580a0feeedc0bdb3f4dd58d`。
+
+Actions:
+
+**#1973 / 35432978519**
+
+### deterministic-tests
+
+- status: success；
+- Python: **847 passed**, 1163 warnings；
+- Web build: success；
+- existing Playwright: **24 passed**；
+- Phase18 portable visual Playwright: **1 passed**；
+- Phase18 evidence verifier: valid, 10 checks / 5 screenshots；
+- Phase21 dynamic Playwright: **1 passed**；
+- Phase21 evidence verifier: valid；
+- browser artifact ID: **10581870545**。
+
+### formal-main-release-integrity
+
+- status: success；
+- full-history release lineage: **ready**；
+- formal release Web build: success；
+- existing Playwright: **24 passed**；
+- Phase18 Playwright/evidence: green；
+- Phase21 dynamic Playwright/evidence: green；
+- M4 methodology changed components: **0 / 37**；
+- M4 Outcome Engine changed components: **0 / 4**；
+- formal release artifact ID: **10582195249**。
+
+Hosted CI proves the Phase23 code/contract and existing product/browser/research-freeze compatibility.
+
+It does **not** run the private-M1 preflight against the user's local market database, because hosted CI does not possess that private M1 state.
+
+## 21. Implementation correction made before freeze
+
+Initial Phase23 draft treated every historical SSE/SZSE `daily_dataset` not currently listed as an orphan blocker.
+
+That was too strict relative to the existing Phase9 daily pipeline, which selects active datasets by current `listed_ids`.
+
+Before freeze Phase23 was corrected to:
+
+- hard-check only currently listed SSE/SZSE active initialized datasets；
+- retain `inactive_dataset_count` as diagnostic；
+- do not require stale/delisted historical datasets to have active Parquet validity for current closeout；
+- add a regression where an inactive/delisted retained dataset points to a missing historical file but the current active dataset remains valid and the probe still passes。
+
+This correction avoids silently changing the current product universe contract.
+
+## 22. Remaining acceptance after hosted implementation green
+
+Still intentionally open until integration:
+
+- [ ] merge PR #36 to `main`；
+- [ ] observe the merge-generated real push-main `formal-main-release-integrity` run；
+- [ ] record final main merge SHA and push-main release artifact。
+
+The real current-market/private-M1 `full_closeout_ready` remains a separate Phase21 outcome produced only when the user later runs the one-click final BAT on the machine that owns the private M1 database.
