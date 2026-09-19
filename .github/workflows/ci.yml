@@ -111,6 +111,98 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+
+  main-release-integrity:
+    name: formal-main-release-integrity
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    needs: deterministic-tests
+    concurrency:
+      group: htcn-main-release-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout release candidate with full history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+
+      - name: Verify formal main release lineage
+        run: python scripts/m5_main_release_integrity.py
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Build web for formal main release
+        working-directory: apps/web
+        run: npm run build
+
+      - name: Install Playwright Chromium for formal main release
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Run existing deterministic browser acceptance for main release
+        working-directory: apps/web
+        run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts tests/execution-context.spec.ts tests/market-context.spec.ts tests/sector-context.spec.ts tests/concept-context.spec.ts tests/context-integrity.spec.ts tests/decision-narrative.spec.ts tests/decision-selection.spec.ts tests/operator-queue.spec.ts tests/operator-delta.spec.ts tests/operator-index.spec.ts tests/operator-history.spec.ts tests/daily-review-digest.spec.ts tests/review-followup-journal.spec.ts
+
+      - name: Build M5 Phase18 portable visual browser fixture for main release
+        run: python scripts/m5_build_portable_visual_browser_fixture.py
+
+      - name: Run M5 Phase18 portable visual browser acceptance for main release
+        working-directory: apps/web
+        run: npx playwright test tests/portable-visual-workspace.spec.ts --reporter=list
+
+      - name: Verify M5 Phase18 browser evidence for main release
+        run: python scripts/m5_verify_portable_visual_browser_evidence.py
+
+      - name: Prepare M5 Phase21 browser audit fixture for main release
+        run: python scripts/m5_prepare_main_real_browser_audit.py --fixture
+
+      - name: Run M5 Phase21 dynamic browser audit for main release
+        working-directory: apps/web
+        run: npx playwright test tests/main-real-portable-delivery.spec.ts --reporter=list
+
+      - name: Verify M5 Phase21 browser evidence for main release
+        run: python scripts/m5_verify_main_real_browser_evidence.py
+
+      - name: Verify M4 methodology freeze for main release
+        run: python scripts/m4_methodology_freeze_guard.py
+
+      - name: Verify M4 Outcome Engine freeze for main release
+        run: python scripts/m4_outcome_engine_freeze_guard.py
+
+      - name: Upload formal main release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: htcn-main-release-integrity-${{ github.sha }}
+          path: |
+            artifacts/reports/m5-main-release-integrity.json
+            artifacts/screenshots/
+            artifacts/reports/playwright/
+          if-no-files-found: warn
+          retention-days: 30
+
   integration-readiness:
     name: preserve-ancestry-integration-readiness
     if: startsWith(github.ref, 'refs/heads/m5/integration-readiness') || startsWith(github.head_ref, 'm5/integration-readiness')
