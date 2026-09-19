@@ -1,6 +1,6 @@
 # CR-0069 — M6.4 Repository Governance
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -51,3 +51,24 @@ no BSE enablement, no market-data repair, no trade execution and no profitabilit
 - Temporary autofix/report workflows were removed from the candidate branch.
 - Full PR-only browser/Phase18/Phase21/M4 freeze gates remain required before ISSUE-0068/M6.4 closure.
 - GitHub server facts remain: main protected=false; repository rulesets empty; branch-protection detail is inaccessible to the connected integration with HTTP 403; no administration write action is exposed.
+
+
+## Full PR validation
+
+PR #53 head `9f19ba55ab389bd13e5084a21d93c20b85825eb6` passed workflow
+`35464886662` / run #2328:
+
+- Project OS: success
+- mutable Ruff: 0 / budget 0
+- Python: 890 passed
+- pytest warnings: 0
+- Web build: success
+- existing browser acceptance: 24 passed
+- Phase18 browser/evidence: valid
+- Phase21 dynamic browser/evidence: valid
+- M4 methodology freeze: frozen_match, 37 components
+- Outcome Engine freeze: frozen_match, 4 components
+- evidence artifact: 10591125410
+- artifact digest: sha256:1347bf1921af268aea8ae1b9e612129c149d891ff3c2df90b19293f9be271aa7
+
+The candidate is ready for one final ledger-bearing validation before merge.
