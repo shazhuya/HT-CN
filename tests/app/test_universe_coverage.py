@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
@@ -120,7 +120,7 @@ def test_catalog_universe_excludes_bse_delisted_and_orphan_files(
     daily.mkdir(parents=True)
     catalog = root / "catalog.duckdb"
     _init_catalog(catalog)
-    now = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    now = datetime(2026, 9, 20, tzinfo=UTC)
 
     valid_sse = daily / "SSE.600001.parquet"
     valid_szse = daily / "SZSE.000001.parquet"
