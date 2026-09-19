@@ -1,6 +1,6 @@
 # HT-CN Project Blueprint — 项目总蓝图
 
-blueprint_schema: `3`
+blueprint_schema: `4`
 status: `authoritative`
 
 ## 1. 项目使命
@@ -87,9 +87,30 @@ HT-CN 在本目标中的“实时”分为两层：
 ### M6.5 — Source Coverage Freeze
 将三卷书全部关键能力归档为 Supported / Partial / Quarantined / Unsupported，并绑定 Source、spec、代码、测试与 decision。
 
+### M6.6 — Interactive Harmonic Chart Foundation
+在进入大规模 M7 prospective evidence accumulation 之前完成 TradingView 类交互主图基础，避免继续在静态 SVG 坐标体系上累积迁移债务。M6.6 不改写 M2/M3/M4 的谐波 Source Truth，只负责建立稳定的交互图表与 overlay 映射层。
+
+实施顺序固定为四步：
+
+1. **交互 K 线底座**：正式接入交互式 chart engine，完成 pan / zoom、时间轴、价格轴、十字光标、视口复位，并冻结 canonical bar/time/price coordinate identity。
+2. **谐波 Overlay 锚定**：把 XABCD / ABCD / 0XABC 节点、腿线、标签、比例从固定 SVG 坐标迁移到 canonical time + price 锚定；拖动和缩放不得漂移。
+3. **PRZ / 生命周期同步**：把 Source Raw PRZ、Ideal Core、Component Envelope、PEZ、T1/T2、Source Terminal、T+1、Type-I/Type-II 事件全部接入同一坐标系统。
+4. **数据驱动更新与浏览器验收**：新 K 线、历史窗口、复权/数据版本、标的或参数变化时触发增量/重新分析；pan / zoom 本身不得重跑识别。Playwright 必须验证交互前后 overlay 与原 K 线 identity 一致。
+
+M6.6 的完成门槛至少包括：
+
+- 主图不再以固定 SVG snapshot 作为唯一生产渲染路径；
+- K 线与所有 harmonic overlay 可连续拖动/缩放且保持 bar/time/price 对齐；
+- crosshair/hover 可把 OHLC、节点、比例、PRZ、生命周期映射到同一 identity；
+- forming pattern 随新数据演化，但未来节点不得提前绘制；
+- Source Identity、Raw PRZ、Source Clock、Reaction/Reversal 不受 viewport 状态影响；
+- 自动化测试覆盖 pan、zoom、重新计算、forming 更新、PRZ/lifecycle 锚定和无漂移；
+- M6.4 Repository Governance 与 M6.5 Source Coverage Freeze 已完成后才允许正式启动 M6.6；
+- M6.6 完成后方进入以大规模 prospective accumulation 为主的 M7。
+
 ## 6. M7 以后推进原则
 
-M6 完成后，默认停止横向扩功能。M7 优先积累未回看的 prospective cohort、Source Terminal、Type-I/II、right-censoring、5/10/20 traded-bar MFE/MAE 与市场环境分层。在满足预先冻结的样本和协议之前，不输出真实胜率、alpha 或盈利能力结论。
+M6 完成后，默认停止横向扩功能。M6.6 先把交互图表基础固定下来，再进入 M7 的大规模 prospective accumulation。M7 优先积累未回看的 prospective cohort、Source Terminal、Type-I/II、right-censoring、5/10/20 traded-bar MFE/MAE 与市场环境分层。在满足预先冻结的样本和协议之前，不输出真实胜率、alpha 或盈利能力结论。
 
 ## 7. 项目事实权威顺序
 
