@@ -40,7 +40,7 @@
         {
           "id": "M6.1",
           "title": "Project OS v2 / Cross-Conversation Lossless Continuity",
-          "status": "validation_green",
+          "status": "closed",
           "exit_gate": [
             "machine-readable project state validates",
             "dynamic resume pack derives active specs/decisions/issues from state",
@@ -52,7 +52,7 @@
         {
           "id": "M6.2",
           "title": "Real Private-M1 Closeout",
-          "status": "planned"
+          "status": "ready_not_started"
         },
         {
           "id": "M6.3",
