@@ -613,6 +613,50 @@ def _review_state_index(
     return result
 
 
+def query_active_follow_ups(
+    *,
+    journal_root: str | Path,
+) -> list[dict[str, Any]]:
+    events = _load_valid_events(Path(journal_root).resolve())
+    latest: dict[str, dict[str, Any]] = {}
+    for event in events:
+        source = event.get("source") or {}
+        display_key = str(source.get("display_key") or "")
+        prior = latest.get(display_key)
+        if (
+            prior is None
+            or int(event.get("display_key_event_ordinal") or 0)
+            > int(prior.get("display_key_event_ordinal") or 0)
+        ):
+            latest[display_key] = event
+
+    active: list[dict[str, Any]] = []
+    for display_key, event in latest.items():
+        if event.get("review_state") != "follow_up":
+            continue
+        source = event.get("source") or {}
+        active.append({
+            "display_key": display_key,
+            "instrument_id": source.get("instrument_id"),
+            "source_observation_id": source.get("observation_id"),
+            "source_trade_date": source.get("trade_date"),
+            "source_revision_ordinal": source.get("revision_ordinal"),
+            "source_change_types": source.get("change_types") or [],
+            "event_id": event.get("event_id"),
+            "created_at_utc": event.get("created_at_utc"),
+            "note": event.get("note") or "",
+            "review_state": "follow_up",
+        })
+    active.sort(
+        key=lambda item: (
+            str(item.get("created_at_utc") or ""),
+            str(item.get("display_key") or ""),
+        ),
+        reverse=True,
+    )
+    return active
+
+
 def build_latest_review_session(
     *,
     history_root: str | Path,
@@ -625,13 +669,18 @@ def build_latest_review_session(
     result["session_contract"] = (
         ReviewFollowupJournalContract().as_payload()
     )
+    active_follow_ups = query_active_follow_ups(
+        journal_root=journal_root,
+    )
     if not digest.get("review_ready"):
         result["review_state_counts"] = {
             "unseen": 0,
             "reviewed": 0,
             "follow_up": 0,
         }
-        result["active_follow_up_count"] = 0
+        result["active_follow_ups"] = active_follow_ups
+        result["active_follow_up_count"] = len(active_follow_ups)
+        result["active_follow_up_in_current_digest_count"] = 0
         return result
 
     source_observation_id = str(
@@ -649,7 +698,7 @@ def build_latest_review_session(
     )
 
     counts: Counter[str] = Counter()
-    active_count = 0
+    active_in_current_count = 0
     sections: list[dict[str, Any]] = []
     for raw_section in digest.get("workflow_sections") or []:
         section = dict(raw_section)
@@ -671,7 +720,7 @@ def build_latest_review_session(
             item["review"] = review
             counts[str(review["review_state"])] += 1
             if review["active_follow_up"]:
-                active_count += 1
+                active_in_current_count += 1
             items.append(item)
         section["items"] = items
         sections.append(section)
@@ -681,7 +730,16 @@ def build_latest_review_session(
         state: int(counts.get(state, 0))
         for state in REVIEW_STATES
     }
-    result["active_follow_up_count"] = active_count
+    current_keys = set(display_keys)
+    for item in active_follow_ups:
+        item["in_current_digest"] = (
+            str(item.get("display_key") or "") in current_keys
+        )
+    result["active_follow_ups"] = active_follow_ups
+    result["active_follow_up_count"] = len(active_follow_ups)
+    result["active_follow_up_in_current_digest_count"] = (
+        active_in_current_count
+    )
     result["review_workflow_mutates_source"] = False
     return result
 
