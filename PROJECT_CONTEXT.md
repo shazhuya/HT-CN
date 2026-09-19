@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `84c7d8a0f2d46cd8ed9b79dcd638cb727d165465`
-context_checkpoint_title: `M5 Phase 12 Daily Review Digest / Change Triage v1 green`
+context_checkpoint: `4b015dfc0e72db0f1275e1e570d85959254550fa`
+context_checkpoint_title: `M5 Phase 13 Review Session / Follow-up Journal v1 green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -13,19 +13,19 @@ repository: `shazhuya/HT-CN`
 
 正式 `main` 仍以 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration** 为已合并基线；M4 prospective evidence 与 M5 只读产品层继续在独立分支演进。
 
-当前实际开发现场已经完成 **M5 Phase 12 — Daily Review Digest / Change Triage v1**：
+当前实际开发现场已经完成 **M5 Phase 13 — Review Session / Follow-up Journal v1**：
 
-- 当前分支：`m5/daily-review-digest-v1`
-- Phase 12 validated code checkpoint：`84c7d8a0f2d46cd8ed9b79dcd638cb727d165465`
-- hosted CI：run `35413656027` / #1733，overall success
-- Python：736 passed
+- 当前分支：`m5/review-followup-journal-v1`
+- Phase 13 validated code checkpoint：`4b015dfc0e72db0f1275e1e570d85959254550fa`
+- hosted CI：run `35415145067` / #1768，overall success
+- Python：757 passed
 - Web build：success
-- Playwright：23 passed
+- Playwright：24 passed
 - browser evidence upload：success
 - M4 capture methodology drift：0 / 37
 - Outcome Engine drift：0 / 4
 
-M5 Phase 1–12 当前主线：
+M5 Phase 1–13 当前主线：
 
 1. Daily Operator Queue；
 2. Operator Delta / 今日变化；
@@ -38,9 +38,10 @@ M5 Phase 1–12 当前主线：
 9. Daily Close Product Pipeline；
 10. Daily Handoff Bundle v2；
 11. append-only Daily Operator History / Change Journal；
-12. Daily Review Digest / Change Triage，把完整跨日 Delta 组织成透明工作流复盘与可钻取筛选。
+12. Daily Review Digest / Change Triage；
+13. Review Session / Follow-up Journal：独立人工复盘状态、append-only event、跨日持续跟踪清单和审计查询。
 
-M5 仍是**只读实战产品层**，不拥有 harmonic identity、Source Raw PRZ 或 lifecycle，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 12 的 review order 只是产品工作流导航，不是预期收益或买卖排名。
+M5 仍是**只读实战产品层 + 人工复盘工作流层**，不拥有 harmonic identity、Source Raw PRZ、canonical lifecycle 或 action state，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 13 的 reviewed/follow_up 只代表人工复盘进度，不代表交易判断。
 
 ## 正式 main 基线 — M3
 
@@ -1929,3 +1930,85 @@ Governance:
 Phase 12 已把“长期历史”变成每天可执行的复盘导航。下一阶段优先进入 **M5 Phase 13 — Review Session / Follow-up Journal v1**：给 review item 增加独立的产品工作流状态，例如“未看 / 已看 / 后续跟踪”和可选笔记，并稳定绑定 source observation / display key。
 
 Phase 13 只能记录用户复盘工作流，不得修改 canonical lifecycle/action state，不得变成仓位/交易执行层，也不得因为用户 pin/follow-up 就改变 Queue 排序、胜率、alpha 或预测评分。若未来需要把 Phase 11/12 artifacts 带入交接包，仍需另建 versioned handoff contract，不修改冻结的 Phase 10 handoff v2。
+
+
+## M5 Phase 13 — Review Session / Follow-up Journal v1
+
+Current branch:
+`m5/review-followup-journal-v1`
+
+Validated code checkpoint:
+`4b015dfc0e72db0f1275e1e570d85959254550fa`
+
+Hosted validation:
+- draft PR #25 is only a CI/diff carrier；
+- initial CI run `35415053453` / #1766：Python 757 + Web green；原有 23 Playwright green；新增 Phase-13 test 仅因 locator 同时命中 follow-up header/item 失败；
+- locator 在 `4b015dfc0e72db0f1275e1e570d85959254550fa` 收窄到具体 row；
+- final code CI run `35415145067` / #1768：success；
+- Python 757 passed；
+- Web build success；
+- Playwright 24 passed；
+- browser evidence upload success。
+
+Frozen implementation:
+- review workflow state is separate from canonical lifecycle/action；
+- fixed states: unseen / reviewed / follow_up；
+- no event means unseen for the exact current observation/display-key binding；
+- every write binds a validated Phase-11 source observation + real Delta display key；
+- journal root is `data/product/m5/review_journal/`；
+- event storage is append-only and cross-process locked；
+- client_request_id makes retries idempotent and conflicting replays fail；
+- note is optional, normalized and capped at 1000 chars；
+- each event has self-integrity SHA plus binding/display-key ordinal chains；
+- chain gaps/tampering fail closed with `review_journal_integrity_failure`；
+- current-day review state never inherits yesterday's reviewed state；
+- active follow-up is derived from the latest event per display key and can persist across trade dates；
+- a follow-up stays visible even when the current day has no new Delta；
+- ending follow-up appends reviewed rather than deleting history；
+- Workbench shows current review counts plus a separate persistent follow-up list；
+- same-day follow-up says “跟踪中”；older source date says “跨日跟踪中”；
+- GET `/api/operator/review-session` returns the enriched current review session；
+- POST `/api/operator/review-session/event` is the explicit write surface；
+- GET `/api/operator/review-journal` is read-only audit；
+- CLI: `scripts/m5_query_review_journal.py`；
+- one-click query: `运行HT-CN复盘跟踪查询.bat`；
+- Phase 13 is deliberately not part of daily-close pipeline, so no user action means no automatic review event；
+- Phase 12 `/api/operator/review-digest` contract remains available/frozen；
+- Phase 10 handoff v2 remains frozen/unmodified。
+
+Boundary:
+- product_review_workflow_only；
+- append_only=true；
+- authoritative_transition=false；
+- authoritative_evidence=false；
+- writes_m4_evidence=false；
+- predictive_score_used=false；
+- historical_outcome_used_for_ranking=false；
+- alpha_inference_allowed=false；
+- is_trade_instruction=false；
+- mutates_operator_queue=false；
+- mutates_operator_history=false；
+- mutates_action_state=false；
+- mutates_lifecycle=false；
+- no harmonic identity / Source Raw PRZ mutation。
+
+Freeze audit:
+- M4 capture methodology: 0 / 37 changed；
+- Outcome Engine: 0 / 4 changed。
+
+Governance:
+- D-054；
+- `specs/m5-phase-13-review-followup-journal.md`。
+
+### 下一步
+
+Phase 13 已把“每天看什么”推进到“哪些看过、哪些要持续跟踪”，并且形成可审计的人工复盘 journal。下一阶段优先进入 **M5 Phase 14 — Daily Handoff Bundle v3 / Review-State Transport**。
+
+Phase 14 应建立新的 versioned transport contract，把 Phase 11/12/13 的当前产品状态安全加入交接包：
+- current validated Operator product snapshot；
+- latest current-day Phase-11 history observation；
+- Phase-12 review digest；
+- Phase-13 review-session snapshot / active follow-up context；
+- 必要的 hashes / source binding / portable paths。
+
+Phase 14 不得修改 Phase 10 handoff v2，不得把 mutable review journal 伪装成 M4 authoritative evidence，也不得因 follow-up/reviewed 状态改变产品排序或交易含义。
