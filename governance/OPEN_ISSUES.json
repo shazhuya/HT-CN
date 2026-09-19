@@ -27,23 +27,26 @@
       "id": "ISSUE-0063",
       "severity": "medium",
       "type": "repository_governance",
-      "status": "open",
+      "status": "blocked_external_permission",
       "title": "main branch server-side protection is disabled/unconfirmed as a required gate",
       "blocks": [
         "M6.4"
       ],
-      "next_action": "Enable required checks if permissions allow; otherwise record admin blocker without claiming protection."
+      "next_action": "Enable required checks if permissions allow; otherwise record admin blocker without claiming protection.",
+      "current_fact": "GitHub branch metadata reports main protected=false. Available GitHub connector exposes ruleset/protection reads only and no administration write action."
     },
     {
       "id": "ISSUE-0064",
       "severity": "medium",
       "type": "repository_hygiene",
-      "status": "open",
+      "status": "closed",
       "title": "Historical stacked M5 draft PRs remain open after preserve-ancestry integration",
       "blocks": [
         "M6.4"
       ],
-      "next_action": "Close as historical/superseded after Project OS merge."
+      "next_action": "Close as historical/superseded after Project OS merge.",
+      "resolution": "PR #14-#17 and #20-#31 verified as ancestors of main and closed; #18/#19 verified diverged prototypes and closed explicitly as superseded historical branches.",
+      "closed_in": "CR-0065"
     },
     {
       "id": "ISSUE-0065",
