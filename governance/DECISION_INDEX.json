@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "active": [
+    {
+      "id": "D-035",
+      "title": "Frozen Source-clock seed / methodology v4",
+      "status": "active",
+      "source": "DECISIONS.md",
+      "supersedes": [
+        "D-034",
+        "D-033"
+      ]
+    },
+    {
+      "id": "D-037",
+      "title": "Outcome evidence v2 protocol/evaluator boundary",
+      "status": "active",
+      "source": "DECISIONS.md"
+    },
+    {
+      "id": "D-064",
+      "title": "Phase23 real-M1 preflight / operational closeout",
+      "status": "active",
+      "source": "DECISIONS.md"
+    },
+    {
+      "id": "D-065",
+      "title": "Project OS v2 — repository-state-driven continuity",
+      "status": "active",
+      "source": "governance/decisions/D-065-project-os-v2.md"
+    }
+  ],
+  "rules": {
+    "read_index_before_legacy_decisions": true,
+    "superseded_decision_must_not_be_reactivated_without_new_decision": true
+  }
+}
