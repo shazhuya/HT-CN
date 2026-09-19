@@ -2,6 +2,13 @@
 
 状态：**Product presentation/index layer; scan universe frozen independently from UI**
 
+> **M6.3 supersession note:** the Phase 4 principle that UI presentation must not define
+> scan scope remains frozen. The older implementation wording
+> `discover_local_instruments(..., limit=0)` / raw local-file discovery is superseded by
+> the M6.3 catalog-backed definition of `initialized_universe`. The scanner/operator
+> universe is now the valid listed + initialized SSE/SZSE catalog set, not every file that
+> happens to exist under `data/market/daily`.
+
 ## 1. 目标
 
 Phase 4 解决一个会直接导致漏扫的架构问题：
