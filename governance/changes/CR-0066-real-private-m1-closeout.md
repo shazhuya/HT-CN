@@ -141,3 +141,17 @@ On success it produces exactly one upload artifact:
 `artifacts/reports/htcn-m6-private-m1-closeout-evidence.zip`
 
 Raw M1 catalog/Parquet/daily-delta data should not be uploaded. M6.2 closes only after the ZIP is independently verified and accepted.
+
+## Post-merge Project OS cleanup
+
+Final audit after PR #40 found one non-functional duplicate declaration of `ALLOWED_CHANGE_STATUS` in `scripts/project_state.py`.
+
+It was removed and a regression assertion was added requiring exactly one lifecycle-status declaration.
+
+This cleanup:
+
+- does not alter M6.2 acceptance semantics;
+- does not alter private-M1 requirements;
+- does not alter M2/M3/M4/M5 implementation;
+- keeps M6.2 in `awaiting_private_run`;
+- is recorded as A-20260919-0066-010.
