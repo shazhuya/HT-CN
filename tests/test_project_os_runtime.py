@@ -34,8 +34,9 @@ def test_resume_pack_is_compact_state_index_not_legacy_dump() -> None:
     assert "CR-0065" in pack
     assert "M6.2" in pack
     assert "FIVE_ZERO" in pack
-    assert "SESSION_LOG.md" not in pack
-    assert "PROJECT_CONTEXT.md" not in pack
+    assert "## FILE: `SESSION_LOG.md`" not in pack
+    assert "## FILE: `PROJECT_CONTEXT.md`" not in pack
+    assert "# Core Context Files" not in pack
     assert len(pack) < 30000
 
 
