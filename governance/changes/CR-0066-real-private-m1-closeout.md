@@ -1,6 +1,6 @@
 # CR-0066 — M6.2 Real Private-M1 Closeout
 
-status: postmerge_pending
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -241,3 +241,23 @@ Final ledger-bearing PR run #2183 / `35455810195` failed after Project OS and Ru
 The repair removes those stale numeric pins. Tests now validate the actual contract: state pointers resolve in the Attempt Ledger, belong to CR-0066, the hosted pointer is successful, and its workflow matches `latest_validation`. Runtime Project OS validation remains unchanged and fail-closed.
 
 The failed candidate is A-20260919-0066-030; the bounded test repair is A-20260919-0066-031. A fresh complete PR validation is required before merge.
+
+## Real Private-M1 empirical acceptance / closure
+
+The final real Private-M1 run on canonical main `e40eb32253a03d62ce2c7bdd253762f824a54a26` produced the required portable evidence ZIP and it was independently accepted.
+
+Acceptance identity:
+
+- evidence ZIP SHA-256: `8a9146a503173b9f30de13792069d71d87c1ca1cae368c0d3773510933413b68`;
+- trade date: `2026-09-18`;
+- delivery identity: `7a05303ecd91804a7e315cb16be7bdea821fe475b12f4366d626f79d77cf4e40`;
+- input identity: `24f8ae23ecd78fd3806af6908713e04b24eca5bdd4f9f090da231ade66ef203c`;
+- pipeline identity: `9a4b1b913de9a0a8a2ddf2c953cc3bebf1c1bb90c760401ed491bd13311528fe`;
+- local/end-remote main identity: `e40eb32253a03d62ce2c7bdd253762f824a54a26`;
+- hard M6 checks: 50/50 true, zero errors;
+- Phase21 real Chromium audit: 61/61 detail coverage, zero browser/future-node violations;
+- no BSE candidate entered the default product scope.
+
+The warning `partial_initialized_scope_allowed:55/5218` is intentionally not reclassified as an M6.2 blocker: M6.2 proves the initialized private-M1 operational chain, while M6.3 now owns the formal separation of listed / initialized / QFQ-ready / scanner / operator universes. The M4 research-QFQ warning likewise remains outside M6 operational authority.
+
+CR-0066 is closed. No harmonic Source identity, Raw PRZ, lifecycle, M4 methodology, Outcome Engine, or trade-execution semantics were changed by this acceptance.
