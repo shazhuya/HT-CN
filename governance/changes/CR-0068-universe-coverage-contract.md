@@ -1,6 +1,6 @@
 # CR-0068 — M6.3 Universe Coverage Contract
 
-status: implementing
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -59,3 +59,23 @@ After that green candidate, review identified one additional fail-closed require
 parentage errors must not be silently filtered. The branch now treats initialized-not-listed and
 formal-QFQ-not-initialized SSE/SZSE members as explicit invariant failures. A fresh hosted validation
 is required for the hardened tree before merge or closure.
+
+
+## Final integration closeout
+
+- final ledger-bearing PR head: `0dbd22ce91790f6e17bed0544151134e38b8292e`;
+- final PR validation: workflow `35460461311` / run #2277, success;
+- PR #49 merge commit: `9b1c11c796dc0292b4607f58bc5a46a1dea8ff38`;
+- canonical main validation: workflow `35460584553` / run #2278, success;
+- Python: 889 passed / 0 warnings;
+- Ruff: 481 observed / budget 483;
+- browser acceptance: 24 passed;
+- Phase18: valid;
+- Phase21: valid;
+- M4 methodology: frozen_match / 37;
+- Outcome Engine: frozen_match / 4.
+
+CR-0068 closes ISSUE-0062 by freezing distinct listed / initialized / formal-QFQ-ready /
+product-scanner / research-scanner / operator / downstream-candidate semantics. M6.3 does not
+claim full A-share data initialization, does not enable BSE, and does not change harmonic Source,
+Raw PRZ, lifecycle, M4 methodology, Outcome Engine, or trading semantics.
