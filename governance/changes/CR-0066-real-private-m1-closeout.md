@@ -1,6 +1,6 @@
 # CR-0066 — M6.2 Real Private-M1 Closeout
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -97,3 +97,19 @@ Independent pre-merge review found that ordinary manifest hash verification coul
 - add regression tests for unlisted unsafe members, rehashed browser-evidence semantic tamper, and rehashed workspace tamper.
 
 After this implementation change, prior ready-to-merge validation is historical only. A new frozen-head validation is required.
+
+## Hardened final validation
+
+- hardened implementation HEAD: `0eed2c90ca3b75c98345155766df6c4f387f28bb`;
+- final PR validation #2101 / `35441597214`: success;
+- Python: **869 passed / 1163 warnings**;
+- Web build: success;
+- existing browser acceptance: **24 passed**;
+- Phase18: **1 passed / valid**;
+- Phase21: **1 passed / valid**;
+- M4 methodology: **frozen_match / 37 components**;
+- Outcome Engine: **frozen_match / 4 components**;
+- formal release artifact ID: **10583747910**;
+- diff audit: no M2/M3/M4/M5 frozen implementation file modified.
+
+The hardened verifier implementation is ready to merge. Real private-M1 execution remains intentionally pending until the code is integrated into formal main.
