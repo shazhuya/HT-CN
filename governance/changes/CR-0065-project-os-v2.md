@@ -1,6 +1,6 @@
 # CR-0065 — HT-CN Project OS v2 / 跨对话无损续接
 
-status: implementing
+status: validation_failed
 baseline_ref: m5/phase23-postmerge-closeout
 baseline_head: 29c88c41aa024a4ac00fecdf7e43a61a51e50ad1
 target: main
