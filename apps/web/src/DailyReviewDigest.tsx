@@ -36,6 +36,20 @@ type ReviewSection = {
   items: ReviewItem[]
 }
 
+type ActiveFollowUp = {
+  display_key: string
+  instrument_id: string
+  source_observation_id: string
+  source_trade_date: string
+  source_revision_ordinal: number
+  source_change_types: string[]
+  event_id: string
+  created_at_utc: string
+  note: string
+  review_state: 'follow_up'
+  in_current_digest: boolean
+}
+
 type ReviewSessionPayload = {
   schema_version: number
   status: string
@@ -55,7 +69,9 @@ type ReviewSessionPayload = {
   analysis_incomplete_instruments: string[]
   source_change_count_unchanged: number
   review_state_counts: Record<ReviewState, number>
+  active_follow_ups: ActiveFollowUp[]
   active_follow_up_count: number
+  active_follow_up_in_current_digest_count: number
   source_review_state_counts_unchanged: Record<ReviewState, number>
   source_active_follow_up_count_unchanged: number
   authoritative_evidence: boolean
@@ -197,6 +213,41 @@ export default function DailyReviewDigest({
     followUpOnly,
   ] as const
 
+  const closeFollowUp = async (item: ActiveFollowUp) => {
+    const key = `follow:${item.display_key}`
+    setSavingKey(key)
+    setSaveMessage(null)
+    setError(null)
+    try {
+      const response = await fetch(
+        `${apiBase}/api/operator/review-session/event`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            source_observation_id: item.source_observation_id,
+            display_key: item.display_key,
+            review_state: 'reviewed',
+            note: '',
+            client_request_id: newClientRequestId(),
+          }),
+        },
+      )
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { detail?: string } | null
+        throw new Error(body?.detail ?? `HTTP ${response.status}`)
+      }
+      setSaveMessage(`${item.instrument_id} 已结束持续跟踪`)
+      const [a, b, c, d, e] = currentFilters()
+      load(a, b, c, d, e)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(`结束跟踪失败：${message}`)
+    } finally {
+      setSavingKey(null)
+    }
+  }
+
   const saveReview = async (item: ReviewItem) => {
     if (!payload?.source_observation_id) return
 
@@ -328,6 +379,59 @@ export default function DailyReviewDigest({
               <strong>{payload.status}</strong>
             </div>
           </div>
+
+          {payload.active_follow_ups.length > 0 && (
+            <section
+              className="daily-review-digest__followups"
+              aria-label="active-follow-ups"
+            >
+              <div className="daily-review-digest__followups-head">
+                <div>
+                  <strong>持续跟踪清单</strong>
+                  <span>
+                    {payload.active_follow_up_count} 个结构 · 不要求今天必须有新变化
+                  </span>
+                </div>
+                <span>
+                  今日有新变化 {payload.active_follow_up_in_current_digest_count}
+                </span>
+              </div>
+              <div className="daily-review-digest__followups-list">
+                {payload.active_follow_ups.map((item) => (
+                  <div
+                    className="daily-review-digest__followup-item"
+                    key={item.display_key}
+                  >
+                    <button
+                      className="daily-review-digest__symbol"
+                      onClick={() => onSelectInstrument(item.instrument_id)}
+                    >
+                      {item.instrument_id}
+                    </button>
+                    <div>
+                      <strong>
+                        {item.in_current_digest ? '今日有新变化' : '今日无新变化'}
+                      </strong>
+                      <span>
+                        跟踪始于 {item.source_trade_date}
+                      </span>
+                    </div>
+                    <div>
+                      <span>{item.note || '无备注'}</span>
+                    </div>
+                    <button
+                      onClick={() => closeFollowUp(item)}
+                      disabled={savingKey === `follow:${item.display_key}`}
+                    >
+                      {savingKey === `follow:${item.display_key}`
+                        ? '处理中…'
+                        : '结束跟踪'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <div className="daily-review-digest__types">
             {Object.entries(payload.change_type_counts).map(([key, count]) => (
