@@ -12,13 +12,8 @@ from htcn.app.operator_snapshot import (
     build_or_load_operator_snapshot,
     latest_local_trade_date,
 )
-from htcn.app.source_clock_lifecycle_service import (
-    M3SourceClockHarmonicService,
-)
-from htcn.app.universe_coverage import (
-    build_universe_coverage,
-    load_catalog_universes,
-)
+from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
+from htcn.app.universe_coverage import build_universe_coverage, load_catalog_universes
 
 
 ROOT = Path(__file__).resolve().parents[1]
