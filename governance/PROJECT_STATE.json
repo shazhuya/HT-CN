@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.3-CLOSED",
+  "state_id": "HTCN-M6.4-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,33 +21,33 @@
   },
   "current": {
     "milestone": "M6",
-    "phase": "M6.3",
-    "title": "Universe Coverage Contract",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260920-0068-005",
-    "latest_hosted_validation_attempt_id": "A-20260920-0068-005",
-    "work_branch": null,
+    "phase": "M6.4",
+    "title": "Repository Governance",
+    "status": "implementing",
+    "active_change": "CR-0069",
+    "active_spec": "specs/m6-phase-4-repository-governance.md",
+    "latest_attempt_id": "A-20260920-0069-001",
+    "latest_hosted_validation_attempt_id": "A-20260920-0069-001",
+    "work_branch": "m6/repository-governance-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35460584553,
-      "run_number": 2278,
+      "workflow_run": 35463650834,
+      "run_number": 2321,
       "event": "push",
-      "head": "9b1c11c796dc0292b4607f58bc5a46a1dea8ff38",
-      "python_passed": 889,
+      "head": "b30c9d7043ff349302f6c816ff71f6d613f3f630",
+      "python_passed": 890,
       "warnings": 0,
-      "ruff_observed": 481,
-      "ruff_budget": 483,
+      "ruff_observed": 0,
+      "ruff_budget": 0,
       "project_os_integrity": "success",
-      "formal_main_release_integrity": "success",
-      "existing_playwright_passed": 24,
-      "phase18": "valid",
-      "phase21": "valid",
-      "m4_methodology": "frozen_match_37",
-      "outcome_engine": "frozen_match_4",
-      "artifact_id": 10588728848,
-      "scope": "M6.3 final integrated main validation after PR #49 merge; universe coverage contract closed."
+      "formal_main_release_integrity": "skipped_on_branch_push",
+      "existing_playwright_passed": null,
+      "phase18": "pending_pr_gate",
+      "phase21": "pending_pr_gate",
+      "m4_methodology": "pending_pr_gate",
+      "outcome_engine": "pending_pr_gate",
+      "artifact_id": null,
+      "scope": "M6.4 zero-lint branch candidate. Deterministic Python/Project OS/Web gates are green; full PR-only browser, Phase18/Phase21 and both M4 freeze guards remain pending."
     }
   },
   "private_m1": {
@@ -61,7 +61,7 @@
   "next_major_task": {
     "phase": "M6.4",
     "title": "Repository Governance",
-    "status": "ready_not_started",
+    "status": "implementing",
     "blocked_until": []
   },
   "freezes": {
@@ -80,6 +80,7 @@
     "bse_default_scope": "deferred"
   },
   "required_specs": [
+    "specs/m6-phase-4-repository-governance.md",
     "specs/m6-phase-3-universe-coverage-contract.md",
     "specs/m6-phase-2-portable-chat-continuity.md",
     "specs/m6-phase-2-real-private-m1-closeout.md",
