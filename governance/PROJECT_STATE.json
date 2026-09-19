@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.2-AWAITING-PRIVATE-RUN",
+  "state_id": "HTCN-M6.2-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,10 +23,10 @@
     "milestone": "M6",
     "phase": "M6.2",
     "title": "Real Private-M1 Closeout",
-    "status": "awaiting_private_run",
-    "active_change": "CR-0066",
-    "active_spec": "specs/m6-phase-2-real-private-m1-closeout.md",
-    "latest_attempt_id": "A-20260919-0066-031",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260920-0066-032",
     "latest_hosted_validation_attempt_id": "A-20260919-0066-029",
     "work_branch": null,
     "latest_validation": {
@@ -46,23 +46,33 @@
       "outcome_engine": "frozen_match_4",
       "artifact_id": 10588047315,
       "scope": "M6.2 BSE default-scope correction plus forming-Shark Phase21 audit hardening; canonical Shark remains 0-X-A-B-C, forming prefixes are allowed without future-node fabrication; real Private-M1 evidence ZIP still pending."
+    },
+    "closeout_acceptance": {
+      "result": "accepted",
+      "evidence_receipt": "governance/acceptance/M6.2-private-m1-evidence-acceptance.json",
+      "evidence_bundle_sha256": "8a9146a503173b9f30de13792069d71d87c1ca1cae368c0d3773510933413b68",
+      "source_main_head": "e40eb32253a03d62ce2c7bdd253762f824a54a26",
+      "trade_date": "2026-09-18",
+      "status": "ready_with_warnings",
+      "warnings": [
+        "m1_full_listed_coverage:partial_initialized_scope_allowed:55/5218",
+        "pipeline_m4_research_degraded"
+      ]
     }
   },
   "private_m1": {
-    "current_market_full_closeout_ready": false,
-    "next_gate": "run_current_main_on_private_m1_and_upload_m6_evidence_zip",
+    "current_market_full_closeout_ready": true,
+    "next_gate": "accepted_m6_2_closed",
     "one_action_entry": "运行HT-CN M6.2真实Private-M1最终收口.bat",
     "expected_evidence": "artifacts/reports/htcn-m6-private-m1-closeout-evidence.zip",
+    "accepted_evidence_receipt": "governance/acceptance/M6.2-private-m1-evidence-acceptance.json",
     "raw_private_m1_upload_required": false
   },
   "next_major_task": {
-    "phase": "M6.2",
-    "title": "Real Private-M1 Closeout",
-    "status": "awaiting_private_run",
-    "blocked_until": [
-      "real private-M1 evidence ZIP is produced by current formal main",
-      "evidence ZIP passes independent M6.2 verifier and manual acceptance"
-    ]
+    "phase": "M6.3",
+    "title": "Universe Coverage Contract",
+    "status": "ready_not_started",
+    "blocked_until": []
   },
   "freezes": {
     "m4_capture_methodology": {
