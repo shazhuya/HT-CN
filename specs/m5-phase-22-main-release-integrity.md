@@ -1,6 +1,6 @@
 # M5 Phase 22 — Formal Main Release Integrity v1
 
-状态：**implementation in progress**
+状态：**Frozen / PR→main hosted release gates green; push-main observation pending merge**
 
 ## 1. 背景
 
@@ -254,27 +254,27 @@ Phase22 不能替代后者。
 
 ## 13. Acceptance
 
-- [ ] dedicated main-release-integrity job exists；
+- [x] dedicated main-release-integrity job exists；
 - [ ] push main triggers formal release job；
-- [ ] PR targeting main triggers formal release job；
-- [ ] deterministic-tests is prerequisite；
-- [ ] full-history checkout；
-- [ ] lineage report ready；
-- [ ] M2.31 ancestor preserved；
-- [ ] M3 ancestor preserved；
-- [ ] M4 methodology ancestor preserved；
-- [ ] Outcome Engine ancestor preserved；
-- [ ] Phase20 merge ancestor preserved；
-- [ ] Phase21 merge ancestor preserved；
-- [ ] tracked worktree clean；
-- [ ] Web build in release job；
-- [ ] existing 24 Playwright green；
-- [ ] Phase18 Playwright/evidence green；
-- [ ] Phase21 Playwright/evidence green；
-- [ ] M4 methodology drift 0/37；
-- [ ] Outcome Engine drift 0/4；
-- [ ] evidence artifact uploaded；
-- [ ] workflow self-regression green；
+- [x] PR targeting main triggers formal release job；
+- [x] deterministic-tests is prerequisite；
+- [x] full-history checkout；
+- [x] lineage report ready；
+- [x] M2.31 ancestor preserved；
+- [x] M3 ancestor preserved；
+- [x] M4 methodology ancestor preserved；
+- [x] Outcome Engine ancestor preserved；
+- [x] Phase20 merge ancestor preserved；
+- [x] Phase21 merge ancestor preserved；
+- [x] tracked worktree clean；
+- [x] Web build in release job；
+- [x] existing 24 Playwright green；
+- [x] Phase18 Playwright/evidence green；
+- [x] Phase21 Playwright/evidence green；
+- [x] M4 methodology drift 0/37；
+- [x] Outcome Engine drift 0/4；
+- [x] evidence artifact uploaded；
+- [x] workflow self-regression green；
 - [ ] full Python regression green。
 
 ## 14. Branch-protection note
@@ -289,3 +289,78 @@ Phase22 therefore treats:
 - server-side required-check policy = GitHub repository administration responsibility。
 
 The codebase must not falsely claim branch protection is configured unless GitHub confirms it.
+
+
+## 15. Hosted PR→main validation — 2026-09-19
+
+Implementation checkpoint:
+
+`a3ee750a0bb069caf68fddb84b7e6ad74de735f1`
+
+Carrier PR:
+
+- #34;
+- head = `m5/main-release-integrity-v1`;
+- base = `main`;
+- base main SHA = `d8687f2bcc8d4a9d9b37eeac1430f6f88ff563d3`.
+
+Actions:
+
+**#1942 / 35429893144**
+
+Results:
+
+### prerequisite deterministic-tests
+
+- status: success;
+- Python: **832 passed**, 1163 warnings;
+- Web build: success;
+- existing Playwright: **24 passed**;
+- Phase18 Playwright: **1 passed**;
+- Phase18 evidence: valid, 10 checks / 5 screenshots;
+- Phase21 dynamic Playwright: **1 passed**;
+- Phase21 evidence: valid, 5 screenshots;
+- deterministic browser artifact ID: **10580576017**.
+
+### formal-main-release-integrity
+
+- status: success;
+- full-history checkout: success;
+- release-lineage report: `status=ready`;
+- M2.31/M3/M4/Phase20/Phase21 required ancestry: preserved;
+- tracked worktree: clean;
+- Web build: success;
+- existing Playwright: **24 passed**;
+- Phase18 Playwright/evidence: green;
+- Phase21 Playwright/evidence: green;
+- M4 methodology: **0 / 37 changed**, error_count=0;
+- M4 Outcome Engine: **0 / 4 changed**, error_count=0;
+- release evidence artifact ID: **10580297443**.
+
+This proves the **PR targeting main** path is operational, not merely syntactically present.
+
+## 16. Server-side branch protection read result
+
+The connected GitHub integration attempted to read:
+
+`/repos/shazhuya/HT-CN/branches/main/protection`
+
+GitHub returned:
+
+`403 Resource not accessible by integration`
+
+Therefore Phase22 records only:
+
+- repository workflow enforcement is verified;
+- server-side “required status check” policy is **not observable through the current integration**;
+- no claim is made that GitHub branch protection currently requires `formal-main-release-integrity` before merge.
+
+This is not a code blocker.
+
+## 17. Remaining post-merge observation
+
+One acceptance item intentionally remains open before merge:
+
+- actual **push-to-main** execution of `formal-main-release-integrity`.
+
+The workflow predicate and self-regression already freeze that path, but Phase22 will observe the real push-main run created by the Phase22 merge before declaring the phase operationally complete.
