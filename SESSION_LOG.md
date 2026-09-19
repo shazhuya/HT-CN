@@ -1629,3 +1629,22 @@ Next:
 - read/verify/browse a v3 bundle without requiring the local market database；
 - expose transported product/history/digest/review/follow-up state in a Chinese-first read-only workspace；
 - no automatic import into local history/journal, no new review events, no M4 write, no ranking/trade inference。
+
+
+## 2026-09-19 — M5 Phase 15 portable inspector v1
+
+- Restored Phase-14 current head and opened `m5/handoff-v3-inspector-v1`.
+- Added a read-only v3 inspector that refuses unverified handoff transport.
+- Inspector uses only data embedded in v3/nested-v2 transport; no market DB dependency.
+- Added current/previous Queue/history, daily digest, review-session, active-follow-up and review-event inspection.
+- Added exact instrument/display-key drill-down.
+- Added self-contained Chinese single-file HTML workspace with no network fetch/write action.
+- Added CLI and Windows one-click entry.
+- Added 5 deterministic Python regressions.
+- Draft PR #27 created against the Phase-14 branch.
+- Hosted CI #1805 / 35419145630 green:
+  - 779 Python passed;
+  - Web build success;
+  - 24 Playwright passed;
+  - browser evidence uploaded.
+- Implementation diff changed no pre-existing Phase-14 file; M4 methodology and Outcome Engine remained untouched.
