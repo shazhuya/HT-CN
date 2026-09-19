@@ -62,12 +62,12 @@
         {
           "id": "M6.4",
           "title": "Repository Governance",
-          "status": "ready_to_merge"
+          "status": "closed"
         },
         {
           "id": "M6.5",
           "title": "Source Coverage Freeze",
-          "status": "planned"
+          "status": "ready_not_started"
         },
         {
           "id": "M6.6",
