@@ -1,6 +1,6 @@
 # CR-0066 — M6.2 Real Private-M1 Closeout
 
-status: implementing
+status: validation_green
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -38,3 +38,16 @@ Complete all engineering needed for one-action real private-M1 current-market cl
 ## Non-goals
 
 No harmonic ratios, identity, PRZ, lifecycle, M4 methodology/outcome engine, M5 product semantics, win-rate/alpha claims, or trade execution changes.
+
+## Hosted implementation validation
+
+- Project OS drift failure #2061 / `35437436500` preserved as A-20260919-0066-002;
+- corrected without weakening fail-closed validation;
+- final branch run #2072 / `35437669271`: success;
+- Project OS integrity: success;
+- Python: **866 passed / 1163 warnings**;
+- Web build: success;
+- M6.2 tests cover end-of-run remote-main drift, state mismatch, trade-date mismatch, archive tamper, screenshot tamper, portable bundle identity, rehashed semantic tamper, bundle self-verification and one-action BAT boundaries;
+- no M2/M3/M4/M5 semantic file modified.
+
+Formal PR->main release validation remains required before merge.
