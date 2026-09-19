@@ -64,6 +64,12 @@
       "title": "Behavior-sensitive legacy lint is exception-ledgered, not silently rewritten",
       "status": "active",
       "source": "governance/decisions/D-071-behavior-sensitive-lint-exceptions.md"
+    },
+    {
+      "id": "D-072",
+      "title": "GitHub server-side protection remains an explicit external-permission limitation",
+      "status": "active",
+      "source": "governance/decisions/D-072-external-main-protection-boundary.md"
     }
   ],
   "rules": {
