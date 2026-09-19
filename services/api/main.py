@@ -26,6 +26,7 @@ from htcn.app.review_followup_journal import (
     append_review_event,
     build_latest_review_session,
     filter_review_session,
+    query_review_journal,
 )
 from htcn.app.operator_queue import (
     build_operator_queue,
@@ -157,6 +158,35 @@ def operator_queue(
         payload,
         include_evidence_insufficient=include_evidence_insufficient,
     )
+
+@app.get("/api/operator/review-journal")
+def operator_review_journal(
+    display_key: str | None = Query(default=None),
+    instrument_id: str | None = Query(default=None),
+    source_observation_id: str | None = Query(default=None),
+    review_state: str | None = Query(default=None),
+    limit: int = Query(default=200, ge=1, le=5000),
+) -> dict[str, object]:
+    if review_state is not None and review_state not in REVIEW_STATES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"unknown review state: {review_state}",
+        )
+    try:
+        return query_review_journal(
+            journal_root=REVIEW_JOURNAL_ROOT,
+            display_key=display_key,
+            instrument_id=instrument_id,
+            source_observation_id=source_observation_id,
+            review_state=review_state,
+            limit=limit,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"review journal unavailable: {exc}",
+        ) from exc
+
 
 @app.get("/api/operator/review-session")
 def operator_review_session(
