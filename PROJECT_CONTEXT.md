@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `e8d46855f775f57bf7e413575c82806b74b24aba`
-context_checkpoint_title: `M5 Phase 19 Daily Portable Delivery implementation green`
+context_checkpoint: `9082230dea8d509c8596059c541c5236a141971e`
+context_checkpoint_title: `M5 Phase 20 Preserve-Ancestry Integration Readiness green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -13,12 +13,12 @@ repository: `shazhuya/HT-CN`
 
 正式 `main` 仍以 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration** 为已合并基线；M4 prospective evidence 与 M5 只读产品层继续在独立分支演进。
 
-当前实际开发现场已经完成 **M5 Phase 19 — Daily Portable Delivery Bundle / One-Click Closeout v1**：
+当前实际开发现场已经完成 **M5 Phase 20 — Preserve-Ancestry Main Integration Readiness v1**：
 
-- 当前分支：`m5/daily-portable-delivery-v1`
-- Phase 19 validated implementation checkpoint：`e8d46855f775f57bf7e413575c82806b74b24aba`
-- hosted CI：run `35426314518` / #1876，overall success
-- Python：801 passed
+- integration carrier：`m5/integration-readiness-v1` → `main`（PR #32）
+- Phase 20 validated implementation checkpoint：`9082230dea8d509c8596059c541c5236a141971e`
+- hosted CI：run `35426649834` / #1890，deterministic + integration-readiness success
+- Python：808 passed
 - Web build：success
 - existing Playwright：24 passed
 - Phase18 portable visual Playwright：1 passed
@@ -29,7 +29,7 @@ repository: `shazhuya/HT-CN`
 - M4 capture methodology drift：0 / 37
 - Outcome Engine drift：0 / 4
 
-M5 Phase 1–19 当前主线：
+M5 Phase 1–20 当前主线：
 
 1. Daily Operator Queue；
 2. Operator Delta / 今日变化；
@@ -49,7 +49,8 @@ M5 Phase 1–19 当前主线：
 16. Handoff v4 Portable Pattern Detail：为 current Queue 全量绑定 exact bars + pattern payload，detail-or-explicit-error 覆盖守恒；
 17. Portable Visual Semantics v2：schema-specific topology、Raw PRZ / Ideal Core / Envelope 分层、Source Clock 与非几何 guides；
 18. Portable Visual Browser Acceptance：真实 Chromium + 5 场景截图/哈希证据 + 独立 evidence verifier；
-19. Daily Portable Delivery v1：staged v3 → exact-identity v4 → Inspector/HTML → verified outer ZIP → immutable archive → latest pointer last。
+19. Daily Portable Delivery v1：staged v3 → exact-identity v4 → Inspector/HTML → verified outer ZIP → immutable archive → latest pointer last；
+20. Preserve-Ancestry Integration Readiness：full-history Git gate、关键 provenance ancestor 守卫、main-only change 审计、merge-only carrier PR #32。
 
 M5 仍是**只读实战产品层 + 人工复盘工作流 + transport / portable delivery 层**，不拥有 harmonic identity、Source Raw PRZ、canonical lifecycle 或 action state，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 19 只编排和封装已验证的 Phase9/14/16/17 产物，不改变这些状态的语义。
 
@@ -2444,3 +2445,68 @@ Freeze audit:
 - Outcome Engine drift: 0.
 
 Hosted CI uses deterministic fakes for Phase19 orchestration. It does not claim a real current-market delivery was produced on GitHub-hosted CI.
+
+
+## M5 Phase 20 closeout — Preserve-Ancestry Main Integration Readiness v1
+
+Integration carrier:
+`m5/integration-readiness-v1 -> main`
+
+Carrier PR:
+- #32;
+- exact target main HEAD at audit time: `e25fd9584008d35ec464c73f91854d12a66f79ff`;
+- merge base: `edec5e21fb9e873daf8fb77fceaa0d89dbbd5b25`;
+- merge policy: **merge commit only**.
+
+Why Phase20 exists:
+- M4/M5 lineage had accumulated hundreds of commits outside main;
+- squashing or rebasing would destroy exact source/methodology/outcome/phase ancestry;
+- main had one independent README-only cleanup commit;
+- Phase20 therefore turns ancestry preservation into a hosted machine gate before main integration.
+
+Implemented:
+- `src/htcn/app/integration_readiness.py`;
+- `scripts/m5_integration_readiness.py`;
+- `tests/app/test_integration_readiness.py`;
+- `specs/m5-phase-20-integration-readiness.md`;
+- dedicated `preserve-ancestry-integration-readiness` CI job with full-history checkout.
+
+Hosted Git facts:
+- lineage-only commit count: 630;
+- main-only commit count: 1;
+- exact main-only commit: `e25fd9584008d35ec464c73f91854d12a66f79ff`;
+- main-only path set: README only;
+- merge-base exact match: `edec5e21fb9e873daf8fb77fceaa0d89dbbd5b25`;
+- tracked worktree clean.
+
+Required ancestors verified:
+- M2.31 `fbf964fb...`;
+- M3 merge `edec5e21...`;
+- M4 methodology freeze `c774c549...`;
+- M4 Outcome Engine anchor `9cbc0d3d...`;
+- M5 Phase14 / 15 / 16 / 17 / 18 / 19 final checkpoints.
+
+Freeze guards at integration head:
+- M4 methodology changed components: 0;
+- Outcome Engine changed components: 0.
+
+Validation:
+- CI #1890 / `35426649834`: success;
+- Python 808 passed;
+- Web build success;
+- existing Playwright 24 passed;
+- Phase18 Playwright 1 passed;
+- Phase18 evidence verifier valid;
+- integration readiness status=ready;
+- integration evidence artifact ID 10579201636.
+
+Integration rule:
+- final merge must use GitHub merge-commit method;
+- squash/rebase/force update are forbidden;
+- if main moves before merge, readiness must fail closed and be rerun.
+
+Non-blocking backlog:
+- GitHub runner currently emits Node 20 action deprecation warnings while forcing those actions onto Node 24;
+- current jobs succeed, so this is deferred CI dependency maintenance.
+
+Phase20 introduces no harmonic/product/research semantics.
