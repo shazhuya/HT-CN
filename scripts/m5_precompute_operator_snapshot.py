@@ -15,7 +15,6 @@ from htcn.app.operator_snapshot import (
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 from htcn.app.universe_coverage import build_universe_coverage, load_catalog_universes
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
 CACHE_ROOT = ROOT / "data" / "product" / "m5" / "operator_queue"
