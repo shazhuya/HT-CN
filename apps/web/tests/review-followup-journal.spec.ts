@@ -274,8 +274,9 @@ test('M5 review session saves follow-up without changing source review totals', 
 
   const followups = page.getByLabel('active-follow-ups')
   await expect(followups).toBeVisible()
-  await expect(followups.getByText('今日有新变化')).toBeVisible()
-  await followups.getByRole('button', { name: '结束跟踪' }).click()
+  const followupItem = followups.locator('.daily-review-digest__followup-item').first()
+  await expect(followupItem.getByText('今日有新变化')).toBeVisible()
+  await followupItem.getByRole('button', { name: '结束跟踪' }).click()
 
   await expect(followups).toHaveCount(0)
   await expect(summary.getByText('源变化总数').locator('..')).toContainText('1')
