@@ -220,6 +220,25 @@ def build_universe_coverage(
         ),
     }
 
+    downstream_sets = {
+        "candidate_set": {
+            "count": (
+                None if candidate_count is None else int(candidate_count)
+            ),
+            "status": (
+                "not_observed"
+                if candidate_count is None
+                else "observed"
+            ),
+            "coverage_denominator": False,
+            "defines_scanner_universe": False,
+            "definition": (
+                "扫描后产生的谐波候选集合；不是 universe，"
+                "不得用于计算 listed/initialized/scanner 覆盖率。"
+            ),
+        }
+    }
+
     invariants = {
         "initialized_subset_of_listed": not invalid_initialized_not_listed,
         "formal_qfq_subset_of_initialized": not invalid_qfq_not_initialized,
@@ -243,25 +262,6 @@ def build_universe_coverage(
         if value is not None
     ]
     status = "valid" if all(hard_invariants) else "invalid"
-
-    downstream_sets = {
-        "candidate_set": {
-            "count": (
-                None if candidate_count is None else int(candidate_count)
-            ),
-            "status": (
-                "not_observed"
-                if candidate_count is None
-                else "observed"
-            ),
-            "coverage_denominator": False,
-            "defines_scanner_universe": False,
-            "definition": (
-                "扫描后产生的谐波候选集合；不是 universe，"
-                "不得用于计算 listed/initialized/scanner 覆盖率。"
-            ),
-        }
-    }
 
     return {
         "schema_version": UNIVERSE_COVERAGE_SCHEMA_VERSION,
