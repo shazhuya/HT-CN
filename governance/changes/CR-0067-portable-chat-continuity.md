@@ -91,3 +91,12 @@ candidate through `formal-main-release-integrity` before the Change can close.
 - final closed-state candidate must pass the same two hosted jobs before PR #44 merges;
 - CR-0066 remains the active Change, M6.2 remains `awaiting_private_run`, and no real
   private-M1 acceptance is claimed.
+
+## Ledger reconciliation
+
+A blank-session bootstrap audit found that the final closed-state validation and merge were present in GitHub but had not been appended to the Attempt Ledger. The missing immutable facts are now reconciled:
+
+- A-20260919-0067-009: final closed-state head `8393f5fb660c973eb7b29c022f4083704530d658`, PR #44 run `35451731667` / #2152, success for both `deterministic-tests` and `formal-main-release-integrity`;
+- A-20260919-0067-010: PR #44 merged as canonical main `5a13109c987eb8dfe08a282e977ad2f4f7cfddff`;
+- no CR-0066, M6.2 Gate, Source, M4 methodology, Outcome Engine, product or research semantics changed.
+
