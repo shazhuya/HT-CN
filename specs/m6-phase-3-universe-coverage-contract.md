@@ -1,6 +1,6 @@
 # M6.3 — Universe Coverage Contract
 
-status: ready_not_started
+status: implementing
 
 ## 1. Objective
 
@@ -54,6 +54,15 @@ The default production scope is SSE + SZSE. BSE remains deferred.
 7. **candidate_set**
    - Downstream harmonic matches produced after scanning.
    - It is not a universe and must never be used as a coverage denominator.
+
+## 2.1 Parentage integrity
+
+Same-exchange parentage is fail-closed. For the default SSE/SZSE scope:
+
+- an initialized input member absent from listed_universe is an invariant failure;
+- a formal-QFQ-ready input member absent from initialized_universe is an invariant failure;
+- these errors must be reported explicitly and must not be hidden by intersection/filtering;
+- BSE is different: it is intentionally outside default scope and remains reported as deferred rather than treated as a parentage error.
 
 ## 3. Default exchange boundary
 
