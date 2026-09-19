@@ -2101,3 +2101,55 @@ Phase 15 应做到：
 - 不做收益、胜率、alpha 或交易排序。
 
 如果未来要支持显式 import/merge，必须是 Phase 15 之后独立的新 contract，并处理冲突/幂等/来源身份，不能把“只读 inspector”偷偷变成写入器。
+
+
+## M5 Phase 15 closeout — Handoff v3 Inspector / Portable Review Workspace v1
+
+Current branch:
+`m5/handoff-v3-inspector-v1`
+
+Validated implementation checkpoint:
+`4534e4ed16a9b5aabca9245ceeab271a561b5f4b`
+
+Draft PR:
+- #27;
+- base = `m5/daily-handoff-bundle-v3`;
+- Phase-15 implementation diff at validated checkpoint = 5 added files only.
+
+Hosted validation:
+- Actions run **#1805 / 35419145630**: success;
+- Python **779 passed**, 1163 warnings;
+- Web build success;
+- Playwright **24 passed**;
+- browser evidence upload success.
+
+Implemented:
+- `src/htcn/app/handoff_v3_inspector.py`;
+- `scripts/m5_inspect_daily_handoff_v3.py`;
+- `tests/app/test_handoff_v3_inspector.py`;
+- `specs/m5-phase-15-handoff-v3-inspector.md`;
+- `运行HT-CN便携复盘工作区.bat`.
+
+Phase 15 v1 behavior:
+- only opens a Phase-14 v3 ZIP after `verify_daily_handoff_bundle_v3()` returns valid;
+- reads nested v2 current/previous product snapshot from transport, never from local market DB;
+- reads current/previous Phase-11 history, Phase-12 digest, Phase-13 review-session and transported review-event closure;
+- builds a portable inspection JSON model;
+- builds one self-contained Chinese HTML review workspace with no external network dependency;
+- supports search/drill-down by instrument/display-key;
+- invalid/tampered v3 fails closed before transported state is displayed;
+- no Queue/History/Review Journal import;
+- no reviewed/follow_up event creation;
+- no M4 evidence writes;
+- no score / win-rate / alpha / trade ranking.
+
+Default output:
+- `artifacts/reports/m5-handoff-v3-inspector.json`;
+- `artifacts/reports/m5-handoff-v3-workspace.html`.
+
+Freeze audit:
+- Phase-14 existing files changed by Phase-15 implementation: 0;
+- M4 capture methodology drift from this phase: 0;
+- Outcome Engine drift from this phase: 0.
+
+Phase 15 v1 is therefore **code-complete / hosted-CI-green**.
