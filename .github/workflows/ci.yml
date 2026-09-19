@@ -62,6 +62,15 @@ jobs:
         working-directory: apps/web
         run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts tests/execution-context.spec.ts tests/market-context.spec.ts tests/sector-context.spec.ts tests/concept-context.spec.ts tests/context-integrity.spec.ts tests/decision-narrative.spec.ts tests/decision-selection.spec.ts tests/operator-queue.spec.ts tests/operator-delta.spec.ts tests/operator-index.spec.ts tests/operator-history.spec.ts tests/daily-review-digest.spec.ts tests/review-followup-journal.spec.ts
 
+      - name: Build M5 Phase18 portable visual browser fixture
+        if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/')
+        run: python scripts/m5_build_portable_visual_browser_fixture.py
+
+      - name: Run M5 Phase18 portable visual browser acceptance
+        if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/')
+        working-directory: apps/web
+        run: npx playwright test tests/portable-visual-workspace.spec.ts --reporter=list
+
       - name: Upload browser evidence
         if: always() && (startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/') || startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-') || startsWith(github.ref, 'refs/heads/m2/rsi-') || startsWith(github.head_ref, 'm2/rsi-'))
         uses: actions/upload-artifact@v4
