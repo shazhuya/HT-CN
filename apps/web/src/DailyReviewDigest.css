@@ -74,7 +74,7 @@
 
 .daily-review-digest__filters {
   display: grid;
-  grid-template-columns: repeat(2, minmax(140px, 1fr)) minmax(220px, 1.4fr) auto auto;
+  grid-template-columns: repeat(3, minmax(140px, 1fr)) minmax(220px, 1.4fr) auto auto auto;
   gap: 8px;
   align-items: end;
   margin-top: 12px;
@@ -124,7 +124,7 @@
 
 .daily-review-digest__item {
   display: grid;
-  grid-template-columns: 130px minmax(260px, 1.4fr) minmax(240px, 1fr);
+  grid-template-columns: 130px minmax(240px, 1.25fr) minmax(220px, 1fr) minmax(260px, 1.1fr);
   gap: 10px;
   padding: 9px 10px;
   border-top: 1px solid rgba(148, 163, 184, 0.1);
@@ -152,6 +152,52 @@
   font-weight: 700;
   text-align: left;
   cursor: pointer;
+}
+
+
+.daily-review-digest__review-editor {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(180px, 1.5fr) auto;
+  gap: 7px;
+  align-items: end;
+}
+
+.daily-review-digest__review-editor label {
+  display: grid;
+  gap: 4px;
+}
+
+.daily-review-digest__review-editor label > span {
+  font-size: 10px;
+}
+
+.daily-review-digest__review-editor input,
+.daily-review-digest__review-editor select {
+  width: 100%;
+  min-width: 0;
+}
+
+.daily-review-digest__follow-filter {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px !important;
+  padding-bottom: 6px;
+}
+
+.daily-review-digest__follow-filter input {
+  width: auto;
+}
+
+.daily-review-digest__follow-badge {
+  color: #fbbf24 !important;
+  font-weight: 600;
+}
+
+.daily-review-digest__saved {
+  margin-top: 10px;
+  color: #86efac;
+  font-size: 12px;
 }
 
 .daily-review-digest__empty,
@@ -188,6 +234,10 @@
   }
 
   .daily-review-digest__item {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-review-digest__review-editor {
     grid-template-columns: 1fr;
   }
 }
