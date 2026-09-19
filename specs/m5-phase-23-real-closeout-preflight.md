@@ -1,6 +1,6 @@
 # M5 Phase 23 — Real-M1 Final Closeout Preflight / Single-Action Safety v1
 
-状态：**Frozen / implementation + PR→main hosted release gates green; merge/push-main pending**
+状态：**Frozen / operationally closed on main; real private-M1 run remains pending by design**
 
 ## 1. 目标
 
@@ -401,8 +401,8 @@ Phase23 不：
 - [x] formal-main-release-integrity green on PR→main；
 - [x] M4 methodology drift 0/37；
 - [x] Outcome Engine drift 0/4；
-- [ ] merge to main；
-- [ ] push-main formal release gate green。
+- [x] merge to main；
+- [x] push-main formal release gate green。
 
 
 ## 20. Hosted implementation validation — 2026-09-19
@@ -466,10 +466,66 @@ This correction avoids silently changing the current product universe contract.
 
 ## 22. Remaining acceptance after hosted implementation green
 
-Still intentionally open until integration:
+Integration is now complete.
 
-- [ ] merge PR #36 to `main`；
-- [ ] observe the merge-generated real push-main `formal-main-release-integrity` run；
-- [ ] record final main merge SHA and push-main release artifact。
+- PR #36 merged to `main` using merge commit `c309f782bd31ccf3e963be3bb65670f6e3788174`；
+- merge-generated push-main Actions #1982 / `35433384021` passed；
+- `formal-main-release-integrity` passed on the merged main；
+- final release artifact ID: `10581176575`。
 
-The real current-market/private-M1 `full_closeout_ready` remains a separate Phase21 outcome produced only when the user later runs the one-click final BAT on the machine that owns the private M1 database.
+The real current-market/private-M1 `full_closeout_ready` remains a separate Phase21 outcome produced only when the user later runs the one-click final BAT on the machine that owns the private M1 database. This is an empirical boundary, not unfinished Phase23 engineering.
+
+
+## 23. Post-merge operational validation
+
+Phase23 main merge commit:
+
+`c309f782bd31ccf3e963be3bb65670f6e3788174`
+
+Merge method:
+
+- merge commit；
+- no squash；
+- no rebase。
+
+Post-merge ancestry audit confirmed the following remain real ancestors of formal `main`:
+
+- Phase23 final PR head `12529ae93206e9ca83af73c1bb721db78e1129eb`；
+- Phase22 main merge `56b6da0d30b951c3ff569ff4739ddbe6e5d3e695`；
+- Phase21 main merge `d8687f2bcc8d4a9d9b37eeac1430f6f88ff563d3`；
+- Phase20 main merge `7ed0c56c2fe631f687a16cb8d4922030a21bc80a`；
+- M4 methodology freeze `c774c54928c33361952bf1a612a8555633449625`；
+- M4 Outcome Engine anchor `9cbc0d3d30ac5f0a87748a39788cbee04a44bcc8`；
+- M3 merge；
+- M2.31 source-fidelity checkpoint。
+
+The merge generated a real main push:
+
+**Actions #1982 / 35433384021**
+
+Observed results:
+
+- event = `push`；
+- head branch = `main`；
+- head SHA = Phase23 merge commit；
+- deterministic-tests = success；
+- Python = **847 passed**, 1163 warnings；
+- formal-main-release-integrity = success；
+- release lineage = **ready**；
+- formal release existing Playwright = **24 passed**；
+- Phase18 Playwright = **1 passed**；
+- Phase18 evidence = valid；
+- Phase21 dynamic Playwright = **1 passed**；
+- Phase21 evidence = valid；
+- M4 methodology drift = **0 / 37**；
+- M4 Outcome Engine drift = **0 / 4**；
+- formal release artifact ID = **10581176575**。
+
+Therefore Phase23 engineering/integration is operationally closed.
+
+What remains intentionally unexecuted:
+
+- the first real Phase23 preflight against the user's private local M1；
+- the subsequent real current-market Phase21 `full_closeout_ready` result。
+
+Those require the machine that actually owns private M1 and are not suitable for routine assistant-side testing.
