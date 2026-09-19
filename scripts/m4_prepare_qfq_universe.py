@@ -120,7 +120,6 @@ def _repair_safe_internal_factor_gaps(
         pd.Timestamp(stamp).normalize(): index
         for index, stamp in enumerate(raw_order)
     }
-    missing_set = set(candidate_missing)
     runs: list[list[pd.Timestamp]] = []
     current: list[pd.Timestamp] = []
     previous_position: int | None = None
