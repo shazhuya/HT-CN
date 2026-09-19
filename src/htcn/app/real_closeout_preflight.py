@@ -83,6 +83,7 @@ REQUIRED_CHECK_SEVERITY: dict[str, CheckSeverity] = {
     "m1_scope_initialized": "blocker",
     "m1_dataset_metadata_valid": "blocker",
     "m1_parquet_files_present": "blocker",
+    "m1_delta_files_valid": "blocker",
     "m1_calendar_present": "blocker",
     "m1_full_listed_coverage": "warning",
     "provider_liveness": "blocker",
@@ -254,9 +255,14 @@ def _catalog_probe(root: Path) -> dict[str, Any]:
         "tables": [],
         "listed_scope_count": 0,
         "initialized_scope_count": 0,
+        "orphan_dataset_count": 0,
         "invalid_metadata_count": 0,
-        "missing_parquet_count": 0,
-        "missing_parquet_examples": [],
+        "invalid_parquet_count": 0,
+        "row_count_mismatch_count": 0,
+        "invalid_parquet_examples": [],
+        "delta_file_count": 0,
+        "invalid_delta_count": 0,
+        "invalid_delta_examples": [],
         "calendar_count": 0,
         "calendar_first": None,
         "calendar_last": None,
@@ -267,10 +273,53 @@ def _catalog_probe(root: Path) -> dict[str, Any]:
 
     try:
         duckdb = importlib.import_module("duckdb")
+        parquet = importlib.import_module("pyarrow.parquet")
         con = duckdb.connect(str(path), read_only=True)
     except Exception as exc:
         result["error"] = f"{type(exc).__name__}:{exc}"
         return result
+
+    required_columns = {
+        "instrument_id",
+        "trade_date",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+    }
+
+    def inspect_parquet(
+        candidate: Path,
+        *,
+        expected_rows: int | None,
+    ) -> tuple[bool, str | None, int | None]:
+        if not candidate.is_file():
+            return False, "missing", None
+        try:
+            if candidate.stat().st_size <= 0:
+                return False, "empty", None
+            handle = parquet.ParquetFile(candidate)
+            actual_rows = int(handle.metadata.num_rows)
+            columns = set(handle.schema_arrow.names)
+            if actual_rows <= 0:
+                return False, "zero_rows", actual_rows
+            missing_columns = sorted(required_columns - columns)
+            if missing_columns:
+                return (
+                    False,
+                    "missing_columns=" + ",".join(missing_columns),
+                    actual_rows,
+                )
+            if expected_rows is not None and actual_rows != expected_rows:
+                return (
+                    False,
+                    f"row_count_mismatch={actual_rows}!={expected_rows}",
+                    actual_rows,
+                )
+            return True, None, actual_rows
+        except Exception as exc:
+            return False, f"{type(exc).__name__}:{exc}", None
 
     try:
         result["read_only_open"] = True
@@ -296,9 +345,23 @@ def _catalog_probe(root: Path) -> dict[str, Any]:
             "first_trade_date, last_trade_date "
             "FROM daily_dataset WHERE " + scope_sql
         ).fetchall()
+        listed_ids = {
+            str(row[0])
+            for row in con.execute(
+                "SELECT instrument_id FROM security_master "
+                "WHERE status='listed' AND " + scope_sql
+            ).fetchall()
+        }
+
         invalid_metadata = 0
-        missing_files: list[str] = []
+        orphan_count = 0
+        invalid_parquet = 0
+        row_mismatch = 0
+        invalid_examples: list[str] = []
         for instrument_id, parquet_path, row_count, first_date, last_date in datasets:
+            instrument = str(instrument_id)
+            if instrument not in listed_ids:
+                orphan_count += 1
             invalid = (
                 not parquet_path
                 or int(row_count or 0) <= 0
@@ -308,15 +371,45 @@ def _catalog_probe(root: Path) -> dict[str, Any]:
             )
             if invalid:
                 invalid_metadata += 1
-            if parquet_path:
-                candidate = Path(str(parquet_path))
-                if not candidate.is_absolute():
-                    candidate = root / candidate
-                if not candidate.is_file() or candidate.stat().st_size <= 0:
-                    if len(missing_files) < 20:
-                        missing_files.append(
-                            f"{instrument_id}:{candidate}"
-                        )
+
+            if not parquet_path:
+                invalid_parquet += 1
+                if len(invalid_examples) < 20:
+                    invalid_examples.append(f"{instrument}:path_missing")
+                continue
+
+            candidate = Path(str(parquet_path))
+            if not candidate.is_absolute():
+                candidate = root / candidate
+            ok, reason, _actual_rows = inspect_parquet(
+                candidate,
+                expected_rows=int(row_count or 0) if int(row_count or 0) > 0 else None,
+            )
+            if not ok:
+                invalid_parquet += 1
+                if reason and reason.startswith("row_count_mismatch="):
+                    row_mismatch += 1
+                if len(invalid_examples) < 20:
+                    invalid_examples.append(
+                        f"{instrument}:{candidate}:{reason}"
+                    )
+
+        delta_root = root / "data" / "market" / "daily_delta"
+        delta_files = sorted(delta_root.glob("*.parquet")) if delta_root.is_dir() else []
+        invalid_delta = 0
+        invalid_delta_examples: list[str] = []
+        for delta_path in delta_files:
+            ok, reason, _rows = inspect_parquet(
+                delta_path,
+                expected_rows=None,
+            )
+            if not ok:
+                invalid_delta += 1
+                if len(invalid_delta_examples) < 20:
+                    invalid_delta_examples.append(
+                        f"{delta_path}:{reason}"
+                    )
+
         calendar_count, calendar_first, calendar_last = con.execute(
             "SELECT COUNT(*), MIN(trade_date), MAX(trade_date) "
             "FROM trade_calendar"
@@ -326,17 +419,14 @@ def _catalog_probe(root: Path) -> dict[str, Any]:
             {
                 "listed_scope_count": listed_scope_count,
                 "initialized_scope_count": len(datasets),
+                "orphan_dataset_count": orphan_count,
                 "invalid_metadata_count": invalid_metadata,
-                "missing_parquet_count": sum(
-                    1
-                    for instrument_id, parquet_path, *_ in datasets
-                    if parquet_path
-                    and not (
-                        (Path(str(parquet_path)) if Path(str(parquet_path)).is_absolute()
-                         else root / Path(str(parquet_path))).is_file()
-                    )
-                ),
-                "missing_parquet_examples": missing_files,
+                "invalid_parquet_count": invalid_parquet,
+                "row_count_mismatch_count": row_mismatch,
+                "invalid_parquet_examples": invalid_examples,
+                "delta_file_count": len(delta_files),
+                "invalid_delta_count": invalid_delta,
+                "invalid_delta_examples": invalid_delta_examples,
                 "calendar_count": int(calendar_count or 0),
                 "calendar_first": (
                     calendar_first.isoformat()
@@ -355,7 +445,6 @@ def _catalog_probe(root: Path) -> dict[str, Any]:
     finally:
         con.close()
     return result
-
 
 def _provider_probe(root: Path) -> tuple[bool, str, dict[str, Any]]:
     code = r"""
@@ -635,9 +724,14 @@ def collect_real_closeout_preflight(
         "tables": [],
         "listed_scope_count": 0,
         "initialized_scope_count": 0,
+        "orphan_dataset_count": 0,
         "invalid_metadata_count": 0,
-        "missing_parquet_count": 0,
-        "missing_parquet_examples": [],
+        "invalid_parquet_count": 0,
+        "row_count_mismatch_count": 0,
+        "invalid_parquet_examples": [],
+        "delta_file_count": 0,
+        "invalid_delta_count": 0,
+        "invalid_delta_examples": [],
         "calendar_count": 0,
         "calendar_first": None,
         "calendar_last": None,
@@ -679,8 +773,10 @@ def collect_real_closeout_preflight(
             ),
             make_check(
                 "m1_scope_initialized",
-                passed=initialized_scope > 0,
-                detail=f"initialized_scope_count={initialized_scope}",
+                passed=listed_scope > 0 and initialized_scope > 0,
+                detail=(
+                    f"initialized_scope_count={initialized_scope};listed_scope_count={listed_scope}"
+                ),
                 data={
                     "initialized_scope_count": initialized_scope,
                     "listed_scope_count": listed_scope,
@@ -688,27 +784,52 @@ def collect_real_closeout_preflight(
             ),
             make_check(
                 "m1_dataset_metadata_valid",
-                passed=int(catalog.get("invalid_metadata_count") or 0) == 0,
+                passed=(
+                    int(catalog.get("invalid_metadata_count") or 0) == 0
+                    and int(catalog.get("orphan_dataset_count") or 0) == 0
+                ),
                 detail=(
                     "dataset_metadata_valid"
-                    if int(catalog.get("invalid_metadata_count") or 0) == 0
-                    else f"invalid_metadata_count={catalog.get('invalid_metadata_count')}"
+                    if (
+                        int(catalog.get("invalid_metadata_count") or 0) == 0
+                        and int(catalog.get("orphan_dataset_count") or 0) == 0
+                    )
+                    else (
+                        f"invalid_metadata_count={catalog.get('invalid_metadata_count')};"
+                        f"orphan_dataset_count={catalog.get('orphan_dataset_count')}"
+                    )
                 ),
                 data={
-                    "invalid_metadata_count": int(catalog.get("invalid_metadata_count") or 0)
+                    "invalid_metadata_count": int(catalog.get("invalid_metadata_count") or 0),
+                    "orphan_dataset_count": int(catalog.get("orphan_dataset_count") or 0),
                 },
             ),
             make_check(
                 "m1_parquet_files_present",
-                passed=int(catalog.get("missing_parquet_count") or 0) == 0,
+                passed=int(catalog.get("invalid_parquet_count") or 0) == 0,
                 detail=(
-                    "all_catalog_parquet_files_present"
-                    if int(catalog.get("missing_parquet_count") or 0) == 0
-                    else f"missing_parquet_count={catalog.get('missing_parquet_count')}"
+                    "all_base_parquet_metadata_valid"
+                    if int(catalog.get("invalid_parquet_count") or 0) == 0
+                    else f"invalid_parquet_count={catalog.get('invalid_parquet_count')}"
                 ),
                 data={
-                    "missing_parquet_count": int(catalog.get("missing_parquet_count") or 0),
-                    "examples": catalog.get("missing_parquet_examples", []),
+                    "invalid_parquet_count": int(catalog.get("invalid_parquet_count") or 0),
+                    "row_count_mismatch_count": int(catalog.get("row_count_mismatch_count") or 0),
+                    "examples": catalog.get("invalid_parquet_examples", []),
+                },
+            ),
+            make_check(
+                "m1_delta_files_valid",
+                passed=int(catalog.get("invalid_delta_count") or 0) == 0,
+                detail=(
+                    f"delta_files_valid={catalog.get('delta_file_count') or 0}"
+                    if int(catalog.get("invalid_delta_count") or 0) == 0
+                    else f"invalid_delta_count={catalog.get('invalid_delta_count')}"
+                ),
+                data={
+                    "delta_file_count": int(catalog.get("delta_file_count") or 0),
+                    "invalid_delta_count": int(catalog.get("invalid_delta_count") or 0),
+                    "examples": catalog.get("invalid_delta_examples", []),
                 },
             ),
             make_check(
