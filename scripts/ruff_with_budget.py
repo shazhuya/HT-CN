@@ -54,24 +54,6 @@ def main() -> int:
         counts = Counter(str(row.get("code") or "UNKNOWN") for row in rows)
         summary = ", ".join(f"{code}={count}" for code, count in counts.most_common(12))
         print(f"[HT-CN QUALITY] top violations: {summary}", file=sys.stderr)
-        markers = (
-            "src/htcn/app/universe_coverage.py",
-            "scripts/m6_universe_coverage.py",
-            "scripts/m5_precompute_operator_snapshot.py",
-            "tests/app/test_universe_coverage.py",
-            "tests/app/test_daily_close_scripts.py",
-        )
-        for row in rows:
-            filename = str(row.get("filename") or "").replace("\\", "/")
-            if any(marker in filename for marker in markers):
-                location = row.get("location") or {}
-                print(
-                    "[HT-CN QUALITY] M6.3 violation: "
-                    f"{filename}:{location.get('row')}:{location.get('column')} "
-                    f"{row.get('code')} {row.get('message')} "
-                    f"fix={json.dumps(row.get('fix'), ensure_ascii=False)}",
-                    file=sys.stderr,
-                )
         print(
             "[HT-CN QUALITY] FATAL: lint debt increased; fix new violations or record an "
             "explicit CR before changing the baseline",
