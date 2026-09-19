@@ -2016,3 +2016,34 @@ Phase 10 的 v2 已经正确解决“最终产品快照 + M4 nested evidence 如
 - Python 784 passed;
 - Web build success;
 - Playwright 24 passed.
+
+
+## D-058 — Portable visual semantics must be deterministic presentation over frozen v4 detail
+
+日期：2026-09-19
+
+决定：
+
+1. Phase17 does not introduce handoff v5; Phase16 v4 already carries sufficient exact detail.
+2. Visual semantics are derived only from transported v4 pattern payload and may not read local market data.
+3. XABCD, ABCD, 0XABC Shark and FIVE_ZERO retain independent node topology.
+4. Only actual transported adjacent nodes may create solid harmonic geometry.
+5. A forming pattern may report missing future labels, but missing nodes must never be rendered as geometry.
+6. Shark remains 0-X-A-B-C and must never receive a synthetic D.
+7. Ratio display is schema-specific and only reports transported metrics.
+8. Source Raw PRZ, HT-CN Ideal Core and Component Envelope must remain visibly and semantically distinct.
+9. Source Raw PRZ component membership is controlled exclusively by transported `source_prz.component_names`; visual proximity cannot infer membership.
+10. FIVE_ZERO 61.8 V3 execution boundary remains execution refinement when not listed as a Source Raw PRZ member; presentation cannot promote it.
+11. Source Clock event lines are derived exclusively from `source_lifecycle`, never retrospective geometry clock.
+12. 38.2 / 61.8 targets and next-key-price lines are dashed guides with `is_pattern_geometry=false`.
+13. Identity conflicts are disclosed but are not overlaid in the primary chart by default; the current Queue primary identity remains the single main geometry.
+14. Layer visibility controls may change presentation only and can never alter Queue, lifecycle, PRZ or identity.
+15. Inspector presentation schema advances to v2 while handoff v4 transport/verifier remain frozen.
+16. Visual semantics cannot create predictive score, historical-outcome ranking, alpha inference or trade instruction.
+
+验证：
+- implementation checkpoint `5f6a44f1c3108bb89ad7133ef1ef471d10efb8ea`;
+- hosted CI #1839 / `35421868066`: success;
+- Python 792 passed;
+- Web build success;
+- Playwright 24 passed.
