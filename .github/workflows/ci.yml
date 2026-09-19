@@ -75,6 +75,31 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/')
         run: python scripts/m5_verify_portable_visual_browser_evidence.py
 
+      - name: Prepare M5 Phase21 browser audit from deterministic fixture
+        if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/')
+        run: python scripts/m5_prepare_main_real_browser_audit.py --fixture
+
+      - name: Run M5 Phase21 dynamic portable delivery browser audit
+        if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/')
+        working-directory: apps/web
+        run: npx playwright test tests/main-real-portable-delivery.spec.ts --reporter=list
+
+      - name: Verify M5 Phase21 browser audit evidence
+        if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/')
+        run: python scripts/m5_verify_main_real_browser_evidence.py
+
+      - name: Fetch full history for Phase21 freeze guards
+        if: startsWith(github.ref, 'refs/heads/m5/main-real-closeout') || startsWith(github.head_ref, 'm5/main-real-closeout')
+        run: git fetch --no-tags --prune --unshallow origin || git fetch --no-tags --prune origin
+
+      - name: Verify M4 methodology freeze for Phase21 closeout
+        if: startsWith(github.ref, 'refs/heads/m5/main-real-closeout') || startsWith(github.head_ref, 'm5/main-real-closeout')
+        run: python scripts/m4_methodology_freeze_guard.py
+
+      - name: Verify M4 Outcome Engine freeze for Phase21 closeout
+        if: startsWith(github.ref, 'refs/heads/m5/main-real-closeout') || startsWith(github.head_ref, 'm5/main-real-closeout')
+        run: python scripts/m4_outcome_engine_freeze_guard.py
+
       - name: Upload browser evidence
         if: always() && (startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/') || startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-') || startsWith(github.ref, 'refs/heads/m2/rsi-') || startsWith(github.head_ref, 'm2/rsi-'))
         uses: actions/upload-artifact@v4

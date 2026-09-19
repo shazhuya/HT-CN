@@ -2149,3 +2149,36 @@ Phase 10 的 v2 已经正确解决“最终产品快照 + M4 nested evidence 如
 - main-only commits=1;
 - methodology drift=0;
 - Outcome Engine drift=0.
+
+
+## D-062 — Real closeout requires current-main structural binding plus browser evidence over the exact latest Phase19 workspace
+
+日期：2026-09-19
+
+决定：
+
+1. Phase20 merge commit `7ed0c56c2fe631f687a16cb8d4922030a21bc80a` makes the preserved M2→M5 lineage part of formal main; future real closeout must bind to the current main HEAD rather than a historical feature-branch checkpoint.
+2. A real Phase21 closeout requires current branch=`main`, a clean tracked worktree, and a Phase9 pipeline preflight whose branch/head/clean state exactly matches that current main checkout.
+3. Phase19 `latest pointer` alone is insufficient because a failed delivery intentionally preserves the previous success. Phase21 must bind both the latest run report and the latest-success pointer.
+4. The current pipeline report SHA, Phase19 pointer, outer portable delivery, trade date, input identity, immutable archive and convenience aliases must form one hash-consistent closure.
+5. A valid explicit Phase16 detail error is a visible degradation, not silent omission. It may yield `ready_with_warnings`; missing/unbound detail remains invalid.
+6. Context refresh, Operator history, review digest and M4 research degradation remain warnings under the existing product/research separation and must never be silently hidden.
+7. The real browser audit consumes the exact Phase19 workspace and Inspector without rerunning harmonic analysis or reading market data.
+8. Browser audit is exhaustive over the delivered `portable_items`: actual SVG nodes/legs/components must equal transported Visual Semantics v2, missing future nodes may not render, Shark must never receive D, and explicit detail errors must be visibly rendered.
+9. A zero-candidate day is a legitimate real closeout state; Phase21 must not manufacture a candidate merely to exercise chart assertions.
+10. Runtime safety requires zero page errors, zero console errors and zero fetch/XHR from the portable workspace.
+11. Browser screenshots are product-QA evidence. Their path/size/SHA and source identity must be independently verified, but they do not become M4 authoritative research evidence.
+12. Final `full_closeout_ready` requires structural and browser gates to bind the same trade date and Phase19 bundle SHA.
+13. Hosted CI may validate the Phase21 acceptance mechanism using the formal deterministic fixture. Hosted CI must not be described as a real current-market/private-M1 closeout.
+14. Only a machine that possesses the current private M1 data may establish the real current-market `full_closeout_ready`, using `运行HT-CN主线真实A股最终验收.bat` after Phase21 is merged to main.
+15. Phase21 does not own or mutate harmonic identity, Source Raw PRZ, source lifecycle, Queue/history/review state or M4 evidence, and introduces no predictive score, win rate, alpha, outcome ranking or trade execution.
+
+Hosted validation:
+- implementation checkpoint `576f8aa4e950b9b416da27c69933dae75004903d`;
+- Actions #1927 / `35428668864`: success;
+- Python 824 passed;
+- existing Playwright 24 passed;
+- Phase18 Playwright/evidence valid;
+- Phase21 dynamic Playwright/evidence valid;
+- M4 methodology drift 0 / 37;
+- Outcome Engine drift 0 / 4.

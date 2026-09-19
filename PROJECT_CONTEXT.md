@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `9082230dea8d509c8596059c541c5236a141971e`
-context_checkpoint_title: `M5 Phase 20 Preserve-Ancestry Integration Readiness green`
+context_checkpoint: `576f8aa4e950b9b416da27c69933dae75004903d`
+context_checkpoint_title: `M5 Phase 21 Main Real-M1 Closeout acceptance mechanism green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -11,9 +11,11 @@ repository: `shazhuya/HT-CN`
 
 ## 当前阶段
 
-正式 `main` 仍以 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration** 为已合并基线；M4 prospective evidence 与 M5 只读产品层继续在独立分支演进。
+正式 `main` 已通过 Phase20 的 preserve-ancestry **merge commit `7ed0c56c2fe631f687a16cb8d4922030a21bc80a`** 整合完整 M2→M3→M4→M5 Phase20 lineage；不再是“main 仅停在 M3、M4/M5 只存在独立分支”的状态。
 
-当前实际开发现场已经完成 **M5 Phase 20 — Preserve-Ancestry Main Integration Readiness v1**：
+当前实际开发现场已经完成 **M5 Phase 21 — Main Real-M1 Closeout / Current Delivery Acceptance v1 的 hosted acceptance mechanism**。Phase21 当前分支为 `m5/main-real-closeout-v1`，PR #33 以正式 `main` 为 base。Hosted CI 已证明验收机制成立；真正的 current-market/private-M1 `full_closeout_ready` 仍必须在 Phase21 合入 main 后由持有真实 M1 的本地机器运行一次。
+
+Phase20 已正式完成并合入 main，关键整合事实：
 
 - integration carrier：`m5/integration-readiness-v1` → `main`（PR #32）
 - Phase 20 validated implementation checkpoint：`9082230dea8d509c8596059c541c5236a141971e`
@@ -50,11 +52,11 @@ M5 Phase 1–20 当前主线：
 17. Portable Visual Semantics v2：schema-specific topology、Raw PRZ / Ideal Core / Envelope 分层、Source Clock 与非几何 guides；
 18. Portable Visual Browser Acceptance：真实 Chromium + 5 场景截图/哈希证据 + 独立 evidence verifier；
 19. Daily Portable Delivery v1：staged v3 → exact-identity v4 → Inspector/HTML → verified outer ZIP → immutable archive → latest pointer last；
-20. Preserve-Ancestry Integration Readiness：full-history Git gate、关键 provenance ancestor 守卫、main-only change 审计、merge-only carrier PR #32。
+20. Preserve-Ancestry Integration Readiness：full-history Git gate、关键 provenance ancestor 守卫、main-only change 审计、merge-only carrier PR #32，并已通过 merge commit `7ed0c56c...` 正式进入 main；\n21. Main Real-M1 Closeout / Current Delivery Acceptance：绑定当前 clean main HEAD、Phase9 pipeline、Phase19 latest run/pointer/archive/aliases，并对 exact latest workspace 做动态 Chromium 全候选审计与截图/hash evidence；hosted CI 只证明验收机制，本地 private-M1 才能产生 real-market `full_closeout_ready`。
 
 M5 仍是**只读实战产品层 + 人工复盘工作流 + transport / portable delivery 层**，不拥有 harmonic identity、Source Raw PRZ、canonical lifecycle 或 action state，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 19 只编排和封装已验证的 Phase9/14/16/17 产物，不改变这些状态的语义。
 
-## 正式 main 基线 — M3
+## 历史 main 基线 — M3（现已包含于 Phase20 后的完整 main lineage）
 
 M3 已正式合入 `main`，冻结以下产品基线：
 
@@ -2510,3 +2512,78 @@ Non-blocking backlog:
 - current jobs succeed, so this is deferred CI dependency maintenance.
 
 Phase20 introduces no harmonic/product/research semantics.
+
+
+## M5 Phase 21 closeout — Main Real-M1 Closeout / Current Delivery Acceptance v1
+
+Current branch:
+`m5/main-real-closeout-v1`
+
+Carrier PR:
+- #33;
+- base = formal `main` after Phase20 merge commit `7ed0c56c2fe631f687a16cb8d4922030a21bc80a`.
+
+Validated implementation checkpoint:
+`576f8aa4e950b9b416da27c69933dae75004903d`
+
+Purpose:
+- close the gap between hosted deterministic product validation and the exact latest Phase19 artifact produced from private real M1 on the current main HEAD;
+- prevent stale successful Phase19 pointers from masking a failed new run;
+- browser-audit the exact delivered HTML against its own transported Visual Semantics v2 rather than a separately hand-written expectation set.
+
+Structural gate:
+- current branch must be `main`;
+- tracked worktree must be clean;
+- Phase9 pipeline preflight branch/head/clean must bind to the current main HEAD;
+- `m5_product_ready=true`;
+- Phase19 latest run must itself be successful, not merely leave an old successful latest pointer behind;
+- current pipeline SHA, latest pointer, portable outer ZIP, input identity and trade date must close over the same delivery;
+- immutable archive manifest/files and Phase19 convenience aliases must hash-match;
+- explicit context/history/digest/M4 research degradation and Phase16 detail errors remain visible warnings instead of silent omissions.
+
+Dynamic browser gate:
+- consumes the exact latest Phase19 workspace + Inspector;
+- parses embedded `#htcn-data`;
+- audits every transported candidate dynamically;
+- SVG nodes and legs must exactly match transported topology;
+- missing future labels may not render;
+- Shark/0XABC never gets D;
+- PRZ component names and semantic roles must match transport;
+- Source Raw PRZ must render when source says available;
+- explicit detail errors must render explicitly;
+- candidate/detail/error/schema counts are exhaustive;
+- page errors=0, console errors=0, XHR/fetch=0;
+- overview + one screenshot per actually present schema;
+- screenshot size/SHA-256 independently verified;
+- zero-candidate days remain valid and do not fabricate candidates.
+
+Outputs:
+- `artifacts/reports/m5-main-real-closeout.json`;
+- `artifacts/reports/playwright/phase21-real-delivery-browser-source.json`;
+- `artifacts/reports/playwright/phase21-real-delivery-browser-evidence.json`;
+- `artifacts/reports/playwright/phase21-real-delivery-browser-verification.json`;
+- `artifacts/reports/m5-main-real-closeout-final.json`.
+
+One-click real local gate after merge:
+`运行HT-CN主线真实A股最终验收.bat`
+
+Hosted validation:
+- Actions #1927 / `35428668864`: success;
+- Python 824 passed;
+- Web build success;
+- existing Playwright 24 passed;
+- Phase18 Playwright 1 passed + evidence valid;
+- Phase21 dynamic Playwright 1 passed + evidence valid;
+- Phase21 deterministic fixture candidate count 5;
+- Phase21 screenshot count 5;
+- M4 methodology changed components 0 / 37;
+- Outcome Engine changed components 0 / 4.
+
+Boundary:
+- Hosted CI validates the **acceptance mechanism** only;
+- it does not claim that a real current-market private-M1 closeout has already run;
+- browser QA remains product QA, not M4 authoritative evidence;
+- no harmonic identity/Source Raw PRZ/source lifecycle/Queue/history/review mutation;
+- no win-rate, alpha, outcome ranking or trade execution.
+
+Phase21 acceptance mechanism is **code-complete / hosted-CI-green**.
