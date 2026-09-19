@@ -136,7 +136,9 @@ def _pipeline_source(
     return path, raw_bytes
 
 
-def _verify_nested_v2_bytes(data: bytes) -> tuple[dict[str, Any], dict[str, Any]]:
+def _verify_nested_v2_bytes(
+    data: bytes,
+) -> tuple[dict[str, Any], dict[str, Any], bytes]:
     with tempfile.TemporaryDirectory(prefix="htcn-handoff-v2-") as temp:
         path = Path(temp) / "htcn-daily-handoff-v2.zip"
         path.write_bytes(data)
@@ -151,11 +153,14 @@ def _verify_nested_v2_bytes(data: bytes) -> tuple[dict[str, Any], dict[str, Any]
             archive.read("daily-handoff-manifest.json"),
             label="nested_v2_manifest",
         )
+        pipeline_raw = archive.read(
+            "pipeline/m5-daily-close-pipeline.json"
+        )
         pipeline = _read_json_bytes(
-            archive.read("pipeline/m5-daily-close-pipeline.json"),
+            pipeline_raw,
             label="nested_v2_pipeline",
         )
-    return manifest, pipeline
+    return manifest, pipeline, pipeline_raw
 
 
 def _history_payload_from_record(record: dict[str, Any]) -> dict[str, Any]:
@@ -581,10 +586,12 @@ def verify_daily_handoff_bundle_v3(
                     errors.append("nested_v2_role_invalid")
                 else:
                     try:
-                        base_manifest, pipeline_payload = (
-                            _verify_nested_v2_bytes(
-                                archive.read(base_members[0])
-                            )
+                        (
+                            base_manifest,
+                            pipeline_payload,
+                            nested_pipeline_raw,
+                        ) = _verify_nested_v2_bytes(
+                            archive.read(base_members[0])
                         )
                     except RuntimeError as exc:
                         errors.append(str(exc))
@@ -604,10 +611,9 @@ def verify_daily_handoff_bundle_v3(
                                 )
                     if int(base_manifest.get("schema_version") or 0) != BASE_V2_SCHEMA_VERSION:
                         errors.append("nested_v2_schema_mismatch")
-                    pipeline_raw = _canonical_json_bytes(pipeline_payload)
                     if str(
                         manifest.get("pipeline_report_sha256") or ""
-                    ) != _sha256_bytes(pipeline_raw):
+                    ) != _sha256_bytes(nested_pipeline_raw):
                         errors.append("pipeline_report_hash_mismatch")
                     for field in (
                         "m5_product_ready",
