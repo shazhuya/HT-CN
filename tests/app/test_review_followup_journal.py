@@ -378,3 +378,50 @@ def test_missing_source_binding_is_rejected(tmp_path: Path) -> None:
             note="",
             client_request_id="req-missing",
         )
+
+
+def test_active_follow_up_remains_visible_without_new_daily_change(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_source(monkeypatch)
+    root = tmp_path / "journal"
+    append_review_event(
+        history_root=tmp_path / "history",
+        journal_root=root,
+        source_observation_id=OBS_A,
+        display_key=KEY,
+        review_state="follow_up",
+        note="持续跟踪，即使明天没有新变化",
+        client_request_id="req-follow-no-delta",
+    )
+
+    no_change_digest = _digest(OBS_B)
+    no_change_digest["status"] = "no_changes"
+    no_change_digest["change_count"] = 0
+    no_change_digest["change_type_counts"] = {}
+    no_change_digest["workflow_bucket_counts"] = {}
+    no_change_digest["workflow_sections"] = []
+
+    monkeypatch.setattr(
+        journal,
+        "build_latest_daily_review_digest",
+        lambda **_kwargs: no_change_digest,
+    )
+    payload = build_latest_review_session(
+        history_root=tmp_path / "history",
+        journal_root=root,
+    )
+
+    assert payload["review_state_counts"] == {
+        "unseen": 0,
+        "reviewed": 0,
+        "follow_up": 0,
+    }
+    assert payload["active_follow_up_count"] == 1
+    assert payload["active_follow_up_in_current_digest_count"] == 0
+    follow = payload["active_follow_ups"][0]
+    assert follow["display_key"] == KEY
+    assert follow["instrument_id"] == "SSE.688256"
+    assert follow["source_trade_date"] == "2026-09-18"
+    assert follow["in_current_digest"] is False
