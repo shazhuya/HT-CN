@@ -88,6 +88,10 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/')
         run: python scripts/m5_verify_main_real_browser_evidence.py
 
+      - name: Fetch full history for Phase21 freeze guards
+        if: startsWith(github.ref, 'refs/heads/m5/main-real-closeout') || startsWith(github.head_ref, 'm5/main-real-closeout')
+        run: git fetch --no-tags --prune --unshallow origin || git fetch --no-tags --prune origin
+
       - name: Verify M4 methodology freeze for Phase21 closeout
         if: startsWith(github.ref, 'refs/heads/m5/main-real-closeout') || startsWith(github.head_ref, 'm5/main-real-closeout')
         run: python scripts/m4_methodology_freeze_guard.py
