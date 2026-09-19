@@ -1,6 +1,6 @@
 # M5 Phase 21 — Main Real-M1 Closeout / Current Delivery Acceptance v1
 
-状态：**implementation in progress**
+状态：**Frozen / hosted acceptance mechanism CI green**
 
 ## 1. 目标
 
@@ -429,32 +429,32 @@ Browser evidence 是产品 QA，不是 M4 authoritative evidence。
 
 ## 17. Acceptance
 
-- [ ] structural verifier current-main binding；
-- [ ] pipeline-head mismatch fail closed；
-- [ ] latest-run anti-stale gate；
-- [ ] pointer/current pipeline hash binding；
-- [ ] portable bundle verification；
-- [ ] immutable archive verification；
-- [ ] latest alias hash verification；
-- [ ] explicit context/M4/detail degradation -> warning；
-- [ ] latest real workspace browser-source binding；
-- [ ] dynamic all-candidate Chromium audit；
-- [ ] missing future nodes never render；
-- [ ] Shark never gets D；
-- [ ] explicit detail errors render；
-- [ ] schema counts exhaustive；
-- [ ] page/console errors=0；
-- [ ] no XHR/fetch；
-- [ ] screenshots hash/size verified；
-- [ ] final structural/browser identity binding；
-- [ ] zero-candidate day supported；
-- [ ] Python full regression green；
-- [ ] Web build green；
-- [ ] existing Playwright green；
-- [ ] Phase18 browser/evidence green；
-- [ ] Phase21 hosted fixture browser/evidence green；
-- [ ] M4 methodology drift=0；
-- [ ] Outcome Engine drift=0。
+- [x] structural verifier current-main binding；
+- [x] pipeline-head mismatch fail closed；
+- [x] latest-run anti-stale gate；
+- [x] pointer/current pipeline hash binding；
+- [x] portable bundle verification；
+- [x] immutable archive verification；
+- [x] latest alias hash verification；
+- [x] explicit context/M4/detail degradation -> warning；
+- [x] latest real workspace browser-source binding；
+- [x] dynamic all-candidate Chromium audit；
+- [x] missing future nodes never render；
+- [x] Shark never gets D；
+- [x] explicit detail errors render；
+- [x] schema counts exhaustive；
+- [x] page/console errors=0；
+- [x] no XHR/fetch；
+- [x] screenshots hash/size verified；
+- [x] final structural/browser identity binding；
+- [x] zero-candidate day supported；
+- [x] Python full regression green；
+- [x] Web build green；
+- [x] existing Playwright green；
+- [x] Phase18 browser/evidence green；
+- [x] Phase21 hosted fixture browser/evidence green；
+- [x] M4 methodology drift=0；
+- [x] Outcome Engine drift=0。
 
 ## 18. Real-market completion boundary
 
@@ -463,3 +463,41 @@ Phase21 code/CI 可以由 GitHub hosted 环境完整验收。
 但 **real current-market `full_closeout_ready`** 只能由持有当前私有 M1 数据的真实机器生成。
 
 该本地动作应只在 Phase21 合入 main 后做一次，不用于替代 assistant/cloud routine testing。
+
+
+## 19. Hosted validation closeout — 2026-09-19
+
+Validated implementation checkpoint:
+
+`576f8aa4e950b9b416da27c69933dae75004903d`
+
+Hosted CI:
+
+- Actions **#1927 / 35428668864**: success;
+- Python **824 passed**, 1163 warnings;
+- Web build: success;
+- existing Playwright: **24 passed**;
+- Phase18 browser acceptance: **1 passed**;
+- Phase18 evidence verifier: valid, 10 semantic checks / 5 screenshots;
+- Phase21 dynamic browser audit: **1 passed**;
+- Phase21 browser evidence verifier: valid;
+- deterministic fixture candidate count: 5;
+- fixture schema counts: XABCD 2 / ABCD 1 / 0XABC 1 / FIVE_ZERO 1;
+- Phase21 screenshot count: 5;
+- M4 methodology freeze: **0 / 37 changed**, error_count=0;
+- M4 Outcome Engine freeze: **0 / 4 changed**, error_count=0;
+- browser evidence artifact upload: success.
+
+Development blockers found and fixed without weakening acceptance:
+
+1. successful integer zero values were initially collapsed by Python `value or -1` patterns in new Phase21 verifiers;
+2. a broad Playwright `Visual Semantics v2` locator matched both subtitle and footer;
+3. methodology ancestry guard initially ran on shallow Git history; Phase21 now fetches full ancestry before both M4 freeze guards.
+
+All original semantic assertions remain.
+
+Important boundary:
+
+**Hosted CI proves that the Phase21 acceptance mechanism is green. It does not prove that the user's current private-M1 real-market closeout has run.**
+
+The latter requires the one-click command on a clean, current `main` checkout after this phase is merged.
