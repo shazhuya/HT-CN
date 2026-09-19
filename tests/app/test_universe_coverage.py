@@ -223,3 +223,49 @@ def test_qfq_not_evaluated_is_explicit_not_zero_ready() -> None:
     assert qfq["status"] == "not_evaluated"
     assert payload["coverage"]["formal_qfq_over_initialized"] is None
     assert payload["status"] == "valid"
+
+
+def test_iterable_inputs_are_materialized_once() -> None:
+    payload = build_universe_coverage(
+        listed_ids=(value for value in ["SSE.600001", "BSE.920001"]),
+        initialized_ids=(value for value in ["SSE.600001", "BSE.920001"]),
+        qfq_ready_ids=(value for value in ["SSE.600001", "BSE.920001"]),
+        operator_ids=(value for value in ["SSE.600001"]),
+        candidate_count=3,
+    )
+
+    assert payload["status"] == "valid"
+    assert payload["layers"]["listed_universe"]["instrument_ids"] == [
+        "SSE.600001"
+    ]
+    assert payload["gaps"]["deferred_bse"]["instrument_ids"] == [
+        "BSE.920001"
+    ]
+    assert payload["downstream_sets"]["candidate_set"] == {
+        "count": 3,
+        "status": "observed",
+        "coverage_denominator": False,
+        "defines_scanner_universe": False,
+        "definition": (
+            "扫描后产生的谐波候选集合；不是 universe，"
+            "不得用于计算 listed/initialized/scanner 覆盖率。"
+        ),
+    }
+    assert (
+        payload["invariants"]["candidate_set_excluded_from_coverage_denominator"]
+        is True
+    )
+
+
+def test_candidate_set_not_observed_is_explicit() -> None:
+    payload = build_universe_coverage(
+        listed_ids=["SSE.600001"],
+        initialized_ids=["SSE.600001"],
+        qfq_evaluated=False,
+        operator_ids=["SSE.600001"],
+    )
+
+    candidate_set = payload["downstream_sets"]["candidate_set"]
+    assert candidate_set["count"] is None
+    assert candidate_set["status"] == "not_observed"
+    assert candidate_set["coverage_denominator"] is False
