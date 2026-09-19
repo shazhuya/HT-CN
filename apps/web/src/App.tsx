@@ -7,6 +7,7 @@ import SectorContext, { IndustryContextPayload } from './SectorContext'
 import ConceptContext, { ConceptContextPayload } from './ConceptContext'
 import ContextIntegrity, { ContextIntegrityPayload } from './ContextIntegrity'
 import DecisionNarrative from './DecisionNarrative'
+import OperatorQueue from './OperatorQueue'
 
 type Health = {
   status: string
@@ -147,7 +148,7 @@ export default function App() {
       .then(setHealth)
       .catch((err: Error) => setError(err.message))
 
-    fetch(`${API}/api/instruments?limit=500`)
+    fetch(`${API}/api/instruments?limit=10000`)
       .then((response) => response.json())
       .then((payload: { items?: InstrumentRow[] }) => setInstruments(payload.items ?? []))
       .catch(() => undefined)
@@ -195,13 +196,29 @@ export default function App() {
     <main className="shell">
       <section className="hero compact">
         <div>
-          <p className="eyebrow">HT-CN LOCAL · M2 HARMONIC CORE</p>
+          <p className="eyebrow">HT-CN LOCAL · M5 OPERATOR WORKBENCH</p>
           <h1>A 股谐波研究与辅助决策系统</h1>
           <p className="subtitle">Carney 几何识别 · QFQ 连续价格 · 多尺度 Pivot · PRZ 审计</p>
         </div>
         <div className="health-pill" data-ok={Boolean(health)}>
           <span className="health-dot" />
           {health ? `API ${health.version}` : 'API 未连接'}
+        </div>
+      </section>
+
+      <OperatorQueue
+        apiBase={API}
+        onSelectInstrument={(instrumentId) => {
+          setSymbol(instrumentId)
+          setAnalysis(null)
+          setSelectedKey(null)
+        }}
+      />
+
+      <section className="single-symbol-heading">
+        <div>
+          <p className="eyebrow">SINGLE INSTRUMENT DEEP DIVE</p>
+          <h2>单标的深度工作台</h2>
         </div>
       </section>
 
@@ -240,8 +257,8 @@ export default function App() {
 
       {!analysis && !error && (
         <section className="placeholder">
-          <h2>M2 谐波工作台</h2>
-          <p>输入已建库的沪深 A 股代码，运行本地多尺度谐波识别。识别核心与 A 股交易判断分离。</p>
+          <h2>选择观察队列中的标的，或直接输入代码</h2>
+          <p>Operator Queue 负责告诉你“今天先看什么”；这里继续做单标的几何、Source lifecycle、PRZ 与上下文深挖。</p>
         </section>
       )}
 

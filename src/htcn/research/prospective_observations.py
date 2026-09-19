@@ -1,0 +1,580 @@
+from __future__ import annotations
+
+from collections import Counter
+from dataclasses import asdict, dataclass
+from datetime import date
+from typing import Any, Iterable
+
+from .lifecycle_transitions import normalize_journal_rows
+from .snapshot_manifest import resolve_capture_timeline
+
+
+@dataclass(frozen=True, slots=True)
+class ProspectiveObservation:
+    candidate_key: str
+    instrument_id: str
+    outcome_enrollment_trade_date: str
+    observation_trade_date: str
+    captured_snapshot_index: int
+    scanner_presence: str
+    consecutive_absent_snapshots: int
+    pattern_state: str | None
+    source_lifecycle_state: str | None
+    action_state: str | None
+    execution_context_gate: str | None
+    context_integrity_summary: str | None
+    price_mode: str | None
+    price_basis_id: str | None
+    price_basis_matches_enrollment: bool | None
+    next_key_price: float | None
+    next_key_price_role: str | None
+    source_terminal_trade_date: str | None
+    underlying_last_trade_date: str | None
+    market_observation_status: str | None
+    daily_event_source: str | None
+    daily_event_reason: str | None
+    as_of_open: float | None
+    as_of_high: float | None
+    as_of_low: float | None
+    as_of_close: float | None
+    as_of_volume: float | None
+    evidence_only: bool = True
+    is_trade_instruction: bool = False
+    alpha_inference_allowed: bool = False
+
+    def as_payload(self) -> dict[str, object]:
+        return asdict(self)
+
+
+def _float_or_none(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def build_prospective_observation_report(
+    rows: Iterable[dict[str, Any]],
+    *,
+    manifest_rows: Iterable[dict[str, Any]] | None = None,
+    followup_rows: Iterable[dict[str, Any]] | None = None,
+    legacy_baseline_trade_date: str | None = None,
+) -> dict[str, Any]:
+    materialized = [dict(row) for row in rows]
+    manifest_materialized = (
+        None
+        if manifest_rows is None
+        else [dict(row) for row in manifest_rows]
+    )
+    followup_materialized = (
+        []
+        if followup_rows is None
+        else [dict(row) for row in followup_rows]
+    )
+    timeline = resolve_capture_timeline(
+        materialized,
+        manifest_materialized,
+        legacy_baseline_trade_date=legacy_baseline_trade_date,
+    )
+    dates = list(timeline.dates)
+    baseline = dates[0] if dates else None
+    normalized = normalize_journal_rows(
+        materialized,
+        baseline_trade_date=baseline,
+    )
+    if not normalized and not dates:
+        if followup_materialized:
+            raise ValueError(
+                "cohort follow-up evidence cannot exist without captured timeline"
+            )
+        return {
+            "schema_version": 4,
+            "status": "empty",
+            "captured_dates": [],
+            "prospective_candidate_count": 0,
+            "observation_count": 0,
+            "observations": [],
+            "candidate_summaries": [],
+            "interpretation": {
+                "capture_timeline_source": timeline.source,
+                "legacy_pre_manifest_dates": list(timeline.legacy_pre_manifest_dates),
+                "captured_snapshot_index_is_trade_session_index": False,
+                "scanner_absence_is_invalidation": False,
+                "scanner_absent_market_followup_supported": True,
+                "followup_changes_scanner_presence": False,
+                "return_metrics_computed": False,
+                "alpha_inference_allowed": False,
+            },
+        }
+
+    by_date: dict[str, dict[str, dict[str, Any]]] = {}
+    for as_of in dates:
+        by_date[as_of] = {
+            str(row["candidate_key"]): row
+            for row in normalized
+            if str(row["as_of_trade_date"]) == as_of
+        }
+
+    followup_by_date: dict[str, dict[str, dict[str, Any]]] = {
+        as_of: {} for as_of in dates
+    }
+    for row in followup_materialized:
+        as_of = str(row.get("as_of_trade_date") or "")
+        key = str(row.get("candidate_key") or "")
+        if not as_of or not key:
+            raise ValueError("cohort follow-up row missing as_of_trade_date/candidate_key")
+        if as_of not in followup_by_date:
+            raise ValueError(
+                f"cohort follow-up date {as_of} is not in captured timeline"
+            )
+        if key in followup_by_date[as_of]:
+            raise ValueError(
+                f"duplicate cohort follow-up candidate {key} on {as_of}"
+            )
+        if str(row.get("scanner_presence") or "") != "absent":
+            raise ValueError(
+                f"cohort follow-up candidate {key} must be scanner absent"
+            )
+        followup_by_date[as_of][key] = row
+
+    enrollment: dict[str, str] = {}
+    enrollment_price_mode: dict[str, str] = {}
+    enrollment_price_basis: dict[str, str] = {}
+    enrollment_seed: dict[str, dict[str, Any]] = {}
+    instrument_by_key: dict[str, str] = {}
+    for row in normalized:
+        key = str(row["candidate_key"])
+        instrument_by_key.setdefault(key, str(row.get("instrument_id") or ""))
+        enrolled = row.get("outcome_enrollment_trade_date")
+        if enrolled:
+            value = str(enrolled)
+            previous = enrollment.get(key)
+            if previous is not None and previous != value:
+                raise ValueError(
+                    f"candidate {key} outcome_enrollment_trade_date drift: "
+                    f"{previous} != {value}"
+                )
+            enrollment[key] = value
+            if str(row.get("as_of_trade_date") or "") == value:
+                mode = str(row.get("price_mode") or "")
+                basis = str(row.get("price_basis_id") or "")
+                if not mode or not basis:
+                    raise ValueError(
+                        f"candidate {key} enrollment is missing price basis provenance"
+                    )
+                prior_mode = enrollment_price_mode.get(key)
+                prior_basis = enrollment_price_basis.get(key)
+                if prior_mode is not None and prior_mode != mode:
+                    raise ValueError(
+                        f"candidate {key} enrollment price_mode drift: "
+                        f"{prior_mode} != {mode}"
+                    )
+                if prior_basis is not None and prior_basis != basis:
+                    raise ValueError(
+                        f"candidate {key} enrollment price_basis_id drift: "
+                        f"{prior_basis} != {basis}"
+                    )
+                enrollment_price_mode[key] = mode
+                enrollment_price_basis[key] = basis
+                seed = {
+                    "pattern_id": str(row.get("pattern_id") or ""),
+                    "schema": str(row.get("schema") or ""),
+                    "direction": str(row.get("direction") or ""),
+                    "scale": int(row.get("scale") or 0),
+                    "source_lifecycle_state": str(
+                        row.get("source_lifecycle_state") or ""
+                    ),
+                    "source_prz_low": _float_or_none(row.get("source_prz_low")),
+                    "source_prz_high": _float_or_none(row.get("source_prz_high")),
+                    "source_signal_trade_date": str(
+                        row.get("source_signal_trade_date") or ""
+                    ),
+                    "source_signal_clock_basis": str(
+                        row.get("source_signal_clock_basis") or ""
+                    ),
+                    "source_reaction_anchor_label": str(
+                        row.get("source_reaction_anchor_label") or ""
+                    ),
+                    "source_reaction_anchor_price": _float_or_none(
+                        row.get("source_reaction_anchor_price")
+                    ),
+                }
+                if (
+                    not seed["pattern_id"]
+                    or not seed["schema"]
+                    or not seed["direction"]
+                    or seed["scale"] <= 0
+                    or not seed["source_lifecycle_state"]
+                    or seed["source_prz_low"] is None
+                    or seed["source_prz_high"] is None
+                    or not seed["source_signal_trade_date"]
+                    or not seed["source_signal_clock_basis"]
+                    or not seed["source_reaction_anchor_label"]
+                    or seed["source_reaction_anchor_price"] is None
+                ):
+                    raise ValueError(
+                        f"candidate {key} enrollment is missing source-clock seed"
+                    )
+                enrollment_seed[key] = seed
+
+    instrument_by_key_from_followup: dict[str, str] = {}
+    for as_of, items in followup_by_date.items():
+        for key, row in items.items():
+            enrolled = enrollment.get(key)
+            if enrolled is None:
+                raise ValueError(
+                    f"cohort follow-up candidate {key} is not outcome-enrolled"
+                )
+            row_enrollment = str(
+                row.get("outcome_enrollment_trade_date") or ""
+            )
+            if row_enrollment != enrolled:
+                raise ValueError(
+                    f"cohort follow-up enrollment drift for {key}: "
+                    f"{row_enrollment} != {enrolled}"
+                )
+            if as_of <= enrolled:
+                raise ValueError(
+                    f"cohort follow-up date must be after enrollment for {key}"
+                )
+            instrument = str(row.get("instrument_id") or "")
+            if not instrument:
+                raise ValueError(
+                    f"cohort follow-up candidate {key} missing instrument_id"
+                )
+            expected_instrument = instrument_by_key.get(key)
+            if expected_instrument and instrument != expected_instrument:
+                raise ValueError(
+                    f"cohort follow-up instrument drift for {key}"
+                )
+            instrument_by_key_from_followup[key] = instrument
+
+    observations: list[ProspectiveObservation] = []
+    candidate_summaries: list[dict[str, Any]] = []
+
+    for key in sorted(enrollment):
+        enrolled = enrollment[key]
+        if enrolled not in dates:
+            raise ValueError(
+                f"candidate {key} enrollment date {enrolled} is not a captured snapshot date"
+            )
+        observation_dates = [value for value in dates if value >= enrolled]
+        absent_streak = 0
+        ever_absent = False
+        first_absent: str | None = None
+        first_reappeared: str | None = None
+        first_terminal: str | None = None
+        first_state_date: dict[str, str] = {}
+        present_count = 0
+        absent_count = 0
+        suspended_count = 0
+        absent_market_followup_count = 0
+        basis_drift_count = 0
+        first_basis_drift_date: str | None = None
+        enrolled_basis = enrollment_price_basis.get(key)
+        enrolled_mode = enrollment_price_mode.get(key)
+        frozen_seed = enrollment_seed.get(key)
+        if not enrolled_basis or not enrolled_mode:
+            raise ValueError(
+                f"candidate {key} missing frozen enrollment price basis"
+            )
+        if frozen_seed is None:
+            raise ValueError(
+                f"candidate {key} missing frozen source-clock seed"
+            )
+
+        for captured_index, as_of in enumerate(observation_dates):
+            row = by_date[as_of].get(key)
+            followup = followup_by_date[as_of].get(key)
+            if row is not None and followup is not None:
+                raise ValueError(
+                    f"candidate {key} cannot be scanner-present and follow-up-absent "
+                    f"on {as_of}"
+                )
+            if row is None:
+                absent_streak += 1
+                absent_count += 1
+                ever_absent = True
+                if first_absent is None:
+                    first_absent = as_of
+                if followup is not None:
+                    followup_mode = str(followup.get("price_mode") or "")
+                    followup_basis = str(followup.get("price_basis_id") or "")
+                    if not followup_mode or not followup_basis:
+                        raise ValueError(
+                            f"candidate {key} follow-up on {as_of} missing price basis"
+                        )
+                    absent_market_followup_count += 1
+                    market_status = str(
+                        followup.get("market_observation_status") or "traded"
+                    )
+                    if market_status == "confirmed_full_day_suspended":
+                        suspended_count += 1
+                    observation = ProspectiveObservation(
+                        candidate_key=key,
+                        instrument_id=instrument_by_key[key],
+                        outcome_enrollment_trade_date=enrolled,
+                        observation_trade_date=as_of,
+                        captured_snapshot_index=captured_index,
+                        scanner_presence="absent",
+                        consecutive_absent_snapshots=absent_streak,
+                        pattern_state=None,
+                        source_lifecycle_state=None,
+                        action_state=None,
+                        execution_context_gate=(
+                            None
+                            if followup.get("execution_context_gate") is None
+                            else str(followup.get("execution_context_gate"))
+                        ),
+                        context_integrity_summary=None,
+                        price_mode=(
+                            None
+                            if followup.get("price_mode") is None
+                            else str(followup.get("price_mode"))
+                        ),
+                        price_basis_id=(
+                            None
+                            if followup.get("price_basis_id") is None
+                            else str(followup.get("price_basis_id"))
+                        ),
+                        price_basis_matches_enrollment=(
+                            None
+                            if followup.get("price_basis_id") is None
+                            else str(followup.get("price_basis_id")) == enrolled_basis
+                        ),
+                        next_key_price=None,
+                        next_key_price_role=None,
+                        source_terminal_trade_date=None,
+                        underlying_last_trade_date=(
+                            None
+                            if followup.get("underlying_last_trade_date") is None
+                            else str(followup.get("underlying_last_trade_date"))
+                        ),
+                        market_observation_status=market_status,
+                        daily_event_source=(
+                            None
+                            if followup.get("daily_event_source") is None
+                            else str(followup.get("daily_event_source"))
+                        ),
+                        daily_event_reason=(
+                            None
+                            if followup.get("daily_event_reason") is None
+                            else str(followup.get("daily_event_reason"))
+                        ),
+                        as_of_open=_float_or_none(followup.get("as_of_open")),
+                        as_of_high=_float_or_none(followup.get("as_of_high")),
+                        as_of_low=_float_or_none(followup.get("as_of_low")),
+                        as_of_close=_float_or_none(followup.get("as_of_close")),
+                        as_of_volume=_float_or_none(followup.get("as_of_volume")),
+                    )
+                else:
+                    observation = ProspectiveObservation(
+                        candidate_key=key,
+                        instrument_id=instrument_by_key[key],
+                        outcome_enrollment_trade_date=enrolled,
+                        observation_trade_date=as_of,
+                        captured_snapshot_index=captured_index,
+                        scanner_presence="absent",
+                        consecutive_absent_snapshots=absent_streak,
+                        pattern_state=None,
+                        source_lifecycle_state=None,
+                        action_state=None,
+                        execution_context_gate=None,
+                        context_integrity_summary=None,
+                        price_mode=None,
+                        price_basis_id=None,
+                        price_basis_matches_enrollment=None,
+                        next_key_price=None,
+                        next_key_price_role=None,
+                        source_terminal_trade_date=None,
+                        underlying_last_trade_date=None,
+                        market_observation_status=None,
+                        daily_event_source=None,
+                        daily_event_reason=None,
+                        as_of_open=None,
+                        as_of_high=None,
+                        as_of_low=None,
+                        as_of_close=None,
+                        as_of_volume=None,
+                    )
+                if (
+                    observation.price_basis_matches_enrollment is False
+                ):
+                    basis_drift_count += 1
+                    if first_basis_drift_date is None:
+                        first_basis_drift_date = as_of
+                observations.append(observation)
+                continue
+
+            current_mode = str(row.get("price_mode") or "")
+            current_basis = str(row.get("price_basis_id") or "")
+            if not current_mode or not current_basis:
+                raise ValueError(
+                    f"candidate {key} observation on {as_of} missing price basis"
+                )
+
+            if ever_absent and absent_streak > 0 and first_reappeared is None:
+                first_reappeared = as_of
+            absent_streak = 0
+            present_count += 1
+            market_status = str(
+                row.get("market_observation_status") or "traded"
+            )
+            if market_status == "confirmed_full_day_suspended":
+                suspended_count += 1
+
+            terminal_raw = row.get("source_terminal_trade_date")
+            terminal = None if terminal_raw is None else str(terminal_raw)
+            if terminal is not None:
+                if date.fromisoformat(terminal) < date.fromisoformat(enrolled):
+                    raise ValueError(
+                        f"candidate {key} Source Terminal {terminal} predates outcome enrollment {enrolled}"
+                    )
+                if first_terminal is None:
+                    first_terminal = terminal
+
+            lifecycle = str(row.get("source_lifecycle_state") or "")
+            if lifecycle:
+                first_state_date.setdefault(lifecycle, as_of)
+
+            present_observation = ProspectiveObservation(
+                    candidate_key=key,
+                    instrument_id=instrument_by_key[key],
+                    outcome_enrollment_trade_date=enrolled,
+                    observation_trade_date=as_of,
+                    captured_snapshot_index=captured_index,
+                    scanner_presence="present",
+                    consecutive_absent_snapshots=0,
+                    pattern_state=(
+                        None if row.get("pattern_state") is None else str(row.get("pattern_state"))
+                    ),
+                    source_lifecycle_state=lifecycle or None,
+                    action_state=(
+                        None if row.get("action_state") is None else str(row.get("action_state"))
+                    ),
+                    execution_context_gate=(
+                        None
+                        if row.get("execution_context_gate") is None
+                        else str(row.get("execution_context_gate"))
+                    ),
+                    context_integrity_summary=(
+                        None
+                        if row.get("context_integrity_summary") is None
+                        else str(row.get("context_integrity_summary"))
+                    ),
+                    price_mode=(
+                        None
+                        if row.get("price_mode") is None
+                        else str(row.get("price_mode"))
+                    ),
+                    price_basis_id=(
+                        None
+                        if row.get("price_basis_id") is None
+                        else str(row.get("price_basis_id"))
+                    ),
+                    price_basis_matches_enrollment=(
+                        None
+                        if row.get("price_basis_id") is None
+                        else str(row.get("price_basis_id")) == enrolled_basis
+                    ),
+                    next_key_price=_float_or_none(row.get("next_key_price")),
+                    next_key_price_role=(
+                        None
+                        if row.get("next_key_price_role") is None
+                        else str(row.get("next_key_price_role"))
+                    ),
+                    source_terminal_trade_date=terminal,
+                    underlying_last_trade_date=(
+                        None
+                        if row.get("underlying_last_trade_date") is None
+                        else str(row.get("underlying_last_trade_date"))
+                    ),
+                    market_observation_status=market_status,
+                    daily_event_source=(
+                        None
+                        if row.get("daily_event_source") is None
+                        else str(row.get("daily_event_source"))
+                    ),
+                    daily_event_reason=(
+                        None
+                        if row.get("daily_event_reason") is None
+                        else str(row.get("daily_event_reason"))
+                    ),
+                    as_of_open=_float_or_none(row.get("as_of_open")),
+                    as_of_high=_float_or_none(row.get("as_of_high")),
+                    as_of_low=_float_or_none(row.get("as_of_low")),
+                    as_of_close=_float_or_none(row.get("as_of_close")),
+                    as_of_volume=_float_or_none(row.get("as_of_volume")),
+                )
+            if present_observation.price_basis_matches_enrollment is False:
+                basis_drift_count += 1
+                if first_basis_drift_date is None:
+                    first_basis_drift_date = as_of
+            observations.append(present_observation)
+
+        candidate_summaries.append({
+            "candidate_key": key,
+            "instrument_id": instrument_by_key[key],
+            "outcome_enrollment_trade_date": enrolled,
+            "enrollment_price_mode": enrolled_mode,
+            "enrollment_price_basis_id": enrolled_basis,
+            "enrollment_source_clock_seed": dict(frozen_seed),
+            "price_basis_drift_snapshot_count": basis_drift_count,
+            "first_price_basis_drift_date": first_basis_drift_date,
+            "price_basis_stable_across_observations": basis_drift_count == 0,
+            "captured_snapshot_count": len(observation_dates),
+            "present_snapshot_count": present_count,
+            "absent_snapshot_count": absent_count,
+            "scanner_absent_market_followup_snapshot_count": (
+                absent_market_followup_count
+            ),
+            "confirmed_full_day_suspended_snapshot_count": suspended_count,
+            "first_scanner_absent_date": first_absent,
+            "first_scanner_reappeared_date": first_reappeared,
+            "first_source_terminal_trade_date": first_terminal,
+            "first_lifecycle_state_observed": dict(sorted(first_state_date.items())),
+        })
+
+    presence_counts = Counter(item.scanner_presence for item in observations)
+    lifecycle_counts = Counter(
+        item.source_lifecycle_state
+        for item in observations
+        if item.source_lifecycle_state is not None
+    )
+    market_observation_counts = Counter(
+        item.market_observation_status
+        for item in observations
+        if item.market_observation_status is not None
+    )
+
+    return {
+        "schema_version": 4,
+        "status": "no_outcome_cohort" if not enrollment else "observations_available",
+        "captured_dates": dates,
+        "prospective_candidate_count": len(enrollment),
+        "observation_count": len(observations),
+        "scanner_presence_counts": dict(sorted(presence_counts.items())),
+        "lifecycle_observation_counts": dict(sorted(lifecycle_counts.items())),
+        "market_observation_counts": dict(
+            sorted(market_observation_counts.items())
+        ),
+        "candidate_summaries": candidate_summaries,
+        "observations": [item.as_payload() for item in observations],
+        "interpretation": {
+            "capture_timeline_source": timeline.source,
+            "legacy_pre_manifest_dates": list(timeline.legacy_pre_manifest_dates),
+            "captured_snapshot_index_is_trade_session_index": False,
+            "scanner_absence_is_invalidation": False,
+            "scanner_absent_market_followup_supported": True,
+            "followup_changes_scanner_presence": False,
+            "price_basis_drift_is_auto_rebased": False,
+            "price_basis_drift_requires_future_outcome_protocol": True,
+            "confirmed_suspension_is_traded_observation": False,
+            "return_metrics_computed": False,
+            "profit_threshold_defined": False,
+            "alpha_inference_allowed": False,
+            "is_trade_instruction": False,
+        },
+    }

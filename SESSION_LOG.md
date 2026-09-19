@@ -368,3 +368,1377 @@ The three failures were stale browser assertions:
 
 No Source lifecycle, harmonic identity, Source Raw PRZ, Shark management or execution-context production logic was changed.
 Implementation fix commit: `d28215bbae682169a8ac47ddf48399bfdf50d05a`.
+
+
+## 2026-09-18 — M3 formal merge / M4 Phase 1 start
+
+### M3 正式合并
+- PR #12 已从 Draft 切到 Ready 并正式 merge；
+- merge commit：`edec5e21fb9e873daf8fb77fceaa0d89dbbd5b25`；
+- merge 前 branch vs main：ahead 85 / behind 0；
+- unresolved review threads：0；
+- 本机 current-head readiness：READY with known warnings，hard blocker=0；
+- GitHub-hosted Actions 仍存在 steps/logs 为空的 runner-allocation 异常，不作为实际测试执行。
+
+### M4 新分支
+- branch：`m4/real-a-share-validation-workflow`；
+- base：M3 merge commit；
+- 目标：先做真实 A 股 prospective lifecycle evidence，不直接做新 pattern 或黑箱评分。
+
+### M4 Phase 1 第一批
+- `d737ee73bccb5086dfbbcaa08d42e9b490dca376`：append-only lifecycle journal contract；
+- `4922cca8c9dea41551d3cbeeb8e722eafbf2589f`：全市场一键 prospective snapshot；
+- 稳定 key 用 anchor trade_date，防 rolling-window index 漂移；
+- journal 默认禁止 backfill；
+- 5-0 继续排除；
+- snapshot 只有在全部 selected initialized SSE/SZSE 分析成功且日期一致时才追加；
+- `alpha_inference_allowed=false`。
+
+### 下一步唯一主任务
+在用户真实 M1 数据上生成 M4 T0 prospective snapshot。
+
+
+## M4 Phase 1.4 / 2026-09-18
+
+User corrected workflow: assistant must not use the user's PC as a routine test runner. D-023 is frozen.
+
+Assistant-side review of uploaded T0:
+- snapshot status pass;
+- 55/55 instruments successful;
+- 87 unique candidates;
+- single HEAD / single as-of date;
+- no 5-0;
+- no alpha inference / trade instruction;
+- 11 rows already had a Source Terminal date before T0;
+- therefore T0 is baseline inventory, not from-formation prospective evidence.
+
+Implementation:
+- `43822e3e441850d0b0e79320cec14542b5187377`: baseline_existing vs prospective_new enrollment;
+- `506f38be16199346eced18f94702c905067b3b95`: factual transition engine;
+- `3b2975a86aede8ae1597de8c2dcc5e2466b2d154`: scanner reappearance identity preservation;
+- `3c1fc9f2fc25b44b32f87a3ce6c92b3a90405f35`: derived transition report;
+- `d84de859af666b25e2c623ebfc736805d31e89b0`: prospective outcome eligibility isolated from generic validation;
+- `4096e19ceb586df0a48d144cb09b07dc7b85ca1c`: transition report exposes outcome-eligible row count.
+
+Current T0 normalization:
+- baseline_existing = 87;
+- prospective_outcome_eligible = 0;
+- no transition/outcome claim is permitted yet.
+
+
+## M4 Phase 1.5-1.6 / 2026-09-18
+
+Assistant-side T0 quality audit and outcome-cohort hardening:
+
+- `d014c4f424390edd21a219bfc54061aa4068260e`: strict prospective outcome gate at journal append;
+- `c645d0405e643e024ca7504a162037292d8b712a`: transition normalization uses same outcome gate;
+- `d672de8288a972046cb3d1ca8a4cb0d41d9009d8`: regression coverage for Alternate Bat / pre-terminal enrollment / delayed resolution;
+- `ed1552abbe5694fe8c786460372c972c2a754e2d`: T0 baseline audit engine;
+- `7518749476b97bc0315b0f15510a6d4594a006a5`: derived JSON/Markdown T0 audit report;
+- `f0bc64b8b8aabaa4981c565207d7afd1b2854ce4`: strict snapshot-journal cross-file/maturity gate;
+- `880f81b700b54f15ccc42344f30f6f3eadcfe9b2`: audit regression fixtures aligned;
+- `704bf2f6032608ab2e710fe4805ba2127c69f3ac`: linear-time outcome-enrollment normalization.
+
+Actual uploaded T0 audit:
+- 87 rows / 87 unique keys;
+- 55/55 instrument capture pass;
+- 0 structural blocker;
+- 6 explicit warnings;
+- transition_ready=true;
+- prospective_outcome_ready=false;
+- AB=CD concentration 56/87 = 64.4%;
+- 11 rows already post-terminal at T0; oldest terminal age 583 days;
+- 13 source-observability-gap rows;
+- all action/next-key/PRZ/terminal/source-fidelity contracts internally consistent.
+
+D-024 freezes strict outcome enrollment: prospective_new alone is insufficient.
+
+
+## M4 Phase 2.1-2.4 / 2026-09-18
+
+Assistant-only implementation; no user-local QA.
+
+- `2ce430a9e512c8174b63a2ed5635281f061aa9eb`: future journal rows persist raw OHLC/volume;
+- `3dd8c1b4679d9422ca2ba4522097438b2881c8be`: raw market-fact regression;
+- `f3d4e02e8dfff9387f8c83666413aad9f1e73cf9`: public normalized journal view;
+- `62ea3b16c7fd1fa735c8f78bbd2c99a5136e7567`: prospective observation panel;
+- `0c04d9821917a51421bc10579b9223e224dafff0`: one code head per capture date;
+- `25f09983747a1163f20e9ccfe6bc73599ce1dadb`: append-only snapshot manifest;
+- `b24db0496a1e36db0331857284dbfe5e1c209909`: capture pipeline writes manifest;
+- `c5de30af208f4a7099ba8d017c2ac0f4760ffc9c`: authoritative capture timeline resolver;
+- `2d58e8bdead6e2dcc505f14e105c93d7639e5c00`: transition engine capture-timeline aware;
+- `edb74d6c9ba5db0ef8f4d43373c4961a14acd201`: observations manifest-aware;
+- `7e56c657d1fcb758fae8ceace8e40b2996d8b8b7`: zero-candidate gap / reappearance regressions;
+- `5414d499d2b30848d40d7fe9e141e11b7a1ec908`: transition report manifest-authoritative;
+- `b94ac7044d5a07fb39c2781961bdaacae9d212d6`: prospective observation report;
+- `0682130deed92a3f35d2d74b1ec0f4214420c30f`: zero-candidate baseline enrollment fix;
+- `ab5f1d9b94d1be7a692d064c76175bba64cb4aad`: manifest/journal candidate-count cross-check.
+
+Synthetic assistant-side scenario verified:
+legacy T0 -> T1 prospective-new -> T2 full capture with zero candidates -> T3 scanner reappearance / Type-I observation, with cohort identity preserved and no invalidation inference.
+
+
+## M4 Phase 2.5 / atomic capture transactions
+
+Problem found during self-review:
+journal append followed by manifest append is not a true cross-file atomic commit. Process interruption could leave a half-complete compatibility snapshot.
+
+Implemented:
+- `2e2750c82ef9d3b0c265de445fadd0c1bf13d5d2`: immutable atomic committed-capture transaction store;
+- `4710545e7bb28405ba62565fc4423f6d4c713b46`: capture pipeline transaction-first;
+- `dfd8560135c171ad901234d122d90d76737e660a`: reports consume committed transactions;
+- `4f1bfa74feaa401447a4e95fe42dcc090bd88b4f`: freeze legacy baseline / capture-time-independent idempotency;
+- `658e1b69133ead315e98fa66ea03eb424a39742b`: reports use frozen baseline + transactions, not live mirrors;
+- `5b3395db3a3b0a4ebcc06c2bf20c39b864c27446`: transaction integrity/tamper hardening;
+- `50e832f1a7f33fc3d57e74db4cd344f19bfc0d7a`: fix baseline JSON being scanned as transaction;
+- `d1fee7d40efc2a7db32f6077585fd533c61f6d71`: monotonic transaction chronology after frozen baseline;
+- `b803a2f723b2d6d3b97bd2f60fdc67cb44a1a1f7`: preserve legacy cutoff even when baseline candidate count is zero.
+
+Assistant-side Python execution:
+- transaction core syntax/execution: PASS;
+- temp partial ignored: PASS;
+- same facts/different capture time: PASS;
+- frozen baseline idempotent/immutable: PASS;
+- frozen T0 overwrite blocked: PASS;
+- T1/T2 forward commits: PASS;
+- historical backfill after newer transaction: PASS.
+
+Hosted CI:
+- run #914 completed failure with deterministic-tests steps=null/logs=null;
+- same known runner-allocation failure, not code execution.
+
+
+## M4 Phase 2.6 / mirror recovery and T0 closeout
+
+Implementation:
+- `5e8a2c8febc8b6e7caaf538906058cd5d0bb3a25`: mirror integrity / repair engine；
+- `19f2b5b1e692627dc23d36a22d197d28171aeb59`: transaction IDs stamped into compatibility mirrors + auto repair；
+- `d1fee7d40efc2a7db32f6077585fd533c61f6d71`: monotonic transaction chronology after frozen baseline；
+- `b803a2f723b2d6d3b97bd2f60fdc67cb44a1a1f7`: zero-candidate legacy cutoff preservation。
+
+Assistant-side executable verification:
+- transaction core: PASS；
+- same facts/different capture time idempotency: PASS；
+- frozen baseline immutable: PASS；
+- baseline-day overwrite blocked: PASS；
+- T1/T2 forward chronology: PASS；
+- historical backfill blocked: PASS；
+- mirror corrupt/missing recovery: PASS；
+- authoritative evidence unchanged by repair: PASS。
+
+Actual uploaded T0 recomputed:
+- 87 rows / 87 unique candidates；
+- baseline audit 0 blockers / 6 warnings；
+- transition baseline_only；
+- 87 baseline_existing；
+- 0 prospective_new；
+- 0 prospective outcome eligible；
+- prospective observation no_outcome_cohort / 0 rows。
+
+Testing limitation:
+assistant container lacks private-repo credentials; full repo pytest was not executed locally and is not claimed. GitHub hosted run #914 remains steps=null/logs=null runner-allocation anomaly.
+
+
+## M4 Phase 2.7 / closed-day and suspension correctness
+
+Static audit found and fixed multiple prospective-integrity edge cases:
+
+- provider-confirmed closed day is now required before authoritative capture;
+- local trade calendar must match provider target;
+- partial-universe max_symbols runs are diagnostic-only;
+- evidence-health returns structured blockers instead of crashing on corrupted authoritative evidence;
+- empty frozen baseline marker is distinct from missing baseline;
+- immutable transaction and legacy baseline validation are shared/fail-closed;
+- D-027 adds confirmed full-day suspension carry-forward without fake bars.
+
+Suspension semantics:
+- only positive `trading_status=suspended` evidence qualifies;
+- `intraday_suspended` does not;
+- current-day bar + suspended event conflicts and fails;
+- confirmed suspended stale analysis is carried to capture date with blocked execution and null OHLC;
+- candidate remains present;
+- first-seen suspended candidate cannot outcome-enroll;
+- already enrolled candidate remains in cohort.
+
+Key commits in this audit chain:
+- `c78c1e8cf8c315ad4fbc69be21cf740db95b28d1`: provider-backed latest closed day;
+- `5f9cbd35d8e96cb6785af5ac079a73cf0ea7fba2`: structured evidence-health blockers;
+- `ce68a0a79c5da24d2ab87693f2e32ce6a8f78164`: shared immutable-evidence validation;
+- `2a58676d8ac15df041655b8a41b5ddf42749e411`: suspension-aware journal schema;
+- `b4349d9853ae25f5509c7149803c9168538e25ef`: suspension-aware capture pipeline;
+- `07400d89d93a2c5385f6e88bddbc40d19cf9d152`: suspension facts in prospective observations;
+- `690cf559446bc39dd5d0151e25da524d586483bf`: observation/report suspension regressions.
+
+
+## M4 Phase 2.8 / methodology identity
+
+Assistant-side source audit found that the first Phase 2.8 commit created a deterministic
+methodology fingerprint module but did not yet bind that identity into authoritative evidence.
+
+Closed in this batch:
+
+- expanded methodology fingerprint coverage to include advanced RSI BAMM / indicator /
+  lifecycle / 5-0 source files that can affect harmonic interpretation;
+- capture transaction schema advanced to v2;
+- new committed captures require `methodology_contract_version` and
+  `methodology_fingerprint`;
+- methodology identity is included in deterministic transaction-id material;
+- active committed chain rejects methodology drift before append;
+- schema-v1 pre-fingerprint captures remain readable only for explicit migration audit;
+- evidence-health compares the current methodology fingerprint with the authoritative chain
+  and blocks mismatch;
+- snapshot compatibility manifest exposes methodology identity;
+- mirror integrity now detects methodology-field drift;
+- transition and prospective-observation reports expose the authoritative fingerprint;
+- D-028 and `specs/m4-phase-2-8-methodology-identity.md` freeze the contract.
+
+Additional correction from this audit:
+the initial fingerprint list omitted `rsi_bamm.py`, `rsi_bamm_lifecycle.py`,
+`five_zero_source.py`, `indicators.py` and `lifecycle.py`; they are now included and
+protected by a regression test.
+
+GitHub Actions remains infrastructure-limited:
+latest push / pull_request deterministic-tests jobs completed with `steps=null`, so no pytest
+or Web build actually executed. This is the same known runner-allocation anomaly and is not
+counted as test pass or code failure.
+
+
+## M4 Phase 2 closeout / evidence integrity
+
+Phase 2 assistant-side closeout completed after the Phase 2.8 methodology-provenance audit.
+
+Closed:
+- schema-v1 chain cannot silently accept schema-v2 append;
+- 32/32 methodology fingerprint component paths exist in the repository tree;
+- production committed-capture builder receives methodology identity;
+- modified research fixtures receive methodology identity;
+- mirror methodology drift is detectable;
+- Phase 2 closeout checklist frozen at `specs/m4-phase-2-closeout.md`;
+- PROJECT_CONTEXT advanced to the first real fingerprinted future-capture gate.
+
+Remaining evidence gates are external/forward-looking:
+- GitHub hosted deterministic runner must actually allocate steps/logs;
+- first post-T0 fingerprinted real-M1 capture;
+- first strict prospective outcome-enrolled candidate;
+- separately preregistered future outcome protocol before performance inference.
+
+
+### One-click T1 handoff
+
+Before asking for the first post-T0 private-M1 run, the local workflow was reduced to one action:
+
+`运行M4真实A股生命周期快照.bat`
+
+It now runs:
+1. authoritative lifecycle capture;
+2. evidence-chain health;
+3. lifecycle transition report;
+4. prospective observation report;
+5. evidence transport-bundle export.
+
+The handoff artifact is:
+`artifacts/reports/m4-evidence-bundle.zip`.
+
+The ZIP is transport-only and records hashes/provenance. It does not become authoritative
+evidence and never repairs committed evidence. If the authoritative store is corrupt, the
+bundle preserves the problematic files for diagnosis so the user does not need to locate
+multiple JSON files manually.
+
+
+M1 freshness is now part of the same one-click T1 handoff:
+- the wrapper runs `m1_daily_update.py --limit 0` before any M4 capture;
+- a failed M1 update skips the new authoritative capture;
+- the M1 update console output is persisted as `artifacts/reports/m4-m1-update.log`;
+- the log is included in `m4-evidence-bundle.zip`.
+
+
+## M4 T1 preflight hardening / 2026-09-18
+
+Assistant-side only; no user-local QA requested.
+
+Risk found before the first post-T0 real capture:
+a clean worktree alone does not prove that a private-M1 run starts from the frozen M4 T1 protocol. An older but clean checkout could otherwise enter the capture workflow.
+
+Closed:
+- `4a57dbfc188cc3696c0b7d9b162f13c054a500c7`: one-click wrapper now checks the exact M4 branch, minimum safe checkpoint ancestry and clean worktree before any M1 update;
+- `da927140b8e9b4bea31e0fcc1cd8d8b23b371661`: cross-platform static regression freezes the ordering and fail-closed wording of the wrapper preflight;
+- D-029 freezes the private-capture preflight contract.
+
+Methodology boundary:
+the wrapper/test change does not modify harmonic identity, Source Raw PRZ, Source lifecycle, BAMM evidence or prospective enrollment semantics and is intentionally outside the methodology fingerprint set.
+
+D-023 remains unchanged: the user's computer is not a routine test runner. It is used only when private M1 data must be collected.
+
+
+## M4 T1 evidence-bundle integrity hardening / 2026-09-18
+
+Assistant-side only; no user-local QA requested.
+
+- `1631af0df3302631f00367b8142e89d33f77c616`: added structural evidence-bundle verifier;
+- `9cdf2803e61cd366452a5c6d2b765a7ae03f417d`: standalone verifier entrypoint;
+- `4b727fb1ee5566154953d001f936e35922b8af5e`: verifier regression cases added to existing bundle tests;
+- assistant-side synthetic execution passed valid / tampered-hash / unlisted-member / path-traversal / blocked-diagnostic / false-ready scenarios;
+- `d4f31612173457c305a9ebe943d9930bed861409`: exporter self-verifies generated bundle;
+- `73985d2fd4d4544589dce92bf9ddce1f76ba3f88`: exporter tests require successful self-verification;
+- `20ed0f7fc7fde00f67937eb342057f88b99bb444`: temp bundle is verified before atomic publish, then verified again after publish;
+- D-030 freezes transport-integrity semantics.
+
+These changes do not modify authoritative capture semantics or the harmonic methodology fingerprint.
+
+
+## M4 Phase 2.9 / evidence intake revalidation
+
+Assistant-side only; no user-local QA requested.
+
+Implemented:
+- `c983934ed5dbc948359c5c7fc80a0495720d7377`: authoritative bundle intake/recompute engine;
+- `901acd43efd03119f5e9963a77370f8d35a32c16`: standalone intake CLI;
+- `b10d8531581e804d0262b7ecc1e3b5a0c7532901`: adversarial intake test coverage;
+- `97e6c00ce6df48097a3fc4d8ffdaf1656229a190`: blocked bundle and chain provenance fail-closed hardening;
+- `f1e93902816419c7301c4811a8d1f623c8bd3754`: provenance-complete intake fixtures;
+- `9805f10561cd1ce6db996433b943ce97de5c322b`: transport-valid vs evidence-ready intake boundary regression.
+
+The intake engine:
+- revalidates frozen baseline and immutable committed captures;
+- rebuilds the capture timeline;
+- recomputes transition and prospective-observation facts;
+- cross-checks included derived reports;
+- cross-checks bundle/chain methodology and latest-capture provenance;
+- never computes performance or trading signals.
+
+D-031 and `specs/m4-phase-2-9-evidence-intake.md` freeze this contract.
+
+
+## M4 Phase 2.10 / scanner-absent cohort follow-up + methodology v2
+
+Assistant-side only; no user-local QA requested.
+
+Problem found before first real T1:
+an outcome-enrolled candidate may disappear from the harmonic scanner while the underlying
+security continues trading. The prior observation panel represented scanner absence but
+did not preserve a separate real market path, creating future survivorship/informative-
+censoring risk.
+
+Initial schema-v3 chain already present on branch:
+- `fd47882115de0f7e0e7e889396f4b32fe74f4598`: define outcome cohort follow-up observations;
+- `92b7ce0d1c5d973fbb6a89e3e7be282e3f8551e1`: bind follow-up facts into capture transactions;
+- `695b96f8e5773031bcfda4027aca3ca82bfe24ae`: validate follow-up against prior enrolled cohort;
+- `a16d1dc13eff5f64bde6395e210cf8379363bbc3`: persist follow-up for enrolled scanner-absent candidates;
+- `4bd35e12d49ec7b5caa1d9251177e770fc7258eb`: expose follow-up count in snapshot manifest;
+- `244f65638cfd51ee2d3dffa9db5be9832ecadb02`: include follow-up count in mirror integrity.
+
+Assistant audit then found two incomplete links:
+1. schema-v3 validation checked supplied follow-up rows but did not require complete coverage;
+2. prospective-observation/report/intake code did not consume `cohort_followup_rows`.
+
+Closed:
+- `d8b467c5abf9480c13184fca3da8e167732ff145`: require exact follow-up coverage;
+- `d59acce2418df114b4938ca4dbbb85b29b6a643e`: observation panel consumes scanner-absent market follow-up;
+- `53b6f0172a14a31cba1c5667cc6e2257a6b7fb4a`: observation report wires follow-up evidence;
+- `ca31cd7edcb3025f2375e46764662d82eee49e76`: intake recomputes with follow-up evidence;
+- `d35f2de126e940011f444487aa15f682f53fae8b`: complete-follow-up transaction regressions;
+- `7fd0c4e743e30f588bc227b02f47acf551b335fb`: scanner-absent traded/suspended observation regressions;
+- `e5c9698851403b115b99648ec1c1b67dd16a9929`: observation schema v2 follow-up boundary;
+- `5ec91257b39c46e9e219b21438a1d0b54803b3e9`: intake compares complete transition/observation payloads;
+- `084ddf649e031e8169a761fd3b8578f73b31b5c2`: methodology contract v2, 37 fingerprint components;
+- `82f432eb13532223b7ded754820de1fa2f3f6219`: freeze methodology-v2 coverage regression;
+- `1b29d452e3827b2507dccd75ea34678c0ee50800`: T1 local minimum-safe checkpoint advanced to methodology v2;
+- D-032 and `specs/m4-phase-2-10-cohort-followup.md` freeze the contract.
+
+Interpretation:
+follow-up preserves the underlying market path only. It never turns scanner absence into
+scanner presence, lifecycle continuity, invalidation, or a trade signal.
+
+No post-T0 fingerprinted committed capture existed before this methodology-v2 freeze, so
+no future evidence required migration or rewriting.
+
+
+## M4 pre-T1 methodology freeze guard / 2026-09-18
+
+Assistant-side only; no user-local QA requested.
+
+Final pre-T1 audit confirmed that methodology-v2 commit
+`084ddf649e031e8169a761fd3b8578f73b31b5c2` is followed only by non-methodology
+changes: intake, transport, tests, wrapper and governance docs. The 37 fingerprint component
+paths have 0 changes after the frozen commit.
+
+Closed:
+- `821e988e7c8f477fc855e61f7d62a949e64bef81`: methodology component freeze guard;
+- `6d38271cfceb4fdc2ab3940ab5088a72cf45ee64`: one-click private-M1 wrapper runs guard before M1 update;
+- `e7d8e7cbf0797ed37d72cf43d3c15b498be5c3f1`: bundle includes guard provenance;
+- `9e29d0cab64a34be4f188b092e89a1b8ffd55379`: repaired literal-newline import corruption found by static audit;
+- `a0a09e85fe3ae7d80549f2222e0153c8211a832f`: guard fail-closed regressions;
+- `6593ca8c9af84237a217ccef83f51a4cea3e9178`: wrapper ordering regression;
+- `f12f6f789945f657e0446a113737320849d0b7b3`: evidence-bundle guard-report regression;
+- D-033 freezes the exact component code anchor.
+
+The user's computer was not used.
+
+
+## M4 Phase 2.11 / QFQ price-basis provenance + methodology v3
+
+Assistant-side only; no user-local QA requested.
+
+Pre-T1 outcome-protocol review exposed a price-coordinate provenance gap:
+
+- formal harmonic analysis uses QFQ continuous prices;
+- raw fallback is explicitly non-formal in `LocalHarmonicService`;
+- M4 journal/follow-up previously did not persist the price basis;
+- D-024 enrollment did not independently require formal QFQ;
+- a later corporate action/QFQ historical rebase could place future OHLC and frozen harmonic
+  price levels on different coordinate systems.
+
+Closed:
+- `faded7f0d459179955bce0805012cff2b95abd08`: deterministic QFQ factor-regime basis ID;
+- `ea14afd3f382f6f8d959e454f0c0c617fc386aee`: journal persists price provenance and enrollment gate requires formal QFQ;
+- `329e1c077007574f88b13b12ded0205c1b789ce5`: scanner-absent follow-up requires formal QFQ provenance;
+- `dc50d9363e7209cf6684e2ee5208bb14b1c16efb`: authoritative full-universe capture fails on non-formal basis;
+- `6327bd445003247efa8482748f141c26c1435123`: committed capture schema v4 activated;
+- `0c741c495ace5ccc95ab8fc4d719494c00415644`: observation panel exposes enrollment/current basis drift;
+- `4c01629ebee0359a62521f34cd39c4843e293747`: enrolled observations fail closed on missing basis, observation schema v3;
+- `ebf35e478d9c8cb547aaf9587aa863008eca420f`: basis-ID stability/change regressions;
+- `31a312008cc77f7c0e059b578f738a4e8518e2e6`: schema-v4 transaction regressions;
+- `2b0aa92d292410098d9678a3bfd3102f3df1ed4b`: methodology contract v3 exact freeze;
+- `2e56a12f77b69253c19ac41cab7cd8cebc780737`: exact freeze guard advanced to v3;
+- `7352eb26369871e7eea33ab05a0d1c83e0f110c9`: one-click T1 wrapper requires the v3 checkpoint;
+- `88ed79a262be01a03865114b8923c4afbe1358d5`: human-readable observation report surfaces basis drift;
+- `0962fc3e58064dec013b64e0fd5c9c2f9b9d35de`: intake surfaces basis drift as future-rebase warning;
+- D-034 and `specs/m4-phase-2-11-price-basis-provenance.md` freeze the contract.
+
+Methodology change scope from v2 anchor `084ddf...` to v3 anchor `2b0aa...` was audited.
+Only seven fingerprint components changed, all within the price-basis/prospective-evidence chain:
+`harmonic_service.py`, `lifecycle_journal.py`, `cohort_followup.py`,
+`capture_transaction.py`, `prospective_observations.py`,
+`m4_capture_lifecycle_snapshot.py`, and `methodology_identity.py`.
+
+No harmonic ratios, Source Raw PRZ source definitions, BAMM, Shark or 5-0 source rules changed.
+
+No post-T0 future committed capture existed before methodology-v3 freeze, so no future evidence
+was migrated or mixed.
+
+
+## M4 Phase 2.12 / frozen source-clock seed + methodology v4
+
+Assistant-side only; no user-local QA requested.
+
+Outcome-protocol sufficiency review found a second pre-T1 censoring risk:
+
+D-032 preserved scanner-absent future market observations, but the existing
+`observe_source_execution()` function also requires the original observable forming-signal
+time and reaction-anchor price. Without freezing those at enrollment, a candidate that leaves
+the scanner before Source Terminal cannot be reconstructed from OHLC alone.
+
+Existing forming payload already exposed the required facts through `execution_clock`, so no
+new harmonic geometry rule was needed.
+
+Closed:
+- `05ae340c5d3563a5951cb1f6684e534b580f0e58`: journal persists the minimal source-clock seed and D-024 enrollment requires it;
+- `2370e434a945eaf269e46ce1c9934df1fb4eb26b`: observation candidate summaries freeze enrollment source-clock seed;
+- `0ed3d1fa54bc6a64a024daee32dab593e1363206`: lifecycle-journal seed regressions;
+- `8c3edc2548fcd9196426bfbaa2214aab4036a11d`: transition fixtures carry the seed;
+- `30170131a1b4e8e63f5d4300f4160a5508b3bc7b`: observation fixtures and frozen-seed assertions;
+- `46d6bfc6a3733585fc669c8892345c32e72fea3a`: committed capture schema v5 + all-or-none seed validation;
+- `b6925b8752b910c0f425384a48f93679f11059ba`: schema-v5 seed contract regressions;
+- `1035029284d0cedb499a49bce94a77be41c5b62a`: prospective observation schema v4;
+- `d742053c704ef919888f22e8c7592ec82e3e3097`: observation-v4 seed regression;
+- `c774c54928c33361952bf1a612a8555633449625`: methodology contract v4 exact freeze;
+- `1b572b1f15806e3958a73b42c6d76e1ed69784b9`: exact methodology guard advanced to v4;
+- `04db0a1c5d31ca5f132c600669c4422b9608ea8b`: one-click T1 wrapper requires v4 checkpoint;
+- `18de18a1bf5e51cfd6332acb0dbce0a2b08fd1d4`: explicit v4->v5 schema boundary regression;
+- `7c5f0880420127dd63e2438d20c506caff7858e5`: human-readable observation report surfaces frozen seed;
+- D-035 and `specs/m4-phase-2-12-source-clock-seed.md` freeze the contract.
+
+Methodology delta from v3 anchor `2b0aa92d...` to v4 anchor `c774c549...` was audited.
+Only four fingerprint components changed:
+`lifecycle_journal.py`, `capture_transaction.py`, `prospective_observations.py`,
+and `methodology_identity.py`.
+
+No harmonic ratios, Source Raw PRZ definitions, source lifecycle algorithm, BAMM, Shark or 5-0
+source rules changed.
+
+No post-T0 future committed capture existed before methodology-v4 freeze, so no future evidence
+was migrated, rewritten or mixed.
+
+## 2026-09-18 — M4 Phase 3.1 outcome evidence v2 closeout
+
+### Scope
+
+Assistant-side Phase 3.1 implementation and pre-first-outcome hardening. No additional user-local QA was requested or used.
+
+### Outcome protocol
+
+- D-036 outcome-v1 remains preserved as historical preregistration.
+- Before any real prospective outcome existed, implementation audit found that direct MFE/MAE differences could become negative when the post-terminal window never crossed Terminal price.
+- `m4-outcome-v2` explicitly supersedes v1 before first real outcome.
+- v2 fingerprint:
+  `5822b302e11d197682dc4bb6d835fb0a3b2d62fc97f788c7a323ecda2770555b`.
+- v2 freezes MFE/MAE as nonnegative zero-floor excursion magnitudes.
+
+### Deterministic evaluator
+
+Implemented:
+
+- frozen enrollment Source-clock seed input;
+- M1 base + daily_delta logical traded-bar history;
+- price-basis compatibility gate;
+- reuse of existing `observe_source_execution()`;
+- reuse of existing `derive_source_lifecycle()`;
+- Source PRZ entry / Terminal / Type-I / reaction-only / Type-II price path;
+- 5/10/20 traded-bar descriptive excursion windows from T+1;
+- right-censoring instead of mechanical failure labels;
+- no entry / stop / fees / P&L / win-rate / alpha.
+
+### Self-contained immutable outcome evidence
+
+- canonical market path now persists trade_date + OHLCV, not only a hash;
+- path SHA-256 includes price basis;
+- outcome snapshot schema advanced to v2;
+- same-date fact drift fails closed;
+- historical outcome backfill fails closed;
+- snapshot binds protocol + capture methodology + outcome engine identity;
+- one outcome chain cannot silently mix identities.
+
+### Outcome Engine identity
+
+- engine contract v1;
+- 4 components:
+  - outcome_protocol.py
+  - outcome_evaluator.py
+  - outcome_snapshot.py
+  - outcome_engine_identity.py
+- exact code anchor:
+  `9cbc0d3d30ac5f0a87748a39788cbee04a44bcc8`;
+- `m4_outcome_engine_freeze_guard.py` runs before private M1 update;
+- current audit: 4/4 engine components unchanged since anchor.
+
+### Capture methodology isolation
+
+- capture methodology remains v4 / schema v5 / observation schema v4;
+- 37 components;
+- exact freeze:
+  `c774c54928c33361952bf1a612a8555633449625`;
+- current audit: 37/37 methodology components unchanged since freeze.
+
+### Bundle / intake
+
+- bundle carries active v2 protocol and historical v1 protocol when present;
+- bundle carries outcome snapshots and outcome-engine guard report;
+- intake reconstructs the prospective cohort from authoritative capture evidence;
+- intake reconstructs DataFrame from bundled OHLCV path;
+- intake reruns the frozen evaluator offline;
+- stored result vs recomputed result mismatch is a blocker;
+- semantic tamper remains detectable even when snapshot ID and transport hashes are regenerated.
+
+### One-click workflow
+
+`运行M4真实A股生命周期快照.bat` now performs:
+
+1. branch / minimum-safe / clean-worktree preflight;
+2. capture-methodology exact-freeze guard;
+3. outcome-engine exact-freeze guard;
+4. M1 update;
+5. authoritative capture;
+6. evidence health;
+7. transition report;
+8. prospective observation report;
+9. outcome-v2 report / immutable snapshot;
+10. evidence bundle.
+
+Phase 3.1 minimum-safe workflow checkpoint:
+`c34026755b3b8c491759eaacdb45376d4e1db485`.
+
+### Frozen decision/spec
+
+- D-037
+- `specs/m4-phase-3-1-outcome-evidence-v2.md`
+
+### Real evidence status
+
+Still no post-T0 real authoritative future capture, no real prospective-new outcome cohort and no real outcome snapshot.
+
+No profitability / win-rate / alpha claim is allowed.
+
+### Next
+
+- verify current hosted CI runner behavior;
+- sync PR #13;
+- if hosted runner remains unallocated, report it as infrastructure limitation, not code-test pass/fail;
+- only then request the next irreducibly private M1 one-click capture when needed.
+
+## 2026-09-18 — Hosted CI recovery and Phase 3.1 deterministic green
+
+GitHub-hosted Actions resumed real runner allocation during Phase 3.1 closeout.
+
+Observed sequence:
+
+1. run #1398 executed real Python tests:
+   - 4 failed / 586 passed;
+   - failures were real code/test-contract findings, no longer attributable to runner allocation.
+2. corrections:
+   - isolated capture backfill chronology fixture from cohort follow-up coverage;
+   - aligned wrapper contract text with Phase 3.1 minimum-safe wording;
+   - repaired zero-candidate manifest fixture so positive manifest counts have journal rows;
+   - exposed intake blockers explicitly.
+3. run #1404:
+   - 1 failed / 589 passed;
+   - exact blocker:
+     `outcome_snapshot_protocol_member_missing:m4-outcome-v2`;
+   - root cause: snapshot protocol ID `m4-outcome-v2` had been naively mapped to
+     `protocols/m4-outcome-v2.json`, while canonical bundled file is
+     `protocols/m4-outcome-protocol-v2.json`.
+4. fixed only transport/intake filename mapping; frozen outcome protocol and evaluator were not changed.
+5. run #1406 on code checkpoint
+   `8833d1d78bc266fc26efff92bd0a89204cb5ec12`:
+   - overall workflow: **success**;
+   - Python: **590 passed**;
+   - Web dependencies: pass;
+   - Web build: pass;
+   - Playwright: conditionally skipped by existing M2/M3 branch predicate, not failed;
+   - autonomous real-A-share research: skipped by design.
+
+Freeze audit after all fixes:
+
+- 37 capture-methodology components changed since `c774c549...`: **0**;
+- 4 outcome-engine components changed since `9cbc0d3d...`: **0**.
+
+PR #13 became mergeable_state=clean with no review threads, but remains Draft because no post-T0 real private-M1 future capture exists.
+
+Code-side Phase 3.1 pre-T1 implementation is therefore closed. The next non-substitutable gate is one private-M1 future capture through the existing one-click wrapper and assistant-side independent intake of the resulting evidence bundle.
+
+## 2026-09-18 — D-038 first-T1 acquisition gate
+
+After Phase 3.1 code-side closeout, the one-click private-M1 wrapper still accepted an older minimum-safe checkpoint (`c3402675...`).
+
+That was tightened before the first real post-T0 future capture.
+
+Change:
+
+- `M4_MIN_SAFE_COMMIT` advanced to hosted-CI-green
+  `d29870d3a2ef7b60dec4fd8f0dbef2d7a8f0b5a7`;
+- stale local checkout now fails before M1 update;
+- wrapper static contract updated accordingly.
+
+Validation:
+
+- implementation checkpoint:
+  `106c53da04dab0c3fcc9d03d6b2148106128ff77`;
+- GitHub Actions run #1414:
+  deterministic Python + Node + Web build success;
+- Playwright skip remains expected for M4 under the current branch predicate;
+- 37 capture-methodology components changed since `c774c549...`: 0;
+- 4 Outcome Engine components changed since `9cbc0d3d...`: 0.
+
+Decision:
+
+- D-038 freezes this as an acquisition-safety rule only;
+- it does not alter pattern identity, Source Raw PRZ, Source lifecycle, enrollment, outcome protocol or outcome evaluator.
+
+Next non-substitutable gate:
+
+one clean private-M1 execution of `运行M4真实A股生命周期快照.bat`, followed by assistant-side intake of `artifacts/reports/m4-evidence-bundle.zip`.
+
+## 2026-09-18 — First private M4 bundle intake: QFQ provisioning gate
+
+Received the first user-produced `m4-evidence-bundle.zip`.
+
+Assistant-side transport audit:
+
+- 12 manifest-listed files;
+- all file size + SHA-256 entries verified;
+- no transport corruption;
+- methodology freeze guard frozen_match;
+- Outcome Engine freeze guard frozen_match.
+
+M1 update log:
+
+- latest closed A-share day 2026-09-18;
+- initialized 55;
+- all-market bulk snapshot failed with RemoteDisconnected;
+- updater correctly fell back to slow-path repairs;
+- 55 / 55 raw histories reached 2026-09-18;
+- failed raw updates = 0.
+
+Formal prospective capture:
+
+- 3 successful;
+- 52 failed;
+- all 52 failures were formal-QFQ gate failures;
+- only successful symbols were 600519 / 688256 / 300820, exactly the historical adjustment pilot set;
+- capture status `failed_no_journal_append`;
+- no authoritative transaction;
+- no T1 journal append;
+- no outcome snapshot.
+
+Root cause:
+
+raw updater and formal-QFQ evidence requirements were not connected by an acquisition readiness stage.
+
+Implemented:
+
+- strict resumable QFQ universe preparation script;
+- existing qfq/qfq_carry_forward reuse;
+- AkShare -> BaoStock missing-factor repair;
+- >=95% overlap + no internal historical factor gaps + positive finite factors;
+- wrapper blocks capture unless M1 + QFQ both pass;
+- QFQ diagnostics added to bundle.
+
+Validation:
+
+- GitHub Actions run #1431 success;
+- capture methodology 0/37 drift;
+- Outcome Engine 0/4 drift.
+
+No real future evidence was modified because the failed run never committed T1.
+
+Next user action remains a single git pull + the same one-click BAT.
+
+## 2026-09-18 — Second private bundle: QFQ 53/55
+
+Assistant-side audit of second M4 bundle:
+
+- transport hashes clean;
+- QFQ readiness formal-ready 53 / 55;
+- 50 missing factors successfully built through BaoStock;
+- only SSE.600057 and SZSE.000001 remain blocked by provider-calendar internal gaps;
+- authoritative T1 still not committed;
+- no outcome snapshot.
+
+Implemented D-040 safe internal calendar-gap repair:
+- short bracketed internal gaps only;
+- <=10 raw sessions;
+- <=0.5% bracketing factor drift;
+- linear bounded interpolation;
+- larger regime changes remain fail closed;
+- trailing carry-forward unchanged.
+
+Validation:
+- Actions run #1446 success;
+- 0/37 capture-methodology drift;
+- 0/4 Outcome Engine drift.
+
+Next local run is resumable and should skip the 53 already formal-ready instruments.
+
+## 2026-09-18 — Third private bundle: QFQ 54/55
+
+- transport bundle integrity verified;
+- formal QFQ readiness reached 54/55;
+- SSE.600057 safe internal gap repair succeeded;
+- only SZSE.000001 remained blocked by 1991 historical Saturday provider-calendar gaps;
+- no authoritative T1 committed.
+
+D-041 added a historical-Saturday-only repair path requiring raw pre-close continuity plus <=5% bracketing factor drift.
+
+CI run #1459 passed. Freeze audit remained 0/37 methodology drift and 0/4 Outcome Engine drift.
+
+## 2026-09-18 — M5 Phase 1 Operator Queue green
+
+Created independent branch `m5/a-share-operator-workbench` and draft PR #14 stacked on M4.
+
+Implemented:
+- read-only operator queue service;
+- `GET /api/operator/queue`;
+- API 0.4.0;
+- homepage daily queue;
+- workflow-state ordering only;
+- next-key/watch/blocker/context fields;
+- queue-to-single-symbol selection;
+- Python contract tests;
+- M5 Playwright CI gate.
+
+Validation:
+- run #1485 success;
+- Python success;
+- Web build success;
+- browser acceptance success;
+- frozen M4 methodology diff 0;
+- Outcome Engine diff 0.
+
+Next: M5 Phase 2 Operator Delta / daily change view, remaining strictly product-only and non-authoritative.
+
+## 2026-09-19 — M5 Phase 2 Operator Delta green
+
+Implemented daily product-observation comparison:
+- stable date-based display identity;
+- Queue schema v2 as-of integrity;
+- new/disappeared/state/next-key/context changes;
+- failed-instrument disappearance suppression;
+- pure delta API;
+- browser two-snapshot storage;
+- product-only change UI.
+
+Validation:
+- Actions run #1503 success;
+- Python 619 passed;
+- Playwright 19 passed;
+- Web build success;
+- frozen methodology diff 0;
+- Outcome Engine diff 0.
+
+D-043 freezes Operator Delta as product observation only, never M4 authoritative evidence.
+
+## 2026-09-19 — M5 Phase 3 Daily Operator Cache green
+
+Implemented:
+- cache-first daily Operator Queue;
+- force refresh;
+- atomic snapshot persistence;
+- universe/date/contract invalidation;
+- stale-data cache rejection;
+- precompute script;
+- UI cache provenance.
+
+Validation:
+- run #1525 success;
+- Python 628 passed;
+- Web build success;
+- Playwright 19 passed.
+
+D-044 freezes product cache as acceleration only, never M4 evidence.
+
+## 2026-09-19 — M5 Phase 4 Full-Universe Operator Index green
+
+Implemented:
+- complete initialized-universe scan independent from UI limit;
+- operator_index provenance;
+- full instrument picker;
+- search/filter/pagination over the complete product snapshot.
+
+Validation:
+- run #1583 success;
+- Python 629 passed;
+- Web build success;
+- Playwright 21 passed.
+
+D-045 freezes scan completeness independently from presentation.
+
+## 2026-09-19 — M5 Phase 5 parallel operator build green
+
+Implemented bounded full-universe parallel product build with thread-local M3 service instances.
+
+Validation:
+- run #1601 success;
+- Python 634 passed;
+- Web build success;
+- Playwright 21 passed.
+
+D-046 freezes worker concurrency as throughput-only and non-authoritative.
+
+## 2026-09-19 — M5 Phase 6 single-flight green
+
+Implemented process-local single-flight coalescing for identical Operator rebuild identities.
+
+Validation:
+- run #1613 success;
+- Python 637 passed;
+- Web build success;
+- Playwright 21 passed.
+
+D-047 freezes single-flight as product execution coordination only.
+
+
+
+## 2026-09-19 — M5 Phase 7 Operator Cache Input Identity green
+
+Recovered the actual current M5 branch after an earlier stale M4-context restore.
+
+Current branch:
+`m5/operator-cache-input-identity`
+
+Validated implementation checkpoint:
+`7d1de7a81b7b2efc2a149eecd5a6c41b865123cd`
+
+Phase 7 implementation:
+- added product-only Data Input Identity;
+- added product-only Analysis Code Identity;
+- combined them into Operator Cache Input Identity;
+- snapshot cache contract advanced to v2;
+- cache reads now reject same-day data/code identity drift;
+- single-flight identity now includes the combined input fingerprint;
+- different input identities do not coalesce;
+- API freezes analysis-code identity per running process and refreshes data identity per request;
+- precompute freezes analysis-code identity per process and rechecks data identity after full build;
+- input change during build returns `live_not_cached_input_changed` and suppresses cache write.
+
+CI sequence:
+- run #1627 exposed a real Phase 7 regression during development;
+- later fixes and tests closed it;
+- run #1632 / `35378145254` was cancelled by a newer push, not a code-test failure;
+- run #1633 / `35378178032`: success;
+- run #1634 / `35378357267`: success;
+- Python: 650 passed;
+- Web build: success;
+- Playwright: 21 passed;
+- browser evidence upload: success.
+
+Governance closeout:
+- D-048;
+- `specs/m5-phase-7-operator-cache-input-identity.md`;
+- PROJECT_CONTEXT moved from stale M4 QFQ checkpoint to M5 Phase 7.
+
+Next:
+- do not regress to M4 QFQ;
+- move to the next M5 product-reliability boundary, with cross-process/precompute-vs-API rebuild coordination as the first open concurrency gap;
+- preserve all frozen M3/M4 source/methodology boundaries.
+
+
+## 2026-09-19 — M5 Phase 8 Cross-Process Operator Rebuild Coordination
+
+Branch:
+`m5/cross-process-operator-rebuild`
+
+Phase 8 closed the remaining concurrency gap after Phase 6/7:
+
+- process-local single-flight remains;
+- added cross-platform OS advisory filesystem lock per Operator cache slot;
+- POSIX: fcntl.flock;
+- Windows: msvcrt.locking;
+- lock ownership is descriptor/OS based, so process crash does not create a permanent stale-lock-file deadlock;
+- identical cache-slot writers serialize across API/precompute processes;
+- different input identities do not coalesce;
+- contended force refresh can reuse a just-produced valid cache;
+- cache hit after process wait revalidates current input identity;
+- normal fast cache hit also revalidates current input identity through the current-identity factory;
+- post-build Phase 7 input drift gate remains in force;
+- real multiprocessing regression verifies actual inter-process blocking/release;
+- runtime `data/product/**` and `data/research/**` are Git ignored so cache/lock/evidence do not dirty the source worktree.
+
+Development CI:
+- #1637: real regression exposed old different-identity concurrency test assumption;
+- #1638: same legacy assertion remained while identity-after-wait protection was added;
+- #1639: corrected semantics, 655 Python passed + Web + 21 Playwright;
+- #1640: real multiprocessing lock regression, 656 Python passed + Web + 21 Playwright;
+- #1641 / `35380339931`: final runtime-hygiene closeout, 658 Python passed + Web + 21 Playwright.
+
+Validated code checkpoint:
+`08f51e28f60840cfb6a85b85fbceb091c9392825`
+
+Freeze audit:
+- M4 capture methodology changed components: 0 / 37;
+- Outcome Engine changed components: 0 / 4.
+
+Governance:
+- D-049;
+- `specs/m5-phase-8-cross-process-operator-rebuild.md`.
+
+Next:
+- start Daily Close Product Pipeline from the current Phase 8 lineage;
+- selectively port useful code from old divergent daily-close/handoff experiments;
+- explicitly decouple M5 product readiness from M4 strict-QFQ readiness and M4-only guards.
+
+
+## 2026-09-19 — M5 Phase 9 Daily Close Product Pipeline green
+
+Branch:
+`m5/daily-close-product-pipeline`
+
+Validated code checkpoint:
+`dec76022098574537333e8d3abd56bcc3b928a99`
+
+Implemented:
+- product-first daily close pipeline；
+- M1 shared freshness hard prerequisite；
+- context sync best-effort semantics；
+- initial M5 Operator cache before M4 research；
+- M4 preflight/methodology/outcome/QFQ gates restricted to research lane；
+- final non-force M5 cache revalidation after research-side QFQ；
+- final product readiness based on current/single-as-of/persisted/stable input；
+- isolated per-instrument failures with explicit instrument_errors；
+- unbuffered line-by-line subprocess progress + per-step logs；
+- [1/4]..[4/4] context progress markers。
+
+Validation:
+- Actions run #1646 / `35381269831`: success；
+- Python 682 passed；
+- Web build success；
+- Playwright 21 passed；
+- browser evidence upload success。
+
+Freeze audit:
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-050；
+- `specs/m5-phase-9-daily-close-product-pipeline.md`。
+
+Next:
+- start M5 Phase 10 Daily Handoff Bundle v2 from this lineage；
+- do not merge the old divergent handoff branch wholesale；
+- bind the handoff to the exact final Phase 9 product snapshot and input identity；
+- keep the outer handoff transport-only/non-authoritative。
+
+
+## 2026-09-19 — M5 Phase 10 Daily Handoff Bundle v2 green
+
+Branch:
+`m5/daily-handoff-bundle-v2`
+
+Validated code checkpoint:
+`99e3bf7aba1e656601bdcf4831d4b215eede4e8d`
+
+Implementation:
+- added `src/htcn/app/daily_handoff.py`；
+- added exact binding to the final Phase 9 Operator cache path instead of latest-file scanning；
+- cross-validates final M5 report, cache contract v2, trade date, single-as-of state and full input identity；
+- confines product cache path to the canonical Operator cache root；
+- uses portable repository-relative paths in the handoff manifest；
+- supports optional previous product snapshot as context only；
+- embeds current M4 evidence only when research-ready and verified；
+- may embed a separately verified existing M4 evidence bundle when research is degraded, without promoting it to current research success；
+- outer ZIP is always transport-only/non-authoritative；
+- per-member size/SHA-256 + exact archive membership verification；
+- nested M4 verification；
+- atomic ZIP write with verify-before-replace and verify-after-replace；
+- verifier independently parses pipeline/M5 report/current snapshot and cross-checks ready/date/identity；
+- added `daily_handoff_runner` with a separate transport report；
+- records pipeline report SHA before/after and refuses output/report/pipeline path collisions；
+- transport failure does not rewrite Phase 9 readiness；
+- added `scripts/m5_build_daily_handoff.py`；
+- added `运行HT-CN每日交接包.bat`。
+
+Validation:
+- draft PR #22 created only to expose PR-triggered hosted CI；
+- Actions run #1665 / `35382676878`: success；
+- Python 699 passed；
+- Web build success；
+- Playwright 21 passed；
+- browser evidence upload success。
+
+Freeze audit:
+- Phase 9 governance checkpoint → Phase 10 code checkpoint changed 7 files；
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-051；
+- `specs/m5-phase-10-daily-handoff-bundle-v2.md`。
+
+Next:
+- keep PR #22 draft/unmerged unless later integration policy explicitly changes；
+- start the next M5 product phase from the Phase 10 governance lineage；
+- preferred next boundary: Daily Operator History / Change Journal v1, product observation only, still isolated from M4 authoritative prospective evidence and prohibited from outcome-based ranking。
+
+
+## 2026-09-19 — M5 Phase 11 Daily Operator History / Change Journal v1 green
+
+Branch:
+`m5/daily-operator-history`
+
+Validated code checkpoint:
+`504cc063d93e999dcbac1b131e14f475beacd4d0`
+
+Implementation:
+- added append-only product history under `data/product/m5/operator_history/<trade_date>/<observation_id>.json`；
+- records only the final post-research, post-revalidation M5 Operator state；
+- exact source validation binds final M5 report, exact cache snapshot, trade date, single-as-of and Phase 7 input identity；
+- observation id binds report/snapshot/Queue hashes plus source generated-at and input identity；
+- exact rerun is idempotent；
+- same-day source/input changes append revisions instead of overwriting；
+- older same-day revisions and historical backfill are rejected；
+- append is serialized with an OS advisory lock；
+- every observation carries a self-contained Queue snapshot；
+- daily Delta compares to the latest revision of the previous recorded trade date；
+- current analysis failures keep disappearance suppression；
+- record-integrity SHA plus same-day and previous-trade-date links fail closed on tampering/deletion；
+- query defaults to latest revision per day but can expose all revisions；
+- added `scripts/m5_record_operator_history.py`；
+- added `scripts/m5_query_operator_history.py`；
+- added `运行HT-CN历史变化查询.bat`；
+- daily-close pipeline now records history only after final cache revalidation；
+- history failure is independent from `m5_product_ready`；
+- added GET `/api/operator/history`；
+- added Workbench **跨日产品观察历史** panel；
+- added deterministic browser gate `operator-history.spec.ts`。
+
+CI sequence:
+- #1693 / `35384383540`: Python 715 + Web green; existing 21 Playwright green; new history test failed only because one text locator matched two date cards；
+- locator narrowed to latest-day card in `b49d1468a243f0a129def63b6ee3984170d1ceb8`；
+- #1695 / `35384556086`: 715 Python + Web + 22 Playwright green；
+- chain hardening added record hash/revision/baseline deletion tests；
+- #1699 / `35384764795`: 718 Python + Web + 22 Playwright + browser evidence green。
+
+Freeze audit:
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-052；
+- `specs/m5-phase-11-daily-operator-history.md`；
+- PROJECT_CONTEXT top-level current stage corrected from stale Phase 8 to Phase 11。
+
+Next:
+- Phase 12: Daily Review Digest / Change Triage v1；
+- summarize product-history changes into transparent daily review/navigation；
+- no win-rate, alpha, outcome ranking, predictive scoring or trade instruction；
+- any handoff integration must use a new versioned contract rather than mutating frozen Phase 10 handoff v2。
+
+
+## 2026-09-19 — M5 Phase 12 Daily Review Digest / Change Triage v1 green
+
+Branch:
+`m5/daily-review-digest-v1`
+
+Validated code checkpoint:
+`84c7d8a0f2d46cd8ed9b79dcd638cb727d165465`
+
+Implementation:
+- added `src/htcn/app/daily_review_digest.py`；
+- digest reads only the latest valid Phase-11 history revision；
+- validates that latest Delta is exhaustive before building any review；
+- preserves every change item and its complete change_types；
+- fixed review workflow order: execution_evaluation → reaction_observation → waiting → evidence_insufficient → disappeared_candidate；
+- explicit contract says workflow order is not expected-return/trade ranking；
+- summarizes new/disappeared/action/lifecycle/pattern/next-key/execution-gate/context changes；
+- separates analysis-incomplete instruments from disappearance；
+- added baseline/no-change/change-ready status variants；
+- added presentation-only workflow/change-type/instrument filters；
+- source total remains unchanged after filtering；
+- invalid workflow/change-type filter is rejected explicitly；
+- added `scripts/m5_build_daily_review_digest.py`；
+- daily-close pipeline runs digest only after successful Phase-11 history append；
+- digest failure does not rewrite product/history/research readiness；
+- added `运行HT-CN每日变化复盘.bat`；
+- added GET `/api/operator/review-digest`；
+- added Workbench **每日变化复盘** before the history panel；
+- UI shows source total and filter hit count side-by-side；
+- review items drill into the single-symbol workbench；
+- added browser gate `daily-review-digest.spec.ts`。
+
+Validation:
+- CI #1725 / `35413513169`: 733 Python + Web + 23 Playwright green；
+- final hardening added exhaustive Delta guard and invalid-filter rejection；
+- CI #1733 / `35413656027`: 736 Python + Web + 23 Playwright + browser evidence green。
+
+Freeze audit:
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-053；
+- `specs/m5-phase-12-daily-review-digest.md`；
+- PROJECT_CONTEXT top-level current stage advanced to Phase 12。
+
+Next:
+- Phase 13: Review Session / Follow-up Journal v1；
+- bind review workflow state to source observation/display key；
+- product workflow annotations only；
+- no lifecycle/action mutation, no trade execution, no alpha/win-rate/predictive ranking；
+- future handoff expansion must use a new versioned contract rather than mutating frozen Phase-10 handoff v2。
+
+
+## 2026-09-19 — M5 Phase 13 Review Session / Follow-up Journal v1 green
+
+Branch:
+`m5/review-followup-journal-v1`
+
+Validated code checkpoint:
+`4b015dfc0e72db0f1275e1e570d85959254550fa`
+
+Implementation:
+- added append-only review/follow-up journal under `data/product/m5/review_journal/`；
+- fixed user workflow states: unseen / reviewed / follow_up；
+- no event defaults the exact observation/display-key binding to unseen；
+- source binding is validated against Phase-11 history and a real Delta change；
+- client_request_id provides retry idempotency and replay-conflict protection；
+- notes are optional/normalized/capped at 1000 chars；
+- event records include self-integrity SHA, per-binding ordinals/links and per-display-key ordinals/links；
+- load/query fail closed on chain gaps or tampering；
+- same-day review state and cross-day active-follow-up state are intentionally separate；
+- yesterday reviewed never auto-marks today's new change as reviewed；
+- latest display-key follow_up stays active across observations/trade dates；
+- active follow-ups remain visible even when there is no new current-day Delta；
+- ending follow-up appends reviewed instead of deleting history；
+- added GET `/api/operator/review-session`；
+- added POST `/api/operator/review-session/event`；
+- added GET `/api/operator/review-journal` read-only audit；
+- write API hides local filesystem paths；
+- Workbench gained review-state filter, follow-up-only filter, note/state editor, persistent active-follow-up list, and end-follow-up action；
+- same-day active follow-up is labeled “跟踪中”; only older source dates are labeled “跨日跟踪中”；
+- added `scripts/m5_query_review_journal.py` and `运行HT-CN复盘跟踪查询.bat`；
+- Phase 13 deliberately does not join daily-close pipeline and never creates review events automatically；
+- Phase 12 digest endpoint/contract and Phase 10 handoff v2 remain unchanged。
+
+Validation:
+- CI #1766 / `35415053453`: Python 757 passed + Web build success + existing 23 Playwright passed; only new Phase-13 browser test had a strict locator ambiguity；
+- locator narrowed to a concrete follow-up row in `4b015dfc0e72db0f1275e1e570d85959254550fa`；
+- CI #1768 / `35415145067`: 757 Python + Web + 24 Playwright + browser evidence green。
+
+Freeze audit:
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-054；
+- `specs/m5-phase-13-review-followup-journal.md`；
+- PROJECT_CONTEXT top-level current stage advanced to Phase 13。
+
+Next:
+- Phase 14: Daily Handoff Bundle v3 / Review-State Transport；
+- carry validated Phase-11 history, Phase-12 digest and Phase-13 current review/follow-up context through a new versioned handoff；
+- do not mutate frozen Phase-10 handoff v2；
+- do not elevate review workflow state into M4 authority, ranking or trade execution。
+
+
+## 2026-09-19 — M5 Phase 14 Daily Handoff Bundle v3 / Review-State Transport green
+
+Branch:
+`m5/daily-handoff-bundle-v3`
+
+Validated code checkpoint:
+`c9de28d959b64043663a2bceccb17cc87b8f3756`
+
+Implementation:
+- added a new v3 transport without modifying frozen Phase-10 handoff v2；
+- v3 builds/verifies v2 in a temporary directory, then nests it as the frozen product/M4 base；
+- existing v2 ZIP/report are never overwritten；
+- outer v3 manifest binds nested-v2 schema/status/product binding/bundle SHA；
+- pipeline hash is verified against exact raw nested-v2 pipeline bytes；
+- pipeline product/history/digest/M4 readiness is inherited, not redefined；
+- current Phase-11 history must bind to exact v2 product report/snapshot hashes and trade date；
+- bounded history transport includes current, direct previous trade-date baseline, and direct previous same-day revision when needed；
+- verifier independently rebuilds Operator Delta from previous/current queues；
+- Phase-12 digest is recomputed from transported current history；
+- Phase-13 review-session export is captured under review-journal lock；
+- review-session semantic projection must equal Phase-12 digest；
+- only currently referenced review journal events plus their predecessor closure are transported；
+- missing predecessors and unrelated extra events both invalidate v3；
+- every event retains Phase-13 self-integrity verification and is cross-checked against session state；
+- atomic temp verify -> replace -> final verify retained；
+- added isolated v3 runner/report；
+- added `scripts/m5_build_daily_handoff_v3.py`；
+- added `运行HT-CN每日交接包v3.bat`；
+- v3 one-click neither reruns daily-close pipeline nor calls the old v2 entrypoint。
+
+Validation:
+- CI #1788 / `35416245508`: 771 Python + Web + 24 Playwright + browser evidence green；
+- final hardening added predecessor-chain closure and forged nested-v2/pipeline-binding tests；
+- CI #1790 / `35416336734`: 774 Python + Web + 24 Playwright + browser evidence green。
+
+Freeze audit:
+- Phase-10 handoff v2 changed files: 0；
+- M4 capture methodology changed components: 0 / 37；
+- Outcome Engine changed components: 0 / 4。
+
+Governance:
+- D-055；
+- `specs/m5-phase-14-daily-handoff-bundle-v3.md`；
+- PROJECT_CONTEXT top-level current stage advanced to Phase 14。
+
+Next:
+- Phase 15: Handoff v3 Inspector / Portable Review Workspace v1；
+- read/verify/browse a v3 bundle without requiring the local market database；
+- expose transported product/history/digest/review/follow-up state in a Chinese-first read-only workspace；
+- no automatic import into local history/journal, no new review events, no M4 write, no ranking/trade inference。
+
+
+## 2026-09-19 — M5 Phase 15 portable inspector v1
+
+- Restored Phase-14 current head and opened `m5/handoff-v3-inspector-v1`.
+- Added a read-only v3 inspector that refuses unverified handoff transport.
+- Inspector uses only data embedded in v3/nested-v2 transport; no market DB dependency.
+- Added current/previous Queue/history, daily digest, review-session, active-follow-up and review-event inspection.
+- Added exact instrument/display-key drill-down.
+- Added self-contained Chinese single-file HTML workspace with no network fetch/write action.
+- Added CLI and Windows one-click entry.
+- Added 5 deterministic Python regressions.
+- Draft PR #27 created against the Phase-14 branch.
+- Hosted CI #1805 / 35419145630 green:
+  - 779 Python passed;
+  - Web build success;
+  - 24 Playwright passed;
+  - browser evidence uploaded.
+- Implementation diff changed no pre-existing Phase-14 file; M4 methodology and Outcome Engine remained untouched.
+
+
+## 2026-09-19 — M5 Phase 16 portable pattern detail v1
+
+- Verified that Phase14/15 v3 transport cannot truthfully reconstruct offline harmonic charts because Queue snapshots do not contain complete bars + pattern.points.
+- Chose a new v4 transport instead of mutating frozen v3 or reading the market DB inside the Phase15 inspector.
+- Added exact-current-Queue detail transport with exhaustive detail-or-error coverage.
+- Added input-identity and trade-date binding to prevent drawing an old Queue with newer data/code.
+- Added semantic re-derivation of display keys from transported pattern points.
+- Added self-contained Chinese portable visual inspector:
+  - real transported K bars;
+  - actual harmonic geometry;
+  - node price labels;
+  - Source PRZ;
+  - lifecycle event lines;
+  - dashed next-key guide that is explicitly not a predicted leg.
+- First CI #1820 failed on a new verifier zero-value bug; the test was retained and the verifier was fixed.
+- Hosted CI #1822 / 35419647193 green:
+  - 784 Python passed;
+  - Web build success;
+  - 24 Playwright passed;
+  - browser evidence uploaded.
+- M4 methodology and Outcome Engine remained untouched.
+
+
+## 2026-09-19 — M5 Phase 17 portable visual semantics v2
+
+- Confirmed Phase16 v4 already contains enough exact detail; no v5 transport was introduced.
+- Added deterministic Visual Semantics v2 over the verified v4 payload.
+- Added independent schema topology for XABCD / ABCD / Shark 0XABC / FIVE_ZERO.
+- Added solid observed leg semantics and explicit missing-future-label reporting without projecting future nodes.
+- Added schema-specific ratio panels.
+- Split Source Raw PRZ, Ideal Core and Component Envelope into separate layers.
+- Added explicit PRZ component membership/role labeling.
+- Preserved 5-0 61.8 as execution refinement outside Raw PRZ.
+- Added Source Clock event timeline and non-geometry target/next-key guides.
+- Added conflict disclosure without multi-identity overlay.
+- Added Visual Semantics v2 layer controls and made it the default portable workspace HTML.
+- Inspector presentation schema/contract advanced to v2; v4 transport/verifier remained unchanged.
+- Draft PR #29 opened against the Phase16 branch.
+- Hosted CI #1839 / 35421868066 green:
+  - 792 Python passed;
+  - Web build success;
+  - 24 Playwright passed;
+  - browser evidence uploaded.
+- M4 methodology and Outcome Engine remained untouched.
+
+
+## 2026-09-19 — M5 Phase 18 portable visual browser acceptance v1
+
+- Added a deterministic five-scenario browser fixture built by the formal Phase17 semantics/workspace builders.
+- Added dedicated Playwright for completed XABCD, forming XABCD, standalone AB=CD, Shark and FIVE_ZERO.
+- Added presentation-only semantic SVG data hooks for layers, legs, nodes, PRZ components, lifecycle events and price guides.
+- Added five full-page screenshots with size/SHA-256 evidence.
+- Added a machine-readable browser evidence manifest.
+- Added an independent Python verifier for required checks, exact screenshot set, hashes and boundary flags.
+- Added CI steps to build fixture, run dedicated browser acceptance, verify evidence and upload artifacts.
+- CI #1854 exposed a broad locator ambiguity; locator was scoped.
+- CI #1856 exposed Playwright SVG line visibility/bounding-box behavior; semantic line assertions were changed to DOM presence while retaining screenshots as rendered evidence.
+- CI #1858 / 35425914613 green:
+  - Python 792 passed;
+  - Web build success;
+  - existing Playwright 24 passed;
+  - Phase18 Playwright 1 passed;
+  - 10 required semantic checks;
+  - 5 screenshots;
+  - independent evidence verifier valid;
+  - artifact upload success, ID 10579180470.
+- Handoff v4 transport/verifier, M4 methodology and Outcome Engine remained untouched.
+- Known next gap: real current-market v4 artifact is not yet automatically built and browser-audited by the daily close/handoff chain.
+
+
+## 2026-09-19 — M5 Phase 19 daily portable delivery v1
+
+- Started immediately after Phase18 closeout to address the larger daily-product gap rather than continue minor UI polish.
+- Added staged production orchestration from Phase9 product-ready report through Phase14 v3, current input identity, Phase16 v4, Phase17 Inspector/HTML and a verified outer portable ZIP.
+- Added outer portable-delivery verifier for member hashes, nested v4 verification, identity/date/count binding, Inspector v2 boundaries and offline HTML boundaries.
+- Added explicit valid `detail_degraded_portable_delivery` status for Phase16 detail-or-error exhaustive degradation.
+- Added pipeline-report hash stability gate.
+- Added immutable hash-addressed delivery archive with hidden-temp-directory publish.
+- Added Phase19-specific convenience aliases while leaving frozen Phase14/16 canonical aliases untouched.
+- Added run report for every attempt and latest-success pointer written only after full success.
+- Added one-click `运行HT-CN每日收盘并生成便携复盘包.bat`.
+- Added 9 Python regressions covering complete/degraded delivery, semantic tamper, successful archive/pointer publication, v3/v4/workspace/preflight failure preservation and pipeline drift.
+- Draft PR #31 opened against Phase18.
+- Hosted CI #1876 / 35426314518 green:
+  - Python 801 passed;
+  - Web build success;
+  - existing Playwright 24 passed;
+  - Phase18 Playwright 1 passed;
+  - Phase18 evidence verifier valid;
+  - browser evidence uploaded.
+- Phase19 implementation diff from Phase18 adds five files only; v4 transport/verifier, Visual Semantics, M4 methodology and Outcome Engine remained untouched.
+- Hosted CI validates orchestration with deterministic fakes; a real current-market delivery still requires a machine with the current M1 market database.

@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "protocol_id": "m4-outcome-v2",
+  "status": "preregistered_frozen_before_first_prospective_outcome",
+  "supersedes_protocol_id": "m4-outcome-v1",
+  "supersession_reason": "clarify standard MFE/MAE as nonnegative excursion magnitudes and freeze self-contained offline-recomputable market paths before any real prospective outcome",
+  "baseline_cutoff_trade_date": "2026-09-17",
+  "capture_contract": {
+    "methodology_contract_version": 4,
+    "capture_transaction_schema_version": 5,
+    "prospective_observation_schema_version": 4,
+    "methodology_component_count": 37,
+    "exact_methodology_freeze_commit": "c774c54928c33361952bf1a612a8555633449625"
+  },
+  "cohort": {
+    "required_enrollment_state": "prospective_new",
+    "required_prospective_outcome_eligible": true,
+    "exclude_baseline_existing": true,
+    "blocked_pattern_ids": [
+      "alternate_bat",
+      "five_zero"
+    ],
+    "source_terminal_must_be_unobserved_at_enrollment": true,
+    "complete_source_clock_seed_required": true,
+    "formal_price_modes": [
+      "qfq",
+      "qfq_carry_forward"
+    ]
+  },
+  "market_path": {
+    "source": "m1_base_plus_daily_delta_logical_daily_history",
+    "clock": "traded_bars_not_capture_snapshot_index",
+    "full_day_suspension_counts_as_traded_bar": false,
+    "require_enrollment_price_basis_match": true,
+    "automatic_rebase": false,
+    "basis_drift_policy": "metrics_requiring_post_drift_price_comparison_unresolved",
+    "stored_market_path_rows": "trade_date_ohlcv",
+    "canonical_path_hash": "sha256_canonical_trade_date_ohlcv_plus_price_basis",
+    "offline_semantic_recompute_required": true
+  },
+  "reconstruction": {
+    "source_execution_function": "htcn.harmonic.execution.observe_source_execution",
+    "lifecycle_function": "htcn.harmonic.source_lifecycle.derive_source_lifecycle",
+    "duplicate_formula_implementation_allowed": false,
+    "pre_enrollment_terminal_policy": "evidence_contradiction_not_normal_outcome"
+  },
+  "source_events": {
+    "terminal_observed": true,
+    "type_i_confirmation_ratio": 0.382,
+    "type_i_secondary_ratio": 0.618,
+    "type_i_primary_window_traded_bars": 5,
+    "record_first_hit_offset_382": true,
+    "record_first_hit_offset_618": true,
+    "record_reaction_only_later_382": true,
+    "record_first_prz_exit": true,
+    "record_type_ii_reentry": true,
+    "strict_type_ii_terminal_side_retest": true,
+    "record_post_type_ii_reversal_exit": true,
+    "type_ii_full_carney_reversal_claim_requires_indicator_protocol": true,
+    "shark_generic_type_i_is_not_shark_management_target": true,
+    "shark_specific_management_target_in_v2": false
+  },
+  "descriptive_path_metrics": {
+    "windows_traded_bars": [
+      5,
+      10,
+      20
+    ],
+    "primary_window": 5,
+    "include_terminal_bar": false,
+    "start_bar": "T+1",
+    "metrics": [
+      "mfe_price",
+      "mae_price",
+      "mfe_terminal_pct",
+      "mae_terminal_pct",
+      "mfe_reaction_span_units",
+      "mae_reaction_span_units"
+    ],
+    "excursion_representation": "nonnegative_magnitude",
+    "zero_floor": true,
+    "bullish_mfe_formula": "max(0,max(post_terminal_high)-terminal_price)",
+    "bullish_mae_formula": "max(0,terminal_price-min(post_terminal_low))",
+    "bearish_mfe_formula": "max(0,terminal_price-min(post_terminal_low))",
+    "bearish_mae_formula": "max(0,max(post_terminal_high)-terminal_price)",
+    "reaction_span_denominator": "abs(reaction_anchor_price-terminal_price)",
+    "incomplete_window_policy": "immature_not_partial_complete"
+  },
+  "censoring": {
+    "terminal_not_observed": "right_censored_ongoing",
+    "type_ii_not_observed": "right_censored_ongoing",
+    "missing_market_data": "unresolved",
+    "price_basis_interruption": "unresolved_after_drift"
+  },
+  "prohibited_in_v2": [
+    "trade_entry_price",
+    "stop_loss",
+    "position_size",
+    "fees",
+    "execution_pnl",
+    "win_loss_label",
+    "win_rate",
+    "alpha",
+    "benchmark_excess_return",
+    "p_value",
+    "significance_test",
+    "buy_sell_ranking"
+  ],
+  "interpretation": {
+    "evidence_only": true,
+    "is_trade_instruction": false,
+    "alpha_inference_allowed": false,
+    "carney_source_events_separated_from_htcn_engineering_metrics": true,
+    "v1_real_outcome_evidence_exists": false
+  }
+}
