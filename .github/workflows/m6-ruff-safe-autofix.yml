@@ -32,8 +32,7 @@ jobs:
 
       - name: Apply Ruff safe fixes only
         run: |
-          python -m ruff check . --fix
-          true
+          python -m ruff check . --fix || true
 
       - name: Report remaining Ruff violations
         run: |
