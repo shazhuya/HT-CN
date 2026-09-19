@@ -34,13 +34,17 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e '.[dev]'
+          python -m pip install -r requirements-dev.lock
+          python -m pip install --no-deps -e .
 
       - name: Verify Project OS v2 state integrity
         run: python scripts/project_state.py
 
+      - name: Enforce frozen Ruff debt budget
+        run: python scripts/ruff_with_budget.py
+
       - name: Run Python tests
-        run: python -m pytest -q
+        run: python scripts/pytest_with_warning_budget.py
 
       - name: Set up Node 22
         uses: actions/setup-node@v4

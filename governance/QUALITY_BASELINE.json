@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "pytest": {
+    "warning_budget": 1163,
+    "baseline_passed": 869,
+    "baseline_commit": "cffe3956f4a053581a512a3df24413f400ab3be5",
+    "baseline_workflow_run": 35445071382,
+    "policy": "net_new_warnings_fail; reductions lower the budget; increases require an explicit CR and evidence"
+  },
+  "ruff": {
+    "violation_budget": 485,
+    "baseline_scope": "entire_repository",
+    "policy": "net_new_violations_fail; all newly added or materially edited Python files must be clean; reductions lower the budget"
+  }
+}

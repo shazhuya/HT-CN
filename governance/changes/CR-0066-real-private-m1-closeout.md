@@ -155,3 +155,34 @@ This cleanup:
 - does not alter M2/M3/M4/M5 implementation;
 - keeps M6.2 in `awaiting_private_run`;
 - is recorded as A-20260919-0066-010.
+
+## Final cleanup lifecycle closure
+
+The cleanup lifecycle is now completely preserved instead of stopping at the first local success:
+
+- A-20260919-0066-011: failed, workflow `35444796422`, literal `\\n` caused pytest collection `SyntaxError`;
+- A-20260919-0066-012: failed, workflow `35444858864`, first repair did not actually replace the literal escape;
+- the exact source was repaired and verified before the final merge;
+- PR #41 merged as `cffe3956f4a053581a512a3df24413f400ab3be5`;
+- push-main workflow `35445071382` / run #2133 completed successfully;
+- deterministic tests and formal-main-release-integrity both succeeded;
+- the verified final success is recorded as A-20260919-0066-013.
+
+`86fd17d01b3b9c2fc597d500723c6966c9a2250f` remains the latest integrated M6.2 product release. `cffe3956f4a053581a512a3df24413f400ab3be5` is the latest successful governance validation. This distinction is explicit and M6.2 remains `awaiting_private_run`.
+
+## Stage-audit continuity and quality hardening
+
+The 2026-09-19 stage audit found that the prior Project OS checks could still pass while the active spec status or final attempt pointer lagged behind Git/CI. This bounded hardening closes that gap without changing M1–M5 product or research semantics:
+
+- `PROJECT_STATE.current.active_spec` must resolve through `required_specs` and its status must equal the current machine state;
+- Change lifecycle status must be compatible with the current machine state;
+- `PROJECT_STATE.current.latest_attempt_id` must resolve to one unique attempt belonging to the active CR;
+- a successful latest attempt must bind the same commit and workflow run as `latest_validation`;
+- attempt IDs are unique and the referenced attempt commit must be an ancestor of the current checkout;
+- M6.2 spec now correctly states `awaiting_private_run`;
+- the final PR #41 / push-main success is recorded as A-20260919-0066-013;
+- Python dependency resolution is locked through `uv.lock` and `requirements-dev.lock`;
+- the 1163-warning and repository-wide Ruff debt baselines are fail-on-growth CI gates;
+- README now exposes current state, operator entrypoints, authority order, data boundaries and Source support limits.
+
+The warning/lint budgets are containment gates, not debt closure claims. Existing debt remains tracked for bounded reduction. The real private-M1 run remains the only M6.2 empirical blocker.

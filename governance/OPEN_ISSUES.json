@@ -53,12 +53,13 @@
       "id": "ISSUE-0065",
       "severity": "medium",
       "type": "warning_noise",
-      "status": "open",
+      "status": "baseline_frozen_reduction_pending",
       "title": "Python warning volume is high and can hide regressions",
       "blocks": [
         "M6.4"
       ],
-      "next_action": "Freeze warning baseline and require explanation for net-new warnings."
+      "next_action": "Reduce warning classes in bounded batches; every verified reduction must lower governance/QUALITY_BASELINE.json and net-new warnings remain forbidden.",
+      "current_fact": "The 1163-warning baseline from cffe395 / workflow 35445071382 is frozen in CI. This prevents growth but does not claim the existing warning debt is resolved."
     },
     {
       "id": "ISSUE-0066",
@@ -81,6 +82,18 @@
         "FIVE_ZERO production support"
       ],
       "next_action": "Keep quarantined until a new explicit Source decision resolves the conflict."
+    },
+    {
+      "id": "ISSUE-0068",
+      "severity": "medium",
+      "type": "lint_debt",
+      "status": "baseline_frozen_reduction_pending",
+      "title": "Repository-wide Ruff debt remains above clean baseline",
+      "blocks": [
+        "M6.4 quality closeout"
+      ],
+      "next_action": "Reduce Ruff violations in bounded mechanical batches; every verified reduction must lower governance/QUALITY_BASELINE.json.",
+      "current_fact": "The current branch reduces the repository-wide count from 493 to 485, keeps all newly added and materially edited Project OS files clean, and adds a no-net-growth CI gate."
     }
   ]
 }
