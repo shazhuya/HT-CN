@@ -14,6 +14,9 @@ from htcn.app.handoff_v4_portable_detail import (
     verify_daily_handoff_bundle_v4,
 )
 from htcn.app.portable_visual_semantics import build_pattern_visual_semantics
+from htcn.app.portable_visual_workspace_v2 import (
+    build_portable_visual_workspace_html_v2,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -366,7 +369,7 @@ def write_portable_pattern_workspace(
         encoding="utf-8",
     )
     html_path.write_text(
-        build_portable_pattern_review_html(inspection),
+        build_portable_visual_workspace_html_v2(inspection),
         encoding="utf-8",
     )
     return {
