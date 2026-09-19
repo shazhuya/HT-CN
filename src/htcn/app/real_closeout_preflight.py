@@ -203,6 +203,7 @@ def _run(
         text=True,
         encoding="utf-8",
         errors="replace",
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,
@@ -255,7 +256,7 @@ def _catalog_probe(root: Path) -> dict[str, Any]:
         "tables": [],
         "listed_scope_count": 0,
         "initialized_scope_count": 0,
-        "orphan_dataset_count": 0,
+        "inactive_dataset_count": 0,
         "invalid_metadata_count": 0,
         "invalid_parquet_count": 0,
         "row_count_mismatch_count": 0,
@@ -340,7 +341,7 @@ def _catalog_probe(root: Path) -> dict[str, Any]:
                 "WHERE status='listed' AND " + scope_sql
             ).fetchone()[0]
         )
-        datasets = con.execute(
+        all_datasets = con.execute(
             "SELECT instrument_id, parquet_path, row_count, "
             "first_trade_date, last_trade_date "
             "FROM daily_dataset WHERE " + scope_sql
@@ -352,16 +353,19 @@ def _catalog_probe(root: Path) -> dict[str, Any]:
                 "WHERE status='listed' AND " + scope_sql
             ).fetchall()
         }
+        datasets = [
+            row
+            for row in all_datasets
+            if str(row[0]) in listed_ids
+        ]
+        inactive_dataset_count = len(all_datasets) - len(datasets)
 
         invalid_metadata = 0
-        orphan_count = 0
         invalid_parquet = 0
         row_mismatch = 0
         invalid_examples: list[str] = []
         for instrument_id, parquet_path, row_count, first_date, last_date in datasets:
             instrument = str(instrument_id)
-            if instrument not in listed_ids:
-                orphan_count += 1
             invalid = (
                 not parquet_path
                 or int(row_count or 0) <= 0
@@ -419,7 +423,7 @@ def _catalog_probe(root: Path) -> dict[str, Any]:
             {
                 "listed_scope_count": listed_scope_count,
                 "initialized_scope_count": len(datasets),
-                "orphan_dataset_count": orphan_count,
+                "inactive_dataset_count": inactive_dataset_count,
                 "invalid_metadata_count": invalid_metadata,
                 "invalid_parquet_count": invalid_parquet,
                 "row_count_mismatch_count": row_mismatch,
@@ -724,7 +728,7 @@ def collect_real_closeout_preflight(
         "tables": [],
         "listed_scope_count": 0,
         "initialized_scope_count": 0,
-        "orphan_dataset_count": 0,
+        "inactive_dataset_count": 0,
         "invalid_metadata_count": 0,
         "invalid_parquet_count": 0,
         "row_count_mismatch_count": 0,
@@ -784,24 +788,16 @@ def collect_real_closeout_preflight(
             ),
             make_check(
                 "m1_dataset_metadata_valid",
-                passed=(
-                    int(catalog.get("invalid_metadata_count") or 0) == 0
-                    and int(catalog.get("orphan_dataset_count") or 0) == 0
-                ),
+                passed=int(catalog.get("invalid_metadata_count") or 0) == 0,
                 detail=(
-                    "dataset_metadata_valid"
-                    if (
-                        int(catalog.get("invalid_metadata_count") or 0) == 0
-                        and int(catalog.get("orphan_dataset_count") or 0) == 0
-                    )
-                    else (
-                        f"invalid_metadata_count={catalog.get('invalid_metadata_count')};"
-                        f"orphan_dataset_count={catalog.get('orphan_dataset_count')}"
-                    )
+                    "active_dataset_metadata_valid"
+                    if int(catalog.get("invalid_metadata_count") or 0) == 0
+                    else f"invalid_metadata_count={catalog.get('invalid_metadata_count')}"
                 ),
                 data={
                     "invalid_metadata_count": int(catalog.get("invalid_metadata_count") or 0),
-                    "orphan_dataset_count": int(catalog.get("orphan_dataset_count") or 0),
+                    "inactive_dataset_count": int(catalog.get("inactive_dataset_count") or 0),
+                    "inactive_history_is_not_a_blocker": True,
                 },
             ),
             make_check(
