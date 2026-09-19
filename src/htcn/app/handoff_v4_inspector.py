@@ -19,11 +19,18 @@ from htcn.app.portable_visual_workspace_v2 import (
 )
 
 
+HANDOFF_V4_INSPECTION_SCHEMA_VERSION = 2
+
+
 @dataclass(frozen=True, slots=True)
 class HandoffV4InspectorContract:
-    version: int = 1
-    semantics: str = "portable_pattern_visual_review"
+    version: int = 2
+    semantics: str = "portable_pattern_visual_review_v2"
     source_bundle_schema: int = DAILY_HANDOFF_V4_SCHEMA_VERSION
+    visual_semantics_version: int = 2
+    schema_specific_rendering: bool = True
+    layered_prz_rendering: bool = True
+    future_pattern_points_may_be_invented: bool = False
     requires_market_database: bool = False
     imports_product_state: bool = False
     writes_review_journal: bool = False
@@ -158,7 +165,7 @@ def build_handoff_v4_inspection(bundle_path: str | Path) -> dict[str, Any]:
         )
 
     return {
-        "schema_version": 1,
+        "schema_version": HANDOFF_V4_INSPECTION_SCHEMA_VERSION,
         "contract": HandoffV4InspectorContract().as_payload(),
         "source": {
             "bundle_path": str(source),
@@ -379,4 +386,5 @@ def write_portable_pattern_workspace(
         "html_output": str(html_path),
         "summary": inspection.get("summary"),
         "contract": inspection.get("contract"),
+        "visual_semantics_version": 2,
     }
