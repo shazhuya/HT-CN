@@ -224,3 +224,12 @@ This is a test/audit defect, not a harmonic-identity defect. Existing source-ali
 The bounded correction makes Phase21 compare rendered nodes with `observed_labels`, separately verifies the canonical `expected_labels == [0,X,A,B,C]`, requires completed Shark to end at `C`, and requires forming Shark prefixes to report `C` among missing future labels. No product geometry, Source Raw PRZ, lifecycle, M4 evidence, or harmonic identity is changed.
 
 A fresh hosted validation and a fresh private-M1 closeout on the resulting current main are required.
+
+## Forming-Shark audit validation closeout
+
+- real Private-M1 failure on main `8f38a628b068417164fd1caad01110d35c4b88b1` is preserved as A-20260919-0066-027;
+- first hosted regression run #2177 / `35455483180` is preserved as A-20260919-0066-028; the forming-Shark browser case passed, while the stale five-screenshot Phase18 evidence contract failed closed;
+- corrected hosted run #2179 / `35455632325` on `01e417129b8f48a287872737802d44b5917519c3` passed 880 Python tests / 0 warnings, Ruff 483, Web build, 24 existing browser tests, six-case Phase18 browser acceptance, Phase18 evidence verification (11 checks / 6 screenshots), Phase21 dynamic Chromium audit, Phase21 evidence verification, M4 methodology frozen-match (37), and Outcome Engine frozen-match (4);
+- formal release artifact: `10588047315`.
+
+This validates the audit correction without changing harmonic identity, Source Raw PRZ, Source lifecycle, M4 methodology, Outcome Engine or trade semantics. M6.2 remains `awaiting_private_run`; a fresh real Private-M1 run on the resulting canonical main is still required before any closeout claim.
