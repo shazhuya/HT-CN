@@ -1875,3 +1875,95 @@ Phase 11 解决了“跨日产品状态如何可靠保存”，Phase 12 解决�
 原因：
 
 Phase 12 已经能回答“今天变了什么”，但如果没有独立 review workflow，用户仍然无法可靠记录“哪些已经看过、哪些要继续跟踪”。Phase 13 用 append-only event journal 把人工复盘进度保存下来，同时把当天 review state 与跨日 follow-up 连续性拆开，避免昨天的“已看”污染今天的新变化，也避免“后续跟踪”因为第二天没有新 Delta 而消失。整个层级只服务复盘流程，不获得任何 lifecycle、研究或交易权力。
+
+
+## D-055 — Daily Handoff v3 必须把 Phase 11–13 作为可验证 transport extension，且不得修改冻结的 v2 语义
+
+**状态：Frozen M5 Phase 14 handoff v3 boundary**
+
+正式决定：
+
+1. Phase 14 必须新建 schema/versioned v3，不修改 Phase-10 handoff v2；
+2. v3 外层基础 member 必须是现场临时重建、并通过冻结 v2 verifier 的 `base/htcn-daily-handoff-v2.zip`；
+3. v3 不得覆盖用户已有的 `htcn-daily-handoff-v2.zip` 或 v2 report；
+4. v3 verifier 必须再次调用冻结 v2 verifier，不能只相信外层 manifest；
+5. v3 manifest 必须绑定 nested-v2 schema/status/product-binding/bundle SHA；
+6. nested-v2 manifest 声明与真实 v2 不一致必须 invalid；
+7. v3 pipeline SHA 必须校验 nested-v2 中原始 pipeline member bytes，禁止用重新序列化 JSON 代替原始 bytes；
+8. v3 继承 pipeline 的 product/history/digest/M4 readiness，不重新定义 readiness；
+9. digest-ready 必须蕴含 history-ready；
+10. history-ready 必须蕴含 product-ready；
+11. readiness 关系不一致时 build/verifier 必须 fail closed；
+12. v3 transport failure 不得改写任何 pipeline readiness；
+13. 当 history-ready=true，v3 current history 必须是 nested-v2 product trade date 的 latest Phase-11 observation；
+14. current history source report SHA 必须等于 nested-v2 product-binding report SHA；
+15. current history source snapshot SHA 必须等于 nested-v2 product-binding snapshot SHA；
+16. current history trade date 必须等于 nested-v2 product trade date；
+17. history transport 必须有界，不运输全部长期 history；
+18. history 只运输 current observation、直接上一交易日 observation，以及必要的直接上一同日 revision；
+19. current history 有 previous-trade-date baseline 时，v3 verifier 必须用 previous/current queues 独立重算 Operator Delta；
+20. 重算 delta 必须与 current history 保存的 delta 完全相同；
+21. 无上一交易日时不得带 previous-history member，且 delta 必须为 baseline_no_previous_observation；
+22. 当 digest-ready=true，必须运输精确 Phase-12 daily review digest；
+23. digest 必须由 transported current history 重新构建并逐字段一致，不能只检查 source id；
+24. digest 的 generated_at_utc/history_root/report_path 只作为 transport metadata，不参与 Phase-12 semantic core；
+25. Phase-13 review-session snapshot 只能在 digest-ready 时运输；
+26. review-session snapshot 必须在 handoff build 时从 validated history + review journal 即时导出；
+27. session 导出与 journal event 选择必须拿 Phase-13 的同一个 review-journal process lock，避免撕裂快照；
+28. 移除 Phase-13 专属字段和 item review 后，session 必须精确投影回 transported Phase-12 digest；
+29. v3 不得整库打包 review journal；
+30. journal root event ids 固定来自 current_event_id / active_follow_up_event_id / active_follow_ups[].event_id；
+31. 必须递归携带每个 root 的 previous_binding_event_id 与 previous_display_key_event_id 直到链首；
+32. included review-event ids 必须严格等于 root closure；
+33. 少 predecessor 必须 invalid；
+34. 多一个不相关 event 也必须 invalid；
+35. 每个 transported review event 必须继续通过 Phase-13 event verifier；
+36. current review event 必须与 session item 的 observation/display-key/state/note 交叉一致；
+37. active follow-up event 必须为 follow_up 且 source display-key/instrument/observation/trade-date 与 session 完全一致；
+38. 外层 v3 永久声明：
+    - transport_only=true；
+    - authoritative_evidence=false；
+    - writes_m4_evidence=false；
+    - is_trade_instruction=false；
+    - alpha_inference_allowed=false；
+    - predictive_score_used=false；
+    - historical_outcome_used_for_ranking=false；
+    - review_state_changes_product_ranking=false；
+39. M4 authority 仍只存在 nested v2 内部的冻结 authoritative capture chain；
+40. reviewed/follow_up 被 transport 后不得获得任何 lifecycle/action/ranking/trade 语义；
+41. v3 status 允许：
+    - complete_review_transport；
+    - history_transport_review_degraded；
+    - product_transport_history_degraded；
+    - base_transport_product_failed；
+42. M4 readiness 与这些 product-review transport status 继续独立；
+43. v3 写入必须 temp ZIP -> full verify -> atomic replace -> final verify；
+44. pre-replace verify 失败不得留下最终 v3 ZIP；
+45. v3 runner 必须独立写 `m5-daily-handoff-v3.json`；
+46. runner 必须比较 pipeline report build 前后 SHA；
+47. runner 必须声明 transport failure does not rewrite readiness；
+48. one-click `运行HT-CN每日交接包v3.bat` 只能运行 v3 build script；
+49. v3 one-click 不得重跑 daily-close pipeline；
+50. v3 one-click 不得调用旧 v2 entrypoint；
+51. Phase-10 v2 入口/代码/manifest/verifier 保持原样；
+52. 首轮 code CI #1788 / `35416245508`：
+    - Python 771 passed；
+    - Web build success；
+    - Playwright 24 passed；
+53. final hardening 增加 review-event predecessor closure、伪造 nested-v2 binding、伪造 pipeline hash 三类测试；
+54. final validated code checkpoint：
+    `c9de28d959b64043663a2bceccb17cc87b8f3756`；
+55. final code CI #1790 / `35416336734`：
+    - overall success；
+    - Python 774 passed；
+    - Web build success；
+    - Playwright 24 passed；
+    - browser evidence upload success；
+56. draft PR #26 只是 hosted-CI / diff audit carrier，不代表已经合并；
+57. Phase-10 handoff v2 changed files：0；
+58. M4 capture methodology drift：0 / 37；
+59. Outcome Engine drift：0 / 4。
+
+原因：
+
+Phase 10 的 v2 已经正确解决“最终产品快照 + M4 nested evidence 如何安全交接”，后续不能为了加入 Phase 11–13 而重写 v2。Phase 14 因此把 v2 当成冻结的可验证基础层，再在外层新增 history/digest/review-state 的绑定链。通过 bounded history、digest 独立重建、session->digest 投影以及 review-event closure，v3 可以证明这些状态确实来自同一个最终产品观察，而不是把几个看起来相关的 JSON 粗暴拼在一起。
