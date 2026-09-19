@@ -1,6 +1,6 @@
 # CR-0066 — M6.2 Real Private-M1 Closeout
 
-status: validation_green
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -51,3 +51,19 @@ No harmonic ratios, identity, PRZ, lifecycle, M4 methodology/outcome engine, M5 
 - no M2/M3/M4/M5 semantic file modified.
 
 Formal PR->main release validation remains required before merge.
+
+## Final pre-merge gate
+
+- lifecycle-state regression #2076 / `35437727008` preserved as A-20260919-0066-004;
+- fix keeps phase=`M6.2` and active change=`CR-0066` strict while allowing only explicit lifecycle progression states;
+- final PR run #2080 / `35437784106`: success;
+- formal Project OS integrity: success;
+- formal main lineage: success;
+- existing browser acceptance: **24 passed**;
+- Phase18: **1 passed**;
+- Phase21: **1 passed**;
+- M4 methodology: **frozen_match / 37 components**;
+- Outcome Engine: **frozen_match / 4 components**;
+- formal release artifact ID: **10582497478**.
+
+CR-0066 engineering is ready to merge. The empirical private-M1 run remains intentionally pending until after formal main integration.
