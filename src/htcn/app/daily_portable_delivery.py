@@ -699,6 +699,7 @@ def run_daily_portable_delivery(
     archive_dir: Path | None = None
 
     try:
+        failed_stage = "pipeline_preflight"
         before_hash = _sha256_path(pipeline_path)
         pipeline = _read_json_object(pipeline_path)
         if pipeline.get("m5_product_ready") is not True:
