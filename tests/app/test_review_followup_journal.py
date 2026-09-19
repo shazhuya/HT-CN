@@ -9,6 +9,7 @@ from htcn.app.review_followup_journal import (
     append_review_event,
     build_latest_review_session,
     filter_review_session,
+    query_review_journal,
     verify_review_journal_event,
 )
 
@@ -425,3 +426,79 @@ def test_active_follow_up_remains_visible_without_new_daily_change(
     assert follow["instrument_id"] == "SSE.688256"
     assert follow["source_trade_date"] == "2026-09-18"
     assert follow["in_current_digest"] is False
+
+
+def test_review_journal_query_is_read_only_and_filterable(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_source(monkeypatch)
+    root = tmp_path / "journal"
+
+    append_review_event(
+        history_root=tmp_path / "history",
+        journal_root=root,
+        source_observation_id=OBS_A,
+        display_key=KEY,
+        review_state="reviewed",
+        note="first",
+        client_request_id="req-query-1",
+    )
+    append_review_event(
+        history_root=tmp_path / "history",
+        journal_root=root,
+        source_observation_id=OBS_A,
+        display_key=KEY,
+        review_state="follow_up",
+        note="second",
+        client_request_id="req-query-2",
+    )
+
+    all_events = query_review_journal(
+        journal_root=root,
+        instrument_id="sse.688256",
+    )
+    assert all_events["event_count"] == 2
+    assert all_events["events"][0]["review_state"] == "follow_up"
+    assert all_events["events"][1]["review_state"] == "reviewed"
+    assert all_events["filter"]["instrument_id"] == "SSE.688256"
+    assert all_events["authoritative_evidence"] is False
+    assert all_events["writes_m4_evidence"] is False
+    assert all_events["historical_outcome_used_for_ranking"] is False
+
+    filtered = query_review_journal(
+        journal_root=root,
+        display_key=KEY,
+        review_state="follow_up",
+    )
+    assert filtered["event_count"] == 1
+    assert filtered["events"][0]["note"] == "second"
+
+
+def test_review_event_tampering_is_detected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_source(monkeypatch)
+    root = tmp_path / "journal"
+    appended = append_review_event(
+        history_root=tmp_path / "history",
+        journal_root=root,
+        source_observation_id=OBS_A,
+        display_key=KEY,
+        review_state="reviewed",
+        note="original",
+        client_request_id="req-tamper",
+    )
+    path = Path(appended["path"])
+    payload = __import__("json").loads(path.read_text(encoding="utf-8"))
+    payload["note"] = "tampered"
+    path.write_text(
+        __import__("json").dumps(payload, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    checked = verify_review_journal_event(path)
+    assert checked["status"] == "invalid"
+    assert "review_event_id_mismatch" in checked["errors"]
+    assert "review_event_integrity_mismatch" in checked["errors"]
