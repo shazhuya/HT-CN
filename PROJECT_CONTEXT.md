@@ -1,8 +1,8 @@
 # HT-CN Project Context — 跨对话权威状态
 
 context_schema: `1`
-context_checkpoint: `504cc063d93e999dcbac1b131e14f475beacd4d0`
-context_checkpoint_title: `M5 Phase 11 Daily Operator History / Change Journal v1 green`
+context_checkpoint: `84c7d8a0f2d46cd8ed9b79dcd638cb727d165465`
+context_checkpoint_title: `M5 Phase 12 Daily Review Digest / Change Triage v1 green`
 context_snapshot_date: `2026-09-19`
 default_branch: `main`
 repository: `shazhuya/HT-CN`
@@ -13,19 +13,19 @@ repository: `shazhuya/HT-CN`
 
 正式 `main` 仍以 **M3 Source-Clock Lifecycle + A-share Context + Action-State Product Orchestration** 为已合并基线；M4 prospective evidence 与 M5 只读产品层继续在独立分支演进。
 
-当前实际开发现场已经完成 **M5 Phase 11 — Daily Operator History / Change Journal v1**：
+当前实际开发现场已经完成 **M5 Phase 12 — Daily Review Digest / Change Triage v1**：
 
-- 当前分支：`m5/daily-operator-history`
-- Phase 11 validated code checkpoint：`504cc063d93e999dcbac1b131e14f475beacd4d0`
-- hosted CI：run `35384764795` / #1699，overall success
-- Python：718 passed
+- 当前分支：`m5/daily-review-digest-v1`
+- Phase 12 validated code checkpoint：`84c7d8a0f2d46cd8ed9b79dcd638cb727d165465`
+- hosted CI：run `35413656027` / #1733，overall success
+- Python：736 passed
 - Web build：success
-- Playwright：22 passed
+- Playwright：23 passed
 - browser evidence upload：success
 - M4 capture methodology drift：0 / 37
 - Outcome Engine drift：0 / 4
 
-M5 Phase 1–11 当前主线：
+M5 Phase 1–12 当前主线：
 
 1. Daily Operator Queue；
 2. Operator Delta / 今日变化；
@@ -37,9 +37,10 @@ M5 Phase 1–11 当前主线：
 8. filesystem advisory cache-slot lock；
 9. Daily Close Product Pipeline；
 10. Daily Handoff Bundle v2；
-11. append-only Daily Operator History / Change Journal，支持同日 revision、跨日 Delta、hash/chain 完整性和 Workbench/API 查询。
+11. append-only Daily Operator History / Change Journal；
+12. Daily Review Digest / Change Triage，把完整跨日 Delta 组织成透明工作流复盘与可钻取筛选。
 
-M5 仍是**只读实战产品层**，不拥有 harmonic identity、Source Raw PRZ 或 lifecycle，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 11 的历史只代表产品观察，不是 authoritative transition。
+M5 仍是**只读实战产品层**，不拥有 harmonic identity、Source Raw PRZ 或 lifecycle，不写 M4 authoritative evidence，不使用 win rate / alpha / predictive score 进行排序。Phase 12 的 review order 只是产品工作流导航，不是预期收益或买卖排名。
 
 ## 正式 main 基线 — M3
 
@@ -1859,3 +1860,72 @@ Governance:
 Phase 11 已建立可靠的跨日产品观察底座。下一阶段优先进入 **M5 Phase 12 — Daily Review Digest / Change Triage v1**：基于已冻结的 product history，把“新出现 / 消失 / lifecycle / action / next-key / context 变化”整理成每日复盘摘要与可钻取工作流。
 
 Phase 12 仍只能做透明的变化归类和复盘导航，不得把历史 observation 转换为胜率、alpha、预测评分或买卖排序。若后续需要把 Phase 11 history 带入每日交接包，应通过新的 versioned handoff contract 实现，不修改 Phase 10 已冻结的 v2 语义。
+
+
+## M5 Phase 12 — Daily Review Digest / Change Triage v1
+
+Current branch:
+`m5/daily-review-digest-v1`
+
+Validated code checkpoint:
+`84c7d8a0f2d46cd8ed9b79dcd638cb727d165465`
+
+Hosted validation:
+- draft PR #24 is only a CI/diff carrier；
+- first code CI run `35413513169` / #1725：success；
+- Python 733 passed；
+- Web build success；
+- Playwright 23 passed；
+- final hardening CI run `35413656027` / #1733：success；
+- Python 736 passed；
+- Web build success；
+- Playwright 23 passed；
+- browser evidence upload success。
+
+Frozen implementation:
+- digest source is the latest valid Phase-11 history revision；
+- Phase-11 record/revision/previous-day chain integrity is inherited and remains fail-closed；
+- digest requires an exhaustive unfiltered Delta：declared total, observation change count and actual changes length must match；
+- all changes and all change_types are retained；
+- fixed review workflow order is execution_evaluation → reaction_observation → waiting → evidence_insufficient → disappeared_candidate；
+- that order is product workflow navigation only, explicitly not expected-return/win-rate/trade ranking；
+- transparent change types cover new/disappeared/action/lifecycle/pattern/next-key/execution-gate/context-caution changes；
+- current analysis gaps are shown separately and are not reinterpreted as candidate disappearance；
+- digest status distinguishes baseline/no-changes/changes-ready and analysis-gap variants；
+- Phase 12 runs only after Phase-11 history append in the daily close pipeline；
+- digest failure does not rewrite product/history/research readiness；
+- GET `/api/operator/review-digest` supports workflow/change-type/instrument filters；
+- filters only affect filtered sections/count and never alter source change totals；
+- invalid workflow/change-type filters are rejected explicitly；
+- Workbench adds **每日变化复盘** before **跨日产品观察历史**；
+- UI shows source total and filtered hit count side by side；
+- each item can drill into the single-symbol workbench；
+- report: `artifacts/reports/m5-daily-review-digest.json`；
+- one-click: `运行HT-CN每日变化复盘.bat`；
+- CI includes `apps/web/tests/daily-review-digest.spec.ts`。
+
+Boundary:
+- product_change_triage_only；
+- exhaustive_changes=true；
+- authoritative_transition=false；
+- authoritative_evidence=false；
+- writes_m4_evidence=false；
+- historical_outcome_used_for_ranking=false；
+- predictive_score_used=false；
+- alpha_inference_allowed=false；
+- is_trade_instruction=false；
+- no harmonic identity / Source Raw PRZ / lifecycle mutation。
+
+Freeze audit:
+- M4 capture methodology: 0 / 37 changed；
+- Outcome Engine: 0 / 4 changed。
+
+Governance:
+- D-053；
+- `specs/m5-phase-12-daily-review-digest.md`。
+
+### 下一步
+
+Phase 12 已把“长期历史”变成每天可执行的复盘导航。下一阶段优先进入 **M5 Phase 13 — Review Session / Follow-up Journal v1**：给 review item 增加独立的产品工作流状态，例如“未看 / 已看 / 后续跟踪”和可选笔记，并稳定绑定 source observation / display key。
+
+Phase 13 只能记录用户复盘工作流，不得修改 canonical lifecycle/action state，不得变成仓位/交易执行层，也不得因为用户 pin/follow-up 就改变 Queue 排序、胜率、alpha 或预测评分。若未来需要把 Phase 11/12 artifacts 带入交接包，仍需另建 versioned handoff contract，不修改冻结的 Phase 10 handoff v2。
