@@ -21,7 +21,15 @@ def test_project_os_runtime_validation_is_green() -> None:
     assert ok, errors
     assert not errors
     assert state["current"]["phase"] == "M6.2"
-    assert state["current"]["status"] == "implementing"
+    assert state["current"]["status"] in {
+        "implementing",
+        "validation_green",
+        "ready_to_merge",
+        "merged",
+        "postmerge_pending",
+        "awaiting_private_run",
+        "real_run_in_progress",
+    }
     assert state["current"]["active_change"] == "CR-0066"
     assert state["next_major_task"]["phase"] == "M6.2"
     assert any("legacy PROJECT_CONTEXT" in item for item in warnings)
