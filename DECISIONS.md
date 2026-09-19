@@ -1991,3 +1991,28 @@ Phase 10 的 v2 已经正确解决“最终产品快照 + M4 nested evidence 如
 - Python 779 passed;
 - Web build success;
 - Playwright 24 passed.
+
+
+## D-057 — Portable chart detail requires a new v4 transport; v3 remains frozen
+
+日期：2026-09-19
+
+决定：
+
+1. Phase14 handoff v3 remains frozen and unmodified.
+2. Phase15 v3 Inspector remains a pure v3 consumer and is not allowed to consult the local market DB to fill missing geometry.
+3. Because v3 Queue records intentionally contain product summaries rather than full bars/pattern.points, portable visual drill-down must use a new versioned transport: v4.
+4. v4 nests the exact verified v3 bytes and adds portable detail only for the exhaustive current Queue display-key set.
+5. No top-N, score, expected-return or user-follow-up state may define the detail inclusion set.
+6. Each current Queue display key must be represented by either exact matched detail or an explicit error; silent omission is invalid.
+7. Detail analysis is accepted only when local input identity matches the v3 current product snapshot identity and the analysis trade date matches v3.
+8. Pattern binding is exact: the verifier re-derives the Queue display key from transported pattern points.
+9. Forming structures must never fabricate a future D/potential leg. The only dashed future-facing visual allowed in v1 is a clearly labelled next-key-price guide, which is not pattern geometry.
+10. Portable detail and visualization remain product-presentation artifacts: no methodology authority, no M4 evidence writes, no Queue/history/review mutation, no review events, no alpha/ranking/trade instruction.
+
+验证：
+- implementation checkpoint `348fd5b47341fbc01e74085530c4fd8dec9aed28`;
+- hosted CI #1822 / `35419647193`: success;
+- Python 784 passed;
+- Web build success;
+- Playwright 24 passed.
