@@ -1,6 +1,6 @@
 # CR-0065 — HT-CN Project OS v2 / 跨对话无损续接
 
-status: validation_green
+status: validation_failed
 baseline_ref: m5/phase23-postmerge-closeout
 baseline_head: 29c88c41aa024a4ac00fecdf7e43a61a51e50ad1
 target: main
@@ -48,3 +48,4 @@ milestone: M6.1
 - Web build: success；
 - PR→main formal release: pending on final governance HEAD；
 - first failed validation #2010 is preserved in Attempt Ledger and was fixed without weakening the gate。
+- PR CI #2031 / 35436210906: Project OS gate passed, but one Resume Pack test was over-constrained; failure preserved as A-20260919-0065-006 and test narrowed without allowing legacy body dumps。
