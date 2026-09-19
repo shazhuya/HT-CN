@@ -1,6 +1,6 @@
 # CR-0066 — M6.2 Real Private-M1 Closeout
 
-status: ready_to_merge
+status: postmerge_pending
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -113,3 +113,31 @@ After this implementation change, prior ready-to-merge validation is historical 
 - diff audit: no M2/M3/M4/M5 frozen implementation file modified.
 
 The hardened verifier implementation is ready to merge. Real private-M1 execution remains intentionally pending until the code is integrated into formal main.
+
+## Integrated engineering release / awaiting private run
+
+- PR #39 merged with merge commit `86fd17d01b3b9c2fc597d500723c6966c9a2250f`;
+- merge-generated main push #2108 / `35443729796`: success;
+- Python: **869 passed / 1163 warnings**;
+- Project OS integrity: success;
+- formal main release integrity: success;
+- existing browser acceptance: **24 passed**;
+- Phase18: **1 passed / valid**;
+- Phase21: **1 passed / valid**;
+- M4 methodology: **frozen_match / 37 components**;
+- Outcome Engine: **frozen_match / 4 components**;
+- formal release artifact ID: **10584915975**.
+
+Engineering and repository integration are complete.
+
+CR-0066 intentionally remains open as `postmerge_pending` until the empirical private-M1 run is performed on the machine that owns the local M1 database.
+
+The only remaining user action is:
+
+`运行HT-CN M6.2真实Private-M1最终收口.bat`
+
+On success it produces exactly one upload artifact:
+
+`artifacts/reports/htcn-m6-private-m1-closeout-evidence.zip`
+
+Raw M1 catalog/Parquet/daily-delta data should not be uploaded. M6.2 closes only after the ZIP is independently verified and accepted.
