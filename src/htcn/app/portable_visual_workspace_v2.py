@@ -143,9 +143,9 @@ function renderChart(detail,queue){
  for(const layer of [...visibleLayers].reverse()){
    const y1=Y(layer.price_high),y2=Y(layer.price_low),h=Math.max(2,y2-y1);
    if(layer.id==="source_raw_prz"){
-     svg.appendChild(svgEl("rect",{x:L,y:y1,width:pw,height:h,fill:"#b8c4d4","fill-opacity":.28,stroke:"#4c5d73","stroke-width":1.5}));
+     svg.appendChild(svgEl("rect",{x:L,y:y1,width:pw,height:h,fill:"#b8c4d4","fill-opacity":.28,stroke:"#4c5d73","stroke-width":1.5,"data-layer-id":layer.id}));
    }else{
-     svg.appendChild(svgEl("rect",{x:L,y:y1,width:pw,height:h,fill:"none",stroke:"#8b97a8","stroke-width":1.2,"stroke-dasharray":layer.id==="ideal_core"?"7 4":"2 5"}));
+     svg.appendChild(svgEl("rect",{x:L,y:y1,width:pw,height:h,fill:"none",stroke:"#8b97a8","stroke-width":1.2,"stroke-dasharray":layer.id==="ideal_core"?"7 4":"2 5","data-layer-id":layer.id}));
    }
    svg.appendChild(svgEl("text",{x:L+6,y:Math.max(T+12,y1+12),"font-size":10,fill:"#526176"},layer.label+" "+fmt(layer.price_low)+"–"+fmt(layer.price_high)));
  }
@@ -160,14 +160,14 @@ function renderChart(detail,queue){
  for(const leg of top.legs||[]){
    if(leg.from_index==null||leg.to_index==null||leg.from_price==null||leg.to_price==null)continue;
    if(leg.from_index<minI||leg.to_index>maxI)continue;
-   svg.appendChild(svgEl("line",{x1:X(leg.from_index),y1:Y(leg.from_price),x2:X(leg.to_index),y2:Y(leg.to_price),stroke:"#26364d","stroke-width":2.5}));
+   svg.appendChild(svgEl("line",{x1:X(leg.from_index),y1:Y(leg.from_price),x2:X(leg.to_index),y2:Y(leg.to_price),stroke:"#26364d","stroke-width":2.5,"data-leg-name":leg.name}));
    const mx=(X(leg.from_index)+X(leg.to_index))/2,my=(Y(leg.from_price)+Y(leg.to_price))/2;
    svg.appendChild(svgEl("text",{x:mx,y:my-6,"text-anchor":"middle","font-size":10,"font-weight":"600",fill:"#3c4c62"},leg.name));
  }
 
  for(const q of pts.filter(x=>Number(x.index)>=minI&&Number(x.index)<=maxI)){
    svg.appendChild(svgEl("circle",{cx:X(q.index),cy:Y(q.price),r:4.5,fill:"#fff",stroke:"#26364d","stroke-width":2}));
-   svg.appendChild(svgEl("text",{x:X(q.index),y:Y(q.price)-10,"text-anchor":"middle","font-size":11,"font-weight":"700",fill:"#26364d"},esc(q.label)+" "+fmt(q.price)));
+   svg.appendChild(svgEl("text",{x:X(q.index),y:Y(q.price)-10,"text-anchor":"middle","font-size":11,"font-weight":"700",fill:"#26364d","data-node-label":esc(q.label)},esc(q.label)+" "+fmt(q.price)));
  }
 
  if(ctrl("show-components")){
@@ -175,7 +175,7 @@ function renderChart(detail,queue){
    for(const comp of components){
      ordinal++;
      const price=(Number(comp.price_low)+Number(comp.price_high))/2,yy=Y(price);
-     svg.appendChild(svgEl("line",{x1:L,x2:W-R,y1:yy,y2:yy,stroke:comp.source_raw_prz_member?"#53647b":"#a0a9b6","stroke-width":comp.source_raw_prz_member?1.5:1,"stroke-dasharray":comp.source_raw_prz_member?"":"2 4"}));
+     svg.appendChild(svgEl("line",{x1:L,x2:W-R,y1:yy,y2:yy,stroke:comp.source_raw_prz_member?"#53647b":"#a0a9b6","stroke-width":comp.source_raw_prz_member?1.5:1,"stroke-dasharray":comp.source_raw_prz_member?"":"2 4","data-component-name":comp.name,"data-component-role":comp.semantic_role}));
      svg.appendChild(svgEl("text",{x:W-R+5,y:yy+3,"font-size":9,fill:"#647186"},"["+ordinal+"]"));
    }
  }
@@ -185,7 +185,7 @@ function renderChart(detail,queue){
    for(const ev of life.events||[]){
      if(ev.bar<minI||ev.bar>maxI)continue;
      const xx=X(ev.bar),slot=evn++%5;
-     svg.appendChild(svgEl("line",{x1:xx,x2:xx,y1:T,y2:H-B,stroke:"#8795a8","stroke-width":1,"stroke-dasharray":"4 4"}));
+     svg.appendChild(svgEl("line",{x1:xx,x2:xx,y1:T,y2:H-B,stroke:"#8795a8","stroke-width":1,"stroke-dasharray":"4 4","data-event-field":ev.field}));
      svg.appendChild(svgEl("text",{x:xx+3,y:T+12+slot*12,"font-size":9,fill:"#5f6d80"},ev.label));
    }
  }
@@ -194,7 +194,7 @@ function renderChart(detail,queue){
    for(const guide of guides){
      if(!Number.isFinite(Number(guide.price)))continue;
      const yy=Y(guide.price);
-     svg.appendChild(svgEl("line",{x1:X(maxP),x2:W-R,y1:yy,y2:yy,stroke:"#64748b","stroke-width":1.4,"stroke-dasharray":"7 5"}));
+     svg.appendChild(svgEl("line",{x1:X(maxP),x2:W-R,y1:yy,y2:yy,stroke:"#64748b","stroke-width":1.4,"stroke-dasharray":"7 5","data-guide-field":guide.field}));
      svg.appendChild(svgEl("text",{x:W-R-4,y:yy-5,"text-anchor":"end","font-size":10,fill:"#526176"},guide.label+" "+fmt(guide.price)));
    }
  }
