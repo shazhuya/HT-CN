@@ -23,9 +23,11 @@ def test_windows_daily_close_exposes_product_research_separation() -> None:
     assert "M4 QFQ" in text
     assert "不会阻塞M5产品队列" in text
 
-def test_m5_operator_precompute_uses_default_sse_szse_scope() -> None:
+def test_m5_operator_precompute_uses_catalog_initialized_scope() -> None:
     text = (ROOT / "scripts" / "m5_precompute_operator_snapshot.py").read_text(
         encoding="utf-8"
     )
-    assert 'exchanges=("SSE", "SZSE")' in text
-    assert '"BSE"' not in text
+    assert "load_catalog_universes(DATA_ROOT)" in text
+    assert 'catalog_universes["initialized_ids"]' in text
+    assert "universe_coverage" in text
+    assert "discover_local_instruments" not in text
