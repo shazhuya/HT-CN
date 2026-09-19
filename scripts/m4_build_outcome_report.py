@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import argparse
-from collections import Counter
-from datetime import datetime, timezone
 import json
+from collections import Counter
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -165,7 +165,7 @@ def run(
     protocol, protocol_identity = load_outcome_protocol()
     payload: dict[str, Any] = {
         "schema_version": 1,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "status": "not_ready",
         "outcome_protocol_id": protocol_identity.protocol_id,
         "outcome_protocol_fingerprint": protocol_identity.fingerprint,

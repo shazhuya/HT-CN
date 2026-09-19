@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 
 from htcn.app.daily_review_digest import (
     build_latest_daily_review_digest,
 )
-
 
 ROOT = Path(__file__).resolve().parents[1]
 HISTORY_ROOT = ROOT / "data" / "product" / "m5" / "operator_history"
@@ -38,7 +37,7 @@ def _write_atomic(payload: dict) -> None:
 
 
 def main() -> int:
-    generated_at = datetime.now(timezone.utc).isoformat()
+    generated_at = datetime.now(UTC).isoformat()
     try:
         digest = build_latest_daily_review_digest(
             history_root=str(HISTORY_ROOT),

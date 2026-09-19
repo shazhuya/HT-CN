@@ -4,7 +4,7 @@ import pandas as pd
 
 from htcn.harmonic.execution import observe_source_execution
 from htcn.harmonic.models import PatternDirection
-from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
+from htcn.harmonic.prz import PotentialReversalZone, PRZComponent
 from htcn.harmonic.source_lifecycle import SourceLifecycleState, derive_source_lifecycle
 
 

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import itertools
+import math
 from dataclasses import asdict, dataclass
 from typing import Any
-
 
 VISUAL_SEMANTICS_VERSION = 2
 
@@ -89,7 +90,7 @@ def _number(value: object) -> float | None:
         number = float(value)
     except (TypeError, ValueError):
         return None
-    if number != number:
+    if math.isnan(number):
         return None
     return number
 
@@ -136,7 +137,7 @@ def _topology(pattern: dict[str, Any]) -> dict[str, Any]:
         status = "invalid_non_prefix"
 
     legs: list[dict[str, Any]] = []
-    for ordinal, (left, right) in enumerate(zip(points, points[1:]), start=1):
+    for ordinal, (left, right) in enumerate(itertools.pairwise(points), start=1):
         left_label = str(left.get("label") or "")
         right_label = str(right.get("label") or "")
         left_price = _number(left.get("price"))
@@ -411,7 +412,7 @@ def _schema_specific(pattern: dict[str, Any]) -> dict[str, Any]:
     if schema == "FIVE_ZERO":
         output["five_zero_boundary"] = {
             "raw_prz_members": list(
-                ((pattern.get("source_contract") or {}).get("raw_prz_members") or [])
+                (pattern.get("source_contract") or {}).get("raw_prz_members") or []
             )
             if isinstance(pattern.get("source_contract"), dict)
             else [],

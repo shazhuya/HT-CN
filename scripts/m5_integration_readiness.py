@@ -8,7 +8,6 @@ from htcn.app.integration_readiness import (
     write_integration_readiness_report,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 

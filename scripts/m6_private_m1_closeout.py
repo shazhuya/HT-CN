@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 from htcn.app.private_m1_closeout import (
     build_private_m1_evidence_bundle,
     verify_private_m1_closeout,
     verify_private_m1_evidence_bundle,
 )
-
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "artifacts" / "reports" / "m6-private-m1-closeout.json"
@@ -131,7 +130,7 @@ def main() -> int:
         )
         return 2
 
-    print("", flush=True)
+    print(flush=True)
     print("============================================================", flush=True)
     print("[HT-CN M6.2] PRIVATE-M1 FULL CLOSEOUT READY", flush=True)
     print(

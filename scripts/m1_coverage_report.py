@@ -9,7 +9,6 @@ from htcn.data.catalog import DataCatalog
 from htcn.data.delta import MarketDailyDeltaStore
 from htcn.data.universe import SUPPORTED_INITIAL_DAILY_PREFIXES
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
 CATALOG_PATH = DATA_ROOT / "catalog.duckdb"

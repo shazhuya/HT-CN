@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 WRAPPER = ROOT / "运行M4真实A股生命周期快照.bat"
 MIN_SAFE_COMMIT = "d29870d3a2ef7b60dec4fd8f0dbef2d7a8f0b5a7"

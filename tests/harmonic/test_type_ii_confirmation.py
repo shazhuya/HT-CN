@@ -2,7 +2,7 @@ import pandas as pd
 
 from htcn.harmonic.lifecycle import audit_completed_reaction
 from htcn.harmonic.models import HarmonicPoint, PatternDirection
-from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
+from htcn.harmonic.prz import PotentialReversalZone, PRZComponent
 
 
 def _points() -> tuple[HarmonicPoint, ...]:

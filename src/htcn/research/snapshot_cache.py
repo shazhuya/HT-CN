@@ -11,7 +11,6 @@ import pandas as pd
 
 from htcn.data.validation import normalize_daily
 
-
 SNAPSHOT_META_SCHEMA_VERSION = 1
 
 
@@ -56,7 +55,7 @@ def write_research_snapshot(
     normalized = normalize_daily(frame).tail(max_bars).reset_index(drop=True)
     if normalized.empty:
         raise ValueError("cannot snapshot an empty frame")
-    ids = set(str(value) for value in normalized["instrument_id"].unique())
+    ids = {str(value) for value in normalized["instrument_id"].unique()}
     if ids != {instrument_id}:
         raise ValueError(f"snapshot instrument mismatch: expected {instrument_id}, got {sorted(ids)}")
 
@@ -140,7 +139,7 @@ def load_research_snapshot(
         return None, "invalid_cached_parquet"
     if frame.empty:
         return None, "empty_cached_parquet"
-    ids = set(str(value) for value in frame["instrument_id"].unique())
+    ids = {str(value) for value in frame["instrument_id"].unique()}
     if ids != {instrument_id}:
         return None, "cached_instrument_mismatch"
 

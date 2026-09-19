@@ -1,11 +1,22 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
-from .quality_gate import GateSpec, build_gate_library, evaluate_gate_library, gate_matches, outcome_metrics
-from .time_split import assign_purged_split, derive_boundaries, learn_numeric_thresholds, mature_forward_records
-
+from .quality_gate import (
+    GateSpec,
+    build_gate_library,
+    evaluate_gate_library,
+    gate_matches,
+    outcome_metrics,
+)
+from .time_split import (
+    assign_purged_split,
+    derive_boundaries,
+    learn_numeric_thresholds,
+    mature_forward_records,
+)
 
 QUALITY_FEATURES = frozenset(
     {

@@ -5,7 +5,6 @@ from htcn.harmonic.prz import PRZComponent, build_xabcd_prz
 from htcn.harmonic.rules import CARNEY_RULES
 from htcn.harmonic.source_prz import SOURCE_PRZ_PROFILES, select_source_prz
 
-
 _SOURCE_CASES = {
     # Normalized XABC structures derived from the source specification tables.  They are
     # executable specification fixtures, not claims that every textbook market chart has

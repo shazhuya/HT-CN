@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import multiprocessing
-from pathlib import Path
 import time
+from pathlib import Path
 
 from htcn.app.operator_process_lock import OperatorCacheProcessLock
 

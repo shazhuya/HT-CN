@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from hashlib import sha256
 import json
+from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -9,7 +9,6 @@ import pytest
 
 from htcn.app import main_real_browser_audit as browser
 from htcn.app import main_real_closeout as closeout
-
 
 HEAD = "1" * 40
 IDENTITY = "2" * 64

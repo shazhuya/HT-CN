@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
-from pathlib import Path, PurePosixPath
 import re
-from typing import Any
 import zipfile
-
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from hashlib import sha256
+from pathlib import Path, PurePosixPath
+from typing import Any
 
 PRIVATE_M1_CLOSEOUT_SCHEMA_VERSION = 1
 PRIVATE_M1_EVIDENCE_BUNDLE_SCHEMA_VERSION = 1
@@ -680,7 +679,7 @@ def build_private_m1_evidence_bundle(
     manifest = {
         "schema_version": PRIVATE_M1_EVIDENCE_BUNDLE_SCHEMA_VERSION,
         "status": report.get("status"),
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "trade_date": report.get("trade_date"),
         "main_head": report.get("main_head"),
         "remote_main_head": report.get("remote_main_head"),

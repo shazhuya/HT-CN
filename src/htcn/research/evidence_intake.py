@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import json
+import zipfile
 from collections import Counter
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
-import json
-import zipfile
 
 import pandas as pd
 
@@ -221,9 +221,11 @@ def audit_evidence_bundle(
             if committed and not baseline_present:
                 blockers.append("committed_chain_missing_frozen_baseline")
 
-            if expected_baseline_trade_date is not None:
-                if baseline_through != expected_baseline_trade_date:
-                    blockers.append("unexpected_frozen_baseline_trade_date")
+            if (
+                expected_baseline_trade_date is not None
+                and baseline_through != expected_baseline_trade_date
+            ):
+                blockers.append("unexpected_frozen_baseline_trade_date")
 
             if not committed:
                 blockers.append("no_post_baseline_committed_capture")
@@ -640,14 +642,13 @@ def audit_evidence_bundle(
                 blockers.append(
                     "outcome_snapshot_missing_for_enrolled_cohort"
                 )
-            if latest_outcome is not None and committed:
-                if (
-                    str(latest_outcome.get("outcome_as_of_trade_date") or "")
-                    < str(committed[-1].get("as_of_trade_date") or "")
-                ):
-                    blockers.append(
-                        "latest_outcome_predates_latest_capture"
-                    )
+            if latest_outcome is not None and committed and (
+                str(latest_outcome.get("outcome_as_of_trade_date") or "")
+                < str(committed[-1].get("as_of_trade_date") or "")
+            ):
+                blockers.append(
+                    "latest_outcome_predates_latest_capture"
+                )
 
             included_outcome = _json_member(
                 archive,

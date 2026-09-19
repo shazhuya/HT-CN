@@ -5,7 +5,6 @@ from pathlib import Path
 
 from htcn.app.daily_handoff_runner import run_daily_handoff_bundle
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PIPELINE_REPORT = ROOT / "artifacts" / "reports" / "m5-daily-close-pipeline.json"
 OUTPUT = ROOT / "artifacts" / "reports" / "htcn-daily-handoff-v2.zip"

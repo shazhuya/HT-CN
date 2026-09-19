@@ -1,16 +1,15 @@
 from __future__ import annotations
 
+import io
+import json
+import zipfile
 from copy import deepcopy
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-import zipfile
-import io
 
 from htcn.app.daily_handoff_v3 import verify_daily_handoff_bundle_v3
-
 
 INSPECTOR_SCHEMA_VERSION = 1
 
@@ -299,7 +298,7 @@ def build_handoff_v3_inspection(bundle_path: str | Path) -> dict[str, Any]:
 
     return {
         "schema_version": INSPECTOR_SCHEMA_VERSION,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "contract": HandoffV3InspectorContract().as_payload(),
         "source": {
             "bundle_path": str(source),

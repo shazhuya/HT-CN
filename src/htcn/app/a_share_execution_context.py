@@ -1,15 +1,14 @@
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
-import math
 
 import pandas as pd
 
 from htcn.data.models import Board
 from htcn.data.symbols import classify_symbol, symbol_from_instrument_id
-
 
 MAIN_RISK_WARNING_10_PCT_EFFECTIVE = date(2026, 7, 6)
 
@@ -182,7 +181,7 @@ def load_daily_trading_metadata(
     )
 
 
-def _finite(value: float | int | None) -> float | None:
+def _finite(value: float | None) -> float | None:
     if value is None:
         return None
     resolved = float(value)

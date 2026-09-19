@@ -4,7 +4,6 @@ import hashlib
 import json
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 ORIGINAL = ROOT / "research" / "a-share-research-universe-v1.json"
 REPLICATION = ROOT / "research" / "a-share-type-i-external-replication-universe-v1.json"

@@ -6,7 +6,6 @@ from pathlib import Path
 
 from htcn.app.operator_history import query_operator_history
 
-
 ROOT = Path(__file__).resolve().parents[1]
 HISTORY_ROOT = ROOT / "data" / "product" / "m5" / "operator_history"
 

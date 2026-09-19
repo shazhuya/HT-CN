@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import json
+from collections.abc import Iterable
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-import json
-from typing import Any, Iterable
-
+from typing import Any
 
 PROSPECTIVE_PROTOCOL_ID = "m2-type-i-prospective-v1"
 PROSPECTIVE_CUTOFF = "2026-09-15"

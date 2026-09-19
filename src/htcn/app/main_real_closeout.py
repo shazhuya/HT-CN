@@ -1,15 +1,14 @@
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
 from typing import Any
 
 from htcn.app.daily_portable_delivery import (
     verify_daily_portable_delivery_bundle,
 )
-
 
 MAIN_REAL_CLOSEOUT_SCHEMA_VERSION = 1
 

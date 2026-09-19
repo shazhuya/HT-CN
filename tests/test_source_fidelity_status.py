@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 STATUS_PATH = ROOT / "research" / "source-fidelity-status-v1.json"
 LEDGER_PATH = ROOT / "specs" / "m2-book-golden-ledger.md"

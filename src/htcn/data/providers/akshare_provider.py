@@ -5,8 +5,8 @@ from datetime import date
 import pandas as pd
 
 from ..models import Security
-from ..trading_events import SecurityDailyEventRecord
 from ..symbols import classify_symbol, instrument_id_from_symbol, symbol_from_instrument_id
+from ..trading_events import SecurityDailyEventRecord
 
 
 class AkShareProvider:
@@ -219,8 +219,7 @@ class AkShareProvider:
         rows: list[dict[str, str]] = []
         for raw in frame[[code_col, name_col]].itertuples(index=False, name=None):
             symbol = str(raw[0]).strip()
-            if symbol.endswith(".0"):
-                symbol = symbol[:-2]
+            symbol = symbol.removesuffix(".0")
             symbol = symbol.zfill(6)
             try:
                 instrument_id = instrument_id_from_symbol(symbol)
@@ -267,8 +266,7 @@ class AkShareProvider:
         rows: list[dict[str, str]] = []
         for raw in frame[[code_col, name_col]].itertuples(index=False, name=None):
             symbol = str(raw[0]).strip()
-            if symbol.endswith(".0"):
-                symbol = symbol[:-2]
+            symbol = symbol.removesuffix(".0")
             symbol = symbol.zfill(6)
             try:
                 instrument_id = instrument_id_from_symbol(symbol)
@@ -334,8 +332,7 @@ class AkShareProvider:
             if code_value is None or pd.isna(code_value):
                 continue
             symbol = str(code_value).strip()
-            if symbol.endswith(".0"):
-                symbol = symbol[:-2]
+            symbol = symbol.removesuffix(".0")
             symbol = symbol.zfill(6)
             try:
                 instrument_id = instrument_id_from_symbol(symbol)

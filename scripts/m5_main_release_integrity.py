@@ -8,7 +8,6 @@ from htcn.app.main_release_integrity import (
     write_main_release_integrity_report,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 

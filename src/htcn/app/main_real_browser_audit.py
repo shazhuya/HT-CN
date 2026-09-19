@@ -1,12 +1,11 @@
 from __future__ import annotations
 
+import json
+import shutil
 from dataclasses import asdict, dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-import shutil
 from typing import Any
-
 
 BROWSER_SOURCE_SCHEMA_VERSION = 1
 BROWSER_EVIDENCE_SCHEMA_VERSION = 1

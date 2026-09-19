@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 import pandas as pd
 
@@ -12,7 +13,6 @@ from htcn.harmonic.models import HarmonicPoint, PatternDirection, Pivot
 from htcn.harmonic.shark import SharkMatch
 
 from .quality_layers import pattern_family
-
 
 DEFAULT_COMPLETED_REACTION_HORIZON = 20
 DEFAULT_COMPLETED_REACTION_SCALES = (3, 5, 8, 13, 21)

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import os
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +17,6 @@ from htcn.app.operator_snapshot import (
     OPERATOR_SNAPSHOT_CONTRACT_VERSION,
     OPERATOR_SNAPSHOT_SCHEMA_VERSION,
 )
-
 
 OPERATOR_HISTORY_SCHEMA_VERSION = 1
 PERSISTED_CACHE_STATUSES = {
@@ -601,7 +600,7 @@ def append_operator_history(
             "trade_date": trade_date,
             "observation_id": observation_id,
             "revision_ordinal": len(same_date) + 1,
-            "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
+            "recorded_at_utc": datetime.now(UTC).isoformat(),
             "source": {
                 "generated_at_utc": current["generated_at_utc"],
                 "input_identity_fingerprint": current[
@@ -724,9 +723,12 @@ def query_operator_history(
             )
         ]
 
-        if instrument_id is not None or display_key is not None:
-            if not items and not changes:
-                continue
+        if (
+            (instrument_id is not None or display_key is not None)
+            and not items
+            and not changes
+        ):
+            continue
 
         observations.append({
             "trade_date": trade_date,

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import date, datetime, time as clock_time, timedelta
+from datetime import date, datetime, timedelta
+from datetime import time as clock_time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -10,7 +11,6 @@ import pandas as pd
 
 from htcn.data.benchmarks import CORE_BENCHMARKS, CoreBenchmarkStore
 from htcn.data.providers import AkShareProvider
-
 
 SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 POST_CLOSE_CUTOFF = clock_time(16, 30)

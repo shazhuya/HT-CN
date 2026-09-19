@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
-from pathlib import Path
 
 from htcn.app.daily_handoff_runner import run_daily_handoff_bundle
 

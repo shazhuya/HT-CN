@@ -6,7 +6,6 @@ from typing import Any
 
 from htcn.app.operator_history import query_operator_history
 
-
 WORKFLOW_REVIEW_ORDER = (
     "execution_evaluation",
     "reaction_observation",

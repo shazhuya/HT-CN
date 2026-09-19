@@ -1,4 +1,3 @@
-from hashlib import sha256
 
 from htcn.research.methodology_identity import (
     METHODOLOGY_CONTRACT_VERSION,

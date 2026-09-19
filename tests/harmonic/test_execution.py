@@ -3,7 +3,7 @@ import pytest
 
 from htcn.harmonic.execution import observe_source_execution
 from htcn.harmonic.models import PatternDirection
-from htcn.harmonic.prz import PRZComponent, PotentialReversalZone
+from htcn.harmonic.prz import PotentialReversalZone, PRZComponent
 
 
 def _prz(

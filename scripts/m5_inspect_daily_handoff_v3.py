@@ -5,9 +5,9 @@ import json
 from pathlib import Path
 
 from htcn.app.handoff_v3_inspector import (
+    build_handoff_v3_inspection,
     filter_handoff_v3_inspection,
     write_portable_review_workspace,
-    build_handoff_v3_inspection,
 )
 
 

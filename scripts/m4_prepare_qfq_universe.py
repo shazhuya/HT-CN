@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import argparse
-from datetime import date
 import json
-from pathlib import Path
 import time
+from datetime import date
+from pathlib import Path
 from typing import Any
 
 import duckdb
@@ -19,7 +19,6 @@ from htcn.data.adjustment import (
 )
 from htcn.data.providers import AkShareProvider, BaoStockProvider
 from htcn.data.validation import normalize_daily
-
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
@@ -121,7 +120,6 @@ def _repair_safe_internal_factor_gaps(
         pd.Timestamp(stamp).normalize(): index
         for index, stamp in enumerate(raw_order)
     }
-    missing_set = set(candidate_missing)
     runs: list[list[pd.Timestamp]] = []
     current: list[pd.Timestamp] = []
     previous_position: int | None = None

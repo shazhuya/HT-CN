@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-import io
 import json
-from pathlib import Path
 import tempfile
-from typing import Any
 import zipfile
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any
 
 from htcn.app.handoff_v3_inspector import build_handoff_v3_inspection
 from htcn.app.handoff_v4_portable_detail import (
@@ -17,7 +16,6 @@ from htcn.app.portable_visual_semantics import build_pattern_visual_semantics
 from htcn.app.portable_visual_workspace_v2 import (
     build_portable_visual_workspace_html_v2,
 )
-
 
 HANDOFF_V4_INSPECTION_SCHEMA_VERSION = 2
 

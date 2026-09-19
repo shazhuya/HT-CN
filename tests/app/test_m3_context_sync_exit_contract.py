@@ -3,6 +3,7 @@ from scripts.m3_sync_all_contexts import _error
 
 def test_context_sync_uses_same_success_literal_for_summary_and_exit_contract() -> None:
     import inspect
+
     import scripts.m3_sync_all_contexts as module
 
     source = inspect.getsource(module.main)

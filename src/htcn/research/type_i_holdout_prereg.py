@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 PREREGISTRATION_ID = "m2-type-i-holdout-v1"
 DEFAULT_HOLDOUT_MIN_GROUP = 20
 NEWCOMBE_Z_95 = 1.959963984540054

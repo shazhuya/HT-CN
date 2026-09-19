@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from hashlib import sha256
 import json
+from hashlib import sha256
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = (

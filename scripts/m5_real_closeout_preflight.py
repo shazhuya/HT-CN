@@ -8,7 +8,6 @@ from htcn.app.real_closeout_preflight import (
     write_real_closeout_preflight_report,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 

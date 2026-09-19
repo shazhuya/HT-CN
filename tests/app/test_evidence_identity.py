@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 import subprocess
 
 from htcn.app.evidence_identity import read_code_identity

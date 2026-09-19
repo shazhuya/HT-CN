@@ -1,13 +1,25 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import asdict
-from typing import Any, Iterable
+from typing import Any
 
 import pandas as pd
 
-from .quality_gate import GateSpec, build_gate_library, evaluate_gate_library, gate_matches, outcome_metrics
-from .time_split import assign_purged_split, derive_boundaries, learn_numeric_thresholds, mature_forward_records
+from .quality_gate import (
+    GateSpec,
+    build_gate_library,
+    evaluate_gate_library,
+    gate_matches,
+    outcome_metrics,
+)
+from .time_split import (
+    assign_purged_split,
+    derive_boundaries,
+    learn_numeric_thresholds,
+    mature_forward_records,
+)
 
 
 def _delta(gated: dict[str, Any], baseline: dict[str, Any], key: str) -> float | None:

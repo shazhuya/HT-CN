@@ -6,7 +6,7 @@ from htcn.harmonic.abcd import ABCDMatch, evaluate_abcd
 from htcn.harmonic.engine import CompletedMatch
 from htcn.harmonic.evaluator import evaluate_xabcd
 from htcn.harmonic.five_zero import FiveZeroMatch, evaluate_five_zero
-from htcn.harmonic.models import HarmonicPoint, PatternDirection, PatternState
+from htcn.harmonic.models import HarmonicPoint, PatternState
 from htcn.harmonic.prz import PotentialReversalZone
 from htcn.harmonic.rsi_bamm import (
     RSIBammDirection,

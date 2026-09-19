@@ -1,20 +1,19 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
-from pathlib import Path, PurePosixPath
 import tempfile
-from typing import Any
 import zipfile
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from hashlib import sha256
+from pathlib import Path, PurePosixPath
+from typing import Any
 
 from htcn.app.operator_snapshot import (
     OPERATOR_SNAPSHOT_CONTRACT_VERSION,
     OPERATOR_SNAPSHOT_SCHEMA_VERSION,
 )
 from htcn.research.evidence_bundle import verify_evidence_bundle
-
 
 DAILY_HANDOFF_SCHEMA_VERSION = 2
 CANONICAL_BARS = 420
@@ -754,7 +753,7 @@ def build_daily_handoff_bundle(
     manifest: dict[str, Any] = {
         "schema_version": DAILY_HANDOFF_SCHEMA_VERSION,
         "status": status,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "transport_only": True,
         "authoritative_evidence": False,
         "writes_m4_evidence": False,

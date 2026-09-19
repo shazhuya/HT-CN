@@ -5,7 +5,6 @@ from pathlib import Path
 
 from htcn.app.main_real_browser_audit import finalize_main_real_closeout
 
-
 ROOT = Path(__file__).resolve().parents[1]
 STRUCTURAL = ROOT / "artifacts" / "reports" / "m5-main-real-closeout.json"
 BROWSER = (

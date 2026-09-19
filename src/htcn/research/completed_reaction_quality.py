@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable, Iterable
 from math import ceil
-from typing import Any, Callable, Iterable
+from typing import Any
 
 import pandas as pd
 
 from .completed_reaction_calibration import ACTIONABLE_COMPLETED_OUTCOMES
-
 
 GatePredicate = Callable[[dict[str, Any], dict[str, float]], bool]
 
@@ -41,12 +41,13 @@ def _split_visible_rows(
     for row in _metric_rows(rows):
         signal = pd.Timestamp(row["signal_trade_date"]).normalize()
         observation_end = pd.Timestamp(row["observation_end_trade_date"]).normalize()
-        if signal <= train_end:
-            if observation_end < validation_start:
-                train.append(row)
-        elif validation_start <= signal <= validation_end:
-            if observation_end < holdout_start:
-                validation.append(row)
+        if signal <= train_end and observation_end < validation_start:
+            train.append(row)
+        elif (
+            validation_start <= signal <= validation_end
+            and observation_end < holdout_start
+        ):
+            validation.append(row)
     return train, validation
 
 

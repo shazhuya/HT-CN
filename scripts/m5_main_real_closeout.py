@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 from htcn.app.main_real_closeout import (
     verify_main_real_closeout,
     write_main_real_closeout_report,
 )
-
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "artifacts" / "reports" / "m5-main-real-closeout.json"
@@ -21,8 +20,7 @@ def _git(*args: str) -> subprocess.CompletedProcess[str]:
         text=True,
         encoding="utf-8",
         errors="replace",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
 

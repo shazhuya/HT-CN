@@ -52,6 +52,24 @@
       "title": "TradingView-class chart foundation is an M6.6 gate before M7",
       "status": "active",
       "source": "governance/decisions/D-069-interactive-chart-m6-6.md"
+    },
+    {
+      "id": "D-070",
+      "title": "Immutable M4 components are governed by freeze guards, not lint rewrites",
+      "status": "active",
+      "source": "governance/decisions/D-070-freeze-vs-lint-boundary.md"
+    },
+    {
+      "id": "D-071",
+      "title": "Behavior-sensitive legacy lint is exception-ledgered, not silently rewritten",
+      "status": "active",
+      "source": "governance/decisions/D-071-behavior-sensitive-lint-exceptions.md"
+    },
+    {
+      "id": "D-072",
+      "title": "GitHub server-side protection remains an explicit external-permission limitation",
+      "status": "active",
+      "source": "governance/decisions/D-072-external-main-protection-boundary.md"
     }
   ],
   "rules": {

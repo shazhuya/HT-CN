@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Callable, Iterable
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -14,7 +15,6 @@ from .type_i_confirmation import (
     _cohort_library,
     _terminal_events,
 )
-
 
 DEFAULT_MIN_TRAIN_PENDING = 60
 DEFAULT_MIN_VALIDATION_PENDING = 20

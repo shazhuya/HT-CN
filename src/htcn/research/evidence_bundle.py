@@ -1,12 +1,11 @@
 from __future__ import annotations
 
+import json
+import zipfile
 from dataclasses import asdict, dataclass
 from hashlib import sha256
-from pathlib import PurePosixPath, Path
-import json
+from pathlib import Path, PurePosixPath
 from typing import Any
-import zipfile
-
 
 SUPPORTED_BUNDLE_SCHEMA_VERSIONS = (1,)
 

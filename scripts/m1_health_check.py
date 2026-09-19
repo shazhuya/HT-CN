@@ -6,7 +6,6 @@ from htcn.data.catalog import DataCatalog
 from htcn.data.health import audit_local_daily
 from htcn.data.universe import SUPPORTED_INITIAL_DAILY_PREFIXES
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG_PATH = ROOT / "data" / "market" / "catalog.duckdb"
 

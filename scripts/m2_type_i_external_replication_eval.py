@@ -21,7 +21,6 @@ from htcn.research.snapshot_cache import (
 from htcn.research.type_i_external_replication import evaluate_external_type_i_replication
 from htcn.research.walk_forward import walk_forward_forming_signals
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "research" / "a-share-type-i-external-replication-universe-v1.json"
 ORIGINAL_MANIFEST = ROOT / "research" / "a-share-research-universe-v1.json"

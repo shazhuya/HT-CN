@@ -5,11 +5,10 @@ import os
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from htcn.app.evidence_identity import read_code_identity
-
 
 ROOT = Path(__file__).resolve().parents[1]
 VENV_PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
@@ -30,7 +29,7 @@ def git_head() -> str | None:
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def write_acceptance(summary: dict[str, object]) -> None:

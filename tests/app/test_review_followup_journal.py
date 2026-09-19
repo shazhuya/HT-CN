@@ -13,7 +13,6 @@ from htcn.app.review_followup_journal import (
     verify_review_journal_event,
 )
 
-
 OBS_A = "a" * 64
 OBS_B = "b" * 64
 KEY = "SSE.688256:bat:XABCD:bullish:S5:2026-09-01"

@@ -31,11 +31,10 @@
       "type": "repository_governance",
       "status": "blocked_external_permission",
       "title": "main branch server-side protection is disabled/unconfirmed as a required gate",
-      "blocks": [
-        "M6.4"
-      ],
-      "next_action": "Enable required checks if permissions allow; otherwise record admin blocker without claiming protection.",
-      "current_fact": "GitHub branch metadata reports main protected=false. Available GitHub connector exposes ruleset/protection reads only and no administration write action."
+      "blocks": [],
+      "next_action": "A repository administrator may enable main branch protection / required checks later. The connected GitHub App cannot perform this administration action.",
+      "current_fact": "Verified during M6.4: GitHub branch metadata reports main protected=false; repository rulesets are empty; GET branch-protection detail returns HTTP 403 Resource not accessible by integration; the available GitHub connector exposes no administration write action. M6.4 records this as an external-permission governance limitation and does not claim protection is enabled.",
+      "resolution_boundary": "Does not block M6.4 internal repository-governance closeout because the server-side change is outside the connected integration's permission boundary; remains open as blocked_external_permission."
     },
     {
       "id": "ISSUE-0064",
@@ -89,13 +88,13 @@
       "id": "ISSUE-0068",
       "severity": "medium",
       "type": "lint_debt",
-      "status": "baseline_frozen_reduction_pending",
+      "status": "validation_green",
       "title": "Repository-wide Ruff debt remains above clean baseline",
       "blocks": [
         "M6.4 quality closeout"
       ],
-      "next_action": "Reduce Ruff violations in bounded mechanical batches; every verified reduction must lower governance/QUALITY_BASELINE.json.",
-      "current_fact": "The current branch reduces the repository-wide count from 493 to 483, keeps all newly added and materially edited files clean, and adds a no-net-growth CI gate."
+      "next_action": "Run the ledger-bearing final PR candidate, merge with ancestry preserved if green, and close after canonical main post-merge validation confirms Ruff 0 / warnings 0 / full release gates.",
+      "current_fact": "PR #53 head 9f19ba55ab389bd13e5084a21d93c20b85825eb6 passed full workflow 35464886662 / #2328 with configured mutable Ruff 0/0, 890 Python tests, 0 warnings, 24 browser tests, Phase18/21 valid, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   ]
 }

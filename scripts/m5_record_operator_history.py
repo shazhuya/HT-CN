@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 from htcn.app.operator_history import (
     append_operator_history,
     query_operator_history,
 )
-
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORTS = ROOT / "artifacts" / "reports"
@@ -33,7 +32,7 @@ def _write_report(payload: dict) -> None:
 
 
 def main() -> int:
-    generated_at = datetime.now(timezone.utc).isoformat()
+    generated_at = datetime.now(UTC).isoformat()
     try:
         appended = append_operator_history(
             root=ROOT,

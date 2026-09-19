@@ -230,13 +230,12 @@ def build_evidence_chain_health(
             "Committed capture dates are not strictly unique/monotonic.",
         )
 
-    if baseline_through is not None and dates:
-        if dates[0] <= baseline_through:
-            finding(
-                "transaction_overlaps_legacy_baseline",
-                "blocker",
-                f"First committed capture {dates[0]} is not after frozen baseline {baseline_through}.",
-            )
+    if baseline_through is not None and dates and dates[0] <= baseline_through:
+        finding(
+            "transaction_overlaps_legacy_baseline",
+            "blocker",
+            f"First committed capture {dates[0]} is not after frozen baseline {baseline_through}.",
+        )
 
     total_rows = sum(int(item.get("candidate_count") or 0) for item in committed)
     zero_candidate_dates = [

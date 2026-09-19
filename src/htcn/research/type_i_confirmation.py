@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Callable, Iterable
+from typing import Any
 
 from .quality_layers import pattern_family
 from .time_split import SplitBoundaries, assign_purged_split
-
 
 DEFAULT_TYPE_I_LANDMARK_BAR = 5
 

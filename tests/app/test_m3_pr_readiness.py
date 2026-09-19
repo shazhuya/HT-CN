@@ -1,6 +1,5 @@
 from scripts.m3_pr_readiness import evaluate, render_markdown
 
-
 HEAD = "abc123"
 
 

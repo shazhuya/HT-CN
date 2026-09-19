@@ -17,7 +17,6 @@ from htcn.data.store import ParquetDailyStore
 from htcn.data.sync import sync_daily
 from htcn.data.universe import select_initial_daily_candidates
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
 CATALOG_PATH = DATA_ROOT / "catalog.duckdb"

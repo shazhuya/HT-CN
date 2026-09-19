@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 from math import floor
 from statistics import median
-from typing import Any, Iterable
+from typing import Any
 
 import pandas as pd
 

@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 from htcn.research.methodology_identity import (
     METHODOLOGY_CONTRACT_VERSION,
     METHODOLOGY_RELATIVE_PATHS,
 )
-
 
 FROZEN_METHODOLOGY_COMMIT = "c774c54928c33361952bf1a612a8555633449625"
 EXPECTED_CONTRACT_VERSION = 4

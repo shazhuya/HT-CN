@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "artifacts" / "ci-research" / "m2-autonomous-research-report.json"
 OUTPUT = ROOT / "artifacts" / "ci-research" / "m2-type-i-exit-timing.json"

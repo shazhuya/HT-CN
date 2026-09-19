@@ -8,7 +8,6 @@ from htcn.app.main_real_browser_audit import (
     prepare_main_real_browser_source,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_HTML = (
     ROOT / "apps" / "web" / "public" / "latest-real-portable-workspace.html"

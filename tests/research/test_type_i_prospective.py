@@ -15,7 +15,6 @@ from htcn.research.type_i_prospective import (
     update_registry,
 )
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 

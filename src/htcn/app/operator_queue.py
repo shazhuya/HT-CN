@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from threading import local
-from typing import Any, Callable, Iterable, Protocol
-
+from typing import Any, Protocol
 
 WORKFLOW_BUCKET_ORDER: dict[str, int] = {
     "execution_evaluation": 0,

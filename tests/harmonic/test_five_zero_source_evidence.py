@@ -6,7 +6,6 @@ from htcn.harmonic.five_zero import evaluate_five_zero
 from htcn.harmonic.models import HarmonicPoint
 from htcn.harmonic.source_prz_evidence import source_prz_evidence
 
-
 ROOT = Path(__file__).resolve().parents[2]
 LEDGER = ROOT / "research" / "book-source-prz-five-zero-cases-v1.json"
 

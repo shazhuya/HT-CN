@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+import json
+from collections.abc import Iterable, Sequence
 from dataclasses import asdict, dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-from typing import Iterable, Sequence
-
 
 DATA_INPUT_IDENTITY_CONTRACT_VERSION = 1
 ANALYSIS_CODE_IDENTITY_CONTRACT_VERSION = 1

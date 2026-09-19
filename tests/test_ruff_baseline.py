@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,5 +18,8 @@ def load_module():
 
 def test_ruff_budget_and_parser() -> None:
     module = load_module()
-    assert module.violation_budget() == 483
+    baseline = json.loads(
+        (ROOT / "governance" / "QUALITY_BASELINE.json").read_text(encoding="utf-8")
+    )
+    assert module.violation_budget() == baseline["ruff"]["violation_budget"]
     assert module.parse_violations('[{"code":"F401"}]') == [{"code": "F401"}]

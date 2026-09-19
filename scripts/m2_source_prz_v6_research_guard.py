@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "artifacts" / "ci-research" / "m2-autonomous-research-report.json"
 HISTORICAL_PREREG = ROOT / "research" / "m2-type-i-holdout-prereg-v1.json"

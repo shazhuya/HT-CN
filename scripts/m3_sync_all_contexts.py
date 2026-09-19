@@ -28,9 +28,8 @@ from htcn.data.sectors import (
     membership_sync_is_fresh,
     sync_industry_memberships,
 )
-from htcn.data.trading_events import sync_daily_trading_events
 from htcn.data.trading_clock import latest_closed_trade_clock
-
+from htcn.data.trading_events import sync_daily_trading_events
 
 SHANGHAI_TZ = ZoneInfo("Asia/Shanghai")
 

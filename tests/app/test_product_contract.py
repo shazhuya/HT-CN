@@ -1,4 +1,4 @@
-from htcn.app.product_contract import audit_product_payload, assert_product_payload
+from htcn.app.product_contract import assert_product_payload, audit_product_payload
 
 
 def _analysis():

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
+from collections.abc import Callable
+from datetime import UTC, datetime
+from hashlib import sha256
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from htcn.app.daily_handoff_v3 import build_daily_handoff_bundle_v3
-
 
 HANDOFF_V3_RUN_REPORT_SCHEMA_VERSION = 1
 BuildBundleV3 = Callable[..., dict[str, Any]]
@@ -83,7 +83,7 @@ def run_daily_handoff_bundle_v3(
             "handoff v3 output and report paths must be distinct"
         )
 
-    generated_at = datetime.now(timezone.utc).isoformat()
+    generated_at = datetime.now(UTC).isoformat()
     pipeline_payload: dict[str, Any] | None = None
     before_hash: str | None = None
     after_hash: str | None = None

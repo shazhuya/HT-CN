@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from hashlib import sha256
 import json
+import zipfile
+from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
-import zipfile
 
 import pytest
 
 from htcn.app import handoff_v4_inspector as inspector
 from htcn.app import handoff_v4_portable_detail as detail
-
 
 FP = "a" * 64
 

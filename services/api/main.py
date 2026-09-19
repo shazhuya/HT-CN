@@ -21,21 +21,20 @@ from htcn.app.operator_input_identity import (
     build_analysis_code_identity,
     build_operator_cache_input_identity,
 )
-from htcn.app.review_followup_journal import (
-    REVIEW_STATES,
-    append_review_event,
-    build_latest_review_session,
-    filter_review_session,
-    query_review_journal,
-)
 from htcn.app.operator_queue import (
-    build_operator_queue,
     discover_local_instruments,
     filter_operator_queue_payload,
 )
 from htcn.app.operator_snapshot import (
     build_or_load_operator_snapshot,
     latest_local_trade_date,
+)
+from htcn.app.review_followup_journal import (
+    REVIEW_STATES,
+    append_review_event,
+    build_latest_review_session,
+    filter_review_session,
+    query_review_journal,
 )
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 from htcn.harmonic.rules import CARNEY_RULES

@@ -10,7 +10,6 @@ from htcn.research.outcome_evaluator import (
     evaluate_candidate_outcome,
 )
 
-
 BASIS = "qfq:" + "1" * 64
 METHOD = "a" * 64
 

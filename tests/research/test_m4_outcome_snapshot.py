@@ -12,7 +12,6 @@ from htcn.research.outcome_snapshot import (
     read_outcome_snapshots,
 )
 
-
 PROTOCOL = "b" * 64
 METHOD = "a" * 64
 

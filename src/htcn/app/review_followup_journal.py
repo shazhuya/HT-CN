@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from collections import Counter
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from hashlib import sha256
 import json
 import os
+from collections import Counter
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +15,6 @@ from htcn.app.daily_review_digest import (
 )
 from htcn.app.operator_history import query_operator_history
 from htcn.app.operator_process_lock import OperatorCacheProcessLock
-
 
 REVIEW_JOURNAL_SCHEMA_VERSION = 1
 REVIEW_STATES = ("unseen", "reviewed", "follow_up")
@@ -74,7 +73,7 @@ def _canonical_json_bytes(value: object) -> bytes:
 
 def _binding_id(source_observation_id: str, display_key: str) -> str:
     return sha256(
-        f"{source_observation_id}\n{display_key}".encode("utf-8")
+        f"{source_observation_id}\n{display_key}".encode()
     ).hexdigest()
 
 
@@ -462,7 +461,7 @@ def append_review_event(
         previous_binding = binding_events[-1] if binding_events else None
         previous_display = display_events[-1] if display_events else None
 
-        created_at = datetime.now(timezone.utc).isoformat()
+        created_at = datetime.now(UTC).isoformat()
         source = {
             "observation_id": source_observation_id,
             "trade_date": source_meta["trade_date"],

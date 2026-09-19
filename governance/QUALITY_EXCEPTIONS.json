@@ -1,0 +1,357 @@
+{
+  "schema": 1,
+  "policy": "exact_path_exact_rule_only",
+  "wildcard_exceptions_allowed": false,
+  "new_exception_requires_change_record": true,
+  "categories": {
+    "BLE001": {
+      "rationale": "Existing orchestration/provider/evidence boundaries deliberately convert unpredictable third-party, filesystem, process or provider failures into structured fail-soft/fail-closed results. Narrowing exception classes is a behavior change and is outside M6.4 mechanical cleanup."
+    },
+    "TRY004": {
+      "rationale": "Existing validators expose ValueError-like malformed-payload contracts. Changing exception type can alter callers/tests and is not a lint-only change."
+    },
+    "DTZ011": {
+      "rationale": "Existing M1 operator scripts use date-only trading-calendar semantics. Timezone behavior must be changed only under an explicit data-semantic change, not repository-governance lint cleanup."
+    },
+    "DTZ001": {
+      "rationale": "Legacy tests intentionally construct naive datetimes for existing contract fixtures; timezone migration requires a separate semantic change."
+    },
+    "S110": {
+      "rationale": "Provider failover intentionally suppresses individual provider probe failures so fallback can proceed; the exact failover behavior is preserved."
+    },
+    "B008": {
+      "rationale": "FastAPI Body(...) default declarations are framework dependency metadata; changing signature construction is an API-contract edit."
+    },
+    "B017": {
+      "rationale": "Legacy negative-path model test asserts the broad failure contract; narrowing requires a test-contract review."
+    },
+    "RUF012": {
+      "rationale": "Legacy test fixture uses a mutable class attribute intentionally as stub state; changing fixture lifecycle is not mechanical governance cleanup."
+    }
+  },
+  "exceptions": [
+    {
+      "path": "scripts/m1_daily_update.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m1_full_market_init.py",
+      "codes": [
+        "BLE001",
+        "DTZ011"
+      ]
+    },
+    {
+      "path": "scripts/m1_live_smoke.py",
+      "codes": [
+        "DTZ011"
+      ]
+    },
+    {
+      "path": "scripts/m1_pilot_init.py",
+      "codes": [
+        "BLE001",
+        "DTZ011"
+      ]
+    },
+    {
+      "path": "scripts/m1_source_audit.py",
+      "codes": [
+        "BLE001",
+        "DTZ011"
+      ]
+    },
+    {
+      "path": "scripts/m2_ci_autonomous_research.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m2_qfq_expand.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m2_type_i_external_replication_eval.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m2_type_i_prospective_update.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m3_metadata_tradability_smoke.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m3_pr_readiness.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m3_product_contract_smoke.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m3_sync_all_contexts.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m3_sync_core_benchmarks.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m4_build_outcome_report.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m4_export_evidence_bundle.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m4_outcome_engine_freeze_guard.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m4_prepare_qfq_universe.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m5_build_daily_review_digest.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/m5_record_operator_history.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "scripts/qa_local.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "services/api/main.py",
+      "codes": [
+        "B008"
+      ]
+    },
+    {
+      "path": "src/htcn/app/a_share_execution_context.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "src/htcn/app/daily_handoff_runner.py",
+      "codes": [
+        "BLE001",
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/daily_handoff_v3_runner.py",
+      "codes": [
+        "BLE001",
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/daily_handoff_v3.py",
+      "codes": [
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/daily_handoff.py",
+      "codes": [
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/daily_portable_delivery.py",
+      "codes": [
+        "BLE001",
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/evidence_identity.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "src/htcn/app/handoff_v3_inspector.py",
+      "codes": [
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/handoff_v4_inspector.py",
+      "codes": [
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/handoff_v4_portable_detail.py",
+      "codes": [
+        "BLE001",
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/main_real_browser_audit.py",
+      "codes": [
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/main_real_closeout.py",
+      "codes": [
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/operator_history.py",
+      "codes": [
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/operator_queue.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "src/htcn/app/operator_snapshot.py",
+      "codes": [
+        "BLE001",
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/private_m1_closeout.py",
+      "codes": [
+        "BLE001",
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/app/real_closeout_preflight.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "src/htcn/data/adjusted_fetch.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "src/htcn/data/concepts.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "src/htcn/data/health.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "src/htcn/data/providers/failover.py",
+      "codes": [
+        "BLE001",
+        "S110"
+      ]
+    },
+    {
+      "path": "src/htcn/data/sectors.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "src/htcn/research/evidence_health.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "src/htcn/research/evidence_intake.py",
+      "codes": [
+        "BLE001",
+        "TRY004"
+      ]
+    },
+    {
+      "path": "src/htcn/research/snapshot_cache.py",
+      "codes": [
+        "BLE001"
+      ]
+    },
+    {
+      "path": "tests/app/test_concept_context.py",
+      "codes": [
+        "DTZ001"
+      ]
+    },
+    {
+      "path": "tests/app/test_context_no_backdating.py",
+      "codes": [
+        "DTZ001"
+      ]
+    },
+    {
+      "path": "tests/data/test_concept_sync_atomic.py",
+      "codes": [
+        "DTZ001"
+      ]
+    },
+    {
+      "path": "tests/harmonic/test_models.py",
+      "codes": [
+        "B017"
+      ]
+    },
+    {
+      "path": "tests/test_baostock_adjusted_provider.py",
+      "codes": [
+        "RUF012"
+      ]
+    }
+  ]
+}

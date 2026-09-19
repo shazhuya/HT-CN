@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.3-CLOSED",
+  "state_id": "HTCN-M6.4-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,24 +21,24 @@
   },
   "current": {
     "milestone": "M6",
-    "phase": "M6.3",
-    "title": "Universe Coverage Contract",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260920-0068-005",
-    "latest_hosted_validation_attempt_id": "A-20260920-0068-005",
-    "work_branch": null,
+    "phase": "M6.4",
+    "title": "Repository Governance",
+    "status": "ready_to_merge",
+    "active_change": "CR-0069",
+    "active_spec": "specs/m6-phase-4-repository-governance.md",
+    "latest_attempt_id": "A-20260920-0069-002",
+    "latest_hosted_validation_attempt_id": "A-20260920-0069-002",
+    "work_branch": "m6/repository-governance-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35460584553,
-      "run_number": 2278,
-      "event": "push",
-      "head": "9b1c11c796dc0292b4607f58bc5a46a1dea8ff38",
-      "python_passed": 889,
+      "workflow_run": 35464886662,
+      "run_number": 2328,
+      "event": "pull_request",
+      "head": "9f19ba55ab389bd13e5084a21d93c20b85825eb6",
+      "python_passed": 890,
       "warnings": 0,
-      "ruff_observed": 481,
-      "ruff_budget": 483,
+      "ruff_observed": 0,
+      "ruff_budget": 0,
       "project_os_integrity": "success",
       "formal_main_release_integrity": "success",
       "existing_playwright_passed": 24,
@@ -46,8 +46,9 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10588728848,
-      "scope": "M6.3 final integrated main validation after PR #49 merge; universe coverage contract closed."
+      "artifact_id": 10591125410,
+      "artifact_digest": "sha256:1347bf1921af268aea8ae1b9e612129c149d891ff3c2df90b19293f9be271aa7",
+      "scope": "M6.4 full PR candidate validation. Final ledger-bearing candidate must rerun before merge."
     }
   },
   "private_m1": {
@@ -61,7 +62,7 @@
   "next_major_task": {
     "phase": "M6.4",
     "title": "Repository Governance",
-    "status": "ready_not_started",
+    "status": "ready_to_merge",
     "blocked_until": []
   },
   "freezes": {
@@ -80,6 +81,7 @@
     "bse_default_scope": "deferred"
   },
   "required_specs": [
+    "specs/m6-phase-4-repository-governance.md",
     "specs/m6-phase-3-universe-coverage-contract.md",
     "specs/m6-phase-2-portable-chat-continuity.md",
     "specs/m6-phase-2-real-private-m1-closeout.md",

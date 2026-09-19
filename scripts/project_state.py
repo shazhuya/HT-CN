@@ -415,6 +415,15 @@ def _markdown_json(title: str, payload: Any) -> str:
     return f"## {title}\n\n```json\n{json.dumps(payload, ensure_ascii=False, indent=2)}\n```\n"
 
 
+def _bounded_text_index(raw: str, *, limit: int, label: str) -> str:
+    lines = raw.splitlines()
+    if len(lines) <= limit:
+        return raw or "(none)"
+    visible = "\n".join(lines[:limit])
+    omitted = len(lines) - limit
+    return f"{visible}\n... ({omitted} additional {label} omitted; read canonical Git for full list)"
+
+
 def build_resume_pack(state: dict[str, Any]) -> str:
     generated = datetime.now().astimezone().isoformat(timespec="seconds")
     head = run_git("rev-parse", "HEAD")
@@ -492,9 +501,11 @@ def build_resume_pack(state: dict[str, Any]) -> str:
         + "\n".join(f"- `{x}`" for x in state.get("required_specs", []))
         + "\n",
         "## Recent commits\n\n```text\n" + (recent or "(none)") + "\n```\n",
-        "## Commits after last integrated release\n\n```text\n" + (delta or "(none)") + "\n```\n",
+        "## Commits after last integrated release\n\n```text\n"
+        + _bounded_text_index(delta, limit=80, label="commits")
+        + "\n```\n",
         "## Changed files after last integrated release\n\n```text\n"
-        + (changed or "(none)")
+        + _bounded_text_index(changed, limit=120, label="changed files")
         + "\n```\n",
         recovery_questions,
     ]

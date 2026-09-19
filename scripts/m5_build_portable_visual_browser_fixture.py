@@ -9,7 +9,6 @@ from htcn.app.portable_visual_workspace_v2 import (
     build_portable_visual_workspace_html_v2,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_HTML = ROOT / "apps" / "web" / "public" / "portable-visual-fixture.html"
 DEFAULT_JSON = (

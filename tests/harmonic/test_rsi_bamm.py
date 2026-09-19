@@ -1,6 +1,6 @@
+import math
 from dataclasses import replace
 
-import math
 import pandas as pd
 
 from htcn.harmonic.rsi_bamm import (

@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
 import json
 import os
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from .capture_transaction import (
     committed_capture_view,
     frozen_legacy_baseline_present,
-    frozen_legacy_baseline_through_date,
     read_committed_captures,
     read_frozen_legacy_baseline,
 )

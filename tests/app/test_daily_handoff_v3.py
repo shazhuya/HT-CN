@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import zipfile
+from pathlib import Path
 
 import pytest
 
@@ -14,7 +14,6 @@ from htcn.app.daily_review_digest import build_latest_daily_review_digest
 from htcn.app.operator_history import append_operator_history
 from htcn.app.operator_snapshot import OPERATOR_SNAPSHOT_CONTRACT_VERSION
 from htcn.app.review_followup_journal import append_review_event
-
 
 FP = "a" * 64
 KEY = "SSE.688256:bat:XABCD:bullish:S5:2026-09-01"
