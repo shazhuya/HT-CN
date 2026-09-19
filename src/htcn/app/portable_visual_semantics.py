@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import itertools
+import math
 from dataclasses import asdict, dataclass
 from typing import Any
-import itertools
 
 VISUAL_SEMANTICS_VERSION = 2
 
@@ -89,7 +90,7 @@ def _number(value: object) -> float | None:
         number = float(value)
     except (TypeError, ValueError):
         return None
-    if number != number:
+    if math.isnan(number):
         return None
     return number
 
