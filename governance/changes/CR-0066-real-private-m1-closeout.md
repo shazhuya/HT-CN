@@ -186,3 +186,5 @@ The 2026-09-19 stage audit found that the prior Project OS checks could still pa
 - README now exposes current state, operator entrypoints, authority order, data boundaries and Source support limits.
 
 The warning/lint budgets are containment gates, not debt closure claims. Existing debt remains tracked for bounded reduction. The real private-M1 run remains the only M6.2 empirical blocker.
+
+Clean local validation on `ff644f45f048bc38d2c55ce10aaac8db719d6195` passed 872 Python tests with the warning budget unchanged at 1163. Ruff debt was 485, all newly added/materially edited Project OS files were clean, both M4 freeze guards matched, and the dependency lock validated. This is recorded as A-20260919-0066-015. Hosted branch validation remains required before merge.

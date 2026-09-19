@@ -360,19 +360,40 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
             elif not git_is_ancestor(attempt_commit, run_git("rev-parse", "HEAD")):
                 errors.append("latest attempt commit is not an ancestor of HEAD")
 
+        hosted_attempt_id = str(current.get("latest_hosted_validation_attempt_id", ""))
+        hosted_matches = [
+            row for row in attempts if row.get("attempt_id") == hosted_attempt_id
+        ]
+        if not hosted_attempt_id:
+            errors.append(
+                "current.latest_hosted_validation_attempt_id is required while a change is active"
+            )
+        elif len(hosted_matches) != 1:
+            errors.append(
+                "current.latest_hosted_validation_attempt_id must resolve to exactly one attempt: "
+                f"{hosted_attempt_id}"
+            )
+        else:
+            hosted_attempt = hosted_matches[0]
+            hosted_commit = _commit_from_attempt(hosted_attempt)
             latest_validation = current.get("latest_validation") or {}
             validation_commit = str(
                 latest_validation.get("merge_commit")
                 or latest_validation.get("head")
                 or ""
             )
-            if latest_attempt.get("result") == "success":
-                if latest_validation.get("result") != "success":
-                    errors.append("successful latest attempt requires successful latest_validation")
-                if validation_commit != attempt_commit:
-                    errors.append("latest_validation commit does not match latest attempt commit")
-                if latest_attempt.get("workflow_run") != latest_validation.get("workflow_run"):
-                    errors.append("latest_validation workflow_run does not match latest attempt")
+            if hosted_attempt.get("change_id") != active_change:
+                errors.append("latest hosted validation attempt does not belong to active change")
+            if hosted_attempt.get("result") != "success":
+                errors.append("latest hosted validation attempt must be successful")
+            if not isinstance(hosted_attempt.get("workflow_run"), int):
+                errors.append("latest hosted validation attempt must bind a workflow_run")
+            if latest_validation.get("result") != "success":
+                errors.append("latest_validation must be successful")
+            if validation_commit != hosted_commit:
+                errors.append("latest_validation commit does not match hosted attempt commit")
+            if hosted_attempt.get("workflow_run") != latest_validation.get("workflow_run"):
+                errors.append("latest_validation workflow_run does not match hosted attempt")
 
     _validate_release(state, errors)
     _validate_freezes(state, errors)

@@ -26,7 +26,8 @@
     "status": "awaiting_private_run",
     "active_change": "CR-0066",
     "active_spec": "specs/m6-phase-2-real-private-m1-closeout.md",
-    "latest_attempt_id": "A-20260919-0066-014",
+    "latest_attempt_id": "A-20260919-0066-015",
+    "latest_hosted_validation_attempt_id": "A-20260919-0066-013",
     "work_branch": null,
     "latest_validation": {
       "result": "success",

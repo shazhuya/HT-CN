@@ -50,7 +50,10 @@ def test_project_state_is_machine_current_truth() -> None:
     }
     assert state["current"]["active_change"] == "CR-0066"
     assert state["current"]["active_spec"] == "specs/m6-phase-2-real-private-m1-closeout.md"
-    assert state["current"]["latest_attempt_id"] == "A-20260919-0066-014"
+    assert state["current"]["latest_attempt_id"] == "A-20260919-0066-015"
+    assert state["current"]["latest_hosted_validation_attempt_id"] == (
+        "A-20260919-0066-013"
+    )
     assert state["next_major_task"]["phase"] == "M6.2"
     assert state["next_major_task"]["status"] in {
         "implementing",
@@ -135,4 +138,4 @@ def test_project_state_engine_is_fail_closed_and_checks_ancestry() -> None:
     assert "return 2" in text
     assert text.count("ALLOWED_CHANGE_STATUS = {") == 1
     assert "active spec status does not match current state" in text
-    assert "latest_validation commit does not match latest attempt commit" in text
+    assert "latest_validation commit does not match hosted attempt commit" in text
