@@ -9,21 +9,20 @@ if exist ".venv\Scripts\python.exe" (
   set "PY=python"
 )
 
-echo [HT-CN CONTEXT] 检查跨对话续接状态...
-"%PY%" scripts\context_pack.py --check
+echo [HT-CN PROJECT OS] 检查 Project OS v2 状态完整性...
+"%PY%" scripts\project_state.py
 if errorlevel 1 goto :fail
 
 echo.
-echo [HT-CN CONTEXT] ========================================
-echo [HT-CN CONTEXT] 续接机制结构检查通过。
-echo [HT-CN CONTEXT] 若提示 checkpoint 落后于 HEAD，属于可接受状态，
-echo [HT-CN CONTEXT] 但新会话必须先阅读这些 delta commits 再继续开发。
-echo [HT-CN CONTEXT] ========================================
+echo [HT-CN PROJECT OS] ========================================
+echo [HT-CN PROJECT OS] PROJECT STATE READY
+echo [HT-CN PROJECT OS] 可以按 AGENTS.md Bootstrap 协议继续项目。
+echo [HT-CN PROJECT OS] ========================================
 pause
 exit /b 0
 
 :fail
 echo.
-echo [HT-CN CONTEXT] FAILED. 续接元数据存在结构性问题，先修复再继续开发。
+echo [HT-CN PROJECT OS] FAILED. 状态漂移或 ledger 断链，先修复 Project OS。
 pause
 exit /b 1
