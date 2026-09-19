@@ -1648,3 +1648,26 @@ Next:
   - 24 Playwright passed;
   - browser evidence uploaded.
 - Implementation diff changed no pre-existing Phase-14 file; M4 methodology and Outcome Engine remained untouched.
+
+
+## 2026-09-19 — M5 Phase 16 portable pattern detail v1
+
+- Verified that Phase14/15 v3 transport cannot truthfully reconstruct offline harmonic charts because Queue snapshots do not contain complete bars + pattern.points.
+- Chose a new v4 transport instead of mutating frozen v3 or reading the market DB inside the Phase15 inspector.
+- Added exact-current-Queue detail transport with exhaustive detail-or-error coverage.
+- Added input-identity and trade-date binding to prevent drawing an old Queue with newer data/code.
+- Added semantic re-derivation of display keys from transported pattern points.
+- Added self-contained Chinese portable visual inspector:
+  - real transported K bars;
+  - actual harmonic geometry;
+  - node price labels;
+  - Source PRZ;
+  - lifecycle event lines;
+  - dashed next-key guide that is explicitly not a predicted leg.
+- First CI #1820 failed on a new verifier zero-value bug; the test was retained and the verifier was fixed.
+- Hosted CI #1822 / 35419647193 green:
+  - 784 Python passed;
+  - Web build success;
+  - 24 Playwright passed;
+  - browser evidence uploaded.
+- M4 methodology and Outcome Engine remained untouched.
