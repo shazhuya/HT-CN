@@ -3,10 +3,12 @@
   "pytest": {
     "warning_budget": 0,
     "baseline_passed": 872,
-    "baseline_commit": "4b664bd947565742577201f9be5af48539c386b2",
+    "baseline_commit": "38ce7b45a67de66d2654c135c4b2691b736749ef",
     "baseline_attempt_id": "A-20260919-0066-021",
-    "baseline_workflow_run": 35448896046,
-    "hosted_validation_status": "success",
+    "baseline_workflow_run": null,
+    "source_branch_validation_head": "0d0c045df6ec41bdaffab04528a9a21590751503",
+    "source_branch_validation_workflow_run": 35449160235,
+    "hosted_validation_status": "source_branch_success_main_push_recovery_pending",
     "policy": "warnings fail; narrowly scoped locked-dependency import deprecations may be filtered explicitly; increases require an explicit CR and evidence"
   },
   "ruff": {
