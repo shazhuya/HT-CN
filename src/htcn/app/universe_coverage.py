@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import json
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import duckdb
 
@@ -375,7 +376,7 @@ def assess_formal_qfq_ready(
                     "basis_id": str(basis_id),
                     "reason": str(warning or "formal_qfq_not_ready"),
                 })
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - isolate one instrument's local QFQ probe
             errors.append({
                 "instrument_id": instrument_id,
                 "mode": "error",
