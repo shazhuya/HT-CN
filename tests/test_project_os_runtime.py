@@ -61,3 +61,13 @@ def test_attempt_recorder_refuses_non_active_change_by_contract() -> None:
     text = (ROOT / "scripts" / "record_attempt.py").read_text(encoding="utf-8")
     assert "refuse attempt for non-active change" in text
     assert 'state["ledgers"]["attempts"]' in text
+
+
+def test_bounded_text_index_keeps_resume_pack_compact() -> None:
+    module = load_project_state_module()
+    raw = "\n".join(f"file-{idx}" for idx in range(250))
+    bounded = module._bounded_text_index(raw, limit=120, label="changed files")
+    assert "file-0" in bounded
+    assert "file-119" in bounded
+    assert "file-120" not in bounded
+    assert "130 additional changed files omitted" in bounded
