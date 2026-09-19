@@ -89,13 +89,13 @@
       "id": "ISSUE-0068",
       "severity": "medium",
       "type": "lint_debt",
-      "status": "baseline_frozen_reduction_pending",
+      "status": "validation_candidate_zero",
       "title": "Repository-wide Ruff debt remains above clean baseline",
       "blocks": [
         "M6.4 quality closeout"
       ],
-      "next_action": "Reduce Ruff violations in bounded mechanical batches; every verified reduction must lower governance/QUALITY_BASELINE.json.",
-      "current_fact": "The current branch reduces the repository-wide count from 493 to 483, keeps all newly added and materially edited files clean, and adds a no-net-growth CI gate."
+      "next_action": "Run the full M6.4 PR gates including browser/Phase18/Phase21 and both M4 freeze guards; close only after the final PR candidate is green.",
+      "current_fact": "M6.4 branch head b30c9d7043ff349302f6c816ff71f6d613f3f630 passed hosted deterministic validation with configured mutable Ruff observed=0/budget=0, 890 Python tests and 0 warnings. Closure is pending full PR-only gates and post-merge main validation."
     }
   ]
 }
