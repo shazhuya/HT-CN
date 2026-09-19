@@ -20,22 +20,18 @@ def test_project_os_runtime_validation_is_green() -> None:
     ok, errors, warnings, state = module.validate()
     assert ok, errors
     assert not errors
-    assert state["current"]["phase"] == "M6.2"
-    assert state["current"]["status"] in {
-        "implementing",
-        "validation_green",
-        "ready_to_merge",
-        "merged",
-        "postmerge_pending",
-        "awaiting_private_run",
-        "real_run_in_progress",
-    }
-    assert state["current"]["active_change"] == "CR-0066"
-    assert state["current"]["latest_attempt_id"].startswith("A-")
-    assert state["current"]["latest_hosted_validation_attempt_id"].startswith("A-")
-    assert state["current"]["latest_validation"]["result"] == "success"
-    assert isinstance(state["current"]["latest_validation"]["workflow_run"], int)
-    assert state["next_major_task"]["phase"] == "M6.2"
+
+    current = state["current"]
+    assert current["phase"]
+    assert current["status"] in module.ALLOWED_STATE_STATUS
+    assert current["latest_attempt_id"].startswith("A-")
+    assert current["latest_hosted_validation_attempt_id"].startswith("A-")
+    assert current["latest_validation"]["result"] == "success"
+    assert isinstance(current["latest_validation"]["workflow_run"], int)
+    if current.get("active_change") is None:
+        assert current["status"] in {"closed", "ready", "ready_not_started"}
+        assert current.get("active_spec") is None
+    assert state["next_major_task"]["phase"]
     assert any("legacy PROJECT_CONTEXT" in item for item in warnings)
 
 
@@ -45,8 +41,10 @@ def test_resume_pack_is_compact_state_index_not_legacy_dump() -> None:
     assert ok, errors
     pack = module.build_resume_pack(state)
     assert "HT-CN Resume Pack v2" in pack
-    assert "active_change: `CR-0066`" in pack
-    assert "M6.2" in pack
+    active_change = state["current"].get("active_change") or "(none)"
+    assert f"active_change: `{active_change}`" in pack
+    assert state["current"]["phase"] in pack
+    assert state["next_major_task"]["phase"] in pack
     assert "FIVE_ZERO" in pack
     assert "## FILE: `SESSION_LOG.md`" not in pack
     assert "## FILE: `PROJECT_CONTEXT.md`" not in pack
