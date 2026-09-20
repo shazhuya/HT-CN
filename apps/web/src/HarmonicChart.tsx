@@ -1,7 +1,18 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  CandlestickSeries,
+  ColorType,
+  CrosshairMode,
+  createChart,
+  type IChartApi,
+  type ISeriesApi,
+  type Time,
+} from 'lightweight-charts'
 import type { AShareExecutionContextPayload } from './AShareExecutionContext'
 import type { DecisionNarrativePayload } from './DecisionNarrative'
 import LifecycleCompass from './LifecycleCompass'
 import './HarmonicChartLifecycle.css'
+import './InteractiveHarmonicChart.css'
 
 export type Bar = {
   index: number
@@ -187,21 +198,84 @@ type LifecycleTarget = {
 }
 
 type SourceEvent = {
-  id: 'prz-entry' | 'tbar' | 'tplus1' | 'type-i-t1' | 'type-i-t2' | 'type-ii-entry' | 'type-ii-terminal' | 'reversal-exit'
+  id:
+    | 'prz-entry'
+    | 'tbar'
+    | 'tplus1'
+    | 'type-i-t1'
+    | 'type-i-t2'
+    | 'type-ii-entry'
+    | 'type-ii-terminal'
+    | 'reversal-exit'
   bar: number
   label: string
   emphasis: 'minor' | 'major' | 'confirm'
 }
 
-const WIDTH = 1100
-const HEIGHT = 520
-const LEFT = 62
-const RIGHT = 18
-const TOP = 20
-const BOTTOM = 42
+type OverlayPoint = HarmonicPoint & {
+  x: number
+  y: number
+}
+
+type OverlayLeg = {
+  name: string
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
+
+type OverlayZone = {
+  id: 'ideal-core' | 'component-envelope' | 'source-prz' | 'pez'
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+type OverlayTarget = LifecycleTarget & {
+  x1: number
+  x2: number
+  y: number
+}
+
+type OverlayEvent = SourceEvent & {
+  x: number
+  y: number
+}
+
+type OverlayGeometry = {
+  width: number
+  height: number
+  points: OverlayPoint[]
+  legs: OverlayLeg[]
+  zones: OverlayZone[]
+  targets: OverlayTarget[]
+  events: OverlayEvent[]
+}
+
+type CrosshairSnapshot = {
+  date: string
+  open: number
+  high: number
+  low: number
+  close: number
+  node: string | null
+}
+
+const CHART_HEIGHT = 520
 
 function formatPrice(value: number) {
   return value >= 100 ? value.toFixed(2) : value.toFixed(3)
+}
+
+function timeKey(time: Time | undefined): string {
+  if (time == null) return ''
+  if (typeof time === 'string') return time
+  if (typeof time === 'number') return new Date(time * 1000).toISOString().slice(0, 10)
+  const month = String(time.month).padStart(2, '0')
+  const day = String(time.day).padStart(2, '0')
+  return `${time.year}-${month}-${day}`
 }
 
 function lifecycleTargets(pattern: Pattern | null): LifecycleTarget[] {
@@ -262,7 +336,12 @@ function sourceEvents(lifecycle: SourceLifecycle | undefined): SourceEvent[] {
     .map(([id, bar, label, emphasis]) => ({ id, bar, label, emphasis }))
 }
 
-function eventPrice(event: SourceEvent, bars: Bar[], pattern: Pattern, lifecycle: SourceLifecycle): number | null {
+function eventPrice(
+  event: SourceEvent,
+  bars: Bar[],
+  pattern: Pattern,
+  lifecycle: SourceLifecycle,
+): number | null {
   const bar = bars.find((item) => item.index === event.bar)
   if (!bar) return null
   if (event.id === 'tbar' || event.id === 'type-ii-terminal') {
@@ -273,206 +352,561 @@ function eventPrice(event: SourceEvent, bars: Bar[], pattern: Pattern, lifecycle
   return bar.close
 }
 
+function emptyOverlay(width = 1): OverlayGeometry {
+  return {
+    width,
+    height: CHART_HEIGHT,
+    points: [],
+    legs: [],
+    zones: [],
+    targets: [],
+    events: [],
+  }
+}
+
 export default function HarmonicChart({ bars, pattern, focusPattern = true }: Props) {
+  const hostRef = useRef<HTMLDivElement | null>(null)
+  const chartRef = useRef<IChartApi | null>(null)
+  const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null)
+  const syncOverlayRef = useRef<() => void>(() => undefined)
+  const [overlay, setOverlay] = useState<OverlayGeometry>(() => emptyOverlay())
+  const [crosshair, setCrosshair] = useState<CrosshairSnapshot | null>(null)
+  const [showComponentEnvelope, setShowComponentEnvelope] = useState(false)
+  const [showSourcePrz, setShowSourcePrz] = useState(true)
+  const [showPez, setShowPez] = useState(true)
+
+  const targets = useMemo(() => lifecycleTargets(pattern), [pattern])
+  const lifecycle = pattern?.source_lifecycle
+  const events = useMemo(() => sourceEvents(lifecycle), [lifecycle])
+
+  useEffect(() => {
+    const host = hostRef.current
+    if (!host || !bars.length) return
+
+    const barByIndex = new Map(bars.map((bar) => [bar.index, bar]))
+    const chart = createChart(host, {
+      width: Math.max(host.clientWidth, 320),
+      height: CHART_HEIGHT,
+      layout: {
+        background: { type: ColorType.Solid, color: '#0a1017' },
+        textColor: '#748396',
+      },
+      grid: {
+        vertLines: { color: '#17222e' },
+        horzLines: { color: '#17222e' },
+      },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+      },
+      rightPriceScale: {
+        borderColor: '#263443',
+        scaleMargins: { top: 0.08, bottom: 0.08 },
+      },
+      timeScale: {
+        borderColor: '#263443',
+        rightOffset: 2,
+        barSpacing: 9,
+        minBarSpacing: 2,
+        fixLeftEdge: false,
+        fixRightEdge: false,
+      },
+      handleScroll: {
+        mouseWheel: true,
+        pressedMouseMove: true,
+        horzTouchDrag: true,
+        vertTouchDrag: true,
+      },
+      handleScale: {
+        axisPressedMouseMove: true,
+        mouseWheel: true,
+        pinch: true,
+      },
+    })
+
+    const series = chart.addSeries(CandlestickSeries, {
+      upColor: '#ef4444',
+      downColor: '#22c55e',
+      borderUpColor: '#ef4444',
+      borderDownColor: '#22c55e',
+      wickUpColor: '#ef4444',
+      wickDownColor: '#22c55e',
+      priceLineVisible: false,
+      lastValueVisible: true,
+    })
+    series.setData(
+      bars.map((bar) => ({
+        time: bar.trade_date as Time,
+        open: bar.open,
+        high: bar.high,
+        low: bar.low,
+        close: bar.close,
+      })),
+    )
+
+    chartRef.current = chart
+    seriesRef.current = series
+
+    const xForIndex = (index: number): number | null => {
+      const date = barByIndex.get(index)?.trade_date
+      if (!date) return null
+      const value = chart.timeScale().timeToCoordinate(date as Time)
+      return value == null ? null : Number(value)
+    }
+
+    const yForPrice = (price: number): number | null => {
+      const value = series.priceToCoordinate(price)
+      return value == null ? null : Number(value)
+    }
+
+    const recomputeOverlay = () => {
+      const width = Math.max(host.clientWidth, 1)
+      if (!pattern) {
+        setOverlay(emptyOverlay(width))
+        return
+      }
+
+      const points: OverlayPoint[] = pattern.points.flatMap((point) => {
+        const date = point.trade_date ?? barByIndex.get(point.index)?.trade_date
+        if (!date) return []
+        const x = chart.timeScale().timeToCoordinate(date as Time)
+        const y = series.priceToCoordinate(point.price)
+        if (x == null || y == null) return []
+        return [{ ...point, x: Number(x), y: Number(y) }]
+      })
+
+      const legs: OverlayLeg[] = points.slice(0, -1).map((point, index) => {
+        const next = points[index + 1]
+        return {
+          name: `${point.label}${next.label}`,
+          x1: point.x,
+          y1: point.y,
+          x2: next.x,
+          y2: next.y,
+        }
+      })
+
+      const lastIndex = bars.at(-1)?.index ?? 0
+      const endX = xForIndex(lastIndex)
+      const zones: OverlayZone[] = []
+
+      const pushZone = (
+        id: OverlayZone['id'],
+        startIndex: number,
+        low: number | null | undefined,
+        high: number | null | undefined,
+      ) => {
+        if (low == null || high == null || endX == null) return
+        const startX = xForIndex(startIndex)
+        const yHigh = yForPrice(high)
+        const yLow = yForPrice(low)
+        if (startX == null || yHigh == null || yLow == null) return
+        zones.push({
+          id,
+          x: Math.min(startX, endX),
+          y: Math.min(yHigh, yLow),
+          width: Math.max(2, Math.abs(endX - startX)),
+          height: Math.max(2, Math.abs(yLow - yHigh)),
+        })
+      }
+
+      const patternLastIndex = pattern.points.at(-1)?.index ?? lastIndex
+      pushZone('ideal-core', patternLastIndex, pattern.prz.price_low, pattern.prz.price_high)
+      const envelopeLow = pattern.prz.component_envelope?.price_low
+        ?? pattern.prz.component_price_low
+      const envelopeHigh = pattern.prz.component_envelope?.price_high
+        ?? pattern.prz.component_price_high
+      if (envelopeLow != null && envelopeHigh != null) {
+        pushZone('component-envelope', patternLastIndex, envelopeLow, envelopeHigh)
+      }
+      if (lifecycle?.source_prz_low != null && lifecycle.source_prz_high != null) {
+        pushZone(
+          'source-prz',
+          lifecycle.signal_bar ?? patternLastIndex,
+          lifecycle.source_prz_low,
+          lifecycle.source_prz_high,
+        )
+      }
+      if (
+        lifecycle?.source_terminal_bar != null
+        && lifecycle.pez_low != null
+        && lifecycle.pez_high != null
+      ) {
+        pushZone('pez', lifecycle.source_terminal_bar, lifecycle.pez_low, lifecycle.pez_high)
+      }
+
+      const lifecycleStart = lifecycle?.source_terminal_bar
+        ?? pattern.reaction_audit?.d_index
+        ?? patternLastIndex
+      const targetRows: OverlayTarget[] = targets.flatMap((target) => {
+        const x1 = xForIndex(lifecycleStart)
+        const x2 = endX
+        const y = yForPrice(target.price)
+        if (x1 == null || x2 == null || y == null) return []
+        return [{ ...target, x1, x2, y }]
+      })
+
+      const eventRows: OverlayEvent[] = []
+      if (lifecycle) {
+        for (const event of events) {
+          const x = xForIndex(event.bar)
+          const price = eventPrice(event, bars, pattern, lifecycle)
+          const y = price == null ? null : yForPrice(price)
+          if (x == null || y == null) continue
+          eventRows.push({ ...event, x, y })
+        }
+      }
+
+      setOverlay({
+        width,
+        height: CHART_HEIGHT,
+        points,
+        legs,
+        zones,
+        targets: targetRows,
+        events: eventRows,
+      })
+    }
+
+    let frame = 0
+    const scheduleOverlay = () => {
+      if (frame) cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(recomputeOverlay)
+    }
+    syncOverlayRef.current = scheduleOverlay
+
+    const onVisibleRange = () => scheduleOverlay()
+    chart.timeScale().subscribeVisibleLogicalRangeChange(onVisibleRange)
+
+    const onInteraction = () => scheduleOverlay()
+    host.addEventListener('wheel', onInteraction, { passive: true })
+    host.addEventListener('pointermove', onInteraction)
+    host.addEventListener('pointerup', onInteraction)
+
+    chart.subscribeCrosshairMove((param) => {
+      const datum = param.seriesData.get(series) as
+        | { open: number; high: number; low: number; close: number }
+        | undefined
+      if (!datum || param.time == null) {
+        setCrosshair(null)
+        return
+      }
+      const date = timeKey(param.time)
+      const node = pattern?.points.find((point) => {
+        const pointDate = point.trade_date ?? barByIndex.get(point.index)?.trade_date
+        return pointDate === date
+      })?.label ?? null
+      setCrosshair({
+        date,
+        open: datum.open,
+        high: datum.high,
+        low: datum.low,
+        close: datum.close,
+        node,
+      })
+    })
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      const width = Math.max(Math.floor(entries[0]?.contentRect.width ?? host.clientWidth), 320)
+      chart.resize(width, CHART_HEIGHT)
+      scheduleOverlay()
+    })
+    resizeObserver.observe(host)
+
+    if (focusPattern && pattern?.points.length) {
+      const firstPatternIndex = pattern.points[0].index
+      const startPosition = Math.max(
+        0,
+        bars.findIndex((bar) => bar.index >= firstPatternIndex) - Math.min(24, bars.length - 1),
+      )
+      chart.timeScale().setVisibleLogicalRange({
+        from: startPosition - 0.5,
+        to: bars.length - 0.5,
+      })
+    } else {
+      chart.timeScale().fitContent()
+    }
+    scheduleOverlay()
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame)
+      resizeObserver.disconnect()
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(onVisibleRange)
+      host.removeEventListener('wheel', onInteraction)
+      host.removeEventListener('pointermove', onInteraction)
+      host.removeEventListener('pointerup', onInteraction)
+      chart.remove()
+      chartRef.current = null
+      seriesRef.current = null
+      syncOverlayRef.current = () => undefined
+    }
+  }, [bars, events, focusPattern, lifecycle, pattern, targets])
+
   if (!bars.length) return <div className="chart-empty">暂无 K 线数据</div>
 
-  const fullFirstIndex = bars[0].index
-  const fullLastIndex = bars.at(-1)?.index ?? fullFirstIndex
-  const patternFirstIndex = pattern?.points[0]?.index ?? fullFirstIndex
-  const focusPadding = Math.max(12, Math.min(40, Math.round((fullLastIndex - patternFirstIndex + 1) * 0.35)))
-  const viewportStart = focusPattern && pattern
-    ? Math.max(fullFirstIndex, patternFirstIndex - focusPadding)
-    : fullFirstIndex
-  const visibleBars = bars.filter((bar) => bar.index >= viewportStart)
-  const targets = lifecycleTargets(pattern)
-  const lifecycle = pattern?.source_lifecycle
-  const events = sourceEvents(lifecycle)
+  const scaleViewport = (factor: number) => {
+    const timeScale = chartRef.current?.timeScale()
+    const range = timeScale?.getVisibleLogicalRange()
+    if (!timeScale || !range) return
+    const center = (range.from + range.to) / 2
+    const half = ((range.to - range.from) * factor) / 2
+    timeScale.setVisibleLogicalRange({
+      from: center - half,
+      to: center + half,
+    })
+    syncOverlayRef.current()
+  }
 
-  const sourcePrices = lifecycle
-    ? [
-        lifecycle.source_prz_low,
-        lifecycle.source_prz_high,
-        lifecycle.pez_low,
-        lifecycle.pez_high,
-        lifecycle.target_382,
-        lifecycle.target_618,
-      ].filter((value): value is number => value != null)
-    : []
-  const extra = pattern
-    ? [pattern.prz.price_low, pattern.prz.price_high, ...targets.map((target) => target.price), ...sourcePrices]
-    : []
-  const low = Math.min(...visibleBars.map((bar) => bar.low), ...extra)
-  const high = Math.max(...visibleBars.map((bar) => bar.high), ...extra)
-  const span = Math.max(high - low, Math.abs(high) * 0.01, 0.01)
-  const paddedLow = low - span * 0.04
-  const paddedHigh = high + span * 0.04
-  const priceSpan = paddedHigh - paddedLow
-  const plotWidth = WIDTH - LEFT - RIGHT
-  const plotHeight = HEIGHT - TOP - BOTTOM
-  const minIndex = visibleBars[0]?.index ?? fullFirstIndex
-  const maxIndex = visibleBars.at(-1)?.index ?? fullLastIndex
-  const indexSpan = Math.max(maxIndex - minIndex, 1)
-  const step = plotWidth / Math.max(visibleBars.length - 1, 1)
-  const candleWidth = Math.max(1, Math.min(7, step * 0.64))
+  const shiftViewport = (direction: -1 | 1) => {
+    const timeScale = chartRef.current?.timeScale()
+    const range = timeScale?.getVisibleLogicalRange()
+    if (!timeScale || !range) return
+    const width = range.to - range.from
+    const delta = Math.max(width * 0.18, 1) * direction
+    timeScale.setVisibleLogicalRange({
+      from: range.from + delta,
+      to: range.to + delta,
+    })
+    syncOverlayRef.current()
+  }
 
-  const x = (index: number) => LEFT + ((index - minIndex) / indexSpan) * plotWidth
-  const y = (price: number) => TOP + ((paddedHigh - price) / priceSpan) * plotHeight
+  const focusLastObservedNode = () => {
+    const chart = chartRef.current
+    const series = seriesRef.current
+    const point = pattern?.points.at(-1)
+    if (!chart || !series || !point) return
+    const bar = bars.find((item) => item.index === point.index)
+    const date = point.trade_date ?? bar?.trade_date
+    if (!date || !bar) return
+    chart.setCrosshairPosition(point.price, date as Time, series)
+    setCrosshair({
+      date,
+      open: bar.open,
+      high: bar.high,
+      low: bar.low,
+      close: bar.close,
+      node: point.label,
+    })
+  }
 
-  const grid = Array.from({ length: 6 }, (_, index) => paddedLow + (priceSpan * index) / 5)
-  const patternPoints = pattern?.points.map((point) => `${x(point.index)},${y(point.price)}`).join(' ') ?? ''
-  const przStart = pattern ? Math.min(pattern.points.at(-1)?.index ?? maxIndex, maxIndex) : maxIndex
-  const lifecycleStart = lifecycle?.source_terminal_bar != null
-    ? Math.max(minIndex, Math.min(lifecycle.source_terminal_bar, maxIndex))
-    : pattern?.reaction_audit
-      ? Math.max(minIndex, Math.min(pattern.reaction_audit.d_index, maxIndex))
-      : maxIndex
-  const sourceZoneStart = lifecycle?.signal_bar != null
-    ? Math.max(minIndex, Math.min(lifecycle.signal_bar, maxIndex))
-    : przStart
-  const pezStart = lifecycle?.source_terminal_bar != null
-    ? Math.max(minIndex, Math.min(lifecycle.source_terminal_bar, maxIndex))
-    : null
+  const resetViewport = () => {
+    chartRef.current?.timeScale().fitContent()
+    syncOverlayRef.current()
+  }
 
   return (
     <>
       <LifecycleCompass pattern={pattern} bars={bars} />
-      <div className="chart-wrap" aria-label="harmonic-chart">
-        <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="A股K线与谐波形态">
-          <rect x="0" y="0" width={WIDTH} height={HEIGHT} className="chart-bg" />
-          {grid.map((price) => (
-            <g key={price}>
-              <line x1={LEFT} x2={WIDTH - RIGHT} y1={y(price)} y2={y(price)} className="grid-line" />
-              <text x={LEFT - 8} y={y(price) + 4} textAnchor="end" className="axis-label">
-                {formatPrice(price)}
-              </text>
-            </g>
-          ))}
-
-          {pattern && (
-            <rect
-              x={x(przStart)}
-              y={y(pattern.prz.price_high)}
-              width={Math.max(3, x(maxIndex) - x(przStart))}
-              height={Math.max(2, y(pattern.prz.price_low) - y(pattern.prz.price_high))}
-              className={`prz-zone legacy-core ${pattern.direction}`}
-              aria-label="HT-CN收敛核心-非SourcePRZ"
-            />
-          )}
-
-          {lifecycle?.source_prz_low != null && lifecycle.source_prz_high != null && (
-            <g data-testid="source-prz-zone">
-              <rect
-                x={x(sourceZoneStart)}
-                y={y(lifecycle.source_prz_high)}
-                width={Math.max(3, x(maxIndex) - x(sourceZoneStart))}
-                height={Math.max(2, y(lifecycle.source_prz_low) - y(lifecycle.source_prz_high))}
-                className="source-prz-zone"
+      <div
+        className="chart-wrap interactive-chart-wrap"
+        aria-label="harmonic-chart"
+        data-testid="interactive-harmonic-chart"
+        data-render-engine="lightweight-charts-v5"
+        data-coordinate-system="canonical-time-price"
+      >
+        <div className="interactive-chart-toolbar">
+          <div>
+            <strong>交互主图</strong>
+            <span>拖动平移 · 滚轮缩放 · 十字光标</span>
+          </div>
+          <div className="interactive-chart-actions">
+            <label className="chart-layer-toggle">
+              <input
+                type="checkbox"
+                checked={showSourcePrz}
+                onChange={(event) => setShowSourcePrz(event.target.checked)}
               />
-              <text x={x(sourceZoneStart) + 6} y={y(lifecycle.source_prz_high) + 13} className="source-zone-label">
-                Source Raw PRZ
-              </text>
-            </g>
-          )}
-
-          {pezStart != null && lifecycle?.pez_low != null && lifecycle.pez_high != null && (
-            <g data-testid="source-pez-zone">
-              <rect
-                x={x(pezStart)}
-                y={y(lifecycle.pez_high)}
-                width={Math.max(3, x(maxIndex) - x(pezStart))}
-                height={Math.max(2, y(lifecycle.pez_low) - y(lifecycle.pez_high))}
-                className="source-pez-zone"
+              Source PRZ
+            </label>
+            <label className="chart-layer-toggle">
+              <input
+                type="checkbox"
+                checked={showComponentEnvelope}
+                onChange={(event) => setShowComponentEnvelope(event.target.checked)}
               />
-              <text x={x(pezStart) + 6} y={y(lifecycle.pez_low) - 6} className="source-zone-label pez-label">
-                PEZ
-              </text>
-            </g>
-          )}
-
-          {targets.map((target) => (
-            <g
-              key={target.id}
-              className={`lifecycle-target ${target.reached ? 'reached' : 'pending'} ${target.sourceClock ? 'source-clock-target' : 'retrospective-target'}`}
-              data-testid={`type-i-target-${target.id}`}
-              data-state={target.reached ? 'reached' : 'pending'}
-              data-clock={target.sourceClock ? 'source' : 'retrospective'}
-            >
-              <line
-                x1={x(lifecycleStart)}
-                x2={x(maxIndex)}
-                y1={y(target.price)}
-                y2={y(target.price)}
-                className="lifecycle-target-line"
+              Envelope
+            </label>
+            <label className="chart-layer-toggle">
+              <input
+                type="checkbox"
+                checked={showPez}
+                onChange={(event) => setShowPez(event.target.checked)}
               />
-              <text
-                x={x(maxIndex) - 5}
-                y={y(target.price) - 7}
-                textAnchor="end"
-                className="lifecycle-target-label"
+              PEZ
+            </label>
+            <button type="button" onClick={() => shiftViewport(-1)} data-testid="chart-pan-left">
+              左移
+            </button>
+            <button type="button" onClick={() => shiftViewport(1)} data-testid="chart-pan-right">
+              右移
+            </button>
+            <button type="button" onClick={() => scaleViewport(0.72)} data-testid="chart-zoom-in">
+              放大
+            </button>
+            <button type="button" onClick={() => scaleViewport(1.35)} data-testid="chart-zoom-out">
+              缩小
+            </button>
+            {pattern?.points.length ? (
+              <button type="button" onClick={focusLastObservedNode} data-testid="chart-focus-last-node">
+                定位{pattern.points.at(-1)?.label}
+              </button>
+            ) : null}
+            <button type="button" onClick={resetViewport} data-testid="chart-reset-viewport">
+              复位视图
+            </button>
+          </div>
+        </div>
+
+        <div className="interactive-chart-stage">
+          <div ref={hostRef} className="lightweight-chart-host" data-testid="lightweight-chart-host" />
+          <svg
+            className="chart-overlay"
+            viewBox={`0 0 ${overlay.width} ${overlay.height}`}
+            preserveAspectRatio="none"
+            aria-label="HT-CN谐波与Source生命周期叠加层"
+            data-testid="harmonic-coordinate-overlay"
+          >
+            {overlay.zones.map((zone) => {
+              const visible = zone.id === 'source-prz'
+                ? showSourcePrz
+                : zone.id === 'component-envelope'
+                  ? showComponentEnvelope
+                  : zone.id === 'pez'
+                    ? showPez
+                    : true
+              if (!visible) return null
+              const layerId = zone.id === 'source-prz'
+                ? 'source_raw_prz'
+                : zone.id === 'component-envelope'
+                  ? 'component_envelope'
+                  : zone.id
+              return (
+                <g key={zone.id} data-layer-id={layerId}>
+                  <rect
+                    x={zone.x}
+                    y={zone.y}
+                    width={zone.width}
+                    height={zone.height}
+                    className={
+                      zone.id === 'source-prz'
+                        ? 'source-prz-zone'
+                        : zone.id === 'component-envelope'
+                          ? 'component-envelope-zone'
+                          : zone.id === 'pez'
+                            ? 'source-pez-zone'
+                            : `prz-zone legacy-core ${pattern?.direction ?? 'bullish'}`
+                    }
+                    data-testid={
+                      zone.id === 'source-prz'
+                        ? 'source-prz-zone'
+                        : zone.id === 'component-envelope'
+                          ? 'component-envelope-zone'
+                          : zone.id === 'pez'
+                            ? 'source-pez-zone'
+                            : undefined
+                    }
+                  />
+                </g>
+              )
+            })}
+
+            {overlay.targets.map((target) => (
+              <g
+                key={target.id}
+                className={`lifecycle-target ${target.reached ? 'reached' : 'pending'} ${target.sourceClock ? 'source-clock-target' : 'retrospective-target'}`}
+                data-testid={`type-i-target-${target.id}`}
+                data-state={target.reached ? 'reached' : 'pending'}
+                data-clock={target.sourceClock ? 'source' : 'retrospective'}
               >
-                {target.label} · {formatPrice(target.price)} · {target.reached ? '已到达' : '待到达'}
-              </text>
-            </g>
-          ))}
-
-          {visibleBars.map((bar) => {
-            const rising = bar.close >= bar.open
-            const top = y(Math.max(bar.open, bar.close))
-            const bottom = y(Math.min(bar.open, bar.close))
-            return (
-              <g key={`${bar.trade_date}-${bar.index}`} className={rising ? 'candle up' : 'candle down'}>
-                <line x1={x(bar.index)} x2={x(bar.index)} y1={y(bar.high)} y2={y(bar.low)} />
-                <rect
-                  x={x(bar.index) - candleWidth / 2}
-                  y={top}
-                  width={candleWidth}
-                  height={Math.max(1.2, bottom - top)}
+                <line
+                  x1={target.x1}
+                  x2={target.x2}
+                  y1={target.y}
+                  y2={target.y}
+                  className="lifecycle-target-line"
                 />
+                <text
+                  x={Math.max(target.x1, target.x2) - 6}
+                  y={target.y - 7}
+                  textAnchor="end"
+                  className="lifecycle-target-label"
+                >
+                  {target.label} · {formatPrice(target.price)} · {target.reached ? '已到达' : '待到达'}
+                </text>
               </g>
-            )
-          })}
+            ))}
 
-          {pattern && lifecycle && events.map((event, index) => {
-            if (event.bar < minIndex || event.bar > maxIndex) return null
-            const markerPrice = eventPrice(event, bars, pattern, lifecycle)
-            if (markerPrice == null) return null
-            const labelY = TOP + 16 + (index % 3) * 15
-            return (
+            {overlay.events.map((event, index) => (
               <g
                 key={`${event.id}-${event.bar}`}
                 className={`source-event ${event.emphasis}`}
                 data-testid={`source-event-${event.id}`}
+                data-anchor-index={event.bar}
               >
-                <line x1={x(event.bar)} x2={x(event.bar)} y1={TOP} y2={HEIGHT - BOTTOM} className="source-event-line" />
-                <circle cx={x(event.bar)} cy={y(markerPrice)} r={event.emphasis === 'major' ? 5 : 4} className="source-event-node" />
-                <text x={x(event.bar) + 5} y={labelY} className="source-event-label">
+                <line
+                  x1={event.x}
+                  x2={event.x}
+                  y1={0}
+                  y2={overlay.height}
+                  className="source-event-line"
+                />
+                <circle
+                  cx={event.x}
+                  cy={event.y}
+                  r={event.emphasis === 'major' ? 5 : 4}
+                  className="source-event-node"
+                />
+                <text
+                  x={event.x + 5}
+                  y={18 + (index % 3) * 15}
+                  className="source-event-label"
+                >
                   {event.label}
                 </text>
               </g>
-            )
-          })}
+            ))}
 
-          {pattern && (
+            {overlay.legs.map((leg) => (
+              <line
+                key={leg.name}
+                x1={leg.x1}
+                y1={leg.y1}
+                x2={leg.x2}
+                y2={leg.y2}
+                className={`pattern-line ${pattern?.state ?? 'forming'}`}
+                data-leg-name={leg.name}
+              />
+            ))}
+
+            {overlay.points.map((point) => (
+              <g
+                key={`${point.label}-${point.index}`}
+                data-node-label={point.label}
+                data-anchor-index={point.index}
+                data-anchor-price={point.price}
+              >
+                <circle cx={point.x} cy={point.y} r="5" className="pattern-node" />
+                <text x={point.x} y={point.y - 10} textAnchor="middle" className="point-label">
+                  {point.label}
+                </text>
+              </g>
+            ))}
+          </svg>
+        </div>
+
+        <div className="chart-crosshair-readout" data-testid="chart-crosshair-readout">
+          {crosshair ? (
             <>
-              <polyline points={patternPoints} className={`pattern-line ${pattern.state}`} />
-              {pattern.points.map((point) => (
-                <g key={`${point.label}-${point.index}`}>
-                  <circle cx={x(point.index)} cy={y(point.price)} r="5" className="pattern-node" />
-                  <text x={x(point.index)} y={y(point.price) - 10} textAnchor="middle" className="point-label">
-                    {point.label}
-                  </text>
-                </g>
-              ))}
+              <strong>{crosshair.date}</strong>
+              <span>O {formatPrice(crosshair.open)}</span>
+              <span>H {formatPrice(crosshair.high)}</span>
+              <span>L {formatPrice(crosshair.low)}</span>
+              <span>C {formatPrice(crosshair.close)}</span>
+              {crosshair.node && <b>节点 {crosshair.node}</b>}
             </>
+          ) : (
+            <span>移动十字光标读取 OHLC 与谐波节点</span>
           )}
-
-          <text x={LEFT} y={HEIGHT - 12} className="axis-label">
-            {visibleBars[0]?.trade_date}
-          </text>
-          <text x={WIDTH - RIGHT} y={HEIGHT - 12} textAnchor="end" className="axis-label">
-            {visibleBars.at(-1)?.trade_date}
-          </text>
-        </svg>
+        </div>
       </div>
     </>
   )

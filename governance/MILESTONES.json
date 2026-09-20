@@ -72,7 +72,7 @@
         {
           "id": "M6.6",
           "title": "Interactive Harmonic Chart Foundation",
-          "status": "ready_not_started",
+          "status": "implementing",
           "exit_gate": [
             "M6.4 Repository Governance and M6.5 Source Coverage Freeze are complete",
             "interactive candlestick pan/zoom/time-axis/price-axis/crosshair foundation is production-bound",

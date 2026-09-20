@@ -82,6 +82,12 @@
       "title": "Source Coverage Freeze uses a finite capability taxonomy and machine bindings",
       "status": "active",
       "source": "governance/decisions/D-074-source-coverage-freeze.md"
+    },
+    {
+      "id": "D-075",
+      "title": "Chart engine owns viewport coordinates, never harmonic Source truth",
+      "status": "active",
+      "source": "governance/decisions/D-075-chart-coordinate-source-boundary.md"
     }
   ],
   "rules": {
