@@ -133,3 +133,14 @@ Phase18, Phase21, M4 methodology 37/37 and Outcome Engine 4/4.
 
 M6.6 is closed. Viewport interaction remains presentation-only; D-075, Source identity and all
 existing freezes remain active. M7 Prospective Evidence Accumulation is the next major task.
+
+## Post-merge closeout correction
+
+Closeout workflow `35501953633` / #2403 on head
+`9ceb37152535efa3b70a93358cebc0f63e58527a` passed 895 Python tests and failed one continuity
+assertion because `MILESTONES.active` was advanced to M7 while `PROJECT_STATE.current` correctly
+remained the closed M6.6 phase. M7 has no activated CR/spec/phase yet.
+
+The correction keeps M6 as the active state-ledger milestone until a formal M7 activation changes
+both ledgers atomically. M6 remains complete and M7 remains `ready_not_started`; no product, Source
+or freeze semantics change.

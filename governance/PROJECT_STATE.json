@@ -26,7 +26,7 @@
     "status": "closed",
     "active_change": null,
     "active_spec": null,
-    "latest_attempt_id": "A-20260920-0071-010",
+    "latest_attempt_id": "A-20260920-0071-011",
     "latest_hosted_validation_attempt_id": "A-20260920-0071-010",
     "work_branch": null,
     "latest_validation": {
@@ -52,6 +52,14 @@
       "continuation_artifact_id": 10602487764,
       "continuation_artifact_digest": "sha256:fd5c09f92bb7efa643d402a6c5bf3ce0e55af170514c719b83dcbe8d749c9340",
       "scope": "M6.6 interactive chart foundation merged through PR #58 and canonical main passed Project OS, Source Coverage, Ruff/Python/Web, all 25 browser tests, Phase18, Phase21 and both immutable M4 freeze guards."
+    },
+    "last_failed_validation": {
+      "workflow_run": 35501953633,
+      "run_number": 2403,
+      "head": "9ceb37152535efa3b70a93358cebc0f63e58527a",
+      "failed_python_tests": 1,
+      "passed_python_tests": 895,
+      "scope": "Post-merge closeout advanced MILESTONES.active to M7 before a formal M7 phase existed, conflicting with closed current phase M6.6. Product, Source and M4 semantics were unchanged."
     }
   },
   "private_m1": {
