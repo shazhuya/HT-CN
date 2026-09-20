@@ -1,6 +1,6 @@
 # M6.5 — Source Coverage Freeze
 
-status: implementing
+status: ready_to_merge
 
 ## 1. Objective
 

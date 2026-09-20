@@ -1,6 +1,6 @@
 # CR-0070 — M6.5 Source Coverage Freeze
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -48,3 +48,25 @@ were automatically cancelled when newer commits arrived on the same ref.
 
 This evidence activates M6.5. Full PR-only browser/Phase18/Phase21/M4 freeze gates remain required
 before any ready-to-merge or closeout state.
+
+
+## Full PR validation
+
+PR #56 head `68837b2e93de8effa28109ed6f41a2cb814a1469` passed workflow
+`35485216318` / run #2366:
+
+- Project OS: success
+- Source Coverage freeze: valid, 18 items, 0 Partial, 0 errors
+- mutable Ruff: 0 / budget 0
+- Python: 896 passed
+- pytest warnings: 0
+- Web build: success
+- existing browser acceptance: 24 passed
+- Phase18 browser/evidence: valid
+- Phase21 dynamic browser/evidence: valid
+- M4 methodology freeze: frozen_match, 37 components
+- Outcome Engine freeze: frozen_match, 4 components
+- evidence artifact: 10596643533
+- artifact digest: sha256:35677f0ffe5fb18cb3598fbbd03c1da3786f30aedba0f7fb6330c9be63e4a9e2
+
+The candidate is ready for one final ledger-bearing PR validation before merge.
