@@ -97,7 +97,7 @@
     },
     {
       "id": "D-077",
-      "title": "Legacy Saturday QFQ calendar holes may be bridged only outside the frozen formal-capture window",
+      "title": "Legacy QFQ bridge only outside formal 420-bar window",
       "status": "active",
       "source": "governance/decisions/D-077-legacy-qfq-calendar-bridge.md"
     }

@@ -102,12 +102,12 @@
       "severity": "high",
       "type": "operational_evidence",
       "status": "open",
-      "title": "First M7 append blocked by legacy QFQ gap / stale failure reports",
+      "title": "M7 first append resilience",
       "blocks": [
-        "M7 first evidence append"
+        "M7 first append"
       ],
-      "next_action": "Merge CR-0073 after full green CI, then rerun the M7 BAT on clean canonical main.",
-      "current_fact": "Run eca753f passed freezes+M1 but QFQ was 54/55: SZSE.000001 had five 1991 Saturday gaps; no capture committed. Failure ZIP also exposed stale disposable reports."
+      "next_action": "Merge CR-0073 green, then rerun M7 BAT.",
+      "current_fact": "eca753f run: freezes/M1 pass; QFQ 54/55 on SZSE.000001 1991 Saturday gaps; no capture; stale reports found."
     }
   ]
 }
