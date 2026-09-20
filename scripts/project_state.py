@@ -424,6 +424,27 @@ def _bounded_text_index(raw: str, *, limit: int, label: str) -> str:
     return f"{visible}\n... ({omitted} additional {label} omitted; read canonical Git for full list)"
 
 
+def _source_coverage_index(payload: dict[str, Any]) -> str:
+    lines = [
+        "- canonical ledger: `governance/SOURCE_COVERAGE.json`",
+        f"- schema: `{payload.get('schema')}`",
+        f"- freeze_id: `{payload.get('freeze_id') or '(legacy)'}`",
+    ]
+    for row in payload.get("items", []):
+        if not isinstance(row, dict):
+            continue
+        item_id = str(row.get("id") or "(unknown)")
+        classification = str(row.get("classification") or row.get("status") or "(unknown)")
+        legacy_status = str(row.get("status") or "(none)")
+        production = str(row.get("production_state") or "(none)")
+        lines.append(
+            f"- {item_id}: classification={classification}; "
+            f"status={legacy_status}; production={production}"
+        )
+    lines.append("- full bindings: read the canonical ledger; they are intentionally not duplicated here.")
+    return "\n".join(lines)
+
+
 def build_resume_pack(state: dict[str, Any]) -> str:
     generated = datetime.now().astimezone().isoformat(timespec="seconds")
     head = run_git("rev-parse", "HEAD")
@@ -495,7 +516,7 @@ def build_resume_pack(state: dict[str, Any]) -> str:
         _markdown_json("Machine Current State", state),
         _markdown_json("Active Decision Index", decisions),
         _markdown_json("Open Issues", issues),
-        _markdown_json("Source Coverage", source),
+        "## Source Coverage Index\n\n" + _source_coverage_index(source) + "\n",
         "## Active Change Index\n\n" + change_index + "\n",
         "## Required Specs\n\n"
         + "\n".join(f"- `{x}`" for x in state.get("required_specs", []))

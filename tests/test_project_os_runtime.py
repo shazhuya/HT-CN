@@ -71,3 +71,14 @@ def test_bounded_text_index_keeps_resume_pack_compact() -> None:
     assert "file-119" in bounded
     assert "file-120" not in bounded
     assert "130 additional changed files omitted" in bounded
+
+
+def test_source_coverage_index_is_compact_and_preserves_critical_states() -> None:
+    module = load_project_state_module()
+    source = module.read_json(module.SOURCE_PATH)
+    index = module._source_coverage_index(source)
+    assert "FIVE_ZERO: classification=quarantined" in index
+    assert "ALTERNATE_BAT: classification=quarantined" in index
+    assert "HSI: classification=unsupported" in index
+    assert "full bindings: read the canonical ledger" in index
+    assert len(index) < 5000

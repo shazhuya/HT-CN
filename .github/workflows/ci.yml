@@ -8,15 +8,16 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: htcn-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   actions: read
 
 jobs:
   deterministic-tests:
-    concurrency:
-      group: htcn-deterministic-${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -39,6 +40,9 @@ jobs:
 
       - name: Verify Project OS v2 state integrity
         run: python scripts/project_state.py
+
+      - name: Verify M6.5 source coverage freeze
+        run: python scripts/m6_verify_source_coverage.py
 
       - name: Enforce frozen Ruff debt budget
         run: python scripts/ruff_with_budget.py

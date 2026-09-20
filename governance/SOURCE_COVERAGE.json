@@ -1,100 +1,585 @@
 {
-  "schema": 1,
-  "authority": "Scott M. Carney Harmonic Trading Volumes One/Two/Three + frozen HT-CN Source specs",
+  "schema": 2,
+  "freeze_id": "m6.5-source-coverage-v1",
+  "authority": [
+    "Scott M. Carney, Harmonic Trading Volume One",
+    "Scott M. Carney, Harmonic Trading Volume Two",
+    "Scott M. Carney, Harmonic Trading Volume Three: Reaction vs. Reversal"
+  ],
+  "taxonomy": {
+    "allowed": [
+      "supported",
+      "partial",
+      "quarantined",
+      "unsupported"
+    ],
+    "current_partial_items": [],
+    "partial_policy": "No current capability is classified partial. Do not invent partial coverage to blur an unresolved Source boundary.",
+    "production_rule": "Only supported capabilities may be production-enabled. Quarantined/unsupported capabilities cannot be emitted as supported production identity."
+  },
+  "global_contracts": [
+    "Source Harmonic Truth is separate from A-share execution context.",
+    "Identity precedes score; score cannot rescue invalid identity.",
+    "Source Raw PRZ is separate from Ideal Core, Component Envelope and PEZ.",
+    "Geometry clock is separate from observable Source execution clock.",
+    "PRZ is potential reversal area, not proof of reversal.",
+    "Type-I Reaction is separate from Type-II Reversal.",
+    "Ordinary Wilder RSI is not RSI BAMM.",
+    "Future nodes may not be fabricated.",
+    "No source promotion from empirical A-share performance."
+  ],
   "items": [
     {
+      "id": "SOURCE_RAW_PRZ",
+      "classification": "supported",
+      "production_state": "enabled_source_contract",
+      "role": "source_zone_contract",
+      "source_refs": [
+        "research/source-fidelity-status-v1.json",
+        "research/book-source-prz-cases-v1.json",
+        "research/book-source-prz-abcd-cases-v1.json",
+        "research/book-source-prz-shark-cases-v1.json"
+      ],
+      "specs": [
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/source_prz.py",
+        "src/htcn/harmonic/source_prz_evidence.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_source_prz_golden.py",
+        "tests/harmonic/test_book_source_prz_ledger.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "Raw PRZ may not be replaced by ideal_core/component_envelope/PEZ."
+      ],
+      "status": "supported_frozen"
+    },
+    {
       "id": "ABCD",
-      "status": "supported",
+      "classification": "supported",
+      "production_state": "enabled",
       "topology": "ABCD",
-      "notes": "Source structure and PRZ semantics implemented; standalone topology separate."
+      "source_refs": [
+        "research/book-source-prz-abcd-cases-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-28-source-prz-abcd-closeout.md",
+        "specs/m2-abcd.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/abcd.py",
+        "src/htcn/harmonic/abcd_source.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_abcd.py",
+        "tests/harmonic/test_abcd_source.py",
+        "tests/test_source_aligned_abcd.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "Reciprocal BC mapping and equivalent AB=CD remain coordinated Source measurements."
+      ],
+      "status": "supported"
     },
     {
       "id": "GARTLEY",
-      "status": "supported_frozen",
-      "topology": "XABCD"
+      "classification": "supported",
+      "production_state": "enabled",
+      "topology": "XABCD",
+      "source_refs": [
+        "research/book-source-prz-cases-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/rules.py",
+        "src/htcn/harmonic/source_prz.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_golden_patterns.py",
+        "tests/harmonic/test_source_prz_golden.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "Source identity/Raw PRZ are frozen; quality score cannot rescue an invalid pattern."
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "BAT",
-      "status": "supported_frozen",
-      "topology": "XABCD"
+      "classification": "supported",
+      "production_state": "enabled",
+      "topology": "XABCD",
+      "source_refs": [
+        "research/book-source-prz-cases-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/rules.py",
+        "src/htcn/harmonic/source_prz.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_golden_patterns.py",
+        "tests/harmonic/test_source_prz_golden.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "Source identity/Raw PRZ are frozen; quality score cannot rescue an invalid pattern."
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "CRAB",
-      "status": "supported_frozen",
-      "topology": "XABCD"
+      "classification": "supported",
+      "production_state": "enabled",
+      "topology": "XABCD",
+      "source_refs": [
+        "research/book-source-prz-cases-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/rules.py",
+        "src/htcn/harmonic/source_prz.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_golden_patterns.py",
+        "tests/harmonic/test_source_prz_golden.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "Source identity/Raw PRZ are frozen; quality score cannot rescue an invalid pattern."
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "DEEP_CRAB",
-      "status": "supported_frozen",
-      "topology": "XABCD"
+      "classification": "supported",
+      "production_state": "enabled",
+      "topology": "XABCD",
+      "source_refs": [
+        "research/book-source-prz-cases-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/rules.py",
+        "src/htcn/harmonic/source_prz.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_golden_patterns.py",
+        "tests/harmonic/test_source_prz_golden.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "Source identity/Raw PRZ are frozen; quality score cannot rescue an invalid pattern."
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "BUTTERFLY",
-      "status": "supported_frozen",
-      "topology": "XABCD"
+      "classification": "supported",
+      "production_state": "enabled",
+      "topology": "XABCD",
+      "source_refs": [
+        "research/book-source-prz-cases-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/rules.py",
+        "src/htcn/harmonic/source_prz.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_golden_patterns.py",
+        "tests/harmonic/test_source_prz_golden.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "Source identity/Raw PRZ are frozen; quality score cannot rescue an invalid pattern."
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "SHARK",
-      "status": "supported_frozen",
+      "classification": "supported",
+      "production_state": "enabled_reactive_first",
       "topology": "0XABC",
+      "source_refs": [
+        "research/book-source-prz-shark-cases-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-30-shark-source-freeze-closeout.md",
+        "specs/m2-shark-five-zero.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/shark.py",
+        "src/htcn/harmonic/shark_source.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_shark.py",
+        "tests/harmonic/test_shark_source_evidence.py",
+        "tests/app/test_shark_source_lifecycle.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
       "constraints": [
-        "never fabricate D",
-        "reactive-first semantics"
-      ]
+        "Topology ends at C; never fabricate D.",
+        "Reactive-first management remains distinct from generic XABCD targets."
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "FIVE_ZERO",
-      "status": "quarantined",
+      "classification": "quarantined",
+      "production_state": "quarantined",
       "topology": "FIVE_ZERO",
+      "source_refs": [
+        "research/book-source-prz-five-zero-cases-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m2-shark-five-zero.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/five_zero.py",
+        "src/htcn/harmonic/five_zero_source.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_five_zero.py",
+        "tests/harmonic/test_five_zero_source_evidence.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
       "constraints": [
-        "not production identity",
-        "Volume Two/Three source-coordinate conflict unresolved"
-      ]
+        "Volume Two/Three labeling conflict remains visible.",
+        "Default production scanner must not promote 5-0."
+      ],
+      "status": "quarantined"
     },
     {
       "id": "ALTERNATE_BAT",
-      "status": "fail_closed",
+      "classification": "quarantined",
+      "production_state": "fail_closed",
       "topology": "XABCD",
+      "source_refs": [
+        "research/book-source-prz-cases-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/rules.py",
+        "src/htcn/harmonic/source_prz.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_golden_patterns.py",
+        "tests/harmonic/test_source_prz_golden.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
       "constraints": [
-        "no implicit promotion from standard Bat"
-      ]
+        "No implicit promotion from standard Bat.",
+        "Source Raw PRZ remains unresolved due Volume Two/Three AB=CD-role conflict."
+      ],
+      "status": "fail_closed"
     },
     {
-      "id": "RSI_BAMM",
-      "status": "supported_source_state_machine",
+      "id": "TERMINAL_PRICE_BAR",
+      "classification": "supported",
+      "production_state": "enabled_source_clock",
+      "role": "execution_clock",
+      "source_refs": [
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-terminal-price-bar.md",
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m3-source-clock-lifecycle-migration.md"
+      ],
+      "code": [
+        "src/htcn/research/source_terminal_bar.py",
+        "src/htcn/app/source_clock_lifecycle_service.py"
+      ],
+      "tests": [
+        "tests/research/test_source_terminal_bar.py",
+        "tests/app/test_shark_source_lifecycle.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
       "constraints": [
-        "ordinary RSI is not BAMM",
-        "no-lookahead completion time"
-      ]
+        "Terminal Price Bar requires a terminal-side Source Raw PRZ test.",
+        "Historical geometry D/C is not automatically a Source Terminal Price Bar."
+      ],
+      "status": "supported_source_clock"
+    },
+    {
+      "id": "PEZ",
+      "classification": "supported",
+      "production_state": "enabled_dynamic_execution_layer",
+      "role": "execution_zone",
+      "source_refs": [
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m3-source-clock-lifecycle-migration.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/source_lifecycle.py",
+        "src/htcn/app/source_clock_lifecycle_service.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_source_lifecycle.py",
+        "tests/research/test_source_terminal_bar.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "PEZ is dynamic execution context and may not mutate Source Raw PRZ."
+      ],
+      "status": "supported_source_clock"
     },
     {
       "id": "TYPE_I",
-      "status": "supported_source_clock",
+      "classification": "supported",
+      "production_state": "enabled_source_clock",
+      "role": "reaction",
+      "source_refs": [
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-book-golden-ledger.md",
+        "specs/m3-source-clock-lifecycle-migration.md",
+        "specs/m4-phase-2-12-source-clock-seed.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/source_lifecycle.py",
+        "src/htcn/app/source_clock_lifecycle_service.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_source_lifecycle.py",
+        "tests/harmonic/test_lifecycle.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
       "constraints": [
-        "first PRZ test",
-        "Terminal Price Bar observable",
-        "reaction semantics"
-      ]
+        "First PRZ test / initial reaction semantics.",
+        "T+3/T+5 evidence is post-completion management, not identity."
+      ],
+      "status": "supported_source_clock"
     },
     {
       "id": "TYPE_II",
-      "status": "supported_source_clock",
+      "classification": "supported",
+      "production_state": "enabled_strict_full_retest_policy",
+      "role": "reversal",
+      "source_refs": [
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-source-fidelity-repair.md",
+        "specs/m2-book-golden-ledger.md",
+        "specs/m3-source-clock-lifecycle-migration.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/source_lifecycle.py",
+        "src/htcn/app/source_clock_lifecycle_service.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_type_ii_confirmation.py",
+        "tests/harmonic/test_source_lifecycle.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
       "constraints": [
-        "secondary original-PRZ retest",
-        "reversal semantics"
-      ]
+        "Production uses strict full-Source-Raw-PRZ retest as conservative HT-CN operationalization.",
+        "Nominal-retest research may not silently relax production Type-II."
+      ],
+      "status": "supported_source_clock"
+    },
+    {
+      "id": "REACTION_VS_REVERSAL",
+      "classification": "supported",
+      "production_state": "enabled_taxonomy",
+      "role": "volume_three_execution_taxonomy",
+      "source_refs": [
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-book-golden-ledger.md",
+        "specs/m3-source-clock-lifecycle-migration.md",
+        "specs/m4-phase-2-12-source-clock-seed.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/source_lifecycle.py",
+        "src/htcn/app/source_clock_lifecycle_service.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_source_lifecycle.py",
+        "tests/harmonic/test_type_ii_confirmation.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "PRZ reaction is not automatically a reversal.",
+        "Type-I and Type-II must remain distinct."
+      ],
+      "status": "supported_source_clock"
+    },
+    {
+      "id": "RSI_BAMM",
+      "classification": "supported",
+      "production_state": "enabled_confirmation_evidence",
+      "role": "confirmation_execution_evidence",
+      "source_refs": [
+        "research/book-rsi-bamm-source-ledger-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-31-rsi-bamm-source-state-machine.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [
+        "src/htcn/harmonic/rsi_bamm.py",
+        "src/htcn/harmonic/rsi_bamm_confluence.py",
+        "src/htcn/harmonic/rsi_bamm_lifecycle.py"
+      ],
+      "tests": [
+        "tests/harmonic/test_rsi_bamm.py",
+        "tests/harmonic/test_rsi_bamm_confluence.py",
+        "tests/harmonic/test_rsi_bamm_lifecycle.py",
+        "tests/harmonic/test_rsi_bamm_source_execution_confluence.py"
+      ],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "Ordinary RSI is not RSI BAMM.",
+        "No lookahead or backdating.",
+        "RSI BAMM cannot create/repair harmonic identity or Raw PRZ."
+      ],
+      "status": "supported_source_state_machine"
+    },
+    {
+      "id": "RSI_BAMM_ACCELERATION_TRIGGER",
+      "classification": "unsupported",
+      "production_state": "deferred_not_implemented",
+      "role": "optional_confirmation_enhancement",
+      "source_refs": [
+        "research/book-rsi-bamm-source-ledger-v1.json",
+        "research/source-fidelity-status-v1.json"
+      ],
+      "specs": [
+        "specs/m2-31-rsi-bamm-source-state-machine.md",
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [],
+      "tests": [],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
+      "constraints": [
+        "Optional acceleration trigger remains outside the frozen core BAMM completion state.",
+        "Must not be represented as implemented."
+      ],
+      "status": "unsupported"
     },
     {
       "id": "HSI",
-      "status": "unsupported",
+      "classification": "unsupported",
+      "production_state": "unsupported_proprietary",
+      "role": "harmonic_strength_index",
+      "source_refs": [
+        "research/book-source-prz-shark-cases-v1.json"
+      ],
+      "specs": [
+        "specs/m2-book-golden-ledger.md"
+      ],
+      "code": [],
+      "tests": [],
+      "decisions": [
+        "D-035",
+        "D-074"
+      ],
       "constraints": [
-        "must not be represented as implemented"
-      ]
+        "Proprietary/unsupported; HT-CN must not infer or emulate it without a new explicit Source decision."
+      ],
+      "status": "unsupported"
     }
   ],
   "references": [
     "specs/m2-source-fidelity-repair.md",
     "specs/m2-book-golden-ledger.md",
-    "specs/m4-phase-2-12-source-clock-seed.md"
+    "specs/m2-terminal-price-bar.md",
+    "specs/m2-31-rsi-bamm-source-state-machine.md",
+    "research/source-fidelity-status-v1.json"
   ]
 }
