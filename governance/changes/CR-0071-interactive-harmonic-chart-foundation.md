@@ -82,3 +82,16 @@ lock timing test. An isolated rerun confirmed that the lock serialized correctly
 waiter recorded only 0.04 seconds after process startup, below the test's 0.10-second timing floor.
 This environment-sensitive failure is unrelated to the chart-only implementation; the unchanged
 Python suite remains required to pass in Hosted CI.
+
+## Third full-PR failure and input-boundary repair
+
+PR #58 workflow `35499794939` / #2395 on head
+`2dc9553ef73973434f9b2aa940aee653db49eb7c` again passed 24 of 25 browser tests. Its push workflow
+passed Project OS, Source Coverage, Ruff, all 896 Python tests, zero warnings and the web build. The
+remaining test showed that the third-party chart canvas boundary still did not deliver Playwright's
+wheel input to the component-level chart-stage listener.
+
+The repair captures wheel input at `window` capture scope and filters it to the current chart-stage
+rectangle before incrementing the overlay projection version. This keeps unrelated page scrolling
+out of the overlay path while removing dependence on the chart library's internal canvas event
+propagation. The existing browser contract remains unchanged.
