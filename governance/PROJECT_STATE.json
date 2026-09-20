@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.5-CLOSED",
+  "state_id": "HTCN-M6.6-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,37 +21,34 @@
   },
   "current": {
     "milestone": "M6",
-    "phase": "M6.5",
-    "title": "Source Coverage Freeze",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260920-0070-003",
-    "latest_hosted_validation_attempt_id": "A-20260920-0070-003",
-    "work_branch": null,
+    "phase": "M6.6",
+    "title": "Interactive Harmonic Chart Foundation",
+    "status": "implementing",
+    "active_change": "CR-0071",
+    "active_spec": "specs/m6-phase-6-interactive-harmonic-chart.md",
+    "latest_attempt_id": "A-20260920-0071-001",
+    "latest_hosted_validation_attempt_id": "A-20260920-0071-001",
+    "work_branch": "m6/interactive-harmonic-chart-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35485499183,
-      "run_number": 2369,
+      "workflow_run": 35487588566,
+      "run_number": 2384,
       "event": "push",
-      "head": "beb6688fb3faf9dcdd71fb8f8c754aaff32e8daf",
+      "head": "158d6cd3b316dc5f847d06fd0ff95a0e223e19c3",
       "python_passed": 896,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid_18_items_zero_partial",
-      "formal_main_release_integrity": "success",
-      "existing_playwright_passed": 24,
-      "phase18": "valid",
-      "phase21": "valid",
-      "m4_methodology": "frozen_match_37",
-      "outcome_engine": "frozen_match_4",
-      "artifact_id": 10597435212,
-      "artifact_digest": "sha256:c8f44915581db9683dbcbbe184192a9909bec86718da270f945526b4eedd0efc",
-      "continuation_artifact_id": 10596969645,
-      "continuation_artifact_digest": "sha256:fadd2b5dc1d8198e22c9ffc142e694155ca6d75cd6f6d05872a063803d67efcf",
-      "scope": "M6.5 integrated Source Coverage Freeze after PR #56 merge; schema-2 capability ledger valid with 18 items / zero Partial, workflow-level supersession verified, Ruff/warnings zero, browser/Phase18/Phase21 green, M4 freezes preserved."
+      "web_build": "success",
+      "formal_main_release_integrity": "skipped_on_branch_push",
+      "browser_interactive_chart": "pending_pr_gate",
+      "phase18": "pending_pr_gate",
+      "phase21": "pending_pr_gate",
+      "m4_methodology": "pending_pr_gate",
+      "outcome_engine": "pending_pr_gate",
+      "scope": "M6.6 Phase A branch candidate builds with lightweight-charts v5 interactive candlesticks, canonical time/price harmonic overlay, crosshair readout, viewport synchronization tests and no Source/M4 mutation."
     }
   },
   "private_m1": {
@@ -65,7 +62,7 @@
   "next_major_task": {
     "phase": "M6.6",
     "title": "Interactive Harmonic Chart Foundation",
-    "status": "ready_not_started",
+    "status": "implementing",
     "blocked_until": []
   },
   "freezes": {
@@ -91,6 +88,7 @@
     }
   },
   "required_specs": [
+    "specs/m6-phase-6-interactive-harmonic-chart.md",
     "specs/m6-phase-5-source-coverage-freeze.md",
     "specs/m6-phase-4-repository-governance.md",
     "specs/m6-phase-3-universe-coverage-contract.md",

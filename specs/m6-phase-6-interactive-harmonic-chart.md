@@ -1,6 +1,6 @@
 # M6.6 — Interactive Harmonic Chart Foundation
 
-status: planned
+status: implementing
 
 ## 1. Objective
 
