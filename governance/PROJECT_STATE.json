@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.1-READY-TO-MERGE",
+  "state_id": "HTCN-M7.1-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
     "milestone": "M7",
     "phase": "M7.1",
     "title": "Prospective Evidence Accumulation Control Plane",
-    "status": "ready_to_merge",
-    "active_change": "CR-0072",
-    "active_spec": "specs/m7-phase-1-prospective-evidence-accumulation.md",
-    "latest_attempt_id": "A-20260920-0072-004",
-    "latest_hosted_validation_attempt_id": "A-20260920-0072-004",
-    "work_branch": "m7/prospective-evidence-accumulation-v1",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260920-0072-005",
+    "latest_hosted_validation_attempt_id": "A-20260920-0072-005",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35510346253,
-      "run_number": 2411,
-      "event": "pull_request",
-      "head": "faf0711a701c82dafdf44edb235a882df2cb9872",
+      "workflow_run": 35511986498,
+      "run_number": 2414,
+      "event": "push",
+      "head": "35a114211a74661954c957ec3dc14d60b79df9fa",
       "pr": 60,
       "python_passed": 900,
       "warnings": 0,
@@ -48,24 +48,28 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10604264482,
-      "artifact_digest": "sha256:fc074b8956b01ba54dc82a421bcd38059cb93e73242a001fbd7d50ed2423a228",
-      "scope": "M7.1 PR #60 full candidate passed Project OS, Source Coverage, Ruff 0/0, 900 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology 37/37 and Outcome Engine 4/4 freeze guards."
+      "artifact_id": 10605238265,
+      "artifact_digest": "sha256:e96a263795f50a310d5cad75d873be34c4ba30cc0bab8734c8e9c7ee0e4f2f7b",
+      "continuation_artifact_id": 10604972960,
+      "continuation_artifact_digest": "sha256:798575857091984cad0e1058456accf37fb26901778434101f14e45ed426b304",
+      "scope": "M7.1 control plane merged via PR #60 and canonical main #2414 passed Project OS, Source Coverage, Ruff/Python/Web, all 25 browser tests, Phase18, Phase21 and both immutable M4 freeze guards."
     }
   },
   "private_m1": {
     "current_market_full_closeout_ready": true,
-    "next_gate": "accepted_m6_2_closed",
-    "one_action_entry": "运行HT-CN M6.2真实Private-M1最终收口.bat",
-    "expected_evidence": "artifacts/reports/htcn-m6-private-m1-closeout-evidence.zip",
+    "next_gate": "m7_first_canonical_main_prospective_append",
+    "one_action_entry": "运行M7前瞻证据积累.bat",
+    "expected_evidence": "artifacts/reports/m4-evidence-bundle.zip",
     "accepted_evidence_receipt": "governance/acceptance/M6.2-private-m1-evidence-acceptance.json",
-    "raw_private_m1_upload_required": false
+    "raw_private_m1_upload_required": false,
+    "expected_status_report": "artifacts/reports/m7-accumulation-status.json"
   },
   "next_major_task": {
-    "phase": "M7.1",
-    "title": "Prospective Evidence Accumulation Control Plane",
-    "status": "ready_to_merge",
-    "blocked_until": []
+    "phase": "M7",
+    "title": "First Canonical-Main Prospective Evidence Append",
+    "status": "awaiting_private_run",
+    "blocked_until": [],
+    "one_action_entry": "运行M7前瞻证据积累.bat"
   },
   "freezes": {
     "m4_capture_methodology": {

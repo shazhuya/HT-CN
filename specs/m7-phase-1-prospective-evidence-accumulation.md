@@ -1,6 +1,6 @@
 # M7.1 — Prospective Evidence Accumulation Control Plane
 
-status: ready_to_merge
+status: closed
 
 ## 1. Objective
 

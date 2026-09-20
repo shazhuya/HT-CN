@@ -1,6 +1,6 @@
 # CR-0072 — M7.1 Prospective Evidence Accumulation Control Plane
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -93,4 +93,34 @@ Formal evidence artifact: `10604264482`,
 `sha256:fc074b8956b01ba54dc82a421bcd38059cb93e73242a001fbd7d50ed2423a228`.
 
 The Change is ready to merge only after the ledger-bearing head reruns the unchanged full PR gate.
+
+## Final merge and canonical-main validation
+
+The ledger-bearing PR head `8ee2fa6b6c8f3d9f9559d6ea35d620fe97bcbd33` passed full PR workflow
+`35510508159` / #2413, including formal main release integrity, 25 browser tests, Phase18,
+Phase21, M4 methodology 37/37 and Outcome Engine 4/4.
+
+PR #60 then merged with ancestry preserved as
+`35a114211a74661954c957ec3dc14d60b79df9fa`.
+
+Canonical-main workflow `35511986498` / #2414 passed:
+
+- Project OS and Source Coverage;
+- mutable Ruff 0/0;
+- 900 Python tests / 0 warnings;
+- Web build;
+- 25 deterministic browser tests;
+- Phase18 and Phase21;
+- M4 methodology freeze 37/37;
+- Outcome Engine freeze 4/4.
+
+Formal evidence artifact: `10605238265`,
+`sha256:e96a263795f50a310d5cad75d873be34c4ba30cc0bab8734c8e9c7ee0e4f2f7b`.
+
+Continuation artifact: `10604972960`,
+`sha256:798575857091984cad0e1058456accf37fb26901778434101f14e45ed426b304`.
+
+M7.1 is closed. M7 remains active as an evidence-accumulation milestone. ISSUE-0066 remains open.
+The next action is the first post-integration Private-M1 prospective append using
+`运行M7前瞻证据积累.bat` from clean canonical `main`. No statistical conclusion is authorized.
 
