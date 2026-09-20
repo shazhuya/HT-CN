@@ -308,3 +308,79 @@ test('source lifecycle chart renders Source PRZ PEZ T-Bar T+1 and source Type-I 
   await expect(page.getByText(/Source T1 38\.2% · 107\.00 · 已到达/)).toBeVisible()
   await expect(page.getByText(/Source T2 61\.8% · 109\.20 · 待到达/)).toBeVisible()
 })
+
+
+test('interactive chart keeps harmonic anchors synchronized through viewport transforms', async ({ page }) => {
+  await openScenario(page, {
+    ...basePattern,
+    source_lifecycle: sourceLifecycle({
+      state: 'type_i_confirmed',
+      source_terminal_bar: 4,
+      execution_start_bar: 5,
+      type_i_t1_bar: 5,
+      source_prz_low: 103.9,
+      source_prz_high: 104.5,
+      pez_low: 103.8,
+      pez_high: 104.5,
+      target_382: 107.0,
+      target_618: 109.2,
+    }),
+  })
+
+  const chart = page.getByTestId('interactive-harmonic-chart')
+  await expect(chart).toHaveAttribute('data-render-engine', 'lightweight-charts-v5')
+  await expect(chart).toHaveAttribute('data-coordinate-system', 'canonical-time-price')
+
+  const node = chart.locator('[data-node-label="D"]')
+  const sourcePrz = page.getByTestId('source-prz-zone')
+  await expect(node).toBeVisible()
+  await expect(sourcePrz).toBeVisible()
+
+  const initialNode = await node.boundingBox()
+  const initialPrz = await sourcePrz.boundingBox()
+  expect(initialNode).not.toBeNull()
+  expect(initialPrz).not.toBeNull()
+
+  const host = page.getByTestId('lightweight-chart-host')
+  const hostBox = await host.boundingBox()
+  expect(hostBox).not.toBeNull()
+  if (!hostBox || !initialNode || !initialPrz) return
+
+  await page.mouse.move(hostBox.x + hostBox.width * 0.55, hostBox.y + hostBox.height * 0.45)
+  await page.mouse.wheel(0, -900)
+  await page.waitForTimeout(120)
+
+  const zoomedNode = await node.boundingBox()
+  const zoomedPrz = await sourcePrz.boundingBox()
+  expect(zoomedNode).not.toBeNull()
+  expect(zoomedPrz).not.toBeNull()
+  if (!zoomedNode || !zoomedPrz) return
+
+  expect(Math.abs(zoomedNode.x - initialNode.x)).toBeGreaterThan(0.5)
+  expect(Math.abs(zoomedPrz.x - initialPrz.x)).toBeGreaterThan(0.5)
+  await expect(node).toHaveAttribute('data-anchor-index', '4')
+  await expect(node).toHaveAttribute('data-anchor-price', '104.28')
+
+  await page.getByTestId('chart-reset-viewport').click()
+  await expect(node).toBeVisible()
+  await expect(sourcePrz).toBeVisible()
+})
+
+test('interactive chart crosshair reads canonical OHLC without changing harmonic identity', async ({ page }) => {
+  await openScenario(page, basePattern)
+  const host = page.getByTestId('lightweight-chart-host')
+  const box = await host.boundingBox()
+  expect(box).not.toBeNull()
+  if (!box) return
+
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.45)
+  const readout = page.getByTestId('chart-crosshair-readout')
+  await expect(readout).toContainText(/O /)
+  await expect(readout).toContainText(/H /)
+  await expect(readout).toContainText(/L /)
+  await expect(readout).toContainText(/C /)
+
+  for (const label of ['X', 'A', 'B', 'C', 'D']) {
+    await expect(page.locator(`[data-node-label="${label}"]`)).toHaveCount(1)
+  }
+})
