@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.5-READY-TO-MERGE",
+  "state_id": "HTCN-M6.5-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
     "milestone": "M6",
     "phase": "M6.5",
     "title": "Source Coverage Freeze",
-    "status": "ready_to_merge",
-    "active_change": "CR-0070",
-    "active_spec": "specs/m6-phase-5-source-coverage-freeze.md",
-    "latest_attempt_id": "A-20260920-0070-002",
-    "latest_hosted_validation_attempt_id": "A-20260920-0070-002",
-    "work_branch": "m6/source-coverage-freeze-v1",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260920-0070-003",
+    "latest_hosted_validation_attempt_id": "A-20260920-0070-003",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35485216318,
-      "run_number": 2366,
-      "event": "pull_request",
-      "head": "68837b2e93de8effa28109ed6f41a2cb814a1469",
+      "workflow_run": 35485499183,
+      "run_number": 2369,
+      "event": "push",
+      "head": "beb6688fb3faf9dcdd71fb8f8c754aaff32e8daf",
       "python_passed": 896,
       "warnings": 0,
       "ruff_observed": 0,
@@ -47,9 +47,11 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10596643533,
-      "artifact_digest": "sha256:35677f0ffe5fb18cb3598fbbd03c1da3786f30aedba0f7fb6330c9be63e4a9e2",
-      "scope": "M6.5 full PR candidate passed schema-2 Source Coverage verification, Ruff/Python/Web/browser/Phase18/Phase21 and both immutable M4 freeze guards."
+      "artifact_id": 10597435212,
+      "artifact_digest": "sha256:c8f44915581db9683dbcbbe184192a9909bec86718da270f945526b4eedd0efc",
+      "continuation_artifact_id": 10596969645,
+      "continuation_artifact_digest": "sha256:fadd2b5dc1d8198e22c9ffc142e694155ca6d75cd6f6d05872a063803d67efcf",
+      "scope": "M6.5 integrated Source Coverage Freeze after PR #56 merge; schema-2 capability ledger valid with 18 items / zero Partial, workflow-level supersession verified, Ruff/warnings zero, browser/Phase18/Phase21 green, M4 freezes preserved."
     }
   },
   "private_m1": {
@@ -61,9 +63,9 @@
     "raw_private_m1_upload_required": false
   },
   "next_major_task": {
-    "phase": "M6.5",
-    "title": "Source Coverage Freeze",
-    "status": "ready_to_merge",
+    "phase": "M6.6",
+    "title": "Interactive Harmonic Chart Foundation",
+    "status": "ready_not_started",
     "blocked_until": []
   },
   "freezes": {
@@ -79,7 +81,14 @@
     },
     "five_zero_production": "quarantined",
     "alternate_bat_production": "fail_closed",
-    "bse_default_scope": "deferred"
+    "bse_default_scope": "deferred",
+    "source_coverage": {
+      "commit": "beb6688fb3faf9dcdd71fb8f8c754aaff32e8daf",
+      "freeze_id": "m6.5-source-coverage-v1",
+      "items": 18,
+      "partial_items": 0,
+      "mutable": false
+    }
   },
   "required_specs": [
     "specs/m6-phase-5-source-coverage-freeze.md",

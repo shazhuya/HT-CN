@@ -1,6 +1,6 @@
 # CR-0070 — M6.5 Source Coverage Freeze
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -70,3 +70,29 @@ PR #56 head `68837b2e93de8effa28109ed6f41a2cb814a1469` passed workflow
 - artifact digest: sha256:35677f0ffe5fb18cb3598fbbd03c1da3786f30aedba0f7fb6330c9be63e4a9e2
 
 The candidate is ready for one final ledger-bearing PR validation before merge.
+
+
+## Final closeout
+
+- final PR: #56
+- merged candidate head: `026f6a2b3278f77aaf611a49b5ea202433b7e3c1`
+- merge commit: `beb6688fb3faf9dcdd71fb8f8c754aaff32e8daf`
+- canonical main workflow: `35485499183` / #2369 — success
+- Source Coverage Freeze: valid, schema 2, 18 items, 0 Partial, 0 errors
+- mutable Ruff: 0 / budget 0
+- Python: 896 passed
+- pytest warnings: 0
+- browser acceptance: 24 passed
+- Phase18: valid
+- Phase21: valid
+- M4 methodology freeze: frozen_match, 37 components
+- Outcome Engine freeze: frozen_match, 4 components
+- formal-release artifact: `10597435212`, digest `sha256:c8f44915581db9683dbcbbe184192a9909bec86718da270f945526b4eedd0efc`
+- continuation artifact: `10596969645`, digest `sha256:fadd2b5dc1d8198e22c9ffc142e694155ca6d75cd6f6d05872a063803d67efcf`
+
+The accidental post-merge branch-only duplicate attempt commit `d61e8149...` was removed by resetting
+the already-merged work branch back to `026f6a2b...`. It never entered canonical main.
+
+M6.5 is closed. ISSUE-0067 remains open and FIVE_ZERO remains quarantined; Source Coverage Freeze
+does not resolve the underlying Volume Two/Three conflict. M6.6 Interactive Harmonic Chart
+Foundation becomes the next major task.

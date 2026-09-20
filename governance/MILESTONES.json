@@ -67,12 +67,12 @@
         {
           "id": "M6.5",
           "title": "Source Coverage Freeze",
-          "status": "ready_to_merge"
+          "status": "closed"
         },
         {
           "id": "M6.6",
           "title": "Interactive Harmonic Chart Foundation",
-          "status": "planned",
+          "status": "ready_not_started",
           "exit_gate": [
             "M6.4 Repository Governance and M6.5 Source Coverage Freeze are complete",
             "interactive candlestick pan/zoom/time-axis/price-axis/crosshair foundation is production-bound",
