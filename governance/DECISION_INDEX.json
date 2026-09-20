@@ -88,6 +88,12 @@
       "title": "Interactive chart engine owns viewport coordinates, never harmonic Source truth",
       "status": "active",
       "source": "governance/decisions/D-075-interactive-chart-coordinate-boundary.md"
+    },
+    {
+      "id": "D-076",
+      "title": "M7 prospective evidence originates only from current canonical main",
+      "status": "active",
+      "source": "governance/decisions/D-076-m7-canonical-main-evidence-origin.md"
     }
   ],
   "rules": {

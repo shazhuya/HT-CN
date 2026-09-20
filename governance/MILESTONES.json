@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "active": "M6",
+  "active": "M7",
   "milestones": [
     {
       "id": "M0",
@@ -88,7 +88,22 @@
     {
       "id": "M7",
       "title": "Prospective Evidence Accumulation",
-      "status": "ready_not_started"
+      "status": "active",
+      "phases": [
+        {
+          "id": "M7.1",
+          "title": "Prospective Evidence Accumulation Control Plane",
+          "status": "ready_to_merge",
+          "exit_gate": [
+            "prospective capture starts only from clean local main exactly equal to freshly fetched origin/main",
+            "M4 capture methodology 37/37 and Outcome Engine 4/4 freeze guards run before private-M1 mutation",
+            "M7 accumulation status remains evidence-only and ISSUE-0066 keeps statistical inference disabled",
+            "full PR browser/Phase18/Phase21 and immutable M4 freeze gates are green",
+            "canonical main post-merge validation is green",
+            "next private-M1 prospective append action is persisted in Project OS"
+          ]
+        }
+      ]
     },
     {
       "id": "M8",
