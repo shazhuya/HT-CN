@@ -39,3 +39,17 @@ Hosted branch workflow `35487588566` / #2384 on head
 
 The first implementation slice is therefore activated. PR-only browser interaction,
 Phase18/Phase21 and immutable M4 freeze gates remain required before promotion.
+
+
+## First PR browser finding
+
+PR #59 workflow `35487667066` / #2386 kept all existing browser semantics green
+(24 legacy browser tests passed) but the two new M6.6 interaction tests exposed unstable test targeting:
+
+1. wheel zoom around the D anchor can legitimately leave D's screen X unchanged;
+2. a generic center-screen mouse position is not guaranteed to map to a candle and may yield no
+   crosshair series datum.
+
+The implementation is therefore kept in `implementing`. The next candidate uses deterministic
+viewport zoom controls, verifies real drag-pan separately, and targets crosshair at the canonical
+D-node time coordinate. No Source or M4 semantics are changed.

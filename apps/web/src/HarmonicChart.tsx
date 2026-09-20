@@ -633,6 +633,19 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
 
   if (!bars.length) return <div className="chart-empty">暂无 K 线数据</div>
 
+  const scaleViewport = (factor: number) => {
+    const timeScale = chartRef.current?.timeScale()
+    const range = timeScale?.getVisibleLogicalRange()
+    if (!timeScale || !range) return
+    const center = (range.from + range.to) / 2
+    const half = ((range.to - range.from) * factor) / 2
+    timeScale.setVisibleLogicalRange({
+      from: center - half,
+      to: center + half,
+    })
+    syncOverlayRef.current()
+  }
+
   const resetViewport = () => {
     chartRef.current?.timeScale().fitContent()
     syncOverlayRef.current()
@@ -653,9 +666,17 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
             <strong>交互主图</strong>
             <span>拖动平移 · 滚轮缩放 · 十字光标</span>
           </div>
-          <button type="button" onClick={resetViewport} data-testid="chart-reset-viewport">
-            复位视图
-          </button>
+          <div className="interactive-chart-actions">
+            <button type="button" onClick={() => scaleViewport(0.72)} data-testid="chart-zoom-in">
+              放大
+            </button>
+            <button type="button" onClick={() => scaleViewport(1.35)} data-testid="chart-zoom-out">
+              缩小
+            </button>
+            <button type="button" onClick={resetViewport} data-testid="chart-reset-viewport">
+              复位视图
+            </button>
+          </div>
         </div>
 
         <div className="interactive-chart-stage">

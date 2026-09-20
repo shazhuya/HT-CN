@@ -346,8 +346,7 @@ test('interactive chart keeps harmonic anchors synchronized through viewport tra
   expect(hostBox).not.toBeNull()
   if (!hostBox || !initialNode || !initialPrz) return
 
-  await page.mouse.move(hostBox.x + hostBox.width * 0.55, hostBox.y + hostBox.height * 0.45)
-  await page.mouse.wheel(0, -900)
+  await page.getByTestId('chart-zoom-in').click()
   await page.waitForTimeout(120)
 
   const zoomedNode = await node.boundingBox()
@@ -356,8 +355,28 @@ test('interactive chart keeps harmonic anchors synchronized through viewport tra
   expect(zoomedPrz).not.toBeNull()
   if (!zoomedNode || !zoomedPrz) return
 
-  expect(Math.abs(zoomedNode.x - initialNode.x)).toBeGreaterThan(0.5)
-  expect(Math.abs(zoomedPrz.x - initialPrz.x)).toBeGreaterThan(0.5)
+  expect(
+    Math.abs(zoomedNode.x - initialNode.x) + Math.abs(zoomedPrz.x - initialPrz.x),
+  ).toBeGreaterThan(0.5)
+
+  await page.mouse.move(hostBox.x + hostBox.width * 0.55, hostBox.y + hostBox.height * 0.45)
+  await page.mouse.down()
+  await page.mouse.move(
+    hostBox.x + hostBox.width * 0.70,
+    hostBox.y + hostBox.height * 0.45,
+    { steps: 8 },
+  )
+  await page.mouse.up()
+  await page.waitForTimeout(120)
+
+  const pannedNode = await node.boundingBox()
+  const pannedPrz = await sourcePrz.boundingBox()
+  expect(pannedNode).not.toBeNull()
+  expect(pannedPrz).not.toBeNull()
+  if (!pannedNode || !pannedPrz) return
+
+  expect(Math.abs(pannedNode.x - zoomedNode.x)).toBeGreaterThan(0.5)
+  expect(Math.abs(pannedPrz.x - zoomedPrz.x)).toBeGreaterThan(0.5)
   await expect(node).toHaveAttribute('data-anchor-index', '4')
   await expect(node).toHaveAttribute('data-anchor-price', '104.28')
 
@@ -369,16 +388,23 @@ test('interactive chart keeps harmonic anchors synchronized through viewport tra
 test('interactive chart crosshair reads canonical OHLC without changing harmonic identity', async ({ page }) => {
   await openScenario(page, basePattern)
   const host = page.getByTestId('lightweight-chart-host')
-  const box = await host.boundingBox()
-  expect(box).not.toBeNull()
-  if (!box) return
+  const hostBox = await host.boundingBox()
+  const dNode = page.locator('[data-node-label="D"]')
+  const dBox = await dNode.boundingBox()
+  expect(hostBox).not.toBeNull()
+  expect(dBox).not.toBeNull()
+  if (!hostBox || !dBox) return
 
-  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.45)
+  await page.mouse.move(
+    dBox.x + dBox.width / 2,
+    hostBox.y + hostBox.height * 0.45,
+  )
   const readout = page.getByTestId('chart-crosshair-readout')
   await expect(readout).toContainText(/O /)
   await expect(readout).toContainText(/H /)
   await expect(readout).toContainText(/L /)
   await expect(readout).toContainText(/C /)
+  await expect(readout).toContainText('节点 D')
 
   for (const label of ['X', 'A', 'B', 'C', 'D']) {
     await expect(page.locator(`[data-node-label="${label}"]`)).toHaveCount(1)
