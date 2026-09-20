@@ -23,7 +23,8 @@ Repair the mutable M7 preparation/control layer without changing harmonic method
 - keep all strict rules inside the formal analysis window;
 - clear disposable run reports before each run so failure bundles cannot silently carry stale reports;
 - initialize every wrapper step exit code;
-- add regression tests and governance evidence.
+- add regression tests and governance evidence;
+- keep Project OS Resume Pack bounded by indexing active decisions and non-closed issues instead of duplicating closed governance history.
 
 ## Non-goals
 

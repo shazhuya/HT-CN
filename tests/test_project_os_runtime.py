@@ -82,3 +82,24 @@ def test_source_coverage_index_is_compact_and_preserves_critical_states() -> Non
     assert "HSI: classification=unsupported" in index
     assert "full bindings: read the canonical ledger" in index
     assert len(index) < 5000
+
+
+def test_open_issue_index_omits_closed_history_but_keeps_live_gates() -> None:
+    module = load_project_state_module()
+    issues = module.read_json(module.ISSUES_PATH)
+    index = module._open_issue_index(issues)
+    assert "ISSUE-0061" not in index
+    assert "ISSUE-0066" in index
+    assert "ISSUE-0067" in index
+    assert "closed/history details: read the canonical ledger" in index
+    assert len(index) < 6000
+
+
+def test_decision_index_is_compact_but_preserves_active_sources() -> None:
+    module = load_project_state_module()
+    decisions = module.read_json(module.DECISIONS_PATH)
+    index = module._decision_index(decisions)
+    assert "D-065" in index
+    assert "D-076" in index
+    assert "canonical ledger: `governance/DECISION_INDEX.json`" in index
+    assert len(index) < 6000

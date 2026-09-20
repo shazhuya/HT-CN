@@ -24,6 +24,10 @@ Before M1, the wrapper removes disposable M1/QFQ, snapshot, health, transition, 
 
 Every step exit variable starts at failure `1` and is overwritten only when that step actually runs.
 
-## 6. Frozen boundaries and acceptance
+## 6. Continuity-pack boundedness
+
+Under D-065, the Resume Pack is a compact recovery index, not a duplicate archive. It includes active decisions and non-closed issues with canonical pointers; closed issue history remains in the canonical ledger. The existing 30,000-character gate is not relaxed.
+
+## 7. Frozen boundaries and acceptance
 
 No frozen methodology or Outcome Engine path may change. Before merge: targeted tests, full Python/zero-warning/Ruff, Web/browser/Phase18/Phase21, Project OS, Source Coverage, methodology 37/37 and Outcome 4/4 must all pass. After canonical-main validation, rerun exactly `运行M7前瞻证据积累.bat`; ISSUE-0069 closes only after the real rerun and evidence acceptance.
