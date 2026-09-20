@@ -96,6 +96,18 @@
       "current_fact": "Canonical main c0f287890218318d19e9b745cb03663e4e89205b passed workflow 35465565858 / #2345 with configured mutable Ruff observed=0/budget=0, 890 Python tests, 0 warnings, Web build, 24 browser tests, Phase18/21 valid, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4. Immutable M4 paths remain byte-frozen under D-070; behavior-sensitive legacy exceptions remain exact-path/exact-rule ledgered under D-071.",
       "resolution": "Closed by CR-0069 after PR #54 final validation and merge, followed by canonical main workflow 35465565858 / #2345 success.",
       "closed_in": "CR-0069"
+    },
+    {
+      "id": "ISSUE-0069",
+      "severity": "high",
+      "type": "operational_evidence",
+      "status": "open",
+      "title": "M7 first append resilience",
+      "blocks": [
+        "M7 first append"
+      ],
+      "next_action": "Merge CR-0073 green, then rerun M7 BAT.",
+      "current_fact": "eca753f run: freezes/M1 pass; QFQ 54/55 on SZSE.000001 1991 Saturday gaps; no capture; stale reports found."
     }
   ]
 }

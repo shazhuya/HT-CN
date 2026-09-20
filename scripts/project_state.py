@@ -445,6 +445,44 @@ def _source_coverage_index(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _decision_index(payload: dict[str, Any]) -> str:
+    lines = ["- canonical ledger: `governance/DECISION_INDEX.json`"]
+    for row in payload.get("active", []):
+        if not isinstance(row, dict):
+            continue
+        lines.append(
+            f"- {row.get('id')}: {row.get('title')} "
+            f"[status={row.get('status')}; source={row.get('source')}]"
+        )
+    lines.append("- full decision bodies: read canonical sources above.")
+    return "\n".join(lines)
+
+
+def _compact_issue_text(value: Any, *, limit: int = 220) -> str:
+    text = " ".join(str(value or "").split())
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3].rstrip() + "..."
+
+
+def _open_issue_index(payload: dict[str, Any]) -> str:
+    lines = ["- canonical ledger: `governance/OPEN_ISSUES.json`"]
+    for row in payload.get("issues", []):
+        if not isinstance(row, dict) or row.get("status") == "closed":
+            continue
+        blocks = ", ".join(str(item) for item in (row.get("blocks") or [])) or "(none)"
+        lines.append(
+            f"- {row.get('id')}: status={row.get('status')}; severity={row.get('severity')}; "
+            f"title={_compact_issue_text(row.get('title'), limit=120)}; blocks={blocks}"
+        )
+        if row.get("next_action"):
+            lines.append(f"  next_action: {_compact_issue_text(row.get('next_action'))}")
+        if row.get("current_fact"):
+            lines.append(f"  current_fact: {_compact_issue_text(row.get('current_fact'))}")
+    lines.append("- closed/history details: read the canonical ledger; omitted from resume pack.")
+    return "\n".join(lines)
+
+
 def build_resume_pack(state: dict[str, Any]) -> str:
     generated = datetime.now().astimezone().isoformat(timespec="seconds")
     head = run_git("rev-parse", "HEAD")
@@ -514,8 +552,8 @@ def build_resume_pack(state: dict[str, Any]) -> str:
         "## 恢复硬规则\n",
         "1. 先验证 PROJECT_STATE，不从聊天猜项目阶段。\n2. 只读取 state 引用的 active Change / required specs / active decisions / open blockers。\n3. state drift 必须先修复，禁止带着不一致继续核心开发。\n",
         _markdown_json("Machine Current State", state),
-        _markdown_json("Active Decision Index", decisions),
-        _markdown_json("Open Issues", issues),
+        "## Active Decision Index\n\n" + _decision_index(decisions) + "\n",
+        "## Open Issue Index\n\n" + _open_issue_index(issues) + "\n",
         "## Source Coverage Index\n\n" + _source_coverage_index(source) + "\n",
         "## Active Change Index\n\n" + change_index + "\n",
         "## Required Specs\n\n"

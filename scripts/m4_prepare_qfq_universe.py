@@ -29,6 +29,8 @@ SAFE_INTERNAL_GAP_MAX_RAW_SESSIONS = 10
 SAFE_INTERNAL_GAP_MAX_RELATIVE_FACTOR_DRIFT = 0.005
 SAFE_HISTORICAL_SATURDAY_FACTOR_DRIFT = 0.05
 SAFE_RAW_PRECLOSE_CONTINUITY_DRIFT = 0.01
+FORMAL_CAPTURE_ANALYSIS_BARS = 420
+LEGACY_CALENDAR_BRIDGE_MAX_YEAR = 1992
 
 
 def parse_args() -> argparse.Namespace:
@@ -85,8 +87,12 @@ def _repair_safe_internal_factor_gaps(
       - the missing run is short;
       - the bracketing factor levels differ by <= 0.5%.
 
-    Leading gaps, trailing gaps, long holes, or factor-regime jumps remain
-    fail-closed. Trailing freshness remains owned by qfq_carry_forward.
+    Leading gaps, trailing gaps, and ordinary factor-regime jumps remain
+    fail-closed. One narrow legacy-calendar bridge is allowed for early A-share
+    Saturday sessions only when the whole gap is strictly outside the frozen
+    420-bar formal prospective-capture window. Those synthetic rows can never
+    enter the current formal harmonic analysis; every bridge remains audited.
+    Trailing freshness remains owned by qfq_carry_forward.
     """
     if raw.empty or factors.empty:
         return factors.copy(), []
@@ -248,10 +254,23 @@ def _repair_safe_internal_factor_gaps(
                 > SAFE_RAW_PRECLOSE_CONTINUITY_DRIFT
                 or relative_drift > SAFE_HISTORICAL_SATURDAY_FACTOR_DRIFT
             ):
-                continue
-
-            fill_rule = "historical_saturday_raw_preclose_continuity"
-            allowed_factor_drift = SAFE_HISTORICAL_SATURDAY_FACTOR_DRIFT
+                formal_window_start_position = max(
+                    0,
+                    len(raw_order) - FORMAL_CAPTURE_ANALYSIS_BARS,
+                )
+                legacy_bridge_allowed = (
+                    historical_saturday_run
+                    and max(stamp.year for stamp in run)
+                    <= LEGACY_CALENDAR_BRIDGE_MAX_YEAR
+                    and last_position < formal_window_start_position
+                )
+                if not legacy_bridge_allowed:
+                    continue
+                fill_rule = "legacy_saturday_outside_formal_capture_window"
+                allowed_factor_drift = None
+            else:
+                fill_rule = "historical_saturday_raw_preclose_continuity"
+                allowed_factor_drift = SAFE_HISTORICAL_SATURDAY_FACTOR_DRIFT
 
         # Linear interpolation in raw-session index is deterministic and keeps
         # the synthetic values bounded by the two observed factor values.
@@ -425,7 +444,9 @@ def run(
             "Formal M4 prospective capture requires qfq/qfq_carry_forward "
             "for every initialized listed SSE/SZSE instrument. Existing formal "
             "views are reused; only missing or historically broken factor "
-            "histories are fetched. Raw OHLCV remains durable truth."
+            "histories are fetched. Audited early-Saturday provider-calendar "
+            "holes may be bridged only outside the frozen 420-bar capture "
+            "window. Raw OHLCV remains durable truth."
         ),
         "initialized_instruments": 0,
         "already_formal_ready": 0,
@@ -487,6 +508,45 @@ def run(
                 flush=True,
             )
             continue
+
+        existing_factors = factor_store.read(instrument_id)
+        if not existing_factors.empty:
+            repaired_factors, local_repairs = _repair_safe_internal_factor_gaps(
+                raw,
+                existing_factors,
+            )
+            local_valid, _ = _strict_factor_candidate(raw, repaired_factors)
+            if local_valid and local_repairs:
+                factor_store.write(repaired_factors)
+                final_ready, final_mode, final_basis, final_warning = (
+                    _formal_view_status(service, instrument_id, raw)
+                )
+                if final_ready:
+                    report["built_or_repaired"] += 1
+                    report["formal_ready_after"] += 1
+                    report["rows"].append({
+                        "instrument_id": instrument_id,
+                        "status": "repaired_local_factor_store",
+                        "source": "local_factor_store",
+                        "factor_rows": len(repaired_factors),
+                        "safe_internal_gap_repairs": local_repairs,
+                        "safe_internal_gap_repair_count": sum(
+                            int(item["gap_raw_session_count"])
+                            for item in local_repairs
+                        ),
+                        "price_mode": final_mode,
+                        "price_basis_id": final_basis,
+                        "warning": final_warning,
+                    })
+                    print(
+                        f"[HT-CN M4 QFQ] {position}/{len(instruments)} "
+                        f"REPAIRED {instrument_id}: local factors "
+                        f"repairs={len(local_repairs)} mode={final_mode}",
+                        flush=True,
+                    )
+                    if sleep_seconds > 0:
+                        time.sleep(float(sleep_seconds))
+                    continue
 
         errors: list[str] = []
         built = False

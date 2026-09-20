@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.1-CLOSED",
+  "state_id": "HTCN-M7.2-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,22 +21,22 @@
   },
   "current": {
     "milestone": "M7",
-    "phase": "M7.1",
-    "title": "Prospective Evidence Accumulation Control Plane",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260920-0072-005",
-    "latest_hosted_validation_attempt_id": "A-20260920-0072-005",
-    "work_branch": null,
+    "phase": "M7.2",
+    "title": "Private-M1 Evidence Append Resilience Repair",
+    "status": "ready_to_merge",
+    "active_change": "CR-0073",
+    "active_spec": "specs/m7-phase-2-private-m1-evidence-append-resilience.md",
+    "latest_attempt_id": "A-20260920-0073-006",
+    "latest_hosted_validation_attempt_id": "A-20260920-0073-006",
+    "work_branch": "m7/private-m1-resilience-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35511986498,
-      "run_number": 2414,
-      "event": "push",
-      "head": "35a114211a74661954c957ec3dc14d60b79df9fa",
-      "pr": 60,
-      "python_passed": 900,
+      "workflow_run": 35520849502,
+      "run_number": 2422,
+      "event": "pull_request",
+      "head": "f5f8c91ebbf99345a7a866729a70abc05ad6d190",
+      "pr": 61,
+      "python_passed": 906,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
@@ -48,11 +48,9 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10605238265,
-      "artifact_digest": "sha256:e96a263795f50a310d5cad75d873be34c4ba30cc0bab8734c8e9c7ee0e4f2f7b",
-      "continuation_artifact_id": 10604972960,
-      "continuation_artifact_digest": "sha256:798575857091984cad0e1058456accf37fb26901778434101f14e45ed426b304",
-      "scope": "M7.1 control plane merged via PR #60 and canonical main #2414 passed Project OS, Source Coverage, Ruff/Python/Web, all 25 browser tests, Phase18, Phase21 and both immutable M4 freeze guards."
+      "artifact_id": 10607889896,
+      "artifact_digest": "sha256:090fb2e28c7f44a1d2864953b3cda49bcc3ed05cc1b40ea0a1f259d2e3d9d718",
+      "scope": "PR #61 head passed deterministic and formal release integrity gates: 906 Python / 0 warnings, Ruff 0/0, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -65,11 +63,12 @@
     "expected_status_report": "artifacts/reports/m7-accumulation-status.json"
   },
   "next_major_task": {
-    "phase": "M7",
-    "title": "First Canonical-Main Prospective Evidence Append",
-    "status": "awaiting_private_run",
-    "blocked_until": [],
-    "one_action_entry": "运行M7前瞻证据积累.bat"
+    "phase": "M7.2",
+    "title": "Merge validated resilience repair and re-run canonical-main release gates",
+    "status": "ready_to_merge",
+    "blocked_until": [
+      "final ledger-bearing PR head remains fully green"
+    ]
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -94,6 +93,7 @@
     }
   },
   "required_specs": [
+    "specs/m7-phase-2-private-m1-evidence-append-resilience.md",
     "specs/m7-phase-1-prospective-evidence-accumulation.md",
     "specs/m6-phase-6-interactive-harmonic-chart-foundation.md",
     "specs/m6-phase-5-source-coverage-freeze.md",
