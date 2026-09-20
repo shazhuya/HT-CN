@@ -26,7 +26,7 @@
     "status": "implementing",
     "active_change": "CR-0071",
     "active_spec": "specs/m6-phase-6-interactive-harmonic-chart-foundation.md",
-    "latest_attempt_id": "A-20260920-0071-006",
+    "latest_attempt_id": "A-20260920-0071-008",
     "latest_hosted_validation_attempt_id": "A-20260920-0071-001",
     "work_branch": "m6/interactive-chart-foundation-v1",
     "latest_validation": {
@@ -50,12 +50,12 @@
       "scope": "M6.6 first interactive chart candidate: Lightweight Charts candlesticks + HT-CN time/price overlay adapter + crosshair/no-recompute browser contract. Hosted branch deterministic validation is green; full PR browser/freeze gates remain pending."
     },
     "last_failed_validation": {
-      "workflow_run": 35499794939,
-      "run_number": 2395,
-      "head": "2dc9553ef73973434f9b2aa940aee653db49eb7c",
+      "workflow_run": 35501178834,
+      "run_number": 2397,
+      "head": "7b0897d2a4f29a781242ed642a0f3d2b55099680",
       "failed_browser_tests": 1,
       "passed_browser_tests": 24,
-      "scope": "The chart-stage listener still did not observe Playwright wheel input across the third-party canvas boundary. All other browser and deterministic checks passed; Source/M4 semantics unchanged."
+      "scope": "The browser fixture addressed an off-viewport chart without scrolling it into view, so Playwright wheel input never targeted the page. All other browser and deterministic checks passed; Source/M4 semantics unchanged."
     }
   },
   "private_m1": {

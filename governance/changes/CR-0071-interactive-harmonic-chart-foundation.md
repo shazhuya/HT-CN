@@ -95,3 +95,15 @@ The repair captures wheel input at `window` capture scope and filters it to the 
 rectangle before incrementing the overlay projection version. This keeps unrelated page scrolling
 out of the overlay path while removing dependence on the chart library's internal canvas event
 propagation. The existing browser contract remains unchanged.
+
+## Browser targeting diagnosis
+
+PR #58 workflow `35501178834` / #2397 on head
+`7b0897d2a4f29a781242ed642a0f3d2b55099680` proved that even `window` capture received no wheel
+event. The chart is below the initial browser viewport; the test used its page bounding box without
+first scrolling it into view, so the synthetic mouse coordinates never targeted the rendered page.
+
+The next candidate restores component-scoped chart-stage capture and makes the browser test scroll
+the stage into view before reading its box and sending mouse input. This is an interaction-fixture
+repair, not a weakened assertion: the same viewport-version, no-recompute and canonical-identity
+checks remain in place.
