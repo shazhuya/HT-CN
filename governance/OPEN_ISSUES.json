@@ -96,6 +96,18 @@
       "current_fact": "Canonical main c0f287890218318d19e9b745cb03663e4e89205b passed workflow 35465565858 / #2345 with configured mutable Ruff observed=0/budget=0, 890 Python tests, 0 warnings, Web build, 24 browser tests, Phase18/21 valid, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4. Immutable M4 paths remain byte-frozen under D-070; behavior-sensitive legacy exceptions remain exact-path/exact-rule ledgered under D-071.",
       "resolution": "Closed by CR-0069 after PR #54 final validation and merge, followed by canonical main workflow 35465565858 / #2345 success.",
       "closed_in": "CR-0069"
+    },
+    {
+      "id": "ISSUE-0069",
+      "severity": "high",
+      "type": "operational_evidence",
+      "status": "open",
+      "title": "First M7 private run blocked by one legacy QFQ calendar gap and stale disposable reports in failure bundle",
+      "blocks": [
+        "M7 first canonical-main prospective evidence append"
+      ],
+      "next_action": "Validate and merge CR-0073, then rerun 运行M7前瞻证据积累.bat from clean canonical main and independently verify the new evidence bundle.",
+      "current_fact": "Private run on eca753f148871495482d86a69ca44f30c8730bb6 passed both immutable freeze guards and M1. QFQ readiness reached 54/55 but SZSE.000001 failed because AkShare disconnected and BaoStock omitted five 1991 Saturday raw sessions. No authoritative capture was committed. The transport bundle also included stale disposable reports left from an older run, exposing a control-plane freshness defect."
     }
   ]
 }

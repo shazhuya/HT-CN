@@ -102,6 +102,19 @@
             "canonical main post-merge validation is green",
             "next private-M1 prospective append action is persisted in Project OS"
           ]
+        },
+        {
+          "id": "M7.2",
+          "title": "Private-M1 Evidence Append Resilience Repair",
+          "status": "planned",
+          "exit_gate": [
+            "first real M7 failure is preserved in Attempt Ledger and ISSUE-0069",
+            "legacy QFQ calendar bridge is limited to early Saturday gaps strictly outside the frozen 420-bar formal-capture window",
+            "failed runs cannot package stale disposable reports",
+            "wrapper emits deterministic exit status for every step",
+            "M4 methodology remains frozen_match_37 and Outcome Engine remains frozen_match_4",
+            "canonical main is green before the private M1 rerun"
+          ]
         }
       ]
     },

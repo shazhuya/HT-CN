@@ -94,6 +94,12 @@
       "title": "M7 prospective evidence originates only from current canonical main",
       "status": "active",
       "source": "governance/decisions/D-076-m7-canonical-main-evidence-origin.md"
+    },
+    {
+      "id": "D-077",
+      "title": "Legacy Saturday QFQ calendar holes may be bridged only outside the frozen formal-capture window",
+      "status": "active",
+      "source": "governance/decisions/D-077-legacy-qfq-calendar-bridge.md"
     }
   ],
   "rules": {

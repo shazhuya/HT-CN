@@ -80,6 +80,37 @@ if not exist ".venv\Scripts\python.exe" (
 
 if not exist "artifacts\reports" mkdir "artifacts\reports"
 
+rem Clear disposable per-run reports so a failed run cannot package stale files.
+for %%F in (
+  "m4-m1-update.log"
+  "m4-qfq-readiness.json"
+  "m4-qfq-readiness.log"
+  "m4-lifecycle-snapshot.json"
+  "m4-evidence-health.json"
+  "m4-evidence-health.md"
+  "m4-lifecycle-transitions.json"
+  "m4-lifecycle-transitions.md"
+  "m4-prospective-observations.json"
+  "m4-prospective-observations.md"
+  "m4-outcome-v2.json"
+  "m4-outcome-v2.md"
+  "m7-accumulation-status.json"
+  "m7-accumulation-status.md"
+  "m4-evidence-bundle.zip"
+) do (
+  if exist "artifacts\reports\%%~F" del /q "artifacts\reports\%%~F"
+)
+
+set "M1_EXIT=1"
+set "QFQ_EXIT=1"
+set "CAPTURE_EXIT=1"
+set "HEALTH_EXIT=1"
+set "TRANSITION_EXIT=1"
+set "OBSERVATION_EXIT=1"
+set "OUTCOME_EXIT=1"
+set "BUNDLE_EXIT=1"
+set "M7_STATUS_EXIT=1"
+
 .venv\Scripts\python.exe scripts\m4_methodology_freeze_guard.py > "artifacts\reports\m4-methodology-freeze-guard.json" 2>&1
 set "METHODOLOGY_GUARD_EXIT=!ERRORLEVEL!"
 type "artifacts\reports\m4-methodology-freeze-guard.json"

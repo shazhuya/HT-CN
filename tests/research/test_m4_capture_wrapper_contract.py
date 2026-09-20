@@ -91,3 +91,26 @@ def test_m7_operator_entry_delegates_to_guarded_capture_wrapper() -> None:
     text = M7_ENTRY.read_text(encoding="utf-8")
     assert 'call "运行M4真实A股生命周期快照.bat"' in text
     assert "exit /b %ERRORLEVEL%" in text
+
+
+def test_capture_wrapper_clears_stale_disposable_reports_before_m1() -> None:
+    text = _wrapper_text()
+    m1 = text.index(r"scripts\m1_daily_update.py")
+    cleanup = text.index(
+        r'if exist "artifacts\reports\%%~F" del /q "artifacts\reports\%%~F"'
+    )
+    assert cleanup < m1
+    assert '"m4-lifecycle-snapshot.json"' in text
+    assert '"m4-outcome-v2.json"' in text
+    assert '"m7-accumulation-status.json"' in text
+    assert '"m4-evidence-bundle.zip"' in text
+
+
+def test_capture_wrapper_initializes_every_step_exit_code() -> None:
+    text = _wrapper_text()
+    for name in (
+        "M1_EXIT", "QFQ_EXIT", "CAPTURE_EXIT", "HEALTH_EXIT",
+        "TRANSITION_EXIT", "OBSERVATION_EXIT", "OUTCOME_EXIT",
+        "BUNDLE_EXIT", "M7_STATUS_EXIT",
+    ):
+        assert f'set "{name}=1"' in text

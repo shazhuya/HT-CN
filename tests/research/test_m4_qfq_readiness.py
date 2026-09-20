@@ -191,3 +191,60 @@ def test_historical_saturday_gap_refuses_raw_preclose_discontinuity() -> None:
     assert reason.startswith(
         ("historical_factor_gap:", "factor_overlap_too_low:")
     )
+
+
+def test_legacy_saturday_gap_outside_formal_capture_window_can_bridge() -> None:
+    early = pd.DataFrame({
+        "instrument_id": ["SZSE.000001"] * 3,
+        "trade_date": pd.to_datetime(["1991-04-12", "1991-04-13", "1991-04-15"]),
+        "open": [10.0, 10.0, 12.0],
+        "high": [10.2, 10.3, 12.2],
+        "low": [9.9, 9.8, 11.8],
+        "close": [10.0, 10.2, 12.0],
+        "pre_close": [9.9, 8.0, 10.2],
+        "volume": [1000.0, 1100.0, 1200.0],
+    })
+    recent_dates = pd.bdate_range("2024-01-02", periods=430)
+    recent = pd.DataFrame({
+        "instrument_id": ["SZSE.000001"] * len(recent_dates),
+        "trade_date": recent_dates,
+        "open": [12.0] * len(recent_dates),
+        "high": [12.2] * len(recent_dates),
+        "low": [11.8] * len(recent_dates),
+        "close": [12.0] * len(recent_dates),
+        "pre_close": [12.0] * len(recent_dates),
+        "volume": [1200.0] * len(recent_dates),
+    })
+    raw = pd.concat([early, recent], ignore_index=True)
+    keep = raw["trade_date"] != pd.Timestamp("1991-04-13")
+    factors = pd.DataFrame({
+        "instrument_id": ["SZSE.000001"] * int(keep.sum()),
+        "trade_date": raw.loc[keep, "trade_date"].tolist(),
+        "price_factor": [1.0] + [1.20] * (int(keep.sum()) - 1),
+        "mode": ["qfq"] * int(keep.sum()),
+        "source": ["baostock_qfq"] * int(keep.sum()),
+    })
+
+    repaired, audit = _repair_safe_internal_factor_gaps(raw, factors)
+
+    assert len(repaired) == len(raw)
+    assert len(audit) == 1
+    assert audit[0]["fill_rule"] == "legacy_saturday_outside_formal_capture_window"
+    assert audit[0]["allowed_factor_drift"] is None
+    ready, reason = _strict_factor_candidate(raw, repaired)
+    assert ready is True
+    assert reason == "strict_factor_candidate_ready"
+
+
+def test_legacy_saturday_bridge_never_applies_inside_formal_capture_window() -> None:
+    raw = _historical_saturday_raw(saturday_pre_close=8.0)
+    factors = pd.DataFrame({
+        "instrument_id": ["SZSE.000001", "SZSE.000001"],
+        "trade_date": pd.to_datetime(["1991-04-12", "1991-04-15"]),
+        "price_factor": [1.0, 1.20],
+        "mode": ["qfq", "qfq"],
+        "source": ["baostock_qfq", "baostock_qfq"],
+    })
+    repaired, audit = _repair_safe_internal_factor_gaps(raw, factors)
+    assert len(repaired) == len(factors)
+    assert audit == []
