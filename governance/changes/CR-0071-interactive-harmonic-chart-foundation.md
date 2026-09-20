@@ -61,3 +61,24 @@ browser tests while 22 passed:
 These are renderer-contract defects, not Source-methodology failures. The repair preserves the
 existing UI semantics and moves wheel/pointer reprojection capture to the outer chart stage. Tests
 remain unchanged.
+
+## Second full-PR failure
+
+PR #58 workflow `35486769140` / #2381 on repair head
+`5ba734ee9da3490e9fe8df78402d0e8154959a71` passed 24 of 25 browser tests. The lifecycle-label and
+Source-zone compatibility repairs passed. The remaining M6.6 test observed no viewport-version
+increment after the wheel event burst.
+
+The event reached the interactive chart path, but the overlay scheduler cancelled and replaced its
+pending animation frame on every high-frequency viewport event. The next repair coalesces repeated
+events into the first pending frame so interaction cannot starve overlay reprojection. Tests and
+Source semantics remain unchanged.
+
+## Local repair validation
+
+The repaired web production build succeeds. Project OS integrity also succeeds on the clean repair
+commit. A full local Python run reported 895 passed and one failure in the pre-existing real-process
+lock timing test. An isolated rerun confirmed that the lock serialized correctly but the spawned
+waiter recorded only 0.04 seconds after process startup, below the test's 0.10-second timing floor.
+This environment-sensitive failure is unrelated to the chart-only implementation; the unchanged
+Python suite remains required to pass in Hosted CI.
