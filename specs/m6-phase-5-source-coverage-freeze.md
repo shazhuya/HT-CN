@@ -1,6 +1,6 @@
 # M6.5 — Source Coverage Freeze
 
-status: ready_to_merge
+status: closed
 
 ## 1. Objective
 
@@ -61,3 +61,15 @@ M6.5 may close only after:
 5. PR and post-merge canonical-main validation are green;
 6. Project State / Milestones / Attempt / Decision ledgers agree;
 7. M6.6 becomes the next major task.
+
+
+## 8. Closeout evidence
+
+M6.5 was merged through PR #56 as canonical main commit
+`beb6688fb3faf9dcdd71fb8f8c754aaff32e8daf`. Main workflow `35485499183` / #2369 passed
+Project OS, Source Coverage verification, Ruff 0/0, 896 Python tests with 0 warnings, Web/browser,
+Phase18, Phase21, M4 methodology 37/37 and Outcome Engine 4/4.
+
+The frozen ledger contains 18 capabilities with zero current Partial items. FIVE_ZERO remains
+quarantined, ALTERNATE_BAT remains fail-closed/quarantined, HSI remains unsupported and the RSI
+BAMM Acceleration Trigger remains deferred/unsupported.
