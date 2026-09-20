@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.6-CLOSED",
+  "state_id": "HTCN-M7.1-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -20,38 +20,35 @@
     "note": "CR-0066 immutable starting baseline; latest integrated M6.2 release is tracked separately in last_integrated_release."
   },
   "current": {
-    "milestone": "M6",
-    "phase": "M6.6",
-    "title": "Interactive Harmonic Chart Foundation",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260920-0071-012",
-    "latest_hosted_validation_attempt_id": "A-20260920-0071-012",
-    "work_branch": null,
+    "milestone": "M7",
+    "phase": "M7.1",
+    "title": "Prospective Evidence Accumulation Control Plane",
+    "status": "implementing",
+    "active_change": "CR-0072",
+    "active_spec": "specs/m7-phase-1-prospective-evidence-accumulation.md",
+    "latest_attempt_id": "A-20260920-0072-003",
+    "latest_hosted_validation_attempt_id": "A-20260920-0072-003",
+    "work_branch": "m7/prospective-evidence-accumulation-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35502065088,
-      "run_number": 2404,
+      "workflow_run": 35510212083,
+      "run_number": 2409,
       "event": "push",
-      "head": "7cf6eb947f764c6cc459f496a52276500bd73745",
-      "python_passed": 896,
+      "head": "f006ec0103a3a042ea5cb0ecf9e12268744bf3b7",
+      "python_passed": 900,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
-      "formal_main_release_integrity": "success",
-      "existing_playwright_passed": 25,
-      "phase18": "valid",
-      "phase21": "valid",
-      "m4_methodology": "frozen_match_37",
-      "outcome_engine": "frozen_match_4",
-      "artifact_id": 10601939329,
-      "artifact_digest": "sha256:2a38dd20655fd82c58bcc7e49b2a63a24dc23b938f41e5dfce0364fc10d293fc",
-      "continuation_artifact_id": 10603021141,
-      "continuation_artifact_digest": "sha256:276f233bce83e34cef01e7d9f839f2357875cc4abe51dac7f27f903c184efbc4",
-      "scope": "M6.6 is closed after post-merge state alignment. Canonical main passed Project OS, Source Coverage, Ruff/Python/Web, all 25 browser tests, Phase18, Phase21 and both immutable M4 freeze guards."
+      "formal_main_release_integrity": "skipped_on_branch_push",
+      "existing_playwright_passed": null,
+      "phase18": "pending_pr_gate",
+      "phase21": "pending_pr_gate",
+      "m4_methodology": "pending_pr_gate",
+      "outcome_engine": "pending_pr_gate",
+      "artifact_id": null,
+      "scope": "M7.1 activation candidate: canonical-main prospective capture wrapper, read-only accumulation status, M7 operator entry and updated wrapper contract tests are green on branch push. Full PR browser/Phase18/Phase21/M4 freeze gates remain pending."
     }
   },
   "private_m1": {
@@ -63,9 +60,9 @@
     "raw_private_m1_upload_required": false
   },
   "next_major_task": {
-    "phase": "M7",
-    "title": "Prospective Evidence Accumulation",
-    "status": "ready_not_started",
+    "phase": "M7.1",
+    "title": "Prospective Evidence Accumulation Control Plane",
+    "status": "implementing",
     "blocked_until": []
   },
   "freezes": {
@@ -91,6 +88,7 @@
     }
   },
   "required_specs": [
+    "specs/m7-phase-1-prospective-evidence-accumulation.md",
     "specs/m6-phase-6-interactive-harmonic-chart-foundation.md",
     "specs/m6-phase-5-source-coverage-freeze.md",
     "specs/m6-phase-4-repository-governance.md",

@@ -1,6 +1,6 @@
 # M7.1 — Prospective Evidence Accumulation Control Plane
 
-status: planned
+status: implementing
 
 ## 1. Objective
 

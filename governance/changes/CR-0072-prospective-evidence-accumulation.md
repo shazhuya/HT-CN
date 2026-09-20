@@ -1,6 +1,6 @@
 # CR-0072 — M7.1 Prospective Evidence Accumulation Control Plane
 
-status: planned
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -65,4 +65,13 @@ historical M4 branch/minimum-checkpoint contract, and the generated BAT text con
 Windows backslashes because the GitHub write script had not used raw string material. The repair
 rewrites the BAT byte-for-byte with preserved Windows paths and updates only the non-frozen wrapper
 contract tests to the M7 canonical-main fail-closed rules.
+
+## Activation validation
+
+Hosted branch workflow `35510212083` / #2409 on
+`f006ec0103a3a042ea5cb0ecf9e12268744bf3b7` passed Project OS, Source Coverage,
+mutable Ruff 0/0, 900 Python tests / 0 warnings, continuation-bundle self-verification and Web
+build. PR-only browser/Phase18/Phase21/M4 freeze gates remain pending.
+
+This successful hosted Attempt is the activation anchor for M7.1.
 
