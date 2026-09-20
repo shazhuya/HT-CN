@@ -1,6 +1,6 @@
 # M7.2 — Private-M1 Evidence Append Resilience Repair
 
-status: planned
+status: implementing
 
 ## 1. Observed failure
 

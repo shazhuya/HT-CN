@@ -1,8 +1,9 @@
 # CR-0073 — M7.2 Private-M1 Evidence Append Resilience Repair
 
-status: planned
+status: implementing
 baseline_ref: main
-baseline_head: eca753f148871495482d86a69ca44f30c8730bb6
+baseline_head: 9e228d204082fe19d169e099da16ade11adac658
+implementation_baseline_head: eca753f148871495482d86a69ca44f30c8730bb6
 target: main
 milestone: M7.2
 

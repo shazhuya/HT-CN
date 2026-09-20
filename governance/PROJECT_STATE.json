@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.1-CLOSED",
+  "state_id": "HTCN-M7.2-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,38 +21,31 @@
   },
   "current": {
     "milestone": "M7",
-    "phase": "M7.1",
-    "title": "Prospective Evidence Accumulation Control Plane",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260920-0072-005",
-    "latest_hosted_validation_attempt_id": "A-20260920-0072-005",
-    "work_branch": null,
+    "phase": "M7.2",
+    "title": "Private-M1 Evidence Append Resilience Repair",
+    "status": "implementing",
+    "active_change": "CR-0073",
+    "active_spec": "specs/m7-phase-2-private-m1-evidence-append-resilience.md",
+    "latest_attempt_id": "A-20260920-0073-005",
+    "latest_hosted_validation_attempt_id": "A-20260920-0073-005",
+    "work_branch": "m7/private-m1-resilience-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35511986498,
-      "run_number": 2414,
+      "workflow_run": 35520145965,
+      "run_number": 2420,
       "event": "push",
-      "head": "35a114211a74661954c957ec3dc14d60b79df9fa",
-      "pr": 60,
-      "python_passed": 900,
+      "head": "6e18e84b91b29d3ec25de9015c3ffe05e86a325b",
+      "python_passed": 906,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
-      "formal_main_release_integrity": "success",
-      "existing_playwright_passed": 25,
-      "phase18": "valid",
-      "phase21": "valid",
-      "m4_methodology": "frozen_match_37",
-      "outcome_engine": "frozen_match_4",
-      "artifact_id": 10605238265,
-      "artifact_digest": "sha256:e96a263795f50a310d5cad75d873be34c4ba30cc0bab8734c8e9c7ee0e4f2f7b",
-      "continuation_artifact_id": 10604972960,
-      "continuation_artifact_digest": "sha256:798575857091984cad0e1058456accf37fb26901778434101f14e45ed426b304",
-      "scope": "M7.1 control plane merged via PR #60 and canonical main #2414 passed Project OS, Source Coverage, Ruff/Python/Web, all 25 browser tests, Phase18, Phase21 and both immutable M4 freeze guards."
+      "web_build": "success",
+      "formal_main_release_integrity": "pending_pr",
+      "m4_methodology": "pending_pr",
+      "outcome_engine": "pending_pr",
+      "scope": "M7.2 branch deterministic validation passed Project OS, Source Coverage, Ruff 0/0, 906 Python tests / 0 warnings, continuation-bundle self-verification and Web build. PR-only browser/Phase18/Phase21 and both immutable freeze guards remain pending."
     }
   },
   "private_m1": {
@@ -65,11 +58,13 @@
     "expected_status_report": "artifacts/reports/m7-accumulation-status.json"
   },
   "next_major_task": {
-    "phase": "M7",
-    "title": "First Canonical-Main Prospective Evidence Append",
-    "status": "awaiting_private_run",
-    "blocked_until": [],
-    "one_action_entry": "运行M7前瞻证据积累.bat"
+    "phase": "M7.2",
+    "title": "Private-M1 Evidence Append Resilience Repair",
+    "status": "implementing",
+    "blocked_until": [
+      "full PR browser/Phase18/Phase21 and M4 methodology 37/37 + Outcome Engine 4/4 validation",
+      "canonical main post-merge validation"
+    ]
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -94,6 +89,7 @@
     }
   },
   "required_specs": [
+    "specs/m7-phase-2-private-m1-evidence-append-resilience.md",
     "specs/m7-phase-1-prospective-evidence-accumulation.md",
     "specs/m6-phase-6-interactive-harmonic-chart-foundation.md",
     "specs/m6-phase-5-source-coverage-freeze.md",
