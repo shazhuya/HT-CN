@@ -226,7 +226,7 @@ type OverlayLeg = {
 }
 
 type OverlayZone = {
-  id: 'ideal-core' | 'source-prz' | 'pez'
+  id: 'ideal-core' | 'component-envelope' | 'source-prz' | 'pez'
   x: number
   y: number
   width: number
@@ -371,6 +371,9 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
   const syncOverlayRef = useRef<() => void>(() => undefined)
   const [overlay, setOverlay] = useState<OverlayGeometry>(() => emptyOverlay())
   const [crosshair, setCrosshair] = useState<CrosshairSnapshot | null>(null)
+  const [showComponentEnvelope, setShowComponentEnvelope] = useState(false)
+  const [showSourcePrz, setShowSourcePrz] = useState(true)
+  const [showPez, setShowPez] = useState(true)
 
   const targets = useMemo(() => lifecycleTargets(pattern), [pattern])
   const lifecycle = pattern?.source_lifecycle
@@ -508,6 +511,13 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
 
       const patternLastIndex = pattern.points.at(-1)?.index ?? lastIndex
       pushZone('ideal-core', patternLastIndex, pattern.prz.price_low, pattern.prz.price_high)
+      const envelopeLow = pattern.prz.component_envelope?.price_low
+        ?? pattern.prz.component_price_low
+      const envelopeHigh = pattern.prz.component_envelope?.price_high
+        ?? pattern.prz.component_price_high
+      if (envelopeLow != null && envelopeHigh != null) {
+        pushZone('component-envelope', patternLastIndex, envelopeLow, envelopeHigh)
+      }
       if (lifecycle?.source_prz_low != null && lifecycle.source_prz_high != null) {
         pushZone(
           'source-prz',
@@ -667,6 +677,30 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
             <span>拖动平移 · 滚轮缩放 · 十字光标</span>
           </div>
           <div className="interactive-chart-actions">
+            <label className="chart-layer-toggle">
+              <input
+                type="checkbox"
+                checked={showSourcePrz}
+                onChange={(event) => setShowSourcePrz(event.target.checked)}
+              />
+              Source PRZ
+            </label>
+            <label className="chart-layer-toggle">
+              <input
+                type="checkbox"
+                checked={showComponentEnvelope}
+                onChange={(event) => setShowComponentEnvelope(event.target.checked)}
+              />
+              Envelope
+            </label>
+            <label className="chart-layer-toggle">
+              <input
+                type="checkbox"
+                checked={showPez}
+                onChange={(event) => setShowPez(event.target.checked)}
+              />
+              PEZ
+            </label>
             <button type="button" onClick={() => scaleViewport(0.72)} data-testid="chart-zoom-in">
               放大
             </button>
@@ -688,30 +722,49 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
             aria-label="HT-CN谐波与Source生命周期叠加层"
             data-testid="harmonic-coordinate-overlay"
           >
-            {overlay.zones.map((zone) => (
-              <g key={zone.id} data-layer-id={zone.id === 'source-prz' ? 'source_raw_prz' : zone.id}>
-                <rect
-                  x={zone.x}
-                  y={zone.y}
-                  width={zone.width}
-                  height={zone.height}
-                  className={
-                    zone.id === 'source-prz'
-                      ? 'source-prz-zone'
-                      : zone.id === 'pez'
-                        ? 'source-pez-zone'
-                        : `prz-zone legacy-core ${pattern?.direction ?? 'bullish'}`
-                  }
-                  data-testid={
-                    zone.id === 'source-prz'
-                      ? 'source-prz-zone'
-                      : zone.id === 'pez'
-                        ? 'source-pez-zone'
-                        : undefined
-                  }
-                />
-              </g>
-            ))}
+            {overlay.zones.map((zone) => {
+              const visible = zone.id === 'source-prz'
+                ? showSourcePrz
+                : zone.id === 'component-envelope'
+                  ? showComponentEnvelope
+                  : zone.id === 'pez'
+                    ? showPez
+                    : true
+              if (!visible) return null
+              const layerId = zone.id === 'source-prz'
+                ? 'source_raw_prz'
+                : zone.id === 'component-envelope'
+                  ? 'component_envelope'
+                  : zone.id
+              return (
+                <g key={zone.id} data-layer-id={layerId}>
+                  <rect
+                    x={zone.x}
+                    y={zone.y}
+                    width={zone.width}
+                    height={zone.height}
+                    className={
+                      zone.id === 'source-prz'
+                        ? 'source-prz-zone'
+                        : zone.id === 'component-envelope'
+                          ? 'component-envelope-zone'
+                          : zone.id === 'pez'
+                            ? 'source-pez-zone'
+                            : `prz-zone legacy-core ${pattern?.direction ?? 'bullish'}`
+                    }
+                    data-testid={
+                      zone.id === 'source-prz'
+                        ? 'source-prz-zone'
+                        : zone.id === 'component-envelope'
+                          ? 'component-envelope-zone'
+                          : zone.id === 'pez'
+                            ? 'source-pez-zone'
+                            : undefined
+                    }
+                  />
+                </g>
+              )
+            })}
 
             {overlay.targets.map((target) => (
               <g

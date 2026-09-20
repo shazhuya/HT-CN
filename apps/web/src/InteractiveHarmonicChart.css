@@ -139,3 +139,28 @@
   align-items: center;
   gap: 6px;
 }
+
+
+.chart-layer-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #7f90a4;
+  font-size: 9px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.chart-layer-toggle input {
+  width: 12px;
+  height: 12px;
+  accent-color: #5a78ff;
+}
+
+.component-envelope-zone {
+  fill: rgba(170, 126, 255, .05);
+  stroke: rgba(183, 145, 255, .58);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}

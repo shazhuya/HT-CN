@@ -53,3 +53,16 @@ PR #59 workflow `35487667066` / #2386 kept all existing browser semantics green
 The implementation is therefore kept in `implementing`. The next candidate uses deterministic
 viewport zoom controls, verifies real drag-pan separately, and targets crosshair at the canonical
 D-node time coordinate. No Source or M4 semantics are changed.
+
+
+## Phase B coverage added
+
+The next candidate extends the interactive coordinate foundation beyond Phase A:
+
+- Component Envelope is mapped through the same canonical time/price coordinate plane;
+- Source PRZ, Component Envelope and PEZ receive display-only layer toggles;
+- browser regression asserts pan/zoom/toggles do not trigger another harmonic API analysis request;
+- production interactive XABCD forming state cannot fabricate D;
+- production interactive Shark forming state cannot fabricate C or D.
+
+These are rendering/interaction guarantees only. They do not mutate Source identity or lifecycle.

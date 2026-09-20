@@ -122,6 +122,7 @@ function analysisFor(pattern: Record<string, unknown>) {
 }
 
 async function openScenario(page: import('@playwright/test').Page, pattern: Record<string, unknown>) {
+  let harmonicRequestCount = 0
   await page.route('**/api/health', async (route) => {
     await route.fulfill({ json: { status: 'ok', service: 'ht-cn-api', version: '0.3.0' } })
   })
@@ -129,12 +130,16 @@ async function openScenario(page: import('@playwright/test').Page, pattern: Reco
     await route.fulfill({ json: { count: 1, items: [{ instrument_id: 'SSE.688256', has_qfq_factor: true }] } })
   })
   await page.route('**/api/harmonic/SSE.688256?**', async (route) => {
+    harmonicRequestCount += 1
     await route.fulfill({ json: analysisFor(pattern) })
   })
 
   await page.goto('/')
   await page.getByRole('button', { name: '运行谐波分析' }).click()
   await expect(page.getByTestId('lifecycle-compass')).toBeVisible()
+  return {
+    harmonicRequestCount: () => harmonicRequestCount,
+  }
 }
 
 test('forming candidate stays explicitly uncompleted and waits for source-aligned T-Bar', async ({ page }) => {
@@ -409,4 +414,94 @@ test('interactive chart crosshair reads canonical OHLC without changing harmonic
   for (const label of ['X', 'A', 'B', 'C', 'D']) {
     await expect(page.locator(`[data-node-label="${label}"]`)).toHaveCount(1)
   }
+})
+
+
+test('viewport interaction never re-runs harmonic analysis and layer toggles stay display-only', async ({ page }) => {
+  const tracker = await openScenario(page, {
+    ...basePattern,
+    prz: {
+      ...basePattern.prz,
+      component_price_low: 103.5,
+      component_price_high: 105.0,
+      component_envelope: {
+        price_low: 103.5,
+        price_high: 105.0,
+        width: 1.5,
+        status: 'audit_only',
+      },
+    },
+    source_lifecycle: sourceLifecycle({
+      source_terminal_bar: 4,
+      execution_start_bar: 5,
+      source_prz_low: 103.9,
+      source_prz_high: 104.5,
+      pez_low: 103.8,
+      pez_high: 104.5,
+    }),
+  })
+  expect(tracker.harmonicRequestCount()).toBe(1)
+
+  const chart = page.getByTestId('interactive-harmonic-chart')
+  await expect(chart.locator('[data-layer-id="source_raw_prz"]')).toHaveCount(1)
+  await expect(chart.locator('[data-layer-id="component_envelope"]')).toHaveCount(0)
+
+  await chart.getByText('Envelope', { exact: true }).locator('input').check()
+  await expect(chart.locator('[data-layer-id="component_envelope"]')).toHaveCount(1)
+  await chart.getByText('Source PRZ', { exact: true }).locator('input').uncheck()
+  await expect(chart.locator('[data-layer-id="source_raw_prz"]')).toHaveCount(0)
+  await chart.getByText('Source PRZ', { exact: true }).locator('input').check()
+
+  await page.getByTestId('chart-zoom-in').click()
+  const host = page.getByTestId('lightweight-chart-host')
+  const box = await host.boundingBox()
+  expect(box).not.toBeNull()
+  if (box) {
+    await page.mouse.move(box.x + box.width * 0.55, box.y + box.height * 0.45)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width * 0.68, box.y + box.height * 0.45, { steps: 6 })
+    await page.mouse.up()
+  }
+  await page.getByTestId('chart-reset-viewport').click()
+  await page.waitForTimeout(100)
+
+  expect(tracker.harmonicRequestCount()).toBe(1)
+})
+
+test('interactive forming XABCD never fabricates future D', async ({ page }) => {
+  await openScenario(page, {
+    ...basePattern,
+    state: 'forming',
+    points: basePattern.points.slice(0, 4),
+  })
+
+  const chart = page.getByTestId('interactive-harmonic-chart')
+  for (const label of ['X', 'A', 'B', 'C']) {
+    await expect(chart.locator(`[data-node-label="${label}"]`)).toHaveCount(1)
+  }
+  await expect(chart.locator('[data-node-label="D"]')).toHaveCount(0)
+  await expect(chart.locator('[data-leg-name="CD"]')).toHaveCount(0)
+})
+
+test('interactive forming Shark never fabricates future C or D', async ({ page }) => {
+  await openScenario(page, {
+    ...basePattern,
+    pattern_id: 'shark',
+    schema: '0XABC',
+    state: 'forming',
+    points: [
+      { label: '0', index: 0, price: 100, trade_date: '2026-09-08' },
+      { label: 'X', index: 1, price: 120, trade_date: '2026-09-09' },
+      { label: 'A', index: 2, price: 108, trade_date: '2026-09-10' },
+      { label: 'B', index: 3, price: 116.5, trade_date: '2026-09-11' },
+    ],
+  })
+
+  const chart = page.getByTestId('interactive-harmonic-chart')
+  for (const label of ['0', 'X', 'A', 'B']) {
+    await expect(chart.locator(`[data-node-label="${label}"]`)).toHaveCount(1)
+  }
+  await expect(chart.locator('[data-node-label="C"]')).toHaveCount(0)
+  await expect(chart.locator('[data-node-label="D"]')).toHaveCount(0)
+  await expect(chart.locator('[data-leg-name="BC"]')).toHaveCount(0)
 })
