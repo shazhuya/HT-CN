@@ -106,7 +106,7 @@
         {
           "id": "M7.2",
           "title": "Private-M1 Evidence Append Resilience Repair",
-          "status": "implementing",
+          "status": "ready_to_merge",
           "exit_gate": [
             "first real M7 failure is preserved in Attempt Ledger and ISSUE-0069",
             "legacy QFQ calendar bridge is limited to early Saturday gaps strictly outside the frozen 420-bar formal-capture window",

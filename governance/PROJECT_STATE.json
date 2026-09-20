@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.2-IMPLEMENTING",
+  "state_id": "HTCN-M7.2-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,29 +23,34 @@
     "milestone": "M7",
     "phase": "M7.2",
     "title": "Private-M1 Evidence Append Resilience Repair",
-    "status": "implementing",
+    "status": "ready_to_merge",
     "active_change": "CR-0073",
     "active_spec": "specs/m7-phase-2-private-m1-evidence-append-resilience.md",
-    "latest_attempt_id": "A-20260920-0073-005",
-    "latest_hosted_validation_attempt_id": "A-20260920-0073-005",
+    "latest_attempt_id": "A-20260920-0073-006",
+    "latest_hosted_validation_attempt_id": "A-20260920-0073-006",
     "work_branch": "m7/private-m1-resilience-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35520145965,
-      "run_number": 2420,
-      "event": "push",
-      "head": "6e18e84b91b29d3ec25de9015c3ffe05e86a325b",
+      "workflow_run": 35520849502,
+      "run_number": 2422,
+      "event": "pull_request",
+      "head": "f5f8c91ebbf99345a7a866729a70abc05ad6d190",
+      "pr": 61,
       "python_passed": 906,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
-      "web_build": "success",
-      "formal_main_release_integrity": "pending_pr",
-      "m4_methodology": "pending_pr",
-      "outcome_engine": "pending_pr",
-      "scope": "M7.2 branch deterministic validation passed Project OS, Source Coverage, Ruff 0/0, 906 Python tests / 0 warnings, continuation-bundle self-verification and Web build. PR-only browser/Phase18/Phase21 and both immutable freeze guards remain pending."
+      "formal_main_release_integrity": "success",
+      "existing_playwright_passed": 25,
+      "phase18": "valid",
+      "phase21": "valid",
+      "m4_methodology": "frozen_match_37",
+      "outcome_engine": "frozen_match_4",
+      "artifact_id": 10607889896,
+      "artifact_digest": "sha256:090fb2e28c7f44a1d2864953b3cda49bcc3ed05cc1b40ea0a1f259d2e3d9d718",
+      "scope": "PR #61 head passed deterministic and formal release integrity gates: 906 Python / 0 warnings, Ruff 0/0, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -59,11 +64,10 @@
   },
   "next_major_task": {
     "phase": "M7.2",
-    "title": "Private-M1 Evidence Append Resilience Repair",
-    "status": "implementing",
+    "title": "Merge validated resilience repair and re-run canonical-main release gates",
+    "status": "ready_to_merge",
     "blocked_until": [
-      "full PR browser/Phase18/Phase21 and M4 methodology 37/37 + Outcome Engine 4/4 validation",
-      "canonical main post-merge validation"
+      "final ledger-bearing PR head remains fully green"
     ]
   },
   "freezes": {

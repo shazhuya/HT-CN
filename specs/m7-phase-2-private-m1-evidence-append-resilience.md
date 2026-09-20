@@ -1,6 +1,6 @@
 # M7.2 — Private-M1 Evidence Append Resilience Repair
 
-status: implementing
+status: ready_to_merge
 
 ## 1. Observed failure
 
