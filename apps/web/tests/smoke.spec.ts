@@ -127,6 +127,7 @@ test('M6.6 interactive viewport keeps harmonic identity anchored without recompu
   expect(Math.abs(fullCx - initialCx)).toBeGreaterThan(0.5)
 
   const stage = chart.getByTestId('interactive-chart-stage')
+  await stage.scrollIntoViewIfNeeded()
   const box = await stage.boundingBox()
   expect(box).not.toBeNull()
   if (!box) return

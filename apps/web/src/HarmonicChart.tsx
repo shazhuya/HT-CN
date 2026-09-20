@@ -479,26 +479,14 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
     const resizeObserver = new ResizeObserver(scheduleViewportSync)
     resizeObserver.observe(host)
     const stage = stageRef.current
-    const wheelHandler = (event: WheelEvent) => {
-      const bounds = stage?.getBoundingClientRect()
-      if (
-        bounds
-        && event.clientX >= bounds.left
-        && event.clientX <= bounds.right
-        && event.clientY >= bounds.top
-        && event.clientY <= bounds.bottom
-      ) {
-        setViewportVersion((value) => value + 1)
-      }
-    }
-    window.addEventListener('wheel', wheelHandler, { passive: true, capture: true })
+    stage?.addEventListener('wheel', scheduleViewportSync, { passive: true, capture: true })
     stage?.addEventListener('pointermove', scheduleViewportSync, { capture: true })
 
     scheduleViewportSync()
 
     return () => {
       resizeObserver.disconnect()
-      window.removeEventListener('wheel', wheelHandler, { capture: true })
+      stage?.removeEventListener('wheel', scheduleViewportSync, { capture: true })
       stage?.removeEventListener('pointermove', scheduleViewportSync, { capture: true })
       chart.timeScale().unsubscribeVisibleLogicalRangeChange(rangeHandler)
       chart.remove()
