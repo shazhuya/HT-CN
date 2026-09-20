@@ -371,7 +371,7 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
 
   const scheduleViewportSync = useCallback(() => {
     if (animationFrameRef.current != null) {
-      cancelAnimationFrame(animationFrameRef.current)
+      return
     }
     animationFrameRef.current = requestAnimationFrame(() => {
       animationFrameRef.current = null
