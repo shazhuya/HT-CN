@@ -58,7 +58,8 @@
       ],
       "constraints": [
         "Raw PRZ may not be replaced by ideal_core/component_envelope/PEZ."
-      ]
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "ABCD",
@@ -89,7 +90,8 @@
       ],
       "constraints": [
         "Reciprocal BC mapping and equivalent AB=CD remain coordinated Source measurements."
-      ]
+      ],
+      "status": "supported"
     },
     {
       "id": "GARTLEY",
@@ -118,7 +120,8 @@
       ],
       "constraints": [
         "Source identity/Raw PRZ are frozen; quality score cannot rescue an invalid pattern."
-      ]
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "BAT",
@@ -147,7 +150,8 @@
       ],
       "constraints": [
         "Source identity/Raw PRZ are frozen; quality score cannot rescue an invalid pattern."
-      ]
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "CRAB",
@@ -176,7 +180,8 @@
       ],
       "constraints": [
         "Source identity/Raw PRZ are frozen; quality score cannot rescue an invalid pattern."
-      ]
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "DEEP_CRAB",
@@ -205,7 +210,8 @@
       ],
       "constraints": [
         "Source identity/Raw PRZ are frozen; quality score cannot rescue an invalid pattern."
-      ]
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "BUTTERFLY",
@@ -234,7 +240,8 @@
       ],
       "constraints": [
         "Source identity/Raw PRZ are frozen; quality score cannot rescue an invalid pattern."
-      ]
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "SHARK",
@@ -266,7 +273,8 @@
       "constraints": [
         "Topology ends at C; never fabricate D.",
         "Reactive-first management remains distinct from generic XABCD targets."
-      ]
+      ],
+      "status": "supported_frozen"
     },
     {
       "id": "FIVE_ZERO",
@@ -297,7 +305,8 @@
       "constraints": [
         "Volume Two/Three labeling conflict remains visible.",
         "Default production scanner must not promote 5-0."
-      ]
+      ],
+      "status": "quarantined"
     },
     {
       "id": "ALTERNATE_BAT",
@@ -327,7 +336,8 @@
       "constraints": [
         "No implicit promotion from standard Bat.",
         "Source Raw PRZ remains unresolved due Volume Two/Three AB=CD-role conflict."
-      ]
+      ],
+      "status": "fail_closed"
     },
     {
       "id": "TERMINAL_PRICE_BAR",
@@ -357,7 +367,8 @@
       "constraints": [
         "Terminal Price Bar requires a terminal-side Source Raw PRZ test.",
         "Historical geometry D/C is not automatically a Source Terminal Price Bar."
-      ]
+      ],
+      "status": "supported_source_clock"
     },
     {
       "id": "PEZ",
@@ -385,7 +396,8 @@
       ],
       "constraints": [
         "PEZ is dynamic execution context and may not mutate Source Raw PRZ."
-      ]
+      ],
+      "status": "supported_source_clock"
     },
     {
       "id": "TYPE_I",
@@ -415,7 +427,8 @@
       "constraints": [
         "First PRZ test / initial reaction semantics.",
         "T+3/T+5 evidence is post-completion management, not identity."
-      ]
+      ],
+      "status": "supported_source_clock"
     },
     {
       "id": "TYPE_II",
@@ -445,7 +458,8 @@
       "constraints": [
         "Production uses strict full-Source-Raw-PRZ retest as conservative HT-CN operationalization.",
         "Nominal-retest research may not silently relax production Type-II."
-      ]
+      ],
+      "status": "supported_source_clock"
     },
     {
       "id": "REACTION_VS_REVERSAL",
@@ -475,7 +489,8 @@
       "constraints": [
         "PRZ reaction is not automatically a reversal.",
         "Type-I and Type-II must remain distinct."
-      ]
+      ],
+      "status": "supported_source_clock"
     },
     {
       "id": "RSI_BAMM",
@@ -509,7 +524,8 @@
         "Ordinary RSI is not RSI BAMM.",
         "No lookahead or backdating.",
         "RSI BAMM cannot create/repair harmonic identity or Raw PRZ."
-      ]
+      ],
+      "status": "supported_source_state_machine"
     },
     {
       "id": "RSI_BAMM_ACCELERATION_TRIGGER",
@@ -533,7 +549,8 @@
       "constraints": [
         "Optional acceleration trigger remains outside the frozen core BAMM completion state.",
         "Must not be represented as implemented."
-      ]
+      ],
+      "status": "unsupported"
     },
     {
       "id": "HSI",
@@ -554,7 +571,8 @@
       ],
       "constraints": [
         "Proprietary/unsupported; HT-CN must not infer or emulate it without a new explicit Source decision."
-      ]
+      ],
+      "status": "unsupported"
     }
   ],
   "references": [
