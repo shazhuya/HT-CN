@@ -1,6 +1,6 @@
 # CR-0071 — M6.6 Interactive Harmonic Chart Foundation
 
-status: planned
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -28,3 +28,20 @@ See `specs/m6-phase-6-interactive-harmonic-chart-foundation.md`.
 
 No harmonic formula change, Source promotion, M4 mutation, universe change, empirical tuning or
 trade execution.
+
+
+## Activation evidence
+
+Hosted branch workflow `35486506393` / #2377 on head
+`680d7a179d1179acb71659743d9423dc6bcb9393` passed:
+
+- Project OS v2 integrity;
+- M6.5 Source Coverage freeze gate;
+- mutable Ruff: 0 / budget 0;
+- Python: 896 passed;
+- pytest warnings: 0;
+- Web build: success.
+
+The candidate already contains the first production interactive chart implementation. Full PR-only
+browser, Phase18, Phase21 and immutable M4 freeze gates remain required before this delivery can be
+accepted.
