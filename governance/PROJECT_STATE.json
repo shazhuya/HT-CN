@@ -49,7 +49,7 @@
       "outcome_engine": "frozen_match_4",
       "artifact_id": 10596643533,
       "artifact_digest": "sha256:35677f0ffe5fb18cb3598fbbd03c1da3786f30aedba0f7fb6330c9be63e4a9e2",
-      "scope": "M6.5 full PR candidate passed schema-2 Source Coverage verification, Ruff/Python/Web/browser/Phase18/Phase21 and both immutable M4 freeze guards."
+      "scope": "M6.5 full PR candidate passed Source Coverage schema-2 freeze, Ruff/Python/Web/browser/Phase18/Phase21 and both immutable M4 freeze guards. One ledger-bearing final PR validation is required before merge."
     }
   },
   "private_m1": {
