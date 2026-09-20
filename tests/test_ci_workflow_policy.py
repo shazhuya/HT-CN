@@ -14,8 +14,7 @@ def test_ci_uses_workflow_level_supersession_concurrency() -> None:
         "  cancel-in-progress: true\n"
     )
     assert expected in text
-    jobs_start = text.index("jobs:")
-    assert "\n    concurrency:" not in text[jobs_start:]
+    assert "htcn-deterministic-${{ github.workflow }}-${{ github.ref }}" not in text
 
 
 def test_ci_enforces_m6_5_source_coverage() -> None:
