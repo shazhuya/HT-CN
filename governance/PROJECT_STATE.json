@@ -26,7 +26,7 @@
     "status": "implementing",
     "active_change": "CR-0071",
     "active_spec": "specs/m6-phase-6-interactive-harmonic-chart-foundation.md",
-    "latest_attempt_id": "A-20260920-0071-001",
+    "latest_attempt_id": "A-20260920-0071-002",
     "latest_hosted_validation_attempt_id": "A-20260920-0071-001",
     "work_branch": "m6/interactive-chart-foundation-v1",
     "latest_validation": {
@@ -48,6 +48,14 @@
       "m4_methodology": "pending_pr_gate",
       "outcome_engine": "pending_pr_gate",
       "scope": "M6.6 first interactive chart candidate: Lightweight Charts candlesticks + HT-CN time/price overlay adapter + crosshair/no-recompute browser contract. Hosted branch deterministic validation is green; full PR browser/freeze gates remain pending."
+    },
+    "last_failed_validation": {
+      "workflow_run": 35486604600,
+      "run_number": 2379,
+      "head": "45bd920b8424f37261fa235c5873a4d2045e105c",
+      "failed_browser_tests": 3,
+      "passed_browser_tests": 22,
+      "scope": "Renderer compatibility and viewport-reprojection event boundary only; Source/M4 semantics unchanged."
     }
   },
   "private_m1": {

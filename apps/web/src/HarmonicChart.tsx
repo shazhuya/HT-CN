@@ -357,6 +357,7 @@ function applyViewport(chart: IChartApi, bars: Bar[], pattern: Pattern | null, f
 
 export default function HarmonicChart({ bars, pattern, focusPattern = true }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null)
+  const stageRef = useRef<HTMLDivElement | null>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null)
   const barsRef = useRef(bars)
@@ -477,15 +478,16 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
 
     const resizeObserver = new ResizeObserver(scheduleViewportSync)
     resizeObserver.observe(host)
-    host.addEventListener('wheel', scheduleViewportSync, { passive: true })
-    host.addEventListener('pointermove', scheduleViewportSync)
+    const stage = stageRef.current
+    stage?.addEventListener('wheel', scheduleViewportSync, { passive: true, capture: true })
+    stage?.addEventListener('pointermove', scheduleViewportSync, { capture: true })
 
     scheduleViewportSync()
 
     return () => {
       resizeObserver.disconnect()
-      host.removeEventListener('wheel', scheduleViewportSync)
-      host.removeEventListener('pointermove', scheduleViewportSync)
+      stage?.removeEventListener('wheel', scheduleViewportSync, { capture: true })
+      stage?.removeEventListener('pointermove', scheduleViewportSync, { capture: true })
       chart.timeScale().unsubscribeVisibleLogicalRangeChange(rangeHandler)
       chart.remove()
       chartRef.current = null
@@ -703,7 +705,7 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
             重置视图
           </button>
         </div>
-        <div className="chart-stage" data-testid="interactive-chart-stage">
+        <div ref={stageRef} className="chart-stage" data-testid="interactive-chart-stage">
           <div ref={hostRef} className="chart-host" data-engine="lightweight-charts" />
           <svg
             className="harmonic-overlay"
@@ -712,7 +714,17 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
             aria-hidden="true"
           >
             {overlay.zones.map((zone) => (
-              <g key={zone.id} data-layer-id={zone.id}>
+              <g
+                key={zone.id}
+                data-layer-id={zone.id}
+                data-testid={
+                  zone.id === 'source_raw_prz'
+                    ? 'source-prz-zone'
+                    : zone.id === 'pez'
+                      ? 'source-pez-zone'
+                      : undefined
+                }
+              >
                 <rect
                   x={zone.x}
                   y={zone.y}
@@ -736,7 +748,7 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
               >
                 <line x1={target.x1} x2={target.x2} y1={target.y} y2={target.y} />
                 <text x={Math.max(target.x1, target.x2) - 5} y={target.y - 7} textAnchor="end">
-                  {target.label + ' · ' + formatPrice(target.price)}
+                  {target.label + ' · ' + formatPrice(target.price) + ' · ' + (target.reached ? '已到达' : '待到达')}
                 </text>
               </g>
             ))}
