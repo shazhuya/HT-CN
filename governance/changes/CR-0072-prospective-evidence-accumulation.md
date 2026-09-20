@@ -42,3 +42,15 @@ execution.
 
 This Change remains `planned` until a hosted branch workflow proves the candidate green. Only
 then may Project OS atomically activate M7.1 and bind the successful hosted Attempt.
+
+## First hosted validation
+
+Branch workflow `35510029970` / #2407 on candidate
+`6f2c673d93fb3b6d20c5955a49d0ec0b6577d93e` passed Project OS and Source Coverage,
+then failed the zero-debt Ruff gate with exactly three new-code findings:
+`I001=1`, `BLE001=1`, and `UP035=1`.
+
+No Python tests, browser gates, or M4 freeze gates ran after the lint failure. The repair is limited
+to import ordering, `collections.abc` typing imports, and narrowing the status-script exception
+boundary. No Source, capture-methodology, Outcome Engine, or evidence semantics change.
+

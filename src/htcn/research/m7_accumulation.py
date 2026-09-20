@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 
 def _as_dicts(items: Iterable[Mapping[str, Any]] | None) -> list[dict[str, Any]]:

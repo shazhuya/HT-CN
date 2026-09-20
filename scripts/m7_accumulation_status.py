@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -151,7 +151,7 @@ def main() -> int:
             journal_path=Path(args.journal),
             manifest_path=Path(args.manifest),
         )
-    except Exception as exc:
+    except (OSError, RuntimeError, TypeError, ValueError) as exc:
         payload = {
             "schema_version": 1,
             "status": "blocked",
