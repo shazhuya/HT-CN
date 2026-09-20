@@ -102,12 +102,12 @@
       "severity": "high",
       "type": "operational_evidence",
       "status": "open",
-      "title": "First M7 private run blocked by one legacy QFQ calendar gap and stale disposable reports in failure bundle",
+      "title": "First M7 append blocked by legacy QFQ gap / stale failure reports",
       "blocks": [
-        "M7 first canonical-main prospective evidence append"
+        "M7 first evidence append"
       ],
-      "next_action": "Validate and merge CR-0073, then rerun 运行M7前瞻证据积累.bat from clean canonical main and independently verify the new evidence bundle.",
-      "current_fact": "Private run on eca753f148871495482d86a69ca44f30c8730bb6 passed both immutable freeze guards and M1. QFQ readiness reached 54/55 but SZSE.000001 failed because AkShare disconnected and BaoStock omitted five 1991 Saturday raw sessions. No authoritative capture was committed. The transport bundle also included stale disposable reports left from an older run, exposing a control-plane freshness defect."
+      "next_action": "Merge CR-0073 after full green CI, then rerun the M7 BAT on clean canonical main.",
+      "current_fact": "Run eca753f passed freezes+M1 but QFQ was 54/55: SZSE.000001 had five 1991 Saturday gaps; no capture committed. Failure ZIP also exposed stale disposable reports."
     }
   ]
 }
