@@ -70,25 +70,3 @@ PR #56 head `68837b2e93de8effa28109ed6f41a2cb814a1469` passed workflow
 - artifact digest: sha256:35677f0ffe5fb18cb3598fbbd03c1da3786f30aedba0f7fb6330c9be63e4a9e2
 
 The candidate is ready for one final ledger-bearing PR validation before merge.
-
-
-## Full PR validation
-
-PR #56 head `68837b2e93de8effa28109ed6f41a2cb814a1469` passed workflow
-`35485216318` / #2366:
-
-- Project OS: success
-- M6.5 Source Coverage: valid, schema 2, 18 items, 0 Partial, 0 errors
-- mutable Ruff: 0 / budget 0
-- Python: 896 passed
-- pytest warnings: 0
-- Web build: success
-- browser acceptance: 24 passed
-- Phase18: valid
-- Phase21: valid
-- M4 methodology: frozen_match, 37 components
-- Outcome Engine: frozen_match, 4 components
-- artifact: 10596643533
-- artifact digest: sha256:35677f0ffe5fb18cb3598fbbd03c1da3786f30aedba0f7fb6330c9be63e4a9e2
-
-The candidate is ready for one final ledger-bearing PR validation before merge.
