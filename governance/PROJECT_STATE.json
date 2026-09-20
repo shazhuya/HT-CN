@@ -26,15 +26,15 @@
     "status": "closed",
     "active_change": null,
     "active_spec": null,
-    "latest_attempt_id": "A-20260920-0071-011",
-    "latest_hosted_validation_attempt_id": "A-20260920-0071-010",
+    "latest_attempt_id": "A-20260920-0071-012",
+    "latest_hosted_validation_attempt_id": "A-20260920-0071-012",
     "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35501699757,
-      "run_number": 2402,
+      "workflow_run": 35502065088,
+      "run_number": 2404,
       "event": "push",
-      "head": "7679a8eb802124df9dd23058c60603b8c54cb32a",
+      "head": "7cf6eb947f764c6cc459f496a52276500bd73745",
       "python_passed": 896,
       "warnings": 0,
       "ruff_observed": 0,
@@ -47,19 +47,11 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10602353322,
-      "artifact_digest": "sha256:c66338187d5d0395b40f7307480a11add95337335c8d627ee27655d008e122d1",
-      "continuation_artifact_id": 10602487764,
-      "continuation_artifact_digest": "sha256:fd5c09f92bb7efa643d402a6c5bf3ce0e55af170514c719b83dcbe8d749c9340",
-      "scope": "M6.6 interactive chart foundation merged through PR #58 and canonical main passed Project OS, Source Coverage, Ruff/Python/Web, all 25 browser tests, Phase18, Phase21 and both immutable M4 freeze guards."
-    },
-    "last_failed_validation": {
-      "workflow_run": 35501953633,
-      "run_number": 2403,
-      "head": "9ceb37152535efa3b70a93358cebc0f63e58527a",
-      "failed_python_tests": 1,
-      "passed_python_tests": 895,
-      "scope": "Post-merge closeout advanced MILESTONES.active to M7 before a formal M7 phase existed, conflicting with closed current phase M6.6. Product, Source and M4 semantics were unchanged."
+      "artifact_id": 10601939329,
+      "artifact_digest": "sha256:2a38dd20655fd82c58bcc7e49b2a63a24dc23b938f41e5dfce0364fc10d293fc",
+      "continuation_artifact_id": 10603021141,
+      "continuation_artifact_digest": "sha256:276f233bce83e34cef01e7d9f839f2357875cc4abe51dac7f27f903c184efbc4",
+      "scope": "M6.6 is closed after post-merge state alignment. Canonical main passed Project OS, Source Coverage, Ruff/Python/Web, all 25 browser tests, Phase18, Phase21 and both immutable M4 freeze guards."
     }
   },
   "private_m1": {

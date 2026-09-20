@@ -144,3 +144,8 @@ remained the closed M6.6 phase. M7 has no activated CR/spec/phase yet.
 The correction keeps M6 as the active state-ledger milestone until a formal M7 activation changes
 both ledgers atomically. M6 remains complete and M7 remains `ready_not_started`; no product, Source
 or freeze semantics change.
+
+Corrected canonical-main workflow `35502065088` / #2404 on head
+`7cf6eb947f764c6cc459f496a52276500bd73745` passed 896 Python tests with zero warnings, all 25
+browser tests, Phase18/21, Source Coverage, mutable Ruff 0/0 and both M4 freeze guards. The M6.6
+closeout is final and M7 remains the next, not-yet-activated task.
