@@ -70,6 +70,18 @@
       "title": "GitHub server-side protection remains an explicit external-permission limitation",
       "status": "active",
       "source": "governance/decisions/D-072-external-main-protection-boundary.md"
+    },
+    {
+      "id": "D-073",
+      "title": "HT-CN CI uses workflow-level cancellation for superseded runs",
+      "status": "active",
+      "source": "governance/decisions/D-073-workflow-level-ci-concurrency.md"
+    },
+    {
+      "id": "D-074",
+      "title": "Source Coverage Freeze uses a finite capability taxonomy and machine bindings",
+      "status": "active",
+      "source": "governance/decisions/D-074-source-coverage-freeze.md"
     }
   ],
   "rules": {
