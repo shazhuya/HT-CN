@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "active": "M6",
+  "active": "M7",
   "milestones": [
     {
       "id": "M0",
@@ -35,7 +35,7 @@
     {
       "id": "M6",
       "title": "Operational Closeout & Integrity",
-      "status": "active",
+      "status": "complete",
       "phases": [
         {
           "id": "M6.1",
@@ -72,7 +72,7 @@
         {
           "id": "M6.6",
           "title": "Interactive Harmonic Chart Foundation",
-          "status": "ready_to_merge",
+          "status": "closed",
           "exit_gate": [
             "M6.4 Repository Governance and M6.5 Source Coverage Freeze are complete",
             "interactive candlestick pan/zoom/time-axis/price-axis/crosshair foundation is production-bound",
@@ -88,7 +88,7 @@
     {
       "id": "M7",
       "title": "Prospective Evidence Accumulation",
-      "status": "planned"
+      "status": "ready_not_started"
     },
     {
       "id": "M8",

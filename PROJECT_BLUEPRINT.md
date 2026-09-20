@@ -35,8 +35,8 @@ HT-CN 不是自动交易执行器，不以历史回看后的漂亮形态冒充�
 | M3 | Canonical Source Lifecycle + A 股 Context + Workbench | integrated |
 | M4 | Prospective Evidence / Outcome research architecture | architecture frozen, evidence accumulating |
 | M5 | Daily Operator / Review / Portable Delivery | Phase 1–23 integrated |
-| M6 | Operational Closeout & Integrity | active |
-| M7 | Prospective Evidence Accumulation | planned |
+| M6 | Operational Closeout & Integrity | complete |
+| M7 | Prospective Evidence Accumulation | ready_not_started |
 | M8 | Evidence-based Decision Calibration | planned |
 | M9 | Stable Research/Product Release | planned |
 
@@ -46,7 +46,7 @@ HT-CN 的最终主图必须升级为接近 TradingView 的交互式研究工作�
 
 ### 4.1 当前基线与目标差距
 
-当前 Web 主图仍以 `HarmonicChart.tsx` 自绘 SVG 为主：在重新运行分析、切换标的或切换候选时会重新渲染谐波结构，但尚未形成 TradingView 式统一时间轴/价格轴的拖动、缩放、十字光标和 overlay 同步机制。仓库已引入 `lightweight-charts` 依赖，但“依赖存在”不得被视为本目标已完成。
+M6.6 已把生产深度分析主图迁移到 Lightweight Charts 交互 K 线底座，并由 HT-CN 自有 overlay 层把谐波节点、腿线、价格区与生命周期事件锚定到 canonical time/price 坐标。pan、zoom、crosshair、focus/reset 与无重算语义已经过真实 Chromium 门禁；M5 portable evidence renderer 继续作为独立回归/证据路径保留。后续演进不得把 viewport presentation state 变成 harmonic Source truth。
 
 ### 4.2 必须实现的交互语义
 

@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.6-IMPLEMENTING",
+  "state_id": "HTCN-M6.6-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
     "milestone": "M6",
     "phase": "M6.6",
     "title": "Interactive Harmonic Chart Foundation",
-    "status": "ready_to_merge",
-    "active_change": "CR-0071",
-    "active_spec": "specs/m6-phase-6-interactive-harmonic-chart-foundation.md",
-    "latest_attempt_id": "A-20260920-0071-009",
-    "latest_hosted_validation_attempt_id": "A-20260920-0071-009",
-    "work_branch": "m6/interactive-chart-foundation-v1",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260920-0071-010",
+    "latest_hosted_validation_attempt_id": "A-20260920-0071-010",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35501377878,
-      "run_number": 2399,
-      "event": "pull_request",
-      "head": "9a6805abf597a0e7306db26db81c12aaf9630c97",
+      "workflow_run": 35501699757,
+      "run_number": 2402,
+      "event": "push",
+      "head": "7679a8eb802124df9dd23058c60603b8c54cb32a",
       "python_passed": 896,
       "warnings": 0,
       "ruff_observed": 0,
@@ -47,17 +47,11 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10602157929,
-      "artifact_digest": "sha256:92639b883ef3cfaec68d7dbd7b74323956c951133ee74c5576c1551db8ae2e56",
-      "scope": "M6.6 full PR candidate passed Project OS, Source Coverage, Ruff/Python/Web, 25 browser tests including viewport/no-recompute identity, Phase18, Phase21 and both immutable M4 freeze guards. One ledger-bearing final PR validation is required before merge."
-    },
-    "last_failed_validation": {
-      "workflow_run": 35501178834,
-      "run_number": 2397,
-      "head": "7b0897d2a4f29a781242ed642a0f3d2b55099680",
-      "failed_browser_tests": 1,
-      "passed_browser_tests": 24,
-      "scope": "The browser fixture addressed an off-viewport chart without scrolling it into view, so Playwright wheel input never targeted the page. All other browser and deterministic checks passed; Source/M4 semantics unchanged."
+      "artifact_id": 10602353322,
+      "artifact_digest": "sha256:c66338187d5d0395b40f7307480a11add95337335c8d627ee27655d008e122d1",
+      "continuation_artifact_id": 10602487764,
+      "continuation_artifact_digest": "sha256:fd5c09f92bb7efa643d402a6c5bf3ce0e55af170514c719b83dcbe8d749c9340",
+      "scope": "M6.6 interactive chart foundation merged through PR #58 and canonical main passed Project OS, Source Coverage, Ruff/Python/Web, all 25 browser tests, Phase18, Phase21 and both immutable M4 freeze guards."
     }
   },
   "private_m1": {
@@ -69,9 +63,9 @@
     "raw_private_m1_upload_required": false
   },
   "next_major_task": {
-    "phase": "M6.6",
-    "title": "Interactive Harmonic Chart Foundation",
-    "status": "ready_to_merge",
+    "phase": "M7",
+    "title": "Prospective Evidence Accumulation",
+    "status": "ready_not_started",
     "blocked_until": []
   },
   "freezes": {

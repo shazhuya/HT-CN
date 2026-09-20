@@ -1,6 +1,6 @@
 # CR-0071 — M6.6 Interactive Harmonic Chart Foundation
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -123,3 +123,13 @@ PR #58 workflow `35501377878` / #2399 on head
 
 The candidate is ready to merge after one ledger-bearing final PR validation of this governance
 head.
+
+## Merge and canonical-main validation
+
+PR #58 merged with full ancestry as `7679a8eb802124df9dd23058c60603b8c54cb32a`.
+Canonical-main workflow `35501699757` / #2402 passed Project OS, M6.5 Source Coverage, mutable
+Ruff 0/0, 896 Python tests with zero warnings, the production web build, all 25 browser tests,
+Phase18, Phase21, M4 methodology 37/37 and Outcome Engine 4/4.
+
+M6.6 is closed. Viewport interaction remains presentation-only; D-075, Source identity and all
+existing freezes remain active. M7 Prospective Evidence Accumulation is the next major task.
