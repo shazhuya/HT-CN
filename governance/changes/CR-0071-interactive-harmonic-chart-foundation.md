@@ -1,6 +1,6 @@
 # CR-0071 — M6.6 Interactive Harmonic Chart Foundation
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -107,3 +107,19 @@ The next candidate restores component-scoped chart-stage capture and makes the b
 the stage into view before reading its box and sending mouse input. This is an interaction-fixture
 repair, not a weakened assertion: the same viewport-version, no-recompute and canonical-identity
 checks remain in place.
+
+## Full PR validation
+
+PR #58 workflow `35501377878` / #2399 on head
+`9a6805abf597a0e7306db26db81c12aaf9630c97` passed:
+
+- Project OS and M6.5 Source Coverage integrity;
+- mutable Ruff 0 / budget 0;
+- 896 Python tests with zero warnings;
+- production web build;
+- all 25 browser tests, including M6.6 viewport/no-recompute/canonical-identity acceptance;
+- Phase18 and Phase21 browser/evidence gates;
+- M4 methodology freeze 37/37 and Outcome Engine freeze 4/4.
+
+The candidate is ready to merge after one ledger-bearing final PR validation of this governance
+head.

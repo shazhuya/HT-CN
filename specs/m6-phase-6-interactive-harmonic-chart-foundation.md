@@ -1,6 +1,6 @@
 # M6.6 — Interactive Harmonic Chart Foundation
 
-status: implementing
+status: ready_to_merge
 
 ## 1. Objective
 
