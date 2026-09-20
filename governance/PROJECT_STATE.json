@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.4-CLOSED",
+  "state_id": "HTCN-M6.5-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,36 +21,34 @@
   },
   "current": {
     "milestone": "M6",
-    "phase": "M6.4",
-    "title": "Repository Governance",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260920-0069-004",
-    "latest_hosted_validation_attempt_id": "A-20260920-0069-004",
-    "work_branch": null,
+    "phase": "M6.5",
+    "title": "Source Coverage Freeze",
+    "status": "implementing",
+    "active_change": "CR-0070",
+    "active_spec": "specs/m6-phase-5-source-coverage-freeze.md",
+    "latest_attempt_id": "A-20260920-0070-001",
+    "latest_hosted_validation_attempt_id": "A-20260920-0070-001",
+    "work_branch": "m6/source-coverage-freeze-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35465565858,
-      "run_number": 2345,
+      "workflow_run": 35485130202,
+      "run_number": 2363,
       "event": "push",
-      "head": "c0f287890218318d19e9b745cb03663e4e89205b",
-      "python_passed": 890,
+      "head": "aaa47f49ca899cc8c004eb5cc7b16cb966ce143e",
+      "python_passed": 896,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
-      "formal_main_release_integrity": "success",
-      "existing_playwright_passed": 24,
-      "phase18": "valid",
-      "phase21": "valid",
-      "m4_methodology": "frozen_match_37",
-      "outcome_engine": "frozen_match_4",
-      "artifact_id": 10590763591,
-      "artifact_digest": "sha256:16946d365501684653d36c9e446bdb70f7338bb7f02b6f99ace6782b4d9dfd40",
-      "continuation_artifact_id": 10591570617,
-      "continuation_artifact_digest": "sha256:6c8aaaf722fa565a72662e80966c8693463dffe6cb29a79b84e26e459aafb655",
-      "scope": "M6.4 integrated repository-governance closeout after PR #54 merge; mutable Ruff 0/0, warnings 0, browser/Phase18/Phase21 green, M4 freezes preserved. ISSUE-0063 remains external-permission only."
+      "source_coverage_freeze": "valid_18_items_zero_partial",
+      "formal_main_release_integrity": "skipped_on_branch_push",
+      "existing_playwright_passed": null,
+      "phase18": "pending_pr_gate",
+      "phase21": "pending_pr_gate",
+      "m4_methodology": "pending_pr_gate",
+      "outcome_engine": "pending_pr_gate",
+      "artifact_id": null,
+      "scope": "M6.5 activation candidate: workflow-level supersession works; Source Coverage schema 2 validates 18 capabilities with zero Partial items; Ruff 0/0; 896 Python tests; 0 warnings; Web build success."
     }
   },
   "private_m1": {
@@ -64,7 +62,7 @@
   "next_major_task": {
     "phase": "M6.5",
     "title": "Source Coverage Freeze",
-    "status": "ready_not_started",
+    "status": "implementing",
     "blocked_until": []
   },
   "freezes": {
@@ -83,6 +81,7 @@
     "bse_default_scope": "deferred"
   },
   "required_specs": [
+    "specs/m6-phase-5-source-coverage-freeze.md",
     "specs/m6-phase-4-repository-governance.md",
     "specs/m6-phase-3-universe-coverage-contract.md",
     "specs/m6-phase-2-portable-chat-continuity.md",

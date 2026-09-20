@@ -1,6 +1,6 @@
 # M6.5 — Source Coverage Freeze
 
-status: planned
+status: implementing
 
 ## 1. Objective
 
