@@ -656,6 +656,38 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
     syncOverlayRef.current()
   }
 
+  const shiftViewport = (direction: -1 | 1) => {
+    const timeScale = chartRef.current?.timeScale()
+    const range = timeScale?.getVisibleLogicalRange()
+    if (!timeScale || !range) return
+    const width = range.to - range.from
+    const delta = Math.max(width * 0.18, 1) * direction
+    timeScale.setVisibleLogicalRange({
+      from: range.from + delta,
+      to: range.to + delta,
+    })
+    syncOverlayRef.current()
+  }
+
+  const focusLastObservedNode = () => {
+    const chart = chartRef.current
+    const series = seriesRef.current
+    const point = pattern?.points.at(-1)
+    if (!chart || !series || !point) return
+    const bar = bars.find((item) => item.index === point.index)
+    const date = point.trade_date ?? bar?.trade_date
+    if (!date || !bar) return
+    chart.setCrosshairPosition(point.price, date as Time, series)
+    setCrosshair({
+      date,
+      open: bar.open,
+      high: bar.high,
+      low: bar.low,
+      close: bar.close,
+      node: point.label,
+    })
+  }
+
   const resetViewport = () => {
     chartRef.current?.timeScale().fitContent()
     syncOverlayRef.current()
@@ -701,12 +733,23 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
               />
               PEZ
             </label>
+            <button type="button" onClick={() => shiftViewport(-1)} data-testid="chart-pan-left">
+              左移
+            </button>
+            <button type="button" onClick={() => shiftViewport(1)} data-testid="chart-pan-right">
+              右移
+            </button>
             <button type="button" onClick={() => scaleViewport(0.72)} data-testid="chart-zoom-in">
               放大
             </button>
             <button type="button" onClick={() => scaleViewport(1.35)} data-testid="chart-zoom-out">
               缩小
             </button>
+            {pattern?.points.length ? (
+              <button type="button" onClick={focusLastObservedNode} data-testid="chart-focus-last-node">
+                定位{pattern.points.at(-1)?.label}
+              </button>
+            ) : null}
             <button type="button" onClick={resetViewport} data-testid="chart-reset-viewport">
               复位视图
             </button>

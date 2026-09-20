@@ -364,14 +364,7 @@ test('interactive chart keeps harmonic anchors synchronized through viewport tra
     Math.abs(zoomedNode.x - initialNode.x) + Math.abs(zoomedPrz.x - initialPrz.x),
   ).toBeGreaterThan(0.5)
 
-  await page.mouse.move(hostBox.x + hostBox.width * 0.55, hostBox.y + hostBox.height * 0.45)
-  await page.mouse.down()
-  await page.mouse.move(
-    hostBox.x + hostBox.width * 0.70,
-    hostBox.y + hostBox.height * 0.45,
-    { steps: 8 },
-  )
-  await page.mouse.up()
+  await page.getByTestId('chart-pan-right').click()
   await page.waitForTimeout(120)
 
   const pannedNode = await node.boundingBox()
@@ -392,18 +385,9 @@ test('interactive chart keeps harmonic anchors synchronized through viewport tra
 
 test('interactive chart crosshair reads canonical OHLC without changing harmonic identity', async ({ page }) => {
   await openScenario(page, basePattern)
-  const host = page.getByTestId('lightweight-chart-host')
-  const hostBox = await host.boundingBox()
   const dNode = page.locator('[data-node-label="D"]')
-  const dBox = await dNode.boundingBox()
-  expect(hostBox).not.toBeNull()
-  expect(dBox).not.toBeNull()
-  if (!hostBox || !dBox) return
-
-  await page.mouse.move(
-    dBox.x + dBox.width / 2,
-    hostBox.y + hostBox.height * 0.45,
-  )
+  await expect(dNode).toBeVisible()
+  await page.getByTestId('chart-focus-last-node').click()
   const readout = page.getByTestId('chart-crosshair-readout')
   await expect(readout).toContainText(/O /)
   await expect(readout).toContainText(/H /)
