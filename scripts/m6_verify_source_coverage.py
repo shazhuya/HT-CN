@@ -31,6 +31,17 @@ EXPECTED_IDS = {
     "HSI",
 }
 ALLOWED_CLASSIFICATIONS = {"supported", "partial", "quarantined", "unsupported"}
+STATUS_COMPATIBILITY = {
+    "supported": {
+        "supported",
+        "supported_frozen",
+        "supported_source_state_machine",
+        "supported_source_clock",
+    },
+    "partial": set(),
+    "quarantined": {"quarantined", "fail_closed"},
+    "unsupported": {"unsupported"},
+}
 BINDING_KEYS = ("source_refs", "specs", "code", "tests", "decisions")
 
 
@@ -99,6 +110,12 @@ def verify_source_coverage(
         if classification not in ALLOWED_CLASSIFICATIONS:
             errors.append(f"{item_id}: invalid classification {classification!r}")
             continue
+        legacy_status = str(row.get("status") or "")
+        if legacy_status not in STATUS_COMPATIBILITY[classification]:
+            errors.append(
+                f"{item_id}: legacy status {legacy_status!r} conflicts with "
+                f"classification {classification!r}"
+            )
 
         for key in BINDING_KEYS:
             if key not in row:
