@@ -93,7 +93,7 @@
         {
           "id": "M7.1",
           "title": "Prospective Evidence Accumulation Control Plane",
-          "status": "implementing",
+          "status": "ready_to_merge",
           "exit_gate": [
             "prospective capture starts only from clean local main exactly equal to freshly fetched origin/main",
             "M4 capture methodology 37/37 and Outcome Engine 4/4 freeze guards run before private-M1 mutation",

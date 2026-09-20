@@ -1,6 +1,6 @@
 # CR-0072 — M7.1 Prospective Evidence Accumulation Control Plane
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -74,4 +74,23 @@ mutable Ruff 0/0, 900 Python tests / 0 warnings, continuation-bundle self-verifi
 build. PR-only browser/Phase18/Phase21/M4 freeze gates remain pending.
 
 This successful hosted Attempt is the activation anchor for M7.1.
+
+## Full PR validation
+
+PR #60 workflow `35510346253` / #2411 on
+`faf0711a701c82dafdf44edb235a882df2cb9872` passed the full release gate:
+
+- Project OS and Source Coverage;
+- mutable Ruff 0/0;
+- 900 Python tests / 0 warnings;
+- Web build;
+- 25 deterministic browser tests;
+- Phase18 and Phase21 browser evidence;
+- M4 methodology freeze 37/37;
+- Outcome Engine freeze 4/4.
+
+Formal evidence artifact: `10604264482`,
+`sha256:fc074b8956b01ba54dc82a421bcd38059cb93e73242a001fbd7d50ed2423a228`.
+
+The Change is ready to merge only after the ledger-bearing head reruns the unchanged full PR gate.
 
