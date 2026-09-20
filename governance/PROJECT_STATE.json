@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M6.4-READY-TO-MERGE",
+  "state_id": "HTCN-M6.4-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
     "milestone": "M6",
     "phase": "M6.4",
     "title": "Repository Governance",
-    "status": "ready_to_merge",
-    "active_change": "CR-0069",
-    "active_spec": "specs/m6-phase-4-repository-governance.md",
-    "latest_attempt_id": "A-20260920-0069-002",
-    "latest_hosted_validation_attempt_id": "A-20260920-0069-002",
-    "work_branch": "m6/repository-governance-v1",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260920-0069-004",
+    "latest_hosted_validation_attempt_id": "A-20260920-0069-004",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35464886662,
-      "run_number": 2328,
-      "event": "pull_request",
-      "head": "9f19ba55ab389bd13e5084a21d93c20b85825eb6",
+      "workflow_run": 35465565858,
+      "run_number": 2345,
+      "event": "push",
+      "head": "c0f287890218318d19e9b745cb03663e4e89205b",
       "python_passed": 890,
       "warnings": 0,
       "ruff_observed": 0,
@@ -46,9 +46,11 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10591125410,
-      "artifact_digest": "sha256:1347bf1921af268aea8ae1b9e612129c149d891ff3c2df90b19293f9be271aa7",
-      "scope": "M6.4 full PR candidate validation. Final ledger-bearing candidate must rerun before merge."
+      "artifact_id": 10590763591,
+      "artifact_digest": "sha256:16946d365501684653d36c9e446bdb70f7338bb7f02b6f99ace6782b4d9dfd40",
+      "continuation_artifact_id": 10591570617,
+      "continuation_artifact_digest": "sha256:6c8aaaf722fa565a72662e80966c8693463dffe6cb29a79b84e26e459aafb655",
+      "scope": "M6.4 integrated repository-governance closeout after PR #54 merge; mutable Ruff 0/0, warnings 0, browser/Phase18/Phase21 green, M4 freezes preserved. ISSUE-0063 remains external-permission only."
     }
   },
   "private_m1": {
@@ -60,9 +62,9 @@
     "raw_private_m1_upload_required": false
   },
   "next_major_task": {
-    "phase": "M6.4",
-    "title": "Repository Governance",
-    "status": "ready_to_merge",
+    "phase": "M6.5",
+    "title": "Source Coverage Freeze",
+    "status": "ready_not_started",
     "blocked_until": []
   },
   "freezes": {

@@ -1,6 +1,6 @@
 # M6.4 — Repository Governance
 
-status: ready_to_merge
+status: closed
 
 ## 1. Objective
 
@@ -73,3 +73,14 @@ M6.4 may close only when:
 This phase does not change Source identity, raw PRZ, Source Clock, Reaction/Reversal, RSI BAMM,
 5-0 quarantine, Alternate Bat fail-closed status, M4 evidence semantics, A-share universe semantics,
 or trading execution behavior.
+
+
+## 7. Closeout evidence
+
+M6.4 acceptance gates were satisfied by final PR #54 and canonical-main workflow
+`35465565858` / #2345. Configured mutable Ruff is 0/0, pytest warnings are 0,
+890 Python tests passed, Web/browser/Phase18/Phase21 passed, and the M4 methodology
+and Outcome Engine freezes remained 37/37 and 4/4 respectively.
+
+ISSUE-0063 remains an explicitly recorded external-permission limitation under D-072;
+no server-side branch-protection claim is made.

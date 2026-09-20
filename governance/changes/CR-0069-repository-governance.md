@@ -1,6 +1,6 @@
 # CR-0069 — M6.4 Repository Governance
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 target: main
@@ -15,8 +15,7 @@ Outcome Engine, market-data semantics, product trading semantics, or empirical c
 
 1. historical stacked M5 pull requests are already closed/superseded under CR-0065;
 2. pytest warning budget is already zero and CI fails on warning growth;
-3. canonical main currently reports repository-wide Ruff debt below the frozen budget, but the debt
-   remains non-zero and ISSUE-0068 still blocks quality closeout;
+3. canonical main now enforces configured mutable Ruff observed=0 / budget=0; ISSUE-0068 is closed after full PR and post-merge validation;
 4. GitHub branch metadata reports `main protected=false`;
 5. repository rulesets currently return an empty set;
 6. the connected GitHub App receives HTTP 403 for the branch-protection endpoint and exposes no
@@ -72,3 +71,28 @@ PR #53 head `9f19ba55ab389bd13e5084a21d93c20b85825eb6` passed workflow
 - artifact digest: sha256:1347bf1921af268aea8ae1b9e612129c149d891ff3c2df90b19293f9be271aa7
 
 The candidate is ready for one final ledger-bearing validation before merge.
+
+
+## Final closeout
+
+- Final unchanged candidate: `ae0bbf1fb6ba1f8868b85a02bd81cb49c0aece54`
+- Final validation PR: #54
+- PR workflow: `35465432172` / #2344 — success
+- Merge commit: `c0f287890218318d19e9b745cb03663e4e89205b`
+- Canonical main workflow: `35465565858` / #2345 — success
+- mutable Ruff: `0 / 0`
+- Python: `890 passed`
+- pytest warnings: `0`
+- browser acceptance: `24 passed`
+- Phase18: valid
+- Phase21: valid
+- M4 methodology: frozen_match, 37 components
+- Outcome Engine: frozen_match, 4 components
+- formal-release artifact: `10590763591`, digest `sha256:16946d365501684653d36c9e446bdb70f7338bb7f02b6f99ace6782b4d9dfd40`
+- continuation artifact: `10591570617`, digest `sha256:6c8aaaf722fa565a72662e80966c8693463dffe6cb29a79b84e26e459aafb655`
+
+PR #53's stale GitHub Actions concurrency run was bypassed without changing candidate content by validating the identical SHA through PR #54.
+
+ISSUE-0068 is closed. ISSUE-0063 remains explicitly `blocked_external_permission` under D-072 because GitHub server-side branch protection is still disabled and cannot be administered through the connected integration. This does not convert the external limitation into a false internal success claim.
+
+M6.4 is closed and M6.5 Source Coverage Freeze becomes the next major task.

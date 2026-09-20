@@ -88,13 +88,13 @@
       "id": "ISSUE-0068",
       "severity": "medium",
       "type": "lint_debt",
-      "status": "validation_green",
+      "status": "closed",
       "title": "Repository-wide Ruff debt remains above clean baseline",
-      "blocks": [
-        "M6.4 quality closeout"
-      ],
-      "next_action": "Run the ledger-bearing final PR candidate, merge with ancestry preserved if green, and close after canonical main post-merge validation confirms Ruff 0 / warnings 0 / full release gates.",
-      "current_fact": "PR #53 head 9f19ba55ab389bd13e5084a21d93c20b85825eb6 passed full workflow 35464886662 / #2328 with configured mutable Ruff 0/0, 890 Python tests, 0 warnings, 24 browser tests, Phase18/21 valid, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
+      "blocks": [],
+      "next_action": "None — M6.4 reduced the configured mutable Ruff scope to 0/0 and the integrated main passed all required gates.",
+      "current_fact": "Canonical main c0f287890218318d19e9b745cb03663e4e89205b passed workflow 35465565858 / #2345 with configured mutable Ruff observed=0/budget=0, 890 Python tests, 0 warnings, Web build, 24 browser tests, Phase18/21 valid, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4. Immutable M4 paths remain byte-frozen under D-070; behavior-sensitive legacy exceptions remain exact-path/exact-rule ledgered under D-071.",
+      "resolution": "Closed by CR-0069 after PR #54 final validation and merge, followed by canonical main workflow 35465565858 / #2345 success.",
+      "closed_in": "CR-0069"
     }
   ]
 }
