@@ -54,3 +54,15 @@ No Python tests, browser gates, or M4 freeze gates ran after the lint failure. T
 to import ordering, `collections.abc` typing imports, and narrowing the status-script exception
 boundary. No Source, capture-methodology, Outcome Engine, or evidence semantics change.
 
+## Second hosted validation
+
+Repair workflow `35510111482` / #2408 on
+`245ef70641c0308a9d33701509249a78db1cba06` passed Project OS, Source Coverage and Ruff 0/0.
+Python then reported 892 passed / 9 failed, all in the legacy M4 wrapper-contract test file.
+
+The evidence showed two operational-test issues: the legacy tests still required the retired
+historical M4 branch/minimum-checkpoint contract, and the generated BAT text contained damaged
+Windows backslashes because the GitHub write script had not used raw string material. The repair
+rewrites the BAT byte-for-byte with preserved Windows paths and updates only the non-frozen wrapper
+contract tests to the M7 canonical-main fail-closed rules.
+

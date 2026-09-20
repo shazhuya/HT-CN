@@ -72,17 +72,17 @@ if "!M7_DIRTY!"=="1" (
   exit /b 1
 )
 
-if not exist ".venvScriptspython.exe" (
+if not exist ".venv\Scripts\python.exe" (
   echo [HT-CN M7] ERROR: .venv not found.
   pause
   exit /b 1
 )
 
-if not exist "artifactseports" mkdir "artifactseports"
+if not exist "artifacts\reports" mkdir "artifacts\reports"
 
-.venvScriptspython.exe scriptsm4_methodology_freeze_guard.py > "artifactseportsm4-methodology-freeze-guard.json" 2>&1
+.venv\Scripts\python.exe scripts\m4_methodology_freeze_guard.py > "artifacts\reports\m4-methodology-freeze-guard.json" 2>&1
 set "METHODOLOGY_GUARD_EXIT=!ERRORLEVEL!"
-type "artifactseportsm4-methodology-freeze-guard.json"
+type "artifacts\reports\m4-methodology-freeze-guard.json"
 if not "!METHODOLOGY_GUARD_EXIT!"=="0" (
   echo [HT-CN M7] ERROR: methodology components differ from the frozen T1 protocol.
   echo No M1 update or authoritative capture was started.
@@ -90,9 +90,9 @@ if not "!METHODOLOGY_GUARD_EXIT!"=="0" (
   exit /b 1
 )
 
-.venvScriptspython.exe scriptsm4_outcome_engine_freeze_guard.py > "artifactseportsm4-outcome-engine-freeze-guard.json" 2>&1
+.venv\Scripts\python.exe scripts\m4_outcome_engine_freeze_guard.py > "artifacts\reports\m4-outcome-engine-freeze-guard.json" 2>&1
 set "OUTCOME_ENGINE_GUARD_EXIT=!ERRORLEVEL!"
-type "artifactseportsm4-outcome-engine-freeze-guard.json"
+type "artifacts\reports\m4-outcome-engine-freeze-guard.json"
 if not "!OUTCOME_ENGINE_GUARD_EXIT!"=="0" (
   echo [HT-CN M7] ERROR: outcome engine differs from the frozen Phase 3.1 contract.
   echo No M1 update or authoritative capture was started.
@@ -100,7 +100,7 @@ if not "!OUTCOME_ENGINE_GUARD_EXIT!"=="0" (
   exit /b 1
 )
 
-if not exist "datamarketcatalog.duckdb" (
+if not exist "data\market\catalog.duckdb" (
   echo [HT-CN M7] ERROR: real M1 catalog not found.
   pause
   exit /b 1
@@ -116,14 +116,14 @@ echo ============================================================
 echo.
 
 echo [1/9] M1 smart daily update...
-.venvScriptspython.exe scriptsm1_daily_update.py --limit 0 --sleep 0.05 > "artifactseportsm4-m1-update.log" 2>&1
+.venv\Scripts\python.exe scripts\m1_daily_update.py --limit 0 --sleep 0.05 > "artifacts\reports\m4-m1-update.log" 2>&1
 set "M1_EXIT=!ERRORLEVEL!"
-type "artifactseportsm4-m1-update.log"
+type "artifacts\reports\m4-m1-update.log"
 
 echo.
 echo [2/9] Strict formal-QFQ universe readiness...
 if "!M1_EXIT!"=="0" (
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "& { & '..venvScriptspython.exe' -u 'scriptsm4_prepare_qfq_universe.py' '--retries' '1' '--sleep' '0.05' 2>&1 | Tee-Object -FilePath 'artifactseportsm4-qfq-readiness.log'; exit $LASTEXITCODE }"
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "& { & '.\.venv\Scripts\python.exe' -u 'scripts\m4_prepare_qfq_universe.py' '--retries' '1' '--sleep' '0.05' 2>&1 | Tee-Object -FilePath 'artifacts\reports\m4-qfq-readiness.log'; exit $LASTEXITCODE }"
   set "QFQ_EXIT=!ERRORLEVEL!"
 ) else (
   echo [HT-CN M7] SKIP: M1 update did not pass; QFQ readiness was not attempted.
@@ -133,7 +133,7 @@ if "!M1_EXIT!"=="0" (
 echo.
 echo [3/9] Authoritative lifecycle capture...
 if "!M1_EXIT!"=="0" if "!QFQ_EXIT!"=="0" (
-  .venvScriptspython.exe scriptsm4_capture_lifecycle_snapshot.py
+  .venv\Scripts\python.exe scripts\m4_capture_lifecycle_snapshot.py
   set "CAPTURE_EXIT=!ERRORLEVEL!"
 ) else (
   echo [HT-CN M7] SKIP: M1/QFQ readiness did not pass; no new authoritative capture will be attempted.
@@ -142,23 +142,23 @@ if "!M1_EXIT!"=="0" if "!QFQ_EXIT!"=="0" (
 
 echo.
 echo [4/9] Evidence-chain health...
-.venvScriptspython.exe scriptsm4_evidence_health.py
+.venv\Scripts\python.exe scripts\m4_evidence_health.py
 set "HEALTH_EXIT=!ERRORLEVEL!"
 
 echo.
 echo [5/9] Lifecycle transition report...
-.venvScriptspython.exe scriptsm4_build_transition_report.py
+.venv\Scripts\python.exe scripts\m4_build_transition_report.py
 set "TRANSITION_EXIT=!ERRORLEVEL!"
 
 echo.
 echo [6/9] Prospective observation report...
-.venvScriptspython.exe scriptsm4_build_observation_report.py
+.venv\Scripts\python.exe scripts\m4_build_observation_report.py
 set "OBSERVATION_EXIT=!ERRORLEVEL!"
 
 echo.
 echo [7/9] Preregistered outcome-v2 report...
 if "!CAPTURE_EXIT!"=="0" if "!HEALTH_EXIT!"=="0" if "!OBSERVATION_EXIT!"=="0" (
-  .venvScriptspython.exe scriptsm4_build_outcome_report.py
+  .venv\Scripts\python.exe scripts\m4_build_outcome_report.py
   set "OUTCOME_EXIT=!ERRORLEVEL!"
 ) else (
   echo [HT-CN M7] SKIP: capture/health/observation did not pass; no new outcome snapshot will be attempted.
@@ -167,12 +167,12 @@ if "!CAPTURE_EXIT!"=="0" if "!HEALTH_EXIT!"=="0" if "!OBSERVATION_EXIT!"=="0" (
 
 echo.
 echo [8/9] Evidence handoff bundle...
-.venvScriptspython.exe scriptsm4_export_evidence_bundle.py
+.venv\Scripts\python.exe scripts\m4_export_evidence_bundle.py
 set "BUNDLE_EXIT=!ERRORLEVEL!"
 
 echo.
 echo [9/9] M7 accumulation status...
-.venvScriptspython.exe scriptsm7_accumulation_status.py
+.venv\Scripts\python.exe scripts\m7_accumulation_status.py
 set "M7_STATUS_EXIT=!ERRORLEVEL!"
 
 set "FINAL_EXIT=0"
@@ -200,20 +200,20 @@ if "!FINAL_EXIT!"=="0" (
 
 echo.
 echo Canonical HEAD: !M7_HEAD!
-echo Methodology:  artifactseportsm4-methodology-freeze-guard.json
-echo Outcome guard: artifactseportsm4-outcome-engine-freeze-guard.json
-echo M1 log:       artifactseportsm4-m1-update.log
-echo QFQ report:   artifactseportsm4-qfq-readiness.json
-echo QFQ log:      artifactseportsm4-qfq-readiness.log
-echo Snapshot:     artifactseportsm4-lifecycle-snapshot.json
-echo Health:       artifactseportsm4-evidence-health.json
-echo Transitions:  artifactseportsm4-lifecycle-transitions.json
-echo Observations: artifactseportsm4-prospective-observations.json
-echo Outcome v2:   artifactseportsm4-outcome-v2.json
-echo Bundle:       artifactseportsm4-evidence-bundle.zip
-echo M7 status:    artifactseportsm7-accumulation-status.json
-echo Transactions: dataesearchm4captures
-echo Outcomes:     dataesearchm4outcomes
+echo Methodology:   artifacts\reports\m4-methodology-freeze-guard.json
+echo Outcome guard: artifacts\reports\m4-outcome-engine-freeze-guard.json
+echo M1 log:        artifacts\reports\m4-m1-update.log
+echo QFQ report:    artifacts\reports\m4-qfq-readiness.json
+echo QFQ log:       artifacts\reports\m4-qfq-readiness.log
+echo Snapshot:      artifacts\reports\m4-lifecycle-snapshot.json
+echo Health:        artifacts\reports\m4-evidence-health.json
+echo Transitions:   artifacts\reports\m4-lifecycle-transitions.json
+echo Observations:  artifacts\reports\m4-prospective-observations.json
+echo Outcome v2:    artifacts\reports\m4-outcome-v2.json
+echo Bundle:        artifacts\reports\m4-evidence-bundle.zip
+echo M7 status:     artifacts\reports\m7-accumulation-status.json
+echo Transactions: data\research\m4\captures
+echo Outcomes:     data\research\m4\outcomes
 echo.
 pause
 exit /b !FINAL_EXIT!
