@@ -92,3 +92,59 @@ test('HT-CN M3 fixture workbench renders lifecycle navigation and harmonic chart
   fs.mkdirSync(outDir, { recursive: true })
   await page.screenshot({ path: `${outDir}/m2-harmonic-workbench-fixture.png`, fullPage: true })
 })
+
+
+test('M6.6 interactive viewport keeps harmonic identity anchored without recomputing analysis', async ({ page }) => {
+  let harmonicRequestCount = 0
+
+  await page.route('**/api/health', async (route) => {
+    await route.fulfill({ json: { status: 'ok', service: 'ht-cn-api', version: '0.3.0' } })
+  })
+  await page.route('**/api/instruments?**', async (route) => {
+    await route.fulfill({ json: { count: 1, items: [{ instrument_id: 'SSE.688256', has_qfq_factor: true }] } })
+  })
+  await page.route('**/api/harmonic/SSE.688256?**', async (route) => {
+    harmonicRequestCount += 1
+    await route.fulfill({ json: analysis })
+  })
+
+  await page.goto('/')
+  await page.getByRole('button', { name: '运行谐波分析' }).click()
+
+  const chart = page.getByLabel('harmonic-chart')
+  await expect(chart.locator('[data-engine="lightweight-charts"]')).toBeVisible()
+  const overlay = chart.getByTestId('harmonic-overlay')
+  const dNode = overlay.locator('[data-node-label="D"]')
+  await expect(dNode).toHaveAttribute('data-anchor-date', '2026-09-14')
+
+  const initialCx = Number(await dNode.getAttribute('cx'))
+  const initialVersion = Number(await overlay.getAttribute('data-viewport-version'))
+
+  await page.getByLabel('聚焦当前形态').uncheck()
+  await expect.poll(async () => Number(await overlay.getAttribute('data-viewport-version'))).toBeGreaterThan(initialVersion)
+  const fullCx = Number(await dNode.getAttribute('cx'))
+  expect(Number.isFinite(fullCx)).toBe(true)
+  expect(Math.abs(fullCx - initialCx)).toBeGreaterThan(0.5)
+
+  const stage = chart.getByTestId('interactive-chart-stage')
+  await stage.scrollIntoViewIfNeeded()
+  const box = await stage.boundingBox()
+  expect(box).not.toBeNull()
+  if (!box) return
+
+  const beforeWheelVersion = Number(await overlay.getAttribute('data-viewport-version'))
+  await page.mouse.move(box.x + box.width * 0.65, box.y + box.height * 0.45)
+  await page.mouse.wheel(0, -700)
+  await expect.poll(async () => Number(await overlay.getAttribute('data-viewport-version'))).toBeGreaterThan(beforeWheelVersion)
+  expect(harmonicRequestCount).toBe(1)
+
+  const nodeCx = Number(await dNode.getAttribute('cx'))
+  const nodeCy = Number(await dNode.getAttribute('cy'))
+  await page.mouse.move(box.x + nodeCx, box.y + nodeCy)
+  await expect(chart.getByTestId('chart-crosshair-readout')).toHaveAttribute('data-trade-date', '2026-09-14')
+  await expect(chart.getByTestId('chart-crosshair-readout')).toContainText('节点 D')
+  expect(harmonicRequestCount).toBe(1)
+
+  await chart.getByTestId('chart-reset-view').click()
+  await expect(dNode).toHaveAttribute('data-anchor-date', '2026-09-14')
+})
