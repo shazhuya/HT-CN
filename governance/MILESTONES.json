@@ -128,6 +128,20 @@
             "M4 methodology remains frozen_match_37 and Outcome Engine remains frozen_match_4",
             "canonical main is green before another private M7 rerun"
           ]
+        },
+        {
+          "id": "M7.4",
+          "title": "Post-Five-Day Weekend QFQ Calendar Anomaly Repair",
+          "status": "planned",
+          "exit_gate": [
+            "third real M7 failure is preserved in Attempt Ledger with evidence-bundle identity",
+            "post-1992 weekend raw rows are classified by the documented SZSE five-day trading rule, not by ad-hoc date allowlists",
+            "exact observed gaps 1992-02-01, 1992-02-02 and 1993-01-03 pass provider-to-factor regression outside the frozen 420-bar window",
+            "post-five-day weekend anomalies inside the formal 420-bar window remain fail-closed",
+            "raw OHLCV is never rewritten or deleted",
+            "M4 methodology remains frozen_match_37 and Outcome Engine remains frozen_match_4",
+            "canonical main is green before another private M7 rerun"
+          ]
         }
       ]
     },

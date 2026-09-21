@@ -361,3 +361,126 @@ def test_legacy_bridge_without_preclose_stays_forbidden_inside_formal_window() -
 
     assert len(repaired) == len(factors)
     assert audit == []
+
+
+
+class _PostFiveDayWeekendAdjustedProvider:
+    name = "post_five_day_weekend_fixture"
+
+    def __init__(self, frame: pd.DataFrame) -> None:
+        self.frame = frame
+
+    def get_daily_adjusted(
+        self,
+        instrument_id,
+        start,
+        end,
+        *,
+        mode="qfq",
+    ) -> pd.DataFrame:
+        return self.frame.copy()
+
+
+def _real_post_five_day_weekend_anomaly_fixture() -> tuple[
+    pd.DataFrame,
+    pd.DataFrame,
+]:
+    gap_dates = pd.to_datetime([
+        "1992-02-01",
+        "1992-02-02",
+        "1993-01-03",
+    ])
+    raw_dates = pd.to_datetime([
+        "1992-01-31",
+        "1992-02-01",
+        "1992-02-02",
+        "1992-02-03",
+        "1993-01-01",
+        "1993-01-03",
+        "1993-01-04",
+    ])
+    recent_dates = list(pd.bdate_range("2024-01-02", periods=430))
+    dates = pd.DatetimeIndex(sorted(set(list(raw_dates) + recent_dates)))
+    raw = pd.DataFrame({
+        "instrument_id": ["SZSE.000001"] * len(dates),
+        "trade_date": dates,
+        "open": [10.0] * len(dates),
+        "high": [10.5] * len(dates),
+        "low": [9.5] * len(dates),
+        "close": [10.0] * len(dates),
+        "volume": [1000.0] * len(dates),
+    })
+
+    adjusted = raw.loc[
+        ~raw["trade_date"].isin(gap_dates)
+    ].copy()
+    factor_by_date = {
+        pd.Timestamp("1992-01-31"): 1.0,
+        pd.Timestamp("1992-02-03"): 1.2,
+        pd.Timestamp("1993-01-01"): 1.0,
+        pd.Timestamp("1993-01-04"): 1.2,
+    }
+    adjusted_factor = adjusted["trade_date"].map(
+        lambda stamp: factor_by_date.get(pd.Timestamp(stamp), 1.2)
+    )
+    for column in ("open", "high", "low", "close"):
+        adjusted[column] = adjusted[column] * adjusted_factor
+    adjusted = adjusted.reset_index(drop=True)
+    return raw, adjusted
+
+
+def test_real_post_five_day_weekend_anomalies_bridge_without_preclose() -> None:
+    raw, adjusted = _real_post_five_day_weekend_anomaly_fixture()
+    factors, source, attempts, repairs = _fetch_candidate(
+        instrument_id="SZSE.000001",
+        raw=raw,
+        provider=_PostFiveDayWeekendAdjustedProvider(adjusted),
+        retries=0,
+    )
+
+    assert source == "post_five_day_weekend_fixture_qfq"
+    assert attempts == 1
+    assert sum(item["gap_raw_session_count"] for item in repairs) == 3
+    assert {
+        item["gap_start_trade_date"] for item in repairs
+    } == {"1992-02-01", "1993-01-03"}
+    assert {
+        item["fill_rule"] for item in repairs
+    } == {"legacy_nontrading_weekend_outside_formal_capture_window"}
+    assert all(item["allowed_factor_drift"] is None for item in repairs)
+    ready, reason = _strict_factor_candidate(raw, factors)
+    assert ready is True
+    assert reason == "strict_factor_candidate_ready"
+
+
+def test_post_five_day_weekend_anomaly_never_bridges_inside_formal_window() -> None:
+    raw = pd.DataFrame({
+        "instrument_id": ["SZSE.000001"] * 3,
+        "trade_date": pd.to_datetime([
+            "2026-01-02",
+            "2026-01-03",
+            "2026-01-05",
+        ]),
+        "open": [10.0, 10.0, 12.0],
+        "high": [10.2, 10.3, 12.2],
+        "low": [9.9, 9.8, 11.8],
+        "close": [10.0, 10.2, 12.0],
+        "volume": [1000.0, 1100.0, 1200.0],
+    })
+    factors = pd.DataFrame({
+        "instrument_id": ["SZSE.000001", "SZSE.000001"],
+        "trade_date": pd.to_datetime(["2026-01-02", "2026-01-05"]),
+        "price_factor": [1.0, 1.20],
+        "mode": ["qfq", "qfq"],
+        "source": ["baostock_qfq", "baostock_qfq"],
+    })
+
+    repaired, audit = _repair_safe_internal_factor_gaps(raw, factors)
+
+    assert len(repaired) == len(factors)
+    assert audit == []
+    ready, reason = _strict_factor_candidate(raw, repaired)
+    assert ready is False
+    assert reason.startswith(
+        ("historical_factor_gap:", "factor_overlap_too_low:")
+    )
