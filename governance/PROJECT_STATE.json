@@ -26,15 +26,15 @@
     "status": "implementing",
     "active_change": "CR-0076",
     "active_spec": "specs/m7-phase-5-evidence-acceptance-idempotency.md",
-    "latest_attempt_id": "A-20260921-0076-004",
-    "latest_hosted_validation_attempt_id": "A-20260921-0076-004",
+    "latest_attempt_id": "A-20260921-0076-005",
+    "latest_hosted_validation_attempt_id": "A-20260921-0076-005",
     "work_branch": "m7/evidence-acceptance-idempotency-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35589874325,
-      "run_number": 2449,
+      "workflow_run": 35590005778,
+      "run_number": 2450,
       "event": "push",
-      "head": "b7ac160b2d719a8340937d6ca726b52f9e55d4d8",
+      "head": "2bc3990a47cd417e0468fb9810377cd197982f63",
       "python_passed": 916,
       "warnings": 0,
       "ruff_observed": 0,
@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "M7.5 branch candidate passed Project OS, Source Coverage, Ruff 0/0, 916 Python tests / 0 warnings, continuation-bundle verification and Web build. Acceptance/idempotency regressions passed; PR-only browser/Phase18/Phase21 and immutable freeze guards remain pending."
+      "scope": "Activated M7.5 state passed Project OS, Source Coverage, Ruff 0/0, 916 Python tests / 0 warnings, continuation-bundle verification and Web build."
     }
   },
   "private_m1": {
