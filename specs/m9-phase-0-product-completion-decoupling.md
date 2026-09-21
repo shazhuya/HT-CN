@@ -1,6 +1,6 @@
 # M9.0 — Product Completion Policy & Roadmap
 
-status: implementing
+status: ready_to_merge
 
 ## 1. Permanent track separation
 
