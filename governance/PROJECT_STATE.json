@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.4-CLOSED",
+  "state_id": "HTCN-M7.5-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,22 +21,22 @@
   },
   "current": {
     "milestone": "M7",
-    "phase": "M7.4",
-    "title": "Post-Five-Day Weekend QFQ Calendar Anomaly Repair",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260921-0075-006",
-    "latest_hosted_validation_attempt_id": "A-20260921-0075-005",
-    "work_branch": null,
+    "phase": "M7.5",
+    "title": "Evidence Acceptance and Idempotent Rerun Contract",
+    "status": "ready_to_merge",
+    "active_change": "CR-0076",
+    "active_spec": "specs/m7-phase-5-evidence-acceptance-idempotency.md",
+    "latest_attempt_id": "A-20260921-0076-006",
+    "latest_hosted_validation_attempt_id": "A-20260921-0076-006",
+    "work_branch": "m7/evidence-acceptance-idempotency-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35574094019,
-      "run_number": 2443,
-      "event": "push",
-      "head": "aa87595c62200a578b4faefcc44df3480c111943",
-      "pr": 63,
-      "python_passed": 910,
+      "workflow_run": 35590259026,
+      "run_number": 2452,
+      "event": "pull_request",
+      "head": "82149a8e2e4eb6cfe57ab6cbef646e4b6f203501",
+      "pr": 64,
+      "python_passed": 916,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
@@ -48,11 +48,9 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10627268139,
-      "artifact_digest": "sha256:fb0f8bc0e16d357c405c27bbc637ada53d860d32f8928ff72f4708ffc3f200da",
-      "continuation_artifact_id": 10627586379,
-      "continuation_artifact_digest": "sha256:2017d2133b4632e19f69f6bc0d99ae4fb555c8982c6e2294539a6ed643adf7c3",
-      "scope": "Final ledger-bearing PR #63 run #2442 passed full release gates, then PR #63 merged with ancestry preserved as aa87595c62200a578b4faefcc44df3480c111943. Canonical main #2443 passed Project OS, Source Coverage, Ruff 0/0, 910 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
+      "artifact_id": 10634431564,
+      "artifact_digest": "sha256:badbd559bf4259f4f7e2587fa52a11e03dbac98aefa42eb7ed13b3b93fce4cce",
+      "scope": "PR #64 candidate passed Project OS, Source Coverage, Ruff 0/0, 916 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -69,12 +67,12 @@
     "latest_accepted_m7_evidence_bundle_sha256": "41ea62c21711858c61a43c98aa6959aaf5185773857f8d45ce995939713dc77b"
   },
   "next_major_task": {
-    "phase": "M7",
-    "title": "Continue Frozen Prospective Evidence Accumulation",
-    "status": "active_evidence_accumulation",
-    "blocked_until": [],
-    "one_action_entry": "运行M7前瞻证据积累.bat",
-    "inference_gate": "ISSUE-0066"
+    "phase": "M7.5",
+    "title": "Merge validated evidence acceptance/idempotency contract",
+    "status": "ready_to_merge",
+    "blocked_until": [
+      "exact ledger-bearing PR head remains fully green"
+    ]
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -99,6 +97,7 @@
     }
   },
   "required_specs": [
+    "specs/m7-phase-5-evidence-acceptance-idempotency.md",
     "specs/m7-phase-4-post-five-day-weekend-qfq-anomaly.md",
     "specs/m7-phase-3-provider-derived-legacy-qfq-gap-repair.md",
     "specs/m7-phase-2-private-m1-evidence-append-resilience.md",

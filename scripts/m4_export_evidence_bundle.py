@@ -215,6 +215,18 @@ def build_bundle(
             if latest_capture is None
             else latest_capture.get("transaction_id")
         ),
+        "bundle_generation_code_head": identity.head,
+        "bundle_generation_worktree_clean": identity.worktree_clean,
+        "latest_capture_code_head": (
+            None
+            if latest_capture is None
+            else latest_capture.get("code_head")
+        ),
+        "latest_capture_worktree_clean": (
+            None
+            if latest_capture is None
+            else latest_capture.get("worktree_clean")
+        ),
         "evidence_health_status": health.get("status"),
         "evidence_health_blocker_count": health.get("blocker_count"),
         "committed_capture_read_error": committed_read_error,
@@ -250,9 +262,12 @@ def build_bundle(
         "is_trade_instruction": False,
         "authoritative_evidence_modified": False,
         "interpretation": (
-            "This ZIP is a transport bundle only. Enrollment authority remains "
-            "the frozen baseline plus immutable committed capture transactions. "
-            "Outcome snapshots are separate immutable derived research evidence."
+            "This ZIP is a transport bundle only. code_head identifies the "
+            "bundle-generation checkout; latest_capture_code_head preserves the "
+            "immutable origin of the latest committed capture. Enrollment "
+            "authority remains the frozen baseline plus immutable committed "
+            "capture transactions. Outcome snapshots are separate immutable "
+            "derived research evidence."
         ),
         "files": file_records,
     }

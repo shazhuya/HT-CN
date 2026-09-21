@@ -106,6 +106,12 @@
       "title": "Post-five-day weekend raw rows are audited legacy calendar anomalies",
       "status": "active",
       "source": "governance/decisions/D-078-post-five-day-weekend-calendar-anomaly.md"
+    },
+    {
+      "id": "D-079",
+      "title": "Bundle-generation identity is distinct from immutable capture origin",
+      "status": "active",
+      "source": "governance/decisions/D-079-bundle-generation-vs-capture-origin.md"
     }
   ],
   "rules": {
