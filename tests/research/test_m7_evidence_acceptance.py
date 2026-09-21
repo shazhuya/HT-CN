@@ -309,7 +309,7 @@ def test_acceptance_allows_no_qfq_report_for_verified_idempotent_noop(
     tmp_path: Path,
 ) -> None:
     path = tmp_path / "noop.zip"
-    transaction_id, _ = _write_acceptance_bundle(path)
+    _transaction_id, _ = _write_acceptance_bundle(path)
     with zipfile.ZipFile(path, "r") as source:
         payloads = {
             name: source.read(name)
