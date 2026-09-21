@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 import pandas as pd
 
 from scripts.m4_prepare_qfq_universe import (
@@ -278,12 +280,15 @@ def _five_real_1991_saturday_fixture() -> tuple[pd.DataFrame, pd.DataFrame]:
         "1991-11-23",
     ])
     early_dates: list[pd.Timestamp] = []
-    for stamp in gap_dates:
-        early_dates.extend([
-            stamp - pd.Timedelta(days=1),
-            stamp,
-            stamp + pd.Timedelta(days=2),
-        ])
+    pre_gap_dates: set[pd.Timestamp] = set()
+    post_gap_dates: set[pd.Timestamp] = set()
+    for value in gap_dates:
+        stamp = pd.Timestamp(value)
+        previous = stamp - timedelta(days=1)
+        following = stamp + timedelta(days=2)
+        early_dates.extend([previous, stamp, following])
+        pre_gap_dates.add(previous)
+        post_gap_dates.add(following)
     recent_dates = list(pd.bdate_range("2024-01-02", periods=430))
     dates = pd.DatetimeIndex(sorted(set(early_dates + recent_dates)))
     raw = pd.DataFrame({
@@ -296,14 +301,19 @@ def _five_real_1991_saturday_fixture() -> tuple[pd.DataFrame, pd.DataFrame]:
         "volume": [1000.0] * len(dates),
     })
 
-    adjusted = raw.copy()
-    adjusted["open"] = 12.0
-    adjusted["high"] = 12.6
-    adjusted["low"] = 11.4
-    adjusted["close"] = 12.0
-    adjusted = adjusted.loc[
-        ~adjusted["trade_date"].isin(gap_dates)
-    ].reset_index(drop=True)
+    adjusted = raw.loc[
+        ~raw["trade_date"].isin(gap_dates)
+    ].copy()
+    adjusted_factor = adjusted["trade_date"].map(
+        lambda stamp: (
+            1.0
+            if pd.Timestamp(stamp) in pre_gap_dates
+            else 1.2
+        )
+    )
+    for column in ("open", "high", "low", "close"):
+        adjusted[column] = adjusted[column] * adjusted_factor
+    adjusted = adjusted.reset_index(drop=True)
     return raw, adjusted
 
 
