@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "active": "M7",
+  "active": "M9",
   "milestones": [
     {
       "id": "M0",
@@ -180,12 +180,12 @@
     {
       "id": "M9",
       "title": "Stable Research/Product Release",
-      "status": "planned_productization_mainline",
+      "status": "productization_active",
       "phases": [
         {
           "id": "M9.0",
           "title": "Product Completion Policy & Roadmap",
-          "status": "planned",
+          "status": "implementing",
           "exit_gate": [
             "Blueprint explicitly separates M9 product completion from M7/M8 evidence and calibration tracks",
             "machine-readable Product Completion Policy is mandatory in Project OS and portable continuation bundles",

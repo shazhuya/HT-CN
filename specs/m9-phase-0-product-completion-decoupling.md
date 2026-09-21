@@ -1,6 +1,6 @@
 # M9.0 — Product Completion Policy & Roadmap
 
-status: planned
+status: implementing
 
 ## 1. Permanent track separation
 
