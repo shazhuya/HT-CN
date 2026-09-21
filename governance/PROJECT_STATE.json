@@ -26,15 +26,15 @@
     "status": "implementing",
     "active_change": "CR-0078",
     "active_spec": "specs/m9-phase-0-product-completion-decoupling.md",
-    "latest_attempt_id": "A-20260921-0078-002",
-    "latest_hosted_validation_attempt_id": "A-20260921-0078-002",
+    "latest_attempt_id": "A-20260921-0078-003",
+    "latest_hosted_validation_attempt_id": "A-20260921-0078-003",
     "work_branch": "m9/product-completion-decoupling-roadmap-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35616931839,
-      "run_number": 2472,
+      "workflow_run": 35617127646,
+      "run_number": 2473,
       "event": "push",
-      "head": "ef31dc5b1ad26e141eea41ec02f3e0e5d8cfd7f6",
+      "head": "d74d81788929eb13d109845337d6e36211638bd8",
       "python_passed": 931,
       "warnings": 0,
       "ruff_observed": 0,
@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "M9.0 planned-policy candidate passed Project OS, Source Coverage, Ruff 0/0, 931 Python tests / 0 warnings, portable continuation-bundle verification and Web build. Product-completion policy guards and handoff tests passed; PR-only browser/Phase18/Phase21 and immutable 37/4 freeze gates remain pending."
+      "scope": "Activated M9.0 state passed Project OS, Source Coverage, Ruff 0/0, 931 Python tests / 0 warnings, continuation-bundle verification and Web build. MILESTONES.active=M9 and productization policy enforcement are green; PR-only release gates remain pending."
     }
   },
   "private_m1": {
