@@ -78,7 +78,7 @@ def test_capture_wrapper_runs_strict_qfq_readiness_before_capture() -> None:
     assert 'if not "!QFQ_EXIT!"=="0" set "FINAL_EXIT=1"' in text
     assert "m4-qfq-readiness.json" in text
     assert "m4-qfq-readiness.log" in text
-    assert "M1/QFQ readiness did not pass" in text
+    assert "precheck/QFQ did not authorize a new authoritative capture" in text
 
 
 def test_capture_wrapper_streams_qfq_progress_live() -> None:
