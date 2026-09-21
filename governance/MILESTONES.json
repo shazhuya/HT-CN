@@ -119,7 +119,7 @@
         {
           "id": "M7.3",
           "title": "Provider-Derived Legacy QFQ Gap Execution Repair",
-          "status": "ready_to_merge",
+          "status": "closed",
           "exit_gate": [
             "second real M7 failure is preserved in Attempt Ledger",
             "D-077 legacy bridge is evaluated before optional pre_close continuity",

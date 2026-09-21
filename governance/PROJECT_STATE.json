@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.3-READY-TO-MERGE",
+  "state_id": "HTCN-M7.3-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
     "milestone": "M7",
     "phase": "M7.3",
     "title": "Provider-Derived Legacy QFQ Gap Execution Repair",
-    "status": "ready_to_merge",
-    "active_change": "CR-0074",
-    "active_spec": "specs/m7-phase-3-provider-derived-legacy-qfq-gap-repair.md",
-    "latest_attempt_id": "A-20260921-0074-005",
-    "latest_hosted_validation_attempt_id": "A-20260921-0074-005",
-    "work_branch": "m7/provider-derived-legacy-gap-repair-v2",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260921-0074-006",
+    "latest_hosted_validation_attempt_id": "A-20260921-0074-006",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35560226381,
-      "run_number": 2432,
-      "event": "pull_request",
-      "head": "7cf7fe5a5dda09d813c94f9c2e02be33b1319750",
+      "workflow_run": 35560601018,
+      "run_number": 2435,
+      "event": "push",
+      "head": "7d5fe642c3076a25076ef00c1d96ac7a07e8d079",
       "pr": 62,
       "python_passed": 908,
       "warnings": 0,
@@ -48,14 +48,16 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10622410362,
-      "artifact_digest": "sha256:705e162390edfe02a2d65f81aa7dafedf47eae23ea2e2896722173efe5dc7cfe",
-      "scope": "PR #62 candidate passed Project OS, Source Coverage, Ruff 0/0, 908 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
+      "artifact_id": 10621454177,
+      "artifact_digest": "sha256:1502717f6febc440dd8c1350588ac43fd2e5b938e9d62f306af6bcacc1e99d4d",
+      "continuation_artifact_id": 10621808409,
+      "continuation_artifact_digest": "sha256:93a9d207bc8662199f667b7106ea03aba1c9c32fb8696ba24bd94ee777ce474e",
+      "scope": "PR #62 merged to canonical main as 7d5fe642c3076a25076ef00c1d96ac7a07e8d079. Main #2435 passed Project OS, Source Coverage, Ruff 0/0, 908 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
     "current_market_full_closeout_ready": true,
-    "next_gate": "m7_first_canonical_main_prospective_append_retry",
+    "next_gate": "m7_first_canonical_main_prospective_append_retry_v2",
     "one_action_entry": "运行M7前瞻证据积累.bat",
     "expected_evidence": "artifacts/reports/m4-evidence-bundle.zip",
     "accepted_evidence_receipt": "governance/acceptance/M6.2-private-m1-evidence-acceptance.json",
@@ -63,12 +65,11 @@
     "expected_status_report": "artifacts/reports/m7-accumulation-status.json"
   },
   "next_major_task": {
-    "phase": "M7.3",
-    "title": "Merge validated provider-derived legacy QFQ repair",
-    "status": "ready_to_merge",
-    "blocked_until": [
-      "exact ledger-bearing PR head remains fully green"
-    ]
+    "phase": "M7",
+    "title": "Retry First Canonical-Main Prospective Evidence Append After M7.3",
+    "status": "awaiting_private_run",
+    "blocked_until": [],
+    "one_action_entry": "运行M7前瞻证据积累.bat"
   },
   "freezes": {
     "m4_capture_methodology": {

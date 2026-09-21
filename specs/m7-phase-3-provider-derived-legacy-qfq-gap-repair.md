@@ -1,6 +1,6 @@
 # M7.3 — Provider-Derived Legacy QFQ Gap Execution Repair
 
-status: ready_to_merge
+status: closed
 
 ## 1. Real failure evidence
 

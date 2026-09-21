@@ -1,6 +1,6 @@
 # CR-0074 — M7.3 Provider-Derived Legacy QFQ Gap Execution Repair
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 882f94581819966cf6d0816454b8e6c5897523ee
@@ -38,3 +38,7 @@ Inside the frozen 420-bar formal window, a no-`pre_close` gap remains fail-close
 ## Acceptance
 
 See `specs/m7-phase-3-provider-derived-legacy-qfq-gap-repair.md`.
+
+## Closeout
+
+Merged through PR #62 as `7d5fe642c3076a25076ef00c1d96ac7a07e8d079`. Canonical main workflow `35560601018` / `#2435` passed deterministic and formal release-integrity gates, including the immutable 37/4 freeze guards. ISSUE-0069 remains open until the repaired real Private-M1 M7 rerun is independently accepted.

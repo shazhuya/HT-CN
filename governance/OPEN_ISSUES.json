@@ -72,7 +72,7 @@
         "M7 statistical conclusions"
       ],
       "next_action": "Run 运行M7前瞻证据积累.bat from a clean local main exactly equal to freshly fetched origin/main after the next closed A-share session. Continue frozen prospective accumulation; do not infer win rate, alpha or profitability early.",
-      "current_fact": "M7.1 control plane and M7.2 first-append resilience repair are integrated. Canonical main 2963ce0 passed #2425 with Project OS, Source Coverage, Ruff 0/0, 906 Python tests / 0 warnings, Web, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4. The repaired first private prospective append is still pending."
+      "current_fact": "M7.1 control plane, M7.2 resilience repair and M7.3 provider-derived legacy-gap execution repair are integrated. Canonical main 7d5fe642 passed #2435 with Project OS, Source Coverage, Ruff 0/0, 908 Python tests / 0 warnings, Web, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4. The first accepted prospective capture is still pending."
     },
     {
       "id": "ISSUE-0067",
@@ -106,8 +106,8 @@
       "blocks": [
         "M7 first append"
       ],
-      "next_action": "Validate CR-0074, merge only if all frozen gates remain green, then rerun the M7 BAT on clean canonical main.",
-      "current_fact": "Second real run on 882f945 again reached QFQ 54/55. SZSE.000001 failed on the same five 1991 Saturdays. Root cause: the D-077 legacy bridge was placed after an early pre_close-presence guard, so raw histories without pre_close skipped the bridge before it could run. Stale-report contamination is fixed."
+      "next_action": "Sync a clean local main to the new canonical head, rerun 运行M7前瞻证据积累.bat, and independently verify the resulting evidence bundle before closing this issue.",
+      "current_fact": "CR-0074/M7.3 is integrated and canonical main 7d5fe642 passed #2435 with 908 tests, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4. The exact five-date provider regression is green, but production/private-M1 acceptance is still pending."
     }
   ]
 }
