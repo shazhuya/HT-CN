@@ -292,9 +292,47 @@ def audit_evidence_bundle(
                     != latest_capture.get("transaction_id")
                 ):
                     blockers.append("bundle_latest_transaction_id_drift")
-                if manifest.get("code_head") != latest_capture.get("code_head"):
-                    blockers.append("bundle_code_head_differs_from_latest_capture")
-                if manifest.get("worktree_clean") is not True:
+
+                capture_head = str(latest_capture.get("code_head") or "")
+                explicit_capture_head = manifest.get("latest_capture_code_head")
+                if explicit_capture_head is None:
+                    # Backward compatibility for pre-M7.5 bundles: code_head
+                    # historically doubled as both bundle-generation identity
+                    # and latest-capture identity.
+                    if manifest.get("code_head") != capture_head:
+                        blockers.append(
+                            "bundle_code_head_differs_from_latest_capture"
+                        )
+                else:
+                    if str(explicit_capture_head) != capture_head:
+                        blockers.append("bundle_latest_capture_code_head_drift")
+                    generation_head = str(
+                        manifest.get("bundle_generation_code_head")
+                        or manifest.get("code_head")
+                        or ""
+                    )
+                    if generation_head and generation_head != capture_head:
+                        warnings.append(
+                            "bundle_generated_after_latest_capture"
+                        )
+
+                capture_clean = latest_capture.get("worktree_clean")
+                if capture_clean is not True:
+                    blockers.append("latest_capture_worktree_not_clean")
+                explicit_capture_clean = manifest.get(
+                    "latest_capture_worktree_clean"
+                )
+                if (
+                    explicit_capture_clean is not None
+                    and explicit_capture_clean is not capture_clean
+                ):
+                    blockers.append("bundle_latest_capture_worktree_drift")
+
+                generation_clean = manifest.get(
+                    "bundle_generation_worktree_clean",
+                    manifest.get("worktree_clean"),
+                )
+                if generation_clean is not True:
                     blockers.append("bundle_worktree_not_clean")
 
             health = _json_member(archive, "reports/m4-evidence-health.json")
@@ -762,6 +800,15 @@ def audit_evidence_bundle(
                     None
                     if not committed
                     else committed[-1].get("transaction_id")
+                ),
+                "bundle_generation_code_head": (
+                    manifest.get("bundle_generation_code_head")
+                    or manifest.get("code_head")
+                ),
+                "latest_capture_code_head": (
+                    None
+                    if not committed
+                    else committed[-1].get("code_head")
                 ),
                 "chain_methodology_contract_version": chain_methodology_version,
                 "chain_methodology_fingerprint": chain_methodology_fingerprint,

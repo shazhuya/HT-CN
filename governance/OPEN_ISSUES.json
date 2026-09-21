@@ -108,6 +108,18 @@
       "current_fact": "Accepted bundle on canonical main c822de2e committed the 2026-09-21 prospective capture: QFQ 55/55, 55/55 instruments captured, transaction 9964d49a9147b404cedb4f2f, health=ready/blockers=0, 14 prospective observations and a committed 14-result Outcome v2 snapshot.",
       "resolution": "Closed by A-20260921-0075-006. Evidence ZIP SHA-256 41ea62c21711858c61a43c98aa6959aaf5185773857f8d45ce995939713dc77b; all 19 manifest-listed member hashes verified; methodology 37/37 and Outcome Engine 4/4 stayed frozen; authoritative capture and outcome snapshot were committed.",
       "closed_in": "A-20260921-0075-006"
+    },
+    {
+      "id": "ISSUE-0070",
+      "severity": "medium",
+      "type": "operational_evidence",
+      "status": "open",
+      "title": "M7 bundle acceptance is manual and conflates bundle-generation head with capture origin",
+      "blocks": [
+        "M7.5"
+      ],
+      "next_action": "Validate CR-0076: separate transport-generation identity from immutable capture identity and add read-only automated acceptance/idempotency audit.",
+      "current_fact": "m4-evidence-bundle(8).zip was a same-day rerun on main 094ca01d with exactly one committed 2026-09-21 capture, unchanged transaction 9964d49a9147b404cedb4f2f and unchanged outcome snapshot c348edab37a43eaaf7679299. This proves authoritative idempotency, but pre-M7.5 evidence_intake would falsely block because bundle code_head 094ca01d differs from immutable capture origin c822de2e."
     }
   ]
 }

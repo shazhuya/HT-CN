@@ -142,6 +142,19 @@
             "M4 methodology remains frozen_match_37 and Outcome Engine remains frozen_match_4",
             "canonical main is green before another private M7 rerun"
           ]
+        },
+        {
+          "id": "M7.5",
+          "title": "Evidence Acceptance and Idempotent Rerun Contract",
+          "status": "planned",
+          "exit_gate": [
+            "bundle-generation identity is separated from immutable latest-capture identity",
+            "new M7 acceptance audit classifies new_capture/idempotent_rerun/not_ready without mutating authoritative evidence",
+            "same-date same-transaction reruns are accepted as idempotent",
+            "same-date different-transaction or capture-chain regression fails closed",
+            "freeze/QFQ/intake gates remain mandatory and ISSUE-0066 inference boundary remains false",
+            "full hosted tests and immutable 37/4 freeze guards remain green"
+          ]
         }
       ]
     },
