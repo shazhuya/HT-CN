@@ -4,8 +4,9 @@ import json
 import zipfile
 from dataclasses import asdict, dataclass
 from hashlib import sha256
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .evidence_intake import audit_evidence_bundle
 
@@ -50,7 +51,7 @@ def _json_member(
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError(f"invalid JSON bundle member: {name}") from exc
     if not isinstance(value, dict):
-        raise ValueError(f"bundle JSON member is not an object: {name}")
+        raise TypeError(f"bundle JSON member is not an object: {name}")
     return value
 
 

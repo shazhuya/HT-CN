@@ -13,7 +13,7 @@ def _read_receipt(path: str | None) -> dict | None:
         return None
     value = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(value, dict):
-        raise ValueError("previous receipt must be a JSON object")
+        raise TypeError("previous receipt must be a JSON object")
     return value
 
 
