@@ -26,15 +26,15 @@
     "status": "implementing",
     "active_change": "CR-0077",
     "active_spec": "specs/m7-phase-6-daily-append-precheck-self-contained-handoff.md",
-    "latest_attempt_id": "A-20260921-0077-005",
-    "latest_hosted_validation_attempt_id": "A-20260921-0077-005",
+    "latest_attempt_id": "A-20260921-0077-006",
+    "latest_hosted_validation_attempt_id": "A-20260921-0077-006",
     "work_branch": "m7/daily-append-precheck-self-contained-handoff-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35593569052,
-      "run_number": 2461,
+      "workflow_run": 35593715774,
+      "run_number": 2462,
       "event": "push",
-      "head": "ed0ec346d18164683c6784f07ab35d59889d2027",
+      "head": "30a565b16e4c1a0c0c386d666e97504941a5c20f",
       "python_passed": 926,
       "warnings": 0,
       "ruff_observed": 0,
@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "M7.6 branch candidate passed Project OS, Source Coverage, Ruff 0/0, 926 Python tests / 0 warnings, continuation-bundle verification and Web build. Precheck/no-op/self-contained handoff regressions passed. PR-only browser/Phase18/Phase21 and immutable freeze guards remain pending."
+      "scope": "Activated M7.6 state passed Project OS, Source Coverage, Ruff 0/0, 926 Python tests / 0 warnings, continuation-bundle verification and Web build. Formal PR-only browser/Phase18/Phase21 and immutable 37/4 freeze gates remain pending."
     }
   },
   "private_m1": {
