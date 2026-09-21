@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import json
 import zipfile
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from hashlib import sha256
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
