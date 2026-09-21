@@ -1,6 +1,6 @@
 # CR-0075 — M7.4 Post-Five-Day Weekend QFQ Calendar Anomaly Repair
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: c1be51ef099c11bb5addbb9e501fc195fad433e4

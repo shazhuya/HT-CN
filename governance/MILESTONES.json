@@ -132,7 +132,7 @@
         {
           "id": "M7.4",
           "title": "Post-Five-Day Weekend QFQ Calendar Anomaly Repair",
-          "status": "implementing",
+          "status": "ready_to_merge",
           "exit_gate": [
             "third real M7 failure is preserved in Attempt Ledger with evidence-bundle identity",
             "post-1992 weekend raw rows are classified by the documented SZSE five-day trading rule, not by ad-hoc date allowlists",

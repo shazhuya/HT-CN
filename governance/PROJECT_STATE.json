@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.4-IMPLEMENTING",
+  "state_id": "HTCN-M7.4-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,29 +23,34 @@
     "milestone": "M7",
     "phase": "M7.4",
     "title": "Post-Five-Day Weekend QFQ Calendar Anomaly Repair",
-    "status": "implementing",
+    "status": "ready_to_merge",
     "active_change": "CR-0075",
     "active_spec": "specs/m7-phase-4-post-five-day-weekend-qfq-anomaly.md",
-    "latest_attempt_id": "A-20260921-0075-002",
-    "latest_hosted_validation_attempt_id": "A-20260921-0075-002",
+    "latest_attempt_id": "A-20260921-0075-004",
+    "latest_hosted_validation_attempt_id": "A-20260921-0075-004",
     "work_branch": "m7/post-five-day-weekend-qfq-anomaly-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35573418581,
-      "run_number": 2438,
-      "event": "push",
-      "head": "feb27c2db87a33f61418acd9238cfc38e742d969",
+      "workflow_run": 35573641931,
+      "run_number": 2440,
+      "event": "pull_request",
+      "head": "647790ed3d2c0d16f64f674483e699e4d8e8f270",
+      "pr": 63,
       "python_passed": 910,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
-      "web_build": "success",
-      "formal_main_release_integrity": "pending_pr",
-      "m4_methodology": "pending_pr",
-      "outcome_engine": "pending_pr",
-      "scope": "M7.4 branch candidate passed Project OS, Source Coverage, Ruff 0/0, 910 Python tests / 0 warnings, continuation-bundle self-verification and Web build. Exact post-five-day weekend anomaly and inside-window fail-closed regressions passed."
+      "formal_main_release_integrity": "success",
+      "existing_playwright_passed": 25,
+      "phase18": "valid",
+      "phase21": "valid",
+      "m4_methodology": "frozen_match_37",
+      "outcome_engine": "frozen_match_4",
+      "artifact_id": 10626658249,
+      "artifact_digest": "sha256:9da3b71ee4eb3e78a68315a536b3404439094947d12e90378fe3b94525234c4b",
+      "scope": "PR #63 candidate passed Project OS, Source Coverage, Ruff 0/0, 910 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -59,13 +64,10 @@
   },
   "next_major_task": {
     "phase": "M7.4",
-    "title": "Formal PR validation of post-five-day weekend QFQ anomaly repair",
-    "status": "implementing",
+    "title": "Merge validated post-five-day weekend QFQ anomaly repair",
+    "status": "ready_to_merge",
     "blocked_until": [
-      "PR browser/Phase18/Phase21 gates",
-      "M4 methodology frozen_match_37",
-      "Outcome Engine frozen_match_4",
-      "canonical main post-merge validation"
+      "exact ledger-bearing PR head remains fully green"
     ]
   },
   "freezes": {
