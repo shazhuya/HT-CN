@@ -30,7 +30,7 @@ SAFE_INTERNAL_GAP_MAX_RELATIVE_FACTOR_DRIFT = 0.005
 SAFE_HISTORICAL_SATURDAY_FACTOR_DRIFT = 0.05
 SAFE_RAW_PRECLOSE_CONTINUITY_DRIFT = 0.01
 FORMAL_CAPTURE_ANALYSIS_BARS = 420
-LEGACY_CALENDAR_BRIDGE_MAX_YEAR = 1992
+SZSE_FIVE_DAY_WEEK_START = date(1992, 1, 1)
 
 
 def parse_args() -> argparse.Namespace:
@@ -88,11 +88,13 @@ def _repair_safe_internal_factor_gaps(
       - the bracketing factor levels differ by <= 0.5%.
 
     Leading gaps, trailing gaps, and ordinary factor-regime jumps remain
-    fail-closed. One narrow legacy-calendar bridge is allowed for early A-share
-    Saturday sessions only when the whole gap is strictly outside the frozen
-    420-bar formal prospective-capture window. Those synthetic rows can never
-    enter the current formal harmonic analysis; every bridge remains audited.
-    Trailing freshness remains owned by qfq_carry_forward.
+    fail-closed. Narrow legacy-calendar bridges are allowed only when the whole
+    gap is strictly outside the frozen 420-bar formal prospective-capture
+    window: pre-1992 Saturday sessions may be genuine early-market sessions,
+    while weekend rows on/after the SZSE five-day-week start are treated as
+    legacy raw-calendar anomalies. Those synthetic rows can never enter the
+    current formal harmonic analysis; every bridge remains audited. Trailing
+    freshness remains owned by qfq_carry_forward.
     """
     if raw.empty or factors.empty:
         return factors.copy(), []
@@ -180,32 +182,43 @@ def _repair_safe_internal_factor_gaps(
         allowed_factor_drift = SAFE_INTERNAL_GAP_MAX_RELATIVE_FACTOR_DRIFT
 
         if relative_drift > allowed_factor_drift:
-            # Early A-share raw histories can contain real Saturday sessions
-            # that adjusted-history providers omit. The explicit M7 legacy
-            # bridge is evaluated *before* any optional pre_close continuity
-            # check because D-077 deliberately permits these sessions when the
-            # whole gap is outside the frozen 420-bar formal capture window.
+            # D-077/D-078 calendar bridges are evaluated before optional raw
+            # pre_close continuity. Pre-1992 Saturdays can be genuine early
+            # A-share sessions. From 1992-01-01 SZSE had a five-day trading
+            # week, so weekend raw rows from that point forward are legacy
+            # calendar anomalies rather than formal trading sessions.
             historical_saturday_run = all(
-                stamp.weekday() == 5 and stamp.year <= 1992
+                stamp.weekday() == 5
+                and stamp.date() < SZSE_FIVE_DAY_WEEK_START
+                for stamp in run
+            )
+            post_five_day_weekend_anomaly_run = all(
+                stamp.weekday() >= 5
+                and stamp.date() >= SZSE_FIVE_DAY_WEEK_START
                 for stamp in run
             )
             formal_window_start_position = max(
                 0,
                 len(raw_order) - FORMAL_CAPTURE_ANALYSIS_BARS,
             )
-            legacy_bridge_allowed = (
-                historical_saturday_run
-                and max(stamp.year for stamp in run)
-                <= LEGACY_CALENDAR_BRIDGE_MAX_YEAR
-                and last_position < formal_window_start_position
+            outside_formal_window = (
+                last_position < formal_window_start_position
             )
-            if legacy_bridge_allowed:
+            if historical_saturday_run and outside_formal_window:
                 fill_rule = "legacy_saturday_outside_formal_capture_window"
+                allowed_factor_drift = None
+            elif (
+                post_five_day_weekend_anomaly_run
+                and outside_formal_window
+            ):
+                fill_rule = (
+                    "legacy_nontrading_weekend_outside_formal_capture_window"
+                )
                 allowed_factor_drift = None
             else:
                 # Inside the formal capture window there is no legacy escape.
-                # Historical Saturday holes may still be repaired only with
-                # explicit raw pre-close continuity evidence.
+                # Only genuine pre-1992 Saturday holes may use raw pre-close
+                # continuity; post-five-day weekend anomalies remain blocked.
                 if not historical_saturday_run or "pre_close" not in raw.columns:
                     continue
 
@@ -446,9 +459,10 @@ def run(
             "Formal M4 prospective capture requires qfq/qfq_carry_forward "
             "for every initialized listed SSE/SZSE instrument. Existing formal "
             "views are reused; only missing or historically broken factor "
-            "histories are fetched. Audited early-Saturday provider-calendar "
-            "holes may be bridged only outside the frozen 420-bar capture "
-            "window. Raw OHLCV remains durable truth."
+            "histories are fetched. Audited pre-1992 Saturday holes and "
+            "post-five-day non-trading weekend raw-calendar anomalies may be "
+            "bridged only outside the frozen 420-bar capture window. Raw "
+            "OHLCV remains durable truth."
         ),
         "initialized_instruments": 0,
         "already_formal_ready": 0,

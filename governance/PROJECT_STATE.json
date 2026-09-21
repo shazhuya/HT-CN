@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.3-CLOSED",
+  "state_id": "HTCN-M7.4-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,22 +21,22 @@
   },
   "current": {
     "milestone": "M7",
-    "phase": "M7.3",
-    "title": "Provider-Derived Legacy QFQ Gap Execution Repair",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260921-0074-006",
-    "latest_hosted_validation_attempt_id": "A-20260921-0074-006",
-    "work_branch": null,
+    "phase": "M7.4",
+    "title": "Post-Five-Day Weekend QFQ Calendar Anomaly Repair",
+    "status": "ready_to_merge",
+    "active_change": "CR-0075",
+    "active_spec": "specs/m7-phase-4-post-five-day-weekend-qfq-anomaly.md",
+    "latest_attempt_id": "A-20260921-0075-004",
+    "latest_hosted_validation_attempt_id": "A-20260921-0075-004",
+    "work_branch": "m7/post-five-day-weekend-qfq-anomaly-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35560601018,
-      "run_number": 2435,
-      "event": "push",
-      "head": "7d5fe642c3076a25076ef00c1d96ac7a07e8d079",
-      "pr": 62,
-      "python_passed": 908,
+      "workflow_run": 35573641931,
+      "run_number": 2440,
+      "event": "pull_request",
+      "head": "647790ed3d2c0d16f64f674483e699e4d8e8f270",
+      "pr": 63,
+      "python_passed": 910,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
@@ -48,11 +48,9 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10621454177,
-      "artifact_digest": "sha256:1502717f6febc440dd8c1350588ac43fd2e5b938e9d62f306af6bcacc1e99d4d",
-      "continuation_artifact_id": 10621808409,
-      "continuation_artifact_digest": "sha256:93a9d207bc8662199f667b7106ea03aba1c9c32fb8696ba24bd94ee777ce474e",
-      "scope": "PR #62 merged to canonical main as 7d5fe642c3076a25076ef00c1d96ac7a07e8d079. Main #2435 passed Project OS, Source Coverage, Ruff 0/0, 908 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
+      "artifact_id": 10626658249,
+      "artifact_digest": "sha256:9da3b71ee4eb3e78a68315a536b3404439094947d12e90378fe3b94525234c4b",
+      "scope": "PR #63 candidate passed Project OS, Source Coverage, Ruff 0/0, 910 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -65,11 +63,12 @@
     "expected_status_report": "artifacts/reports/m7-accumulation-status.json"
   },
   "next_major_task": {
-    "phase": "M7",
-    "title": "Retry First Canonical-Main Prospective Evidence Append After M7.3",
-    "status": "awaiting_private_run",
-    "blocked_until": [],
-    "one_action_entry": "运行M7前瞻证据积累.bat"
+    "phase": "M7.4",
+    "title": "Merge validated post-five-day weekend QFQ anomaly repair",
+    "status": "ready_to_merge",
+    "blocked_until": [
+      "exact ledger-bearing PR head remains fully green"
+    ]
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -94,6 +93,7 @@
     }
   },
   "required_specs": [
+    "specs/m7-phase-4-post-five-day-weekend-qfq-anomaly.md",
     "specs/m7-phase-3-provider-derived-legacy-qfq-gap-repair.md",
     "specs/m7-phase-2-private-m1-evidence-append-resilience.md",
     "specs/m7-phase-1-prospective-evidence-accumulation.md",
