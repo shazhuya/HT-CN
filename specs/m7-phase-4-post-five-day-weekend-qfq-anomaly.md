@@ -1,6 +1,6 @@
 # M7.4 — Post-Five-Day Weekend QFQ Calendar Anomaly Repair
 
-status: ready_to_merge
+status: closed
 
 ## 1. Real evidence
 

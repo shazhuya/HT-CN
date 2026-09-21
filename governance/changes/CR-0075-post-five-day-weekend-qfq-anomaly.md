@@ -1,6 +1,6 @@
 # CR-0075 — M7.4 Post-Five-Day Weekend QFQ Calendar Anomaly Repair
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: c1be51ef099c11bb5addbb9e501fc195fad433e4
@@ -34,3 +34,7 @@ Implement D-078:
 ## Acceptance
 
 See `specs/m7-phase-4-post-five-day-weekend-qfq-anomaly.md`.
+
+## Closeout
+
+Final ledger-bearing PR #63 run `35573875292` / `#2442` passed full release gates. PR #63 then merged with ancestry preserved as `aa87595c62200a578b4faefcc44df3480c111943`; canonical main workflow `35574094019` / `#2443` passed Project OS, Source Coverage, Ruff 0/0, 910 Python tests / 0 warnings, Web, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4. ISSUE-0069 remains open until the repaired real Private-M1 M7 rerun is independently accepted.

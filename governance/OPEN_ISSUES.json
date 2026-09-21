@@ -72,7 +72,7 @@
         "M7 statistical conclusions"
       ],
       "next_action": "Run 运行M7前瞻证据积累.bat from a clean local main exactly equal to freshly fetched origin/main after the next closed A-share session. Continue frozen prospective accumulation; do not infer win rate, alpha or profitability early.",
-      "current_fact": "M7.1 control plane, M7.2 resilience repair and M7.3 provider-derived legacy-gap execution repair are integrated. Canonical main 7d5fe642 passed #2435 with Project OS, Source Coverage, Ruff 0/0, 908 Python tests / 0 warnings, Web, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4. The first accepted prospective capture is still pending."
+      "current_fact": "M7.1 through M7.4 are integrated. Canonical main aa87595c passed #2443 with Project OS, Source Coverage, Ruff 0/0, 910 Python tests / 0 warnings, Web, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4. The first accepted prospective capture is still pending."
     },
     {
       "id": "ISSUE-0067",
@@ -106,8 +106,8 @@
       "blocks": [
         "M7 first append"
       ],
-      "next_action": "Validate CR-0075/M7.4. Keep raw OHLCV immutable; bridge only audited post-five-day weekend calendar anomalies strictly outside the frozen 420-bar formal window, then rerun the M7 BAT only after canonical main is fully green.",
-      "current_fact": "Third real run on canonical main c1be51e passed immutable guards and M1 but QFQ remained 54/55. M7.3 cleared the five 1991 Saturday gaps; the next BaoStock failure is historical_factor_gap:1992-02-01,1992-02-02,1993-01-03. SZSE's official chronology states the exchange adopted a five-day trading week from 1992-01-01, so these weekend raw rows are legacy calendar anomalies rather than formal sessions."
+      "next_action": "Sync a clean local main to the current canonical head, rerun 运行M7前瞻证据积累.bat, and independently verify the resulting evidence bundle before closing this issue.",
+      "current_fact": "CR-0075/M7.4 is integrated. PR #63 final ledger-bearing run #2442 and canonical main aa87595c run #2443 both passed full gates with 910 Python tests / 0 warnings, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4. Exact post-five-day weekend anomaly regressions are green, but real Private-M1 production acceptance is still pending."
     }
   ]
 }
