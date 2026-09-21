@@ -185,7 +185,7 @@
         {
           "id": "M9.0",
           "title": "Product Completion Policy & Roadmap",
-          "status": "ready_to_merge",
+          "status": "closed",
           "exit_gate": [
             "Blueprint explicitly separates M9 product completion from M7/M8 evidence and calibration tracks",
             "machine-readable Product Completion Policy is mandatory in Project OS and portable continuation bundles",

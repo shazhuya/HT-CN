@@ -138,13 +138,13 @@
       "id": "ISSUE-0072",
       "severity": "high",
       "type": "product_governance",
-      "status": "open",
+      "status": "closed",
       "title": "Sequential M7->M8->M9 interpretation can turn evidence accumulation into endless manual product development",
-      "blocks": [
-        "M9.0"
-      ],
-      "next_action": "Validate and integrate CR-0078/D-081. Make M9 the development mainline, M7 a non-blocking background evidence track, M8 a claims-calibration track, and user-computer usage exceptional.",
-      "current_fact": "Blueprint v4 and PROJECT_STATE.next_major_task could be read as requiring indefinite daily M7 accumulation before productization, despite the first real evidence chain already being accepted. This risks treating the user's computer as routine evidence infrastructure instead of building an automated mature application."
+      "blocks": [],
+      "next_action": "None — D-081 and Product Completion Policy are integrated. Product development now proceeds on M9 while M7 continues in the background.",
+      "current_fact": "M9 is now the machine-enforced development mainline; M7 is background evidence; M8/ISSUE-0066 gate statistical claims only. AGENTS, CHAT_CONTINUATION, Resume Pack and continuation bundle all carry the same policy. Routine daily user-computer/Private-M1/ZIP operation is prohibited as project infrastructure.",
+      "resolution": "Closed by A-20260921-0078-005 after final PR #66 run #2477 and canonical main #2478 passed all release gates with 931 Python tests / 0 warnings, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4.",
+      "closed_in": "CR-0078"
     }
   ]
 }

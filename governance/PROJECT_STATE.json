@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9.0-IMPLEMENTING",
+  "state_id": "HTCN-M9.0-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,19 +23,21 @@
     "milestone": "M9",
     "phase": "M9.0",
     "title": "Product Completion Policy & Roadmap",
-    "status": "ready_to_merge",
-    "active_change": "CR-0078",
-    "active_spec": "specs/m9-phase-0-product-completion-decoupling.md",
-    "latest_attempt_id": "A-20260921-0078-004",
-    "latest_hosted_validation_attempt_id": "A-20260921-0078-004",
-    "work_branch": "m9/product-completion-decoupling-roadmap-v1",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260921-0078-005",
+    "latest_hosted_validation_attempt_id": "A-20260921-0078-005",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35617305396,
-      "run_number": 2475,
-      "event": "pull_request",
-      "head": "f048566931a356d02e08df892fcfa871d389c837",
+      "workflow_run": 35618067847,
+      "run_number": 2478,
+      "event": "push",
+      "head": "1ea2176b10ab33d4bf6f1d28703d70fa103c242d",
       "pr": 66,
+      "final_pr_workflow_run": 35617760948,
+      "final_pr_run_number": 2477,
       "python_passed": 931,
       "warnings": 0,
       "ruff_observed": 0,
@@ -48,9 +50,13 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10646890772,
-      "artifact_digest": "sha256:7252c89026ade571d04b2a09e8d9eec94da7e260ffb3d4b34e8da5b9d928d50c",
-      "scope": "PR #66 formal validation passed Project OS, Source Coverage, Ruff 0/0, 931 Python tests / 0 warnings, Web, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4. The M9/M7/M8 product-completion policy and handoff guards are validated."
+      "artifact_id": 10646986706,
+      "artifact_digest": "sha256:d03cb859693c6d395be6db0bc6806522dd45365e795f06889448afde6d91f6b4",
+      "continuation_artifact_id": 10647915814,
+      "continuation_artifact_digest": "sha256:de5127620a9dfdf044222f89d4da3484bf221b00f4c15e5589361acc625d7073",
+      "final_pr_artifact_id": 10647456283,
+      "final_pr_artifact_digest": "sha256:699a1329224c1c5b11de866843c869d89fb80e40abea1082c89a9e8fff6aa4cb",
+      "scope": "Final ledger-bearing PR #66 run #2477 passed all release gates. PR #66 merged with ancestry preserved as 1ea2176b10ab33d4bf6f1d28703d70fa103c242d; canonical main #2478 repeated Project OS, Source Coverage, Ruff 0/0, 931 Python tests / 0 warnings, Web, 25 browser tests, Phase18/21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -72,16 +78,16 @@
     "self_contained_handoff": true
   },
   "next_major_task": {
-    "phase": "M9.0",
-    "title": "Merge Product Completion Policy and Revalidate Canonical Main",
-    "status": "ready_to_merge",
-    "blocked_until": [
-      "final ledger-bearing PR validation",
-      "canonical main post-merge validation"
-    ],
+    "phase": "M9.1",
+    "title": "Automated Market Data & Scheduling Service",
+    "status": "ready_not_started",
+    "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
-    "inference_gate": "ISSUE-0066_claims_only"
+    "calibration_track": "M8",
+    "inference_gate": "ISSUE-0066_claims_only",
+    "user_computer_required": false,
+    "objective": "Automate market calendar, incremental A-share data, QFQ, provider failover/retry, scheduling and health so normal daily operation does not require BAT/PowerShell/ZIP handoff."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -147,7 +153,7 @@
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
-    "roadmap_activation": "active",
+    "roadmap_activation": "closed",
     "issue_0066_scope": "claims_only",
     "manual_daily_private_m1_required": false,
     "stable_release_blocked_by_issue_0066": false,

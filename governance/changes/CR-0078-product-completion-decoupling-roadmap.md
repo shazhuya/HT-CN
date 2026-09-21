@@ -1,6 +1,6 @@
 # CR-0078 — M9.0 Product Completion Decoupling and Automation Roadmap
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 87a59ecc0bc26cba65f4fdba116218745947b444
@@ -32,3 +32,7 @@ After M7.6 closeout, PROJECT_STATE still pointed the next major task at continuo
 ## Acceptance
 
 See `specs/m9-phase-0-product-completion-decoupling.md`.
+
+## Closeout
+
+Merged through PR #66 as `1ea2176b10ab33d4bf6f1d28703d70fa103c242d`. Final ledger-bearing PR workflow `35617760948` / `#2477` and canonical-main workflow `35618067847` / `#2478` both passed all deterministic and formal release gates. M9 is now the development mainline; M7 remains non-blocking background evidence; M8/ISSUE-0066 remain claims/calibration gates only. ISSUE-0072 is closed and next_major_task is M9.1 Automated Market Data & Scheduling Service.
