@@ -1,6 +1,6 @@
 # CR-0076 — M7.5 Evidence Acceptance and Idempotent Rerun Contract
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 094ca01de6170a7e76ba1fb948996c26ed8bc940

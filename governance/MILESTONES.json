@@ -146,7 +146,7 @@
         {
           "id": "M7.5",
           "title": "Evidence Acceptance and Idempotent Rerun Contract",
-          "status": "implementing",
+          "status": "ready_to_merge",
           "exit_gate": [
             "bundle-generation identity is separated from immutable latest-capture identity",
             "new M7 acceptance audit classifies new_capture/idempotent_rerun/not_ready without mutating authoritative evidence",

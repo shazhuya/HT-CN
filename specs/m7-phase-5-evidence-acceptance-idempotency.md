@@ -1,6 +1,6 @@
 # M7.5 — Evidence Acceptance and Idempotent Rerun Contract
 
-status: implementing
+status: ready_to_merge
 
 ## 1. Identity model
 

@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.5-IMPLEMENTING",
+  "state_id": "HTCN-M7.5-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,29 +23,34 @@
     "milestone": "M7",
     "phase": "M7.5",
     "title": "Evidence Acceptance and Idempotent Rerun Contract",
-    "status": "implementing",
+    "status": "ready_to_merge",
     "active_change": "CR-0076",
     "active_spec": "specs/m7-phase-5-evidence-acceptance-idempotency.md",
-    "latest_attempt_id": "A-20260921-0076-005",
-    "latest_hosted_validation_attempt_id": "A-20260921-0076-005",
+    "latest_attempt_id": "A-20260921-0076-006",
+    "latest_hosted_validation_attempt_id": "A-20260921-0076-006",
     "work_branch": "m7/evidence-acceptance-idempotency-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35590005778,
-      "run_number": 2450,
-      "event": "push",
-      "head": "2bc3990a47cd417e0468fb9810377cd197982f63",
+      "workflow_run": 35590259026,
+      "run_number": 2452,
+      "event": "pull_request",
+      "head": "82149a8e2e4eb6cfe57ab6cbef646e4b6f203501",
+      "pr": 64,
       "python_passed": 916,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
-      "web_build": "success",
-      "formal_main_release_integrity": "pending_pr",
-      "m4_methodology": "pending_pr",
-      "outcome_engine": "pending_pr",
-      "scope": "Activated M7.5 state passed Project OS, Source Coverage, Ruff 0/0, 916 Python tests / 0 warnings, continuation-bundle verification and Web build."
+      "formal_main_release_integrity": "success",
+      "existing_playwright_passed": 25,
+      "phase18": "valid",
+      "phase21": "valid",
+      "m4_methodology": "frozen_match_37",
+      "outcome_engine": "frozen_match_4",
+      "artifact_id": 10634431564,
+      "artifact_digest": "sha256:badbd559bf4259f4f7e2587fa52a11e03dbac98aefa42eb7ed13b3b93fce4cce",
+      "scope": "PR #64 candidate passed Project OS, Source Coverage, Ruff 0/0, 916 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -63,13 +68,10 @@
   },
   "next_major_task": {
     "phase": "M7.5",
-    "title": "Formal PR validation of evidence acceptance/idempotency contract",
-    "status": "implementing",
+    "title": "Merge validated evidence acceptance/idempotency contract",
+    "status": "ready_to_merge",
     "blocked_until": [
-      "PR browser/Phase18/Phase21 gates",
-      "M4 methodology frozen_match_37",
-      "Outcome Engine frozen_match_4",
-      "canonical main post-merge validation"
+      "exact ledger-bearing PR head remains fully green"
     ]
   },
   "freezes": {
