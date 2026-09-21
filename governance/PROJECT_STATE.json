@@ -26,7 +26,7 @@
     "status": "closed",
     "active_change": null,
     "active_spec": null,
-    "latest_attempt_id": "A-20260921-0075-005",
+    "latest_attempt_id": "A-20260921-0075-006",
     "latest_hosted_validation_attempt_id": "A-20260921-0075-005",
     "work_branch": null,
     "latest_validation": {
@@ -57,19 +57,24 @@
   },
   "private_m1": {
     "current_market_full_closeout_ready": true,
-    "next_gate": "m7_first_canonical_main_prospective_append_retry_v3",
+    "next_gate": "m7_continuous_prospective_accumulation",
     "one_action_entry": "运行M7前瞻证据积累.bat",
     "expected_evidence": "artifacts/reports/m4-evidence-bundle.zip",
     "accepted_evidence_receipt": "governance/acceptance/M6.2-private-m1-evidence-acceptance.json",
     "raw_private_m1_upload_required": false,
-    "expected_status_report": "artifacts/reports/m7-accumulation-status.json"
+    "expected_status_report": "artifacts/reports/m7-accumulation-status.json",
+    "m7_first_append_acceptance_receipt": "governance/acceptance/M7-first-prospective-capture-acceptance.json",
+    "latest_accepted_m7_capture_date": "2026-09-21",
+    "latest_accepted_m7_capture_transaction_id": "9964d49a9147b404cedb4f2f",
+    "latest_accepted_m7_evidence_bundle_sha256": "41ea62c21711858c61a43c98aa6959aaf5185773857f8d45ce995939713dc77b"
   },
   "next_major_task": {
     "phase": "M7",
-    "title": "Retry First Canonical-Main Prospective Evidence Append After M7.4",
-    "status": "awaiting_private_run",
+    "title": "Continue Frozen Prospective Evidence Accumulation",
+    "status": "active_evidence_accumulation",
     "blocked_until": [],
-    "one_action_entry": "运行M7前瞻证据积累.bat"
+    "one_action_entry": "运行M7前瞻证据积累.bat",
+    "inference_gate": "ISSUE-0066"
   },
   "freezes": {
     "m4_capture_methodology": {

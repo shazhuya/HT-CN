@@ -71,8 +71,8 @@
       "blocks": [
         "M7 statistical conclusions"
       ],
-      "next_action": "Run 运行M7前瞻证据积累.bat from a clean local main exactly equal to freshly fetched origin/main after the next closed A-share session. Continue frozen prospective accumulation; do not infer win rate, alpha or profitability early.",
-      "current_fact": "M7.1 through M7.4 are integrated. Canonical main aa87595c passed #2443 with Project OS, Source Coverage, Ruff 0/0, 910 Python tests / 0 warnings, Web, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4. The first accepted prospective capture is still pending."
+      "next_action": "Continue running 运行M7前瞻证据积累.bat from clean canonical main after each closed A-share session. Accumulate frozen prospective captures and outcome follow-up; do not infer win rate, alpha or profitability early.",
+      "current_fact": "The first real M7 prospective capture is accepted for 2026-09-21: one committed capture, 68 captured candidates, 14 prospective outcome-cohort candidates/observations, and one committed Outcome v2 snapshot with all 14 currently right_censored_ongoing. Statistical conclusions remain gated."
     },
     {
       "id": "ISSUE-0067",
@@ -101,13 +101,13 @@
       "id": "ISSUE-0069",
       "severity": "high",
       "type": "operational_evidence",
-      "status": "open",
+      "status": "closed",
       "title": "M7 first append resilience",
-      "blocks": [
-        "M7 first append"
-      ],
-      "next_action": "Sync a clean local main to the current canonical head, rerun 运行M7前瞻证据积累.bat, and independently verify the resulting evidence bundle before closing this issue.",
-      "current_fact": "CR-0075/M7.4 is integrated. PR #63 final ledger-bearing run #2442 and canonical main aa87595c run #2443 both passed full gates with 910 Python tests / 0 warnings, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4. Exact post-five-day weekend anomaly regressions are green, but real Private-M1 production acceptance is still pending."
+      "blocks": [],
+      "next_action": "None — the first real M7 prospective append was independently accepted. Continue normal frozen M7 accumulation under ISSUE-0066.",
+      "current_fact": "Accepted bundle on canonical main c822de2e committed the 2026-09-21 prospective capture: QFQ 55/55, 55/55 instruments captured, transaction 9964d49a9147b404cedb4f2f, health=ready/blockers=0, 14 prospective observations and a committed 14-result Outcome v2 snapshot.",
+      "resolution": "Closed by A-20260921-0075-006. Evidence ZIP SHA-256 41ea62c21711858c61a43c98aa6959aaf5185773857f8d45ce995939713dc77b; all 19 manifest-listed member hashes verified; methodology 37/37 and Outcome Engine 4/4 stayed frozen; authoritative capture and outcome snapshot were committed.",
+      "closed_in": "A-20260921-0075-006"
     }
   ]
 }

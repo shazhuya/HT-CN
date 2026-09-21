@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "phase": "M7",
+  "status": "accepted",
+  "accepted_date": "2026-09-21",
+  "logical_evidence_bundle_filename": "m4-evidence-bundle.zip",
+  "observed_upload_filename": "m4-evidence-bundle(7).zip",
+  "evidence_bundle_sha256": "41ea62c21711858c61a43c98aa6959aaf5185773857f8d45ce995939713dc77b",
+  "evidence_bundle_size_bytes": 63202,
+  "source_main_head": "c822de2e30dce8b8aeefda31c183bb69148e835d",
+  "worktree_clean": true,
+  "trade_date": "2026-09-21",
+  "independent_inspection": {
+    "zip_member_count": 20,
+    "manifest_member_count": 19,
+    "manifest_exact_for_listed_members": true,
+    "listed_member_hashes_valid": true,
+    "methodology_guard_status": "frozen_match",
+    "methodology_component_count": 37,
+    "outcome_engine_guard_status": "frozen_match",
+    "outcome_engine_component_count": 4,
+    "qfq_status": "formal_qfq_ready",
+    "initialized_instruments": 55,
+    "formal_qfq_ready_instruments": 55,
+    "qfq_failed_count": 0,
+    "capture_status": "committed",
+    "capture_transaction_id": "9964d49a9147b404cedb4f2f",
+    "capture_transaction_sha256": "05f17c4c529c73a6e3f6bf8fecba67f4d17c4df7d53cfdf355c6a93668da690d",
+    "capture_candidate_count": 68,
+    "capture_instrument_count": 55,
+    "capture_successful_instruments": 55,
+    "capture_failed_instruments": 0,
+    "evidence_health_status": "ready",
+    "evidence_health_blocker_count": 0,
+    "committed_capture_count": 1,
+    "committed_capture_dates": [
+      "2026-09-21"
+    ],
+    "mirror_status": "current",
+    "transition_status": "transitions_available",
+    "transition_count": 193,
+    "prospective_candidate_count": 14,
+    "observation_count": 14,
+    "outcome_status": "ready",
+    "outcome_snapshot_id": "c348edab37a43eaaf7679299",
+    "outcome_snapshot_sha256": "6d0c33c221a6f07cd4f427b07e67cca6304f24e8d99398ebfc5467d333da6776",
+    "outcome_result_count": 14,
+    "outcome_status_counts": {
+      "right_censored_ongoing": 14
+    },
+    "qfq_calendar_repairs_verified": [
+      {
+        "dates": [
+          "1991-04-13",
+          "1991-04-20",
+          "1991-05-04",
+          "1991-07-20",
+          "1991-11-23"
+        ],
+        "fill_rule": "legacy_saturday_outside_formal_capture_window"
+      },
+      {
+        "dates": [
+          "1992-02-01",
+          "1992-02-02",
+          "1993-01-03"
+        ],
+        "fill_rule": "legacy_nontrading_weekend_outside_formal_capture_window"
+      }
+    ],
+    "m7_status_file_present_in_transport_zip": false,
+    "derived_m7_status": "accumulating",
+    "derived_m7_issue_gate": "ISSUE-0066",
+    "derived_from_accepted_bundle_inputs": true
+  },
+  "authority_boundary": {
+    "authoritative_capture_committed": true,
+    "authoritative_evidence_modified_by_acceptance": false,
+    "statistical_inference_allowed": false,
+    "alpha_inference_allowed": false,
+    "win_rate_inference_allowed": false,
+    "profitability_inference_allowed": false,
+    "is_trade_instruction": false
+  },
+  "acceptance_decision": "Accept the first real M7 prospective capture. Close ISSUE-0069 operational resilience gate and continue frozen prospective accumulation under ISSUE-0066. Do not infer win rate, alpha or profitability from the first accepted cohort."
+}
