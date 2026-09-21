@@ -1,6 +1,6 @@
 # M7.4 — Post-Five-Day Weekend QFQ Calendar Anomaly Repair
 
-status: planned
+status: implementing
 
 ## 1. Real evidence
 
