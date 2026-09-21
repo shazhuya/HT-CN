@@ -70,7 +70,11 @@ def test_capture_wrapper_runs_strict_qfq_readiness_before_capture() -> None:
     qfq = text.index(r"scripts\m4_prepare_qfq_universe.py")
     capture = text.index(r"scripts\m4_capture_lifecycle_snapshot.py")
     assert m1 < qfq < capture
-    assert 'if "!M1_EXIT!"=="0" if "!QFQ_EXIT!"=="0"' in text
+    assert (
+        'if "!PRECHECK_EXIT!"=="0" if /I "!APPEND_ACTION!"=="capture_due" '
+        'if "!QFQ_EXIT!"=="0"'
+    ) in text
+    assert 'if not "!PRECHECK_EXIT!"=="0" set "FINAL_EXIT=1"' in text
     assert 'if not "!QFQ_EXIT!"=="0" set "FINAL_EXIT=1"' in text
     assert "m4-qfq-readiness.json" in text
     assert "m4-qfq-readiness.log" in text
