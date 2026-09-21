@@ -155,6 +155,20 @@
             "freeze/QFQ/intake gates remain mandatory and ISSUE-0066 inference boundary remains false",
             "full hosted tests and immutable 37/4 freeze guards remain green"
           ]
+        },
+        {
+          "id": "M7.6",
+          "title": "Daily Append Precheck and Self-Contained Handoff",
+          "status": "ready_to_merge",
+          "exit_gate": [
+            "M1-updated market clock is checked before any QFQ/capture/outcome append work",
+            "same closed session already committed is a successful idempotent no-op without rerunning append-only QFQ/capture/outcome",
+            "exactly one new closed session proceeds through unchanged strict QFQ and authoritative capture",
+            "multiple missed closed sessions fail closed because M7 forbids historical backfill",
+            "M7 accumulation status is generated before transport packaging and both precheck/status travel inside the ZIP",
+            "read-only M7 acceptance permits missing QFQ report only for a verified idempotent no-op",
+            "M4 methodology remains frozen_match_37 and Outcome Engine remains frozen_match_4"
+          ]
         }
       ]
     },

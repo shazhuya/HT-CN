@@ -70,11 +70,15 @@ def test_capture_wrapper_runs_strict_qfq_readiness_before_capture() -> None:
     qfq = text.index(r"scripts\m4_prepare_qfq_universe.py")
     capture = text.index(r"scripts\m4_capture_lifecycle_snapshot.py")
     assert m1 < qfq < capture
-    assert 'if "!M1_EXIT!"=="0" if "!QFQ_EXIT!"=="0"' in text
+    assert (
+        'if "!PRECHECK_EXIT!"=="0" if /I "!APPEND_ACTION!"=="capture_due" '
+        'if "!QFQ_EXIT!"=="0"'
+    ) in text
+    assert 'if not "!PRECHECK_EXIT!"=="0" set "FINAL_EXIT=1"' in text
     assert 'if not "!QFQ_EXIT!"=="0" set "FINAL_EXIT=1"' in text
     assert "m4-qfq-readiness.json" in text
     assert "m4-qfq-readiness.log" in text
-    assert "M1/QFQ readiness did not pass" in text
+    assert "precheck/QFQ did not authorize a new authoritative capture" in text
 
 
 def test_capture_wrapper_streams_qfq_progress_live() -> None:
@@ -114,3 +118,33 @@ def test_capture_wrapper_initializes_every_step_exit_code() -> None:
         "BUNDLE_EXIT", "M7_STATUS_EXIT",
     ):
         assert f'set "{name}=1"' in text
+
+
+
+def test_capture_wrapper_prechecks_append_before_qfq_and_capture() -> None:
+    text = _wrapper_text()
+    m1 = text.index(r"scripts\m1_daily_update.py")
+    precheck = text.index(r"scripts\m7_append_precheck.py")
+    qfq = text.index(r"scripts\m4_prepare_qfq_universe.py")
+    capture = text.index(r"scripts\m4_capture_lifecycle_snapshot.py")
+    assert m1 < precheck < qfq < capture
+    assert "m7-append-precheck.json" in text
+    assert "m7-append-action.txt" in text
+
+
+def test_capture_wrapper_has_idempotent_noop_path() -> None:
+    text = _wrapper_text()
+    assert 'if /I "!APPEND_ACTION!"=="idempotent_noop"' in text
+    assert "QFQ append-readiness is not rerun" in text
+    assert "authoritative capture for the latest closed session already exists" in text
+    assert "same closed session already has its immutable outcome snapshot state" in text
+    assert "PASS NO-OP" in text
+
+
+def test_capture_wrapper_builds_status_before_bundle_and_accepts_bundle() -> None:
+    text = _wrapper_text()
+    status = text.index(r"scripts\m7_accumulation_status.py")
+    bundle = text.index(r"scripts\m4_export_evidence_bundle.py")
+    acceptance = text.index(r"scripts\m7_evidence_acceptance.py")
+    assert status < bundle < acceptance
+    assert 'if not "!ACCEPT_EXIT!"=="0" set "FINAL_EXIT=1"' in text

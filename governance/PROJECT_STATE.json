@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.5-CLOSED",
+  "state_id": "HTCN-M7.6-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,24 +21,22 @@
   },
   "current": {
     "milestone": "M7",
-    "phase": "M7.5",
-    "title": "Evidence Acceptance and Idempotent Rerun Contract",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260921-0076-007",
-    "latest_hosted_validation_attempt_id": "A-20260921-0076-007",
-    "work_branch": null,
+    "phase": "M7.6",
+    "title": "Daily Append Precheck and Self-Contained Handoff",
+    "status": "ready_to_merge",
+    "active_change": "CR-0077",
+    "active_spec": "specs/m7-phase-6-daily-append-precheck-self-contained-handoff.md",
+    "latest_attempt_id": "A-20260921-0077-007",
+    "latest_hosted_validation_attempt_id": "A-20260921-0077-007",
+    "work_branch": "m7/daily-append-precheck-self-contained-handoff-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35590805595,
-      "run_number": 2455,
-      "event": "push",
-      "head": "1152d1fc80a78c2224cda6aa32c1bfdb80f21073",
-      "pr": 64,
-      "final_pr_workflow_run": 35590566473,
-      "final_pr_run_number": 2454,
-      "python_passed": 916,
+      "workflow_run": 35613574770,
+      "run_number": 2464,
+      "event": "pull_request",
+      "head": "62fa64d5c01eca94737d80249789c4fb2300f7d3",
+      "pr": 65,
+      "python_passed": 926,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
@@ -50,11 +48,9 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10634811314,
-      "artifact_digest": "sha256:565770109c12acfb3a742a2d22c59d1332588c61f52758d4033c18f209fec3d1",
-      "continuation_artifact_id": 10634297428,
-      "continuation_artifact_digest": "sha256:d833b7ceaad9750407000c4481f65b0e7226066dc80222a77b20b8ed1d4f4f34",
-      "scope": "Final ledger-bearing PR #64 run #2454 passed all release gates, then PR #64 merged with ancestry preserved as 1152d1fc80a78c2224cda6aa32c1bfdb80f21073. Canonical main #2455 repeated Project OS, Source Coverage, Ruff 0/0, 916 Python tests / 0 warnings, Web, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4."
+      "artifact_id": 10645580517,
+      "artifact_digest": "sha256:e7211af939d5179b6b9aa9ffd7afc66c2671943abe7fa0c60583d98fc572578b",
+      "scope": "PR #65 formal validation passed deterministic and release gates: Project OS, Source Coverage, Ruff 0/0, 926 Python tests / 0 warnings, Web, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -74,13 +70,13 @@
     "idempotent_same_day_rerun_supported": true
   },
   "next_major_task": {
-    "phase": "M7",
-    "title": "Continue Frozen Prospective Evidence Accumulation",
-    "status": "active_evidence_accumulation",
-    "blocked_until": [],
-    "one_action_entry": "运行M7前瞻证据积累.bat",
-    "acceptance_entry": "scripts/m7_evidence_acceptance.py",
-    "inference_gate": "ISSUE-0066"
+    "phase": "M7.6",
+    "title": "Merge ledger-bearing PR #65 and validate canonical main",
+    "status": "ready_to_merge",
+    "blocked_until": [
+      "final ledger-bearing PR validation",
+      "canonical main post-merge validation"
+    ]
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -105,6 +101,7 @@
     }
   },
   "required_specs": [
+    "specs/m7-phase-6-daily-append-precheck-self-contained-handoff.md",
     "specs/m7-phase-5-evidence-acceptance-idempotency.md",
     "specs/m7-phase-4-post-five-day-weekend-qfq-anomaly.md",
     "specs/m7-phase-3-provider-derived-legacy-qfq-gap-repair.md",

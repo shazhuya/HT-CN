@@ -469,3 +469,52 @@ def test_transport_bundle_can_carry_immutable_outcome_snapshot(tmp_path) -> None
             f"outcomes/2026-09-21__{snapshot.snapshot_id}.json"
             in archive.namelist()
         )
+
+
+
+def test_transport_bundle_carries_append_precheck_and_m7_status(tmp_path: Path) -> None:
+    transaction_root = tmp_path / "captures"
+    transaction_root.mkdir()
+    reports = tmp_path / "reports"
+    reports.mkdir()
+    (reports / "m7-append-precheck.json").write_text(
+        json.dumps({
+            "status": "ready",
+            "action": "idempotent_noop",
+            "append_required": False,
+            "latest_closed_trade_date": "2026-09-21",
+            "latest_committed_capture_date": "2026-09-21",
+            "pending_closed_trade_count": 0,
+        }),
+        encoding="utf-8",
+    )
+    (reports / "m7-accumulation-status.json").write_text(
+        json.dumps({
+            "status": "accumulating",
+            "issue_gate": "ISSUE-0066",
+        }),
+        encoding="utf-8",
+    )
+    (reports / "m7-accumulation-status.md").write_text(
+        "# status\n",
+        encoding="utf-8",
+    )
+
+    output = reports / "bundle.zip"
+    payload = build_bundle(
+        transaction_root=transaction_root,
+        journal_path=tmp_path / "journal.jsonl",
+        manifest_path=tmp_path / "manifest.jsonl",
+        reports_root=reports,
+        output=output,
+    )
+
+    assert payload["append_action"] == "idempotent_noop"
+    assert payload["append_required"] is False
+    assert payload["m7_accumulation_status"] == "accumulating"
+    assert payload["m7_issue_gate"] == "ISSUE-0066"
+    with zipfile.ZipFile(output) as archive:
+        names = set(archive.namelist())
+        assert "reports/m7-append-precheck.json" in names
+        assert "reports/m7-accumulation-status.json" in names
+        assert "reports/m7-accumulation-status.md" in names
