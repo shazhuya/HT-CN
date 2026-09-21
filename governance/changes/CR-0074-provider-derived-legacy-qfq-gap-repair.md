@@ -1,6 +1,6 @@
 # CR-0074 — M7.3 Provider-Derived Legacy QFQ Gap Execution Repair
 
-status: planned
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 882f94581819966cf6d0816454b8e6c5897523ee
