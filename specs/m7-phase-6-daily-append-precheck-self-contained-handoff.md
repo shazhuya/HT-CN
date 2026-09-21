@@ -1,6 +1,6 @@
 # M7.6 — Daily Append Precheck and Self-Contained Handoff
 
-status: planned
+status: implementing
 
 ## 1. Operator states
 

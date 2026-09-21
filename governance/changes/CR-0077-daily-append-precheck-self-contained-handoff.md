@@ -1,6 +1,6 @@
 # CR-0077 — M7.6 Daily Append Precheck and Self-Contained Handoff
 
-status: planned
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 2ce240a2acb8032c3a4d06951279064acfd2cc18
