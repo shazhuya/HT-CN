@@ -1,6 +1,6 @@
 # M7.6 — Daily Append Precheck and Self-Contained Handoff
 
-status: implementing
+status: ready_to_merge
 
 ## 1. Operator states
 
