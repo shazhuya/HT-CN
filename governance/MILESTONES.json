@@ -115,6 +115,19 @@
             "M4 methodology remains frozen_match_37 and Outcome Engine remains frozen_match_4",
             "canonical main is green before the private M1 rerun"
           ]
+        },
+        {
+          "id": "M7.3",
+          "title": "Provider-Derived Legacy QFQ Gap Execution Repair",
+          "status": "ready_to_merge",
+          "exit_gate": [
+            "second real M7 failure is preserved in Attempt Ledger",
+            "D-077 legacy bridge is evaluated before optional pre_close continuity",
+            "exact five 1991 SZSE.000001 Saturday dates pass provider-to-factor regression without pre_close",
+            "inside-window no-pre_close gaps remain fail-closed",
+            "M4 methodology remains frozen_match_37 and Outcome Engine remains frozen_match_4",
+            "canonical main is green before another private M7 rerun"
+          ]
         }
       ]
     },

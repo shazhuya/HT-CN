@@ -106,8 +106,8 @@
       "blocks": [
         "M7 first append"
       ],
-      "next_action": "Sync clean local main to canonical main, rerun 运行M7前瞻证据积累.bat, then independently verify the new evidence bundle.",
-      "current_fact": "CR-0073 merged as 2963ce0; main #2425 is fully green with 906 tests, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4. The repaired private-M1 rerun is still pending."
+      "next_action": "Validate CR-0074, merge only if all frozen gates remain green, then rerun the M7 BAT on clean canonical main.",
+      "current_fact": "Second real run on 882f945 again reached QFQ 54/55. SZSE.000001 failed on the same five 1991 Saturdays. Root cause: the D-077 legacy bridge was placed after an early pre_close-presence guard, so raw histories without pre_close skipped the bridge before it could run. Stale-report contamination is fixed."
     }
   ]
 }
