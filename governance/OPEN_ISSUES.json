@@ -69,10 +69,11 @@
       "status": "open",
       "title": "Prospective outcome sample is insufficient for win-rate/alpha/profitability claims",
       "blocks": [
-        "M7 statistical conclusions"
+        "M8 evidence-based statistical calibration claims",
+        "win-rate/alpha/profitability/statistical-significance claims"
       ],
-      "next_action": "Continue running 运行M7前瞻证据积累.bat from clean canonical main after each closed A-share session. Accumulate frozen prospective captures and outcome follow-up; do not infer win rate, alpha or profitability early.",
-      "current_fact": "The first real M7 prospective capture remains accepted for 2026-09-21. M7.5 is now integrated, so future evidence bundles have automated read-only acceptance/idempotency checks while the statistical sample remains insufficient. Statistical, alpha, win-rate and profitability conclusions remain gated."
+      "next_action": "Continue prospective evidence in the background. Do not turn this into a daily user-computer requirement. ISSUE-0066 must not block M9 product development or Stable Product Release; unavailable statistical features must report insufficient evidence.",
+      "current_fact": "The first prospective capture is accepted and M7.6 operational controls are integrated. The remaining limitation is empirical sample sufficiency for statistical claims only. Productization proceeds on M9 in parallel; M7 continues as a background evidence track."
     },
     {
       "id": "ISSUE-0067",
@@ -132,6 +133,18 @@
       "current_fact": "M7.6 now prechecks the M1-updated closed-session clock against the committed capture chain before append-only work. Same-day reruns become a successful idempotent no-op; exactly one new session preserves strict QFQ/capture/outcome; multiple missed sessions fail closed. The handoff ZIP now carries append-precheck and M7 accumulation status.",
       "resolution": "Closed by A-20260921-0077-009 after final PR #65 run #2468 and canonical main #2469 passed all release gates with 926 Python tests / 0 warnings, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4.",
       "closed_in": "CR-0077"
+    },
+    {
+      "id": "ISSUE-0072",
+      "severity": "high",
+      "type": "product_governance",
+      "status": "open",
+      "title": "Sequential M7->M8->M9 interpretation can turn evidence accumulation into endless manual product development",
+      "blocks": [
+        "M9.0"
+      ],
+      "next_action": "Validate and integrate CR-0078/D-081. Make M9 the development mainline, M7 a non-blocking background evidence track, M8 a claims-calibration track, and user-computer usage exceptional.",
+      "current_fact": "Blueprint v4 and PROJECT_STATE.next_major_task could be read as requiring indefinite daily M7 accumulation before productization, despite the first real evidence chain already being accepted. This risks treating the user's computer as routine evidence infrastructure instead of building an automated mature application."
     }
   ]
 }

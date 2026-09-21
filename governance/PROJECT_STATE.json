@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.6-CLOSED",
+  "state_id": "HTCN-M9.0-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -20,25 +20,23 @@
     "note": "CR-0066 immutable starting baseline; latest integrated M6.2 release is tracked separately in last_integrated_release."
   },
   "current": {
-    "milestone": "M7",
-    "phase": "M7.6",
-    "title": "Daily Append Precheck and Self-Contained Handoff",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260921-0077-009",
-    "latest_hosted_validation_attempt_id": "A-20260921-0077-009",
-    "work_branch": null,
+    "milestone": "M9",
+    "phase": "M9.0",
+    "title": "Product Completion Policy & Roadmap",
+    "status": "ready_to_merge",
+    "active_change": "CR-0078",
+    "active_spec": "specs/m9-phase-0-product-completion-decoupling.md",
+    "latest_attempt_id": "A-20260921-0078-004",
+    "latest_hosted_validation_attempt_id": "A-20260921-0078-004",
+    "work_branch": "m9/product-completion-decoupling-roadmap-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35614489214,
-      "run_number": 2469,
-      "event": "push",
-      "head": "c3e97f8b75df22da99476dc430ffe3206965294c",
-      "pr": 65,
-      "final_pr_workflow_run": 35614134788,
-      "final_pr_run_number": 2468,
-      "python_passed": 926,
+      "workflow_run": 35617305396,
+      "run_number": 2475,
+      "event": "pull_request",
+      "head": "f048566931a356d02e08df892fcfa871d389c837",
+      "pr": 66,
+      "python_passed": 931,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
@@ -50,13 +48,9 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10645606677,
-      "artifact_digest": "sha256:69d1a29fa30a983799373bbc2b822e1ca00eefbddd5c977830f479fa882f3633",
-      "continuation_artifact_id": 10646375054,
-      "continuation_artifact_digest": "sha256:62acf53ec8923e07ccd6cebab7b9ce61020383f584a55881aa65ceabdc2865a3",
-      "final_pr_artifact_id": 10645821098,
-      "final_pr_artifact_digest": "sha256:d276c0347c49341cbc39796124dc655703235fec181615e8901f5a9f604d249e",
-      "scope": "Final ledger-bearing PR #65 run #2468 passed all release gates after the M7.6 milestone-state alignment fix. PR #65 merged as c3e97f8b75df22da99476dc430ffe3206965294c; canonical main #2469 repeated Project OS, Source Coverage, Ruff 0/0, 926 Python tests / 0 warnings, Web, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4."
+      "artifact_id": 10646890772,
+      "artifact_digest": "sha256:7252c89026ade571d04b2a09e8d9eec94da7e260ffb3d4b34e8da5b9d928d50c",
+      "scope": "PR #66 formal validation passed Project OS, Source Coverage, Ruff 0/0, 931 Python tests / 0 warnings, Web, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4. The M9/M7/M8 product-completion policy and handoff guards are validated."
     }
   },
   "private_m1": {
@@ -78,14 +72,16 @@
     "self_contained_handoff": true
   },
   "next_major_task": {
-    "phase": "M7",
-    "title": "Continue Frozen Prospective Evidence Accumulation",
-    "status": "active_evidence_accumulation",
-    "blocked_until": [],
-    "one_action_entry": "运行M7前瞻证据积累.bat",
-    "acceptance_entry": "scripts/m7_evidence_acceptance.py",
-    "append_precheck_entry": "scripts/m7_append_precheck.py",
-    "inference_gate": "ISSUE-0066"
+    "phase": "M9.0",
+    "title": "Merge Product Completion Policy and Revalidate Canonical Main",
+    "status": "ready_to_merge",
+    "blocked_until": [
+      "final ledger-bearing PR validation",
+      "canonical main post-merge validation"
+    ],
+    "development_mainline": "M9",
+    "background_evidence_track": "M7",
+    "inference_gate": "ISSUE-0066_claims_only"
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -110,6 +106,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-phase-0-product-completion-decoupling.md",
     "specs/m7-phase-6-daily-append-precheck-self-contained-handoff.md",
     "specs/m7-phase-5-evidence-acceptance-idempotency.md",
     "specs/m7-phase-4-post-five-day-weekend-qfq-anomaly.md",
@@ -144,5 +141,16 @@
     "important_fact_may_exist_only_in_chat": false,
     "bootstrap_must_fail_on_state_drift": true,
     "legacy_project_context_is_current_truth": false
+  },
+  "productization": {
+    "policy": "governance/PRODUCT_COMPLETION_POLICY.json",
+    "development_mainline": "M9",
+    "background_evidence_track": "M7",
+    "calibration_track": "M8",
+    "roadmap_activation": "active",
+    "issue_0066_scope": "claims_only",
+    "manual_daily_private_m1_required": false,
+    "stable_release_blocked_by_issue_0066": false,
+    "routine_user_computer_dependency": false
   }
 }

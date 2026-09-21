@@ -14,6 +14,7 @@ REQUIRED_FILES = [
     "governance/DECISION_INDEX.json",
     "governance/SOURCE_COVERAGE.json",
     "governance/OPEN_ISSUES.json",
+    "governance/PRODUCT_COMPLETION_POLICY.json",
     "governance/QUALITY_BASELINE.json",
     "uv.lock",
     "requirements-dev.lock",
@@ -197,3 +198,43 @@ def test_project_state_engine_is_fail_closed_and_checks_ancestry() -> None:
     assert text.count("ALLOWED_CHANGE_STATUS = {") == 1
     assert "active spec status does not match current state" in text
     assert "latest_validation commit does not match hosted attempt commit" in text
+
+
+
+def test_product_completion_policy_decouples_release_from_evidence_waiting() -> None:
+    policy = load("governance/PRODUCT_COMPLETION_POLICY.json")
+    milestones = load("governance/MILESTONES.json")
+    state = load("governance/PROJECT_STATE.json")
+
+    assert policy["development_mainline"]["milestone"] == "M9"
+    assert policy["background_tracks"]["evidence"]["milestone"] == "M7"
+    assert policy["background_tracks"]["evidence"]["blocks_product_release"] is False
+    assert policy["background_tracks"]["calibration"]["milestone"] == "M8"
+    assert policy["background_tracks"]["calibration"]["blocks_product_release"] is False
+    assert policy["evidence_gate"]["scope"] == "claims_only"
+    assert policy["evidence_gate"]["blocks_product_release"] is False
+    assert policy["user_computer_policy"]["routine_dependency_for_development"] is False
+    assert policy["user_computer_policy"]["daily_manual_capture_required"] is False
+    assert policy["stable_product_release_definition"]["requires_issue_0066_closed"] is False
+    assert policy["stable_product_release_definition"]["requires_user_daily_cli"] is False
+    assert policy["stable_product_release_definition"]["requires_daily_zip_handoff"] is False
+
+    rows = {row["id"]: row for row in milestones["milestones"]}
+    assert rows["M7"]["status"] == "background_evidence_accumulation"
+    assert "non_blocking_product_release" in rows["M8"]["status"]
+    assert {phase["id"] for phase in rows["M9"]["phases"]} >= {
+        "M9.0", "M9.1", "M9.2", "M9.3", "M9.4", "M9.5", "M9.6"
+    }
+    assert state["productization"]["development_mainline"] == "M9"
+    assert state["productization"]["manual_daily_private_m1_required"] is False
+
+
+def test_agent_and_chat_handoff_cannot_revert_to_daily_user_computer_mainline() -> None:
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    continuation = (ROOT / "CHAT_CONTINUATION.md").read_text(encoding="utf-8")
+    assert "M9 是产品开发主线" in agents
+    assert "用户电脑不是日常基础设施" in agents
+    assert "每天运行 M7 BAT / 上传 ZIP / AI 人工验收" in agents
+    assert "M9 视为产品开发主线" in continuation
+    assert "M7 视为后台长期 evidence track" in continuation
+    assert "默认“下一项用户动作”应为无" in continuation
