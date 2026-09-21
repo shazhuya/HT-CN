@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 
 from scripts.m4_prepare_qfq_universe import (
+    _fetch_candidate,
     _repair_safe_internal_factor_gaps,
     _strict_factor_candidate,
 )
@@ -246,5 +247,107 @@ def test_legacy_saturday_bridge_never_applies_inside_formal_capture_window() -> 
         "source": ["baostock_qfq", "baostock_qfq"],
     })
     repaired, audit = _repair_safe_internal_factor_gaps(raw, factors)
+    assert len(repaired) == len(factors)
+    assert audit == []
+
+
+
+class _FiveSaturdayAdjustedProvider:
+    name = "five_saturday_fixture"
+
+    def __init__(self, frame: pd.DataFrame) -> None:
+        self.frame = frame
+
+    def get_daily_adjusted(
+        self,
+        instrument_id,
+        start,
+        end,
+        *,
+        mode="qfq",
+    ) -> pd.DataFrame:
+        return self.frame.copy()
+
+
+def _five_real_1991_saturday_fixture() -> tuple[pd.DataFrame, pd.DataFrame]:
+    gap_dates = pd.to_datetime([
+        "1991-04-13",
+        "1991-04-20",
+        "1991-05-04",
+        "1991-07-20",
+        "1991-11-23",
+    ])
+    early_dates: list[pd.Timestamp] = []
+    for stamp in gap_dates:
+        early_dates.extend([
+            stamp - pd.Timedelta(days=1),
+            stamp,
+            stamp + pd.Timedelta(days=2),
+        ])
+    recent_dates = list(pd.bdate_range("2024-01-02", periods=430))
+    dates = pd.DatetimeIndex(sorted(set(early_dates + recent_dates)))
+    raw = pd.DataFrame({
+        "instrument_id": ["SZSE.000001"] * len(dates),
+        "trade_date": dates,
+        "open": [10.0] * len(dates),
+        "high": [10.5] * len(dates),
+        "low": [9.5] * len(dates),
+        "close": [10.0] * len(dates),
+        "volume": [1000.0] * len(dates),
+    })
+
+    adjusted = raw.copy()
+    adjusted["open"] = 12.0
+    adjusted["high"] = 12.6
+    adjusted["low"] = 11.4
+    adjusted["close"] = 12.0
+    adjusted = adjusted.loc[
+        ~adjusted["trade_date"].isin(gap_dates)
+    ].reset_index(drop=True)
+    return raw, adjusted
+
+
+def test_real_five_1991_saturday_gaps_bridge_without_preclose() -> None:
+    raw, adjusted = _five_real_1991_saturday_fixture()
+    factors, source, attempts, repairs = _fetch_candidate(
+        instrument_id="SZSE.000001",
+        raw=raw,
+        provider=_FiveSaturdayAdjustedProvider(adjusted),
+        retries=0,
+    )
+
+    assert source == "five_saturday_fixture_qfq"
+    assert attempts == 1
+    assert len(repairs) == 5
+    assert {
+        item["gap_start_trade_date"] for item in repairs
+    } == {
+        "1991-04-13",
+        "1991-04-20",
+        "1991-05-04",
+        "1991-07-20",
+        "1991-11-23",
+    }
+    assert {
+        item["fill_rule"] for item in repairs
+    } == {"legacy_saturday_outside_formal_capture_window"}
+    assert all(item["allowed_factor_drift"] is None for item in repairs)
+    ready, reason = _strict_factor_candidate(raw, factors)
+    assert ready is True
+    assert reason == "strict_factor_candidate_ready"
+
+
+def test_legacy_bridge_without_preclose_stays_forbidden_inside_formal_window() -> None:
+    raw = _historical_saturday_raw().drop(columns=["pre_close"])
+    factors = pd.DataFrame({
+        "instrument_id": ["SZSE.000001", "SZSE.000001"],
+        "trade_date": pd.to_datetime(["1991-04-12", "1991-04-15"]),
+        "price_factor": [1.0, 1.20],
+        "mode": ["qfq", "qfq"],
+        "source": ["baostock_qfq", "baostock_qfq"],
+    })
+
+    repaired, audit = _repair_safe_internal_factor_gaps(raw, factors)
+
     assert len(repaired) == len(factors)
     assert audit == []

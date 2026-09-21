@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.2-CLOSED",
+  "state_id": "HTCN-M7.3-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,14 +21,14 @@
   },
   "current": {
     "milestone": "M7",
-    "phase": "M7.2",
-    "title": "Private-M1 Evidence Append Resilience Repair",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260920-0073-007",
+    "phase": "M7.3",
+    "title": "Provider-Derived Legacy QFQ Gap Execution Repair",
+    "status": "implementing",
+    "active_change": "CR-0074",
+    "active_spec": "specs/m7-phase-3-provider-derived-legacy-qfq-gap-repair.md",
+    "latest_attempt_id": "A-20260921-0074-001",
     "latest_hosted_validation_attempt_id": "A-20260920-0073-007",
-    "work_branch": null,
+    "work_branch": "m7/provider-derived-legacy-gap-repair-v2",
     "latest_validation": {
       "result": "success",
       "workflow_run": 35521182410,
@@ -65,11 +65,14 @@
     "expected_status_report": "artifacts/reports/m7-accumulation-status.json"
   },
   "next_major_task": {
-    "phase": "M7",
-    "title": "Retry First Canonical-Main Prospective Evidence Append",
-    "status": "awaiting_private_run",
-    "blocked_until": [],
-    "one_action_entry": "运行M7前瞻证据积累.bat"
+    "phase": "M7.3",
+    "title": "Repair provider-derived legacy QFQ bridge execution",
+    "status": "implementing",
+    "blocked_until": [
+      "hosted validation proves the exact five-date no-pre_close regression",
+      "M4 methodology remains frozen_match_37 and Outcome Engine remains frozen_match_4",
+      "canonical main is green before another private M7 run"
+    ]
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -94,6 +97,7 @@
     }
   },
   "required_specs": [
+    "specs/m7-phase-3-provider-derived-legacy-qfq-gap-repair.md",
     "specs/m7-phase-2-private-m1-evidence-append-resilience.md",
     "specs/m7-phase-1-prospective-evidence-accumulation.md",
     "specs/m6-phase-6-interactive-harmonic-chart-foundation.md",
