@@ -16,6 +16,7 @@ MILESTONES_PATH = ROOT / "governance" / "MILESTONES.json"
 DECISIONS_PATH = ROOT / "governance" / "DECISION_INDEX.json"
 SOURCE_PATH = ROOT / "governance" / "SOURCE_COVERAGE.json"
 ISSUES_PATH = ROOT / "governance" / "OPEN_ISSUES.json"
+PRODUCT_POLICY_PATH = ROOT / "governance" / "PRODUCT_COMPLETION_POLICY.json"
 DEFAULT_RESUME = ROOT / "logs" / "context" / "HTCN_RESUME_PACK.md"
 
 ALLOWED_SOURCE_STATUS = {
@@ -183,6 +184,147 @@ def _validate_freezes(state: dict[str, Any], errors: list[str]) -> None:
             errors.append(f"freeze {key} is not an ancestor of HEAD")
 
 
+def _validate_product_completion_policy(
+    state: dict[str, Any],
+    milestones: dict[str, Any],
+    issues: dict[str, Any],
+    policy: dict[str, Any],
+    errors: list[str],
+) -> None:
+    if policy.get("schema") != 1:
+        errors.append("PRODUCT_COMPLETION_POLICY schema must be 1")
+    if policy.get("status") != "authoritative":
+        errors.append("PRODUCT_COMPLETION_POLICY status must be authoritative")
+
+    mainline = policy.get("development_mainline") or {}
+    if mainline.get("milestone") != "M9":
+        errors.append("product development mainline must be M9")
+    if mainline.get("may_proceed_while_evidence_accumulates") is not True:
+        errors.append("M9 must be allowed to proceed while evidence accumulates")
+    if mainline.get("blocked_by_natural_time_wait_for_evidence") is not False:
+        errors.append("M9 must not be blocked by natural-time evidence waiting")
+
+    background = policy.get("background_tracks") or {}
+    evidence = background.get("evidence") or {}
+    calibration = background.get("calibration") or {}
+    if evidence.get("milestone") != "M7" or evidence.get("blocks_product_release") is not False:
+        errors.append("M7 must be a non-blocking background evidence track")
+    if evidence.get("routine_user_intervention_required") is not False:
+        errors.append("M7 background evidence must not require routine user intervention")
+    if calibration.get("milestone") != "M8" or calibration.get("blocks_product_release") is not False:
+        errors.append("M8 must be a non-blocking claims/calibration track")
+
+    gate = policy.get("evidence_gate") or {}
+    if gate.get("issue_id") != "ISSUE-0066":
+        errors.append("product evidence gate must bind ISSUE-0066")
+    if gate.get("scope") != "claims_only":
+        errors.append("ISSUE-0066 scope must be claims_only")
+    if gate.get("blocks_product_release") is not False:
+        errors.append("ISSUE-0066 must not block product release")
+    if gate.get("blocks_product_development") is not False:
+        errors.append("ISSUE-0066 must not block product development")
+    if gate.get("blocks_statistical_claims") is not True:
+        errors.append("ISSUE-0066 must continue blocking statistical claims")
+
+    computer = policy.get("user_computer_policy") or {}
+    if computer.get("routine_dependency_for_development") is not False:
+        errors.append("user computer must not be routine development infrastructure")
+    if computer.get("daily_manual_capture_required") is not False:
+        errors.append("daily manual Private-M1 capture must not be required")
+    if computer.get("daily_zip_handoff_required") is not False:
+        errors.append("daily ZIP handoff must not be required")
+
+    release = policy.get("stable_product_release_definition") or {}
+    required_false = (
+        "requires_issue_0066_closed",
+        "requires_predefined_number_of_evidence_days",
+        "requires_user_daily_cli",
+        "requires_daily_zip_handoff",
+    )
+    for key in required_false:
+        if release.get(key) is not False:
+            errors.append(f"stable product policy must keep {key}=false")
+    required_true = (
+        "requires_automated_data_update",
+        "requires_automated_harmonic_analysis",
+        "requires_interactive_product_workbench",
+        "requires_background_evidence_service",
+        "requires_reliability_and_recovery",
+        "requires_zero_cli_daily_operation",
+        "requires_formal_release_gates",
+        "post_release_evidence_continues",
+    )
+    for key in required_true:
+        if release.get(key) is not True:
+            errors.append(f"stable product policy must keep {key}=true")
+
+    milestone_rows = {row.get("id"): row for row in milestones.get("milestones", [])}
+    for milestone in ("M7", "M8", "M9"):
+        if milestone not in milestone_rows:
+            errors.append(f"product completion policy requires milestone {milestone}")
+    if "M7" in milestone_rows and milestone_rows["M7"].get("status") != "background_evidence_accumulation":
+        errors.append("M7 milestone status must be background_evidence_accumulation")
+    if "M8" in milestone_rows and "non_blocking_product_release" not in str(milestone_rows["M8"].get("status")):
+        errors.append("M8 milestone status must be non-blocking for product release")
+    if "M9" in milestone_rows:
+        phase_ids = {row.get("id") for row in milestone_rows["M9"].get("phases", [])}
+        required_phases = {f"M9.{idx}" for idx in range(7)}
+        if not required_phases.issubset(phase_ids):
+            errors.append("M9 roadmap must define M9.0 through M9.6")
+
+    issue_0066 = next(
+        (row for row in issues.get("issues", []) if row.get("id") == "ISSUE-0066"),
+        None,
+    )
+    if issue_0066 is None:
+        errors.append("ISSUE-0066 is required by product completion policy")
+    elif any("M9" in str(item) for item in issue_0066.get("blocks", [])):
+        errors.append("ISSUE-0066 blocks must not contain M9")
+
+    productization = state.get("productization") or {}
+    if productization.get("policy") != "governance/PRODUCT_COMPLETION_POLICY.json":
+        errors.append("PROJECT_STATE productization.policy must reference canonical policy")
+    if productization.get("development_mainline") != "M9":
+        errors.append("PROJECT_STATE productization mainline must be M9")
+    if productization.get("background_evidence_track") != "M7":
+        errors.append("PROJECT_STATE background evidence track must be M7")
+    if productization.get("calibration_track") != "M8":
+        errors.append("PROJECT_STATE calibration track must be M8")
+    if productization.get("issue_0066_scope") != "claims_only":
+        errors.append("PROJECT_STATE ISSUE-0066 scope must be claims_only")
+    if productization.get("manual_daily_private_m1_required") is not False:
+        errors.append("PROJECT_STATE must not require daily manual Private-M1")
+    if productization.get("stable_release_blocked_by_issue_0066") is not False:
+        errors.append("PROJECT_STATE must not block stable release on ISSUE-0066")
+    if productization.get("routine_user_computer_dependency") is not False:
+        errors.append("PROJECT_STATE must not make user computer a routine dependency")
+
+    activation = str(productization.get("roadmap_activation") or "")
+    if activation in {"active", "closed"}:
+        if milestones.get("active") != "M9":
+            errors.append("active productization requires MILESTONES.active=M9")
+        if not str(state.get("next_major_task", {}).get("phase", "")).startswith("M9."):
+            errors.append("active productization next_major_task must remain on M9")
+
+
+def _product_completion_policy_index(policy: dict[str, Any]) -> str:
+    mainline = policy.get("development_mainline") or {}
+    tracks = policy.get("background_tracks") or {}
+    gate = policy.get("evidence_gate") or {}
+    computer = policy.get("user_computer_policy") or {}
+    release = policy.get("stable_product_release_definition") or {}
+    return "\n".join([
+        "- canonical policy: `governance/PRODUCT_COMPLETION_POLICY.json`",
+        f"- development mainline: `{mainline.get('milestone')}`",
+        f"- background evidence: `{(tracks.get('evidence') or {}).get('milestone')}` (non-blocking)",
+        f"- calibration: `{(tracks.get('calibration') or {}).get('milestone')}` (claims-only when evidence is sufficient)",
+        f"- ISSUE-0066 scope: `{gate.get('scope')}`; blocks product release: `{gate.get('blocks_product_release')}`",
+        f"- routine user-computer dependency: `{computer.get('routine_dependency_for_development')}`",
+        f"- daily manual capture required: `{computer.get('daily_manual_capture_required')}`",
+        f"- stable release requires ISSUE-0066 closed: `{release.get('requires_issue_0066_closed')}`",
+    ])
+
+
 def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -194,6 +336,7 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
         DECISIONS_PATH,
         SOURCE_PATH,
         ISSUES_PATH,
+        PRODUCT_POLICY_PATH,
     ]
     for path in required:
         if not path.exists():
@@ -207,6 +350,7 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
     decisions = read_json(DECISIONS_PATH)
     source = read_json(SOURCE_PATH)
     issues = read_json(ISSUES_PATH)
+    product_policy = read_json(PRODUCT_POLICY_PATH)
 
     if state.get("schema") != 2:
         errors.append("PROJECT_STATE schema must be 2")
@@ -388,6 +532,13 @@ def validate() -> tuple[bool, list[str], list[str], dict[str, Any]]:
             if hosted_attempt.get("workflow_run") != latest_validation.get("workflow_run"):
                 errors.append("latest_validation workflow_run does not match hosted attempt")
 
+    _validate_product_completion_policy(
+        state,
+        milestones,
+        issues,
+        product_policy,
+        errors,
+    )
     _validate_release(state, errors)
     _validate_freezes(state, errors)
 
@@ -527,6 +678,7 @@ def build_resume_pack(state: dict[str, Any]) -> str:
     decisions = read_json(DECISIONS_PATH)
     issues = read_json(ISSUES_PATH)
     source = read_json(SOURCE_PATH)
+    product_policy = read_json(PRODUCT_POLICY_PATH)
     recovery_questions = """## Blank-session recovery questions
 
 - 当前 canonical release 是什么？
@@ -535,6 +687,8 @@ def build_resume_pack(state: dict[str, Any]) -> str:
 - 哪些 Source/Methodology 冻结不能改？
 - 最近一次失败/成功尝试是什么？
 - 最新 CI / Git 状态是否与 PROJECT_STATE 一致？
+- 当前产品开发主线、后台 evidence/calibration 轨、ISSUE-0066 claims-only 边界是什么？
+- 当前是否真的需要用户电脑；若需要，为什么自动化不能替代？
 任何一项回答不了，都不得宣称已无损续接。
 """
 
@@ -552,6 +706,7 @@ def build_resume_pack(state: dict[str, Any]) -> str:
         "## 恢复硬规则\n",
         "1. 先验证 PROJECT_STATE，不从聊天猜项目阶段。\n2. 只读取 state 引用的 active Change / required specs / active decisions / open blockers。\n3. state drift 必须先修复，禁止带着不一致继续核心开发。\n",
         _markdown_json("Machine Current State", state),
+        "## Product Completion Policy\n\n" + _product_completion_policy_index(product_policy) + "\n",
         "## Active Decision Index\n\n" + _decision_index(decisions) + "\n",
         "## Open Issue Index\n\n" + _open_issue_index(issues) + "\n",
         "## Source Coverage Index\n\n" + _source_coverage_index(source) + "\n",

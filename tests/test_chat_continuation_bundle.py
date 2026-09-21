@@ -66,6 +66,7 @@ def test_bundle_contains_current_authority_and_required_specs(tmp_path: Path) ->
     assert "canonical/AGENTS.md" in names
     assert "canonical/CHAT_CONTINUATION.md" in names
     assert "canonical/governance/attempts/2026-09.jsonl" in names
+    assert "canonical/governance/PRODUCT_COMPLETION_POLICY.json" in names
     assert all(f"canonical/{path}" in names for path in state["required_specs"])
     with zipfile.ZipFile(bundle) as archive:
         prompt = archive.read("HTCN_NEW_CHAT_PROMPT.md").decode("utf-8")
@@ -103,3 +104,18 @@ def test_bundle_rejects_hash_tamper(tmp_path: Path) -> None:
             target.writestr(info.filename, payload)
     with pytest.raises(verifier.BundleVerificationError, match="size mismatch"):
         verifier.verify_bundle(rebuilt)
+
+
+
+def test_start_here_does_not_assign_daily_private_m1_as_default_human_action(
+    tmp_path: Path,
+) -> None:
+    bundle, _, _, _, _ = build_fixture(tmp_path)
+    with zipfile.ZipFile(bundle) as archive:
+        start_here = archive.read("START_HERE.md").decode("utf-8")
+        prompt = archive.read("HTCN_NEW_CHAT_PROMPT.md").decode("utf-8")
+    assert "development mainline: `M9`" in start_here
+    assert "background evidence track: `M7`" in start_here
+    assert "user computer is not routine project infrastructure" in start_here
+    assert "12 个问题" in prompt
+    assert "产品开发默认沿 M9 主线推进" in prompt

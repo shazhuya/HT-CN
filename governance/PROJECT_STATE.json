@@ -78,14 +78,15 @@
     "self_contained_handoff": true
   },
   "next_major_task": {
-    "phase": "M7",
-    "title": "Continue Frozen Prospective Evidence Accumulation",
-    "status": "active_evidence_accumulation",
-    "blocked_until": [],
-    "one_action_entry": "运行M7前瞻证据积累.bat",
-    "acceptance_entry": "scripts/m7_evidence_acceptance.py",
-    "append_precheck_entry": "scripts/m7_append_precheck.py",
-    "inference_gate": "ISSUE-0066"
+    "phase": "M9.0",
+    "title": "Activate Product Completion Mainline and Dual-Track Roadmap",
+    "status": "ready_not_started",
+    "blocked_until": [
+      "hosted validation of CR-0078 roadmap and Project OS policy guards"
+    ],
+    "development_mainline": "M9",
+    "background_evidence_track": "M7",
+    "inference_gate": "ISSUE-0066_claims_only"
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -110,6 +111,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-phase-0-product-completion-decoupling.md",
     "specs/m7-phase-6-daily-append-precheck-self-contained-handoff.md",
     "specs/m7-phase-5-evidence-acceptance-idempotency.md",
     "specs/m7-phase-4-post-five-day-weekend-qfq-anomaly.md",
@@ -144,5 +146,16 @@
     "important_fact_may_exist_only_in_chat": false,
     "bootstrap_must_fail_on_state_drift": true,
     "legacy_project_context_is_current_truth": false
+  },
+  "productization": {
+    "policy": "governance/PRODUCT_COMPLETION_POLICY.json",
+    "development_mainline": "M9",
+    "background_evidence_track": "M7",
+    "calibration_track": "M8",
+    "roadmap_activation": "pending_hosted_validation",
+    "issue_0066_scope": "claims_only",
+    "manual_daily_private_m1_required": false,
+    "stable_release_blocked_by_issue_0066": false,
+    "routine_user_computer_dependency": false
   }
 }

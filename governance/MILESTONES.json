@@ -88,7 +88,7 @@
     {
       "id": "M7",
       "title": "Prospective Evidence Accumulation",
-      "status": "active_evidence_accumulation",
+      "status": "background_evidence_accumulation",
       "phases": [
         {
           "id": "M7.1",
@@ -175,12 +175,95 @@
     {
       "id": "M8",
       "title": "Evidence-based Decision Calibration",
-      "status": "planned"
+      "status": "planned_claims_calibration_non_blocking_product_release"
     },
     {
       "id": "M9",
       "title": "Stable Research/Product Release",
-      "status": "planned"
+      "status": "planned_productization_mainline",
+      "phases": [
+        {
+          "id": "M9.0",
+          "title": "Product Completion Policy & Roadmap",
+          "status": "planned",
+          "exit_gate": [
+            "Blueprint explicitly separates M9 product completion from M7/M8 evidence and calibration tracks",
+            "machine-readable Product Completion Policy is mandatory in Project OS and portable continuation bundles",
+            "ISSUE-0066 is claims-only and explicitly non-blocking for M9 product development/release",
+            "routine daily user-computer/Private-M1/ZIP operation is prohibited as product infrastructure",
+            "M9.1-M9.6 productization phases and Stable Product completion criteria are frozen",
+            "CI tests fail if future handoff/roadmap regresses these boundaries"
+          ]
+        },
+        {
+          "id": "M9.1",
+          "title": "Automated Market Data & Scheduling Service",
+          "status": "planned",
+          "exit_gate": [
+            "market calendar and incremental A-share data updates run as an application service",
+            "QFQ/provider failover/retry/health are automated",
+            "daily operation no longer requires the user to launch BAT/PowerShell",
+            "service state and failures are visible in Chinese diagnostics",
+            "Private-M1-specific interaction is exceptional, not routine"
+          ]
+        },
+        {
+          "id": "M9.2",
+          "title": "Automated Harmonic Analysis Runtime",
+          "status": "planned",
+          "exit_gate": [
+            "new canonical bars trigger controlled incremental harmonic analysis automatically",
+            "forming patterns and lifecycle state evolve without fabricated future nodes",
+            "viewport pan/zoom never reruns harmonic identity",
+            "analysis provenance and Source truth remain auditable"
+          ]
+        },
+        {
+          "id": "M9.3",
+          "title": "End-to-End Product Workbench",
+          "status": "planned",
+          "exit_gate": [
+            "symbol selection, candlesticks, harmonic overlays, ratios, PRZ, targets and lifecycle are integrated",
+            "Chinese decision-support panel explains current state and next observation points",
+            "crosshair/hover and information panels share canonical bar/time/price identity",
+            "browser acceptance covers end-to-end user workflows"
+          ]
+        },
+        {
+          "id": "M9.4",
+          "title": "Background Evidence, Calibration Boundary & Observability",
+          "status": "planned",
+          "exit_gate": [
+            "M7 capture/outcome/health/cohort maintenance runs in the background without daily user action",
+            "M8 stays disabled until evidence gates are genuinely satisfied",
+            "product exposes insufficient-evidence state instead of fake statistics",
+            "operational observability distinguishes product faults from evidence insufficiency"
+          ]
+        },
+        {
+          "id": "M9.5",
+          "title": "Reliability, Packaging & Zero-CLI Operation",
+          "status": "planned",
+          "exit_gate": [
+            "normal install/start/update/recovery does not require command-line operation",
+            "data migration, backup and recovery are productized",
+            "common provider/network/data failures have automatic retry or clear Chinese remediation",
+            "daily usage requires no ZIP handoff or AI manual acceptance"
+          ]
+        },
+        {
+          "id": "M9.6",
+          "title": "Stable Product Release Acceptance",
+          "status": "planned",
+          "exit_gate": [
+            "automated data, harmonic runtime, product workbench and background evidence service pass end-to-end acceptance",
+            "formal browser/integration/freeze/release gates are green",
+            "normal daily use requires no user command line and no AI陪跑",
+            "ISSUE-0066 may remain open but statistical features must remain explicitly unavailable",
+            "versioned stable release, operator documentation and recovery contract are complete"
+          ]
+        }
+      ]
     }
   ]
 }

@@ -103,3 +103,31 @@ def test_decision_index_is_compact_but_preserves_active_sources() -> None:
     assert "D-076" in index
     assert "canonical ledger: `governance/DECISION_INDEX.json`" in index
     assert len(index) < 6000
+
+
+
+def test_product_completion_policy_is_machine_enforced() -> None:
+    module = load_project_state_module()
+    policy = module.read_json(module.PRODUCT_POLICY_PATH)
+    assert policy["status"] == "authoritative"
+    assert policy["development_mainline"]["milestone"] == "M9"
+    assert policy["development_mainline"]["may_proceed_while_evidence_accumulates"] is True
+    assert policy["evidence_gate"]["issue_id"] == "ISSUE-0066"
+    assert policy["evidence_gate"]["scope"] == "claims_only"
+    assert policy["evidence_gate"]["blocks_product_release"] is False
+    assert policy["user_computer_policy"]["routine_dependency_for_development"] is False
+    assert policy["user_computer_policy"]["daily_manual_capture_required"] is False
+    assert policy["stable_product_release_definition"]["requires_issue_0066_closed"] is False
+    assert policy["stable_product_release_definition"]["requires_zero_cli_daily_operation"] is True
+
+
+def test_resume_pack_exposes_product_mainline_and_user_computer_boundary() -> None:
+    module = load_project_state_module()
+    ok, errors, _, state = module.validate()
+    assert ok, errors
+    pack = module.build_resume_pack(state)
+    assert "## Product Completion Policy" in pack
+    assert "development mainline: `M9`" in pack
+    assert "background evidence: `M7` (non-blocking)" in pack
+    assert "ISSUE-0066 scope: `claims_only`" in pack
+    assert "routine user-computer dependency: `False`" in pack

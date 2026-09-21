@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "policy_id": "product-completion-decoupling-v1",
+  "status": "authoritative",
+  "effective_from": "M9.0",
+  "development_mainline": {
+    "milestone": "M9",
+    "title": "Stable Research/Product Release",
+    "may_proceed_while_evidence_accumulates": true,
+    "blocked_by_natural_time_wait_for_evidence": false
+  },
+  "background_tracks": {
+    "evidence": {
+      "milestone": "M7",
+      "role": "background_continuous_prospective_evidence",
+      "blocks_product_release": false,
+      "routine_user_intervention_required": false
+    },
+    "calibration": {
+      "milestone": "M8",
+      "role": "claims_and_decision_calibration_when_evidence_is_sufficient",
+      "blocks_product_release": false,
+      "unavailable_behavior": "product remains usable; statistical features show insufficient evidence"
+    }
+  },
+  "evidence_gate": {
+    "issue_id": "ISSUE-0066",
+    "scope": "claims_only",
+    "blocks_product_release": false,
+    "blocks_product_development": false,
+    "blocks_statistical_claims": true,
+    "allowed_to_block": [
+      "win_rate_claims",
+      "alpha_claims",
+      "profitability_claims",
+      "statistical_significance_claims",
+      "evidence_based_calibration_outputs"
+    ],
+    "must_not_block": [
+      "M9 product development",
+      "M9 stable product release",
+      "automated data service",
+      "automated harmonic runtime",
+      "interactive workbench",
+      "background evidence service",
+      "packaging and zero-CLI operation"
+    ]
+  },
+  "user_computer_policy": {
+    "routine_dependency_for_development": false,
+    "daily_manual_capture_required": false,
+    "daily_zip_handoff_required": false,
+    "default_test_environment": "hosted_ci_repository_fixtures_or_agent_controlled_runtime",
+    "allowed_reasons": [
+      "private_M1_specific_fault_not_reproducible_elsewhere",
+      "one_time_private_data_migration_or_upgrade",
+      "final_user_acceptance_or_user_requested_local_preview",
+      "local_environment_compatibility_fault"
+    ],
+    "forbidden_reasons": [
+      "ordinary_code_regression",
+      "daily_M7_evidence_accumulation",
+      "same_session_reverification",
+      "ordinary_QFQ_or_provider_testing",
+      "browser_or_chart_regression",
+      "Project_OS_or_freeze_gate",
+      "waiting_for_more_sample_days"
+    ],
+    "necessity_test": [
+      "state why hosted or fixture testing cannot substitute",
+      "state the single required user action",
+      "state the bounded number of executions",
+      "state the unique evidence produced"
+    ]
+  },
+  "stable_product_release_definition": {
+    "requires_issue_0066_closed": false,
+    "requires_predefined_number_of_evidence_days": false,
+    "requires_user_daily_cli": false,
+    "requires_daily_zip_handoff": false,
+    "requires_automated_data_update": true,
+    "requires_automated_harmonic_analysis": true,
+    "requires_interactive_product_workbench": true,
+    "requires_background_evidence_service": true,
+    "requires_reliability_and_recovery": true,
+    "requires_zero_cli_daily_operation": true,
+    "requires_formal_release_gates": true,
+    "post_release_evidence_continues": true
+  },
+  "productization_phases": [
+    "M9.0_product_completion_policy_and_roadmap",
+    "M9.1_automated_market_data_and_scheduling",
+    "M9.2_automated_harmonic_analysis_runtime",
+    "M9.3_end_to_end_product_workbench",
+    "M9.4_background_evidence_calibration_and_observability",
+    "M9.5_reliability_packaging_and_zero_cli_operation",
+    "M9.6_stable_product_release_acceptance"
+  ],
+  "handoff_invariants": [
+    "M9 is the development mainline after M9.0",
+    "M7 remains a background evidence track and must not become daily manual user work",
+    "M8 and ISSUE-0066 gate claims, not product completion",
+    "user computer is not routine project infrastructure",
+    "do not delay M9 waiting for natural evidence accumulation"
+  ]
+}

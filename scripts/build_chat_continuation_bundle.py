@@ -28,6 +28,7 @@ STATIC_CANONICAL_PATHS = [
     "governance/DECISION_INDEX.json",
     "governance/SOURCE_COVERAGE.json",
     "governance/OPEN_ISSUES.json",
+    "governance/PRODUCT_COMPLETION_POLICY.json",
     "governance/QUALITY_BASELINE.json",
     "governance/attempts/2026-09.jsonl",
     "governance/changes/CR-0065-project-os-v2.md",
@@ -107,13 +108,14 @@ def _new_chat_prompt(state: dict[str, Any], head: str) -> str:
 不要立即改代码，也不要依赖你对旧聊天的记忆。先完成以下恢复流程：
 
 1. 按 `START_HERE.md` 和 `MANIFEST.json` 检查续接包；
-2. 读取仓库权威顺序、PROJECT_STATE、Blueprint、active Change/spec、最新 Attempt、Open Issues、Decision Index 与 Source Coverage；
+2. 读取仓库权威顺序、PROJECT_STATE、PRODUCT_COMPLETION_POLICY、Blueprint、active Change/spec、最新 Attempt、Open Issues、Decision Index 与 Source Coverage；
 3. 如可访问 GitHub，核对 canonical main；如不能，明确标注“未在线核对”，不得假装已验证；
-4. 先返回一份 **Bootstrap Receipt**，逐项回答协议规定的 11 个问题；
+4. 先返回一份 **Bootstrap Receipt**，逐项回答协议规定的 12 个问题；
 5. 若 bundle、Git、state、ledger 存在任何矛盾，停止核心开发，先报告差异；
 6. Receipt 合格后再执行我写在最后的任务；
 7. 工作结束前，把成功、失败、用户修改、blocker、Gate 和 next action 写回仓库，不得只留在聊天里；
-8. 不需要通读全部旧聊天。仅当本次任务引用了续接包中缺失的具体用户选择时，才定向检索对应旧对话，并把恢复出的重要事实落库。
+8. 不需要通读全部旧聊天。仅当本次任务引用了续接包中缺失的具体用户选择时，才定向检索对应旧对话，并把恢复出的重要事实落库；
+9. 产品开发默认沿 M9 主线推进；M7 为后台 evidence track，M8/ISSUE-0066 只控制统计/校准声明。不得把每天人工运行用户电脑当作项目主线。
 
 本续接点应为：
 
@@ -132,6 +134,12 @@ def _new_chat_prompt(state: dict[str, Any], head: str) -> str:
 def _start_here(state: dict[str, Any], git_info: dict[str, Any]) -> str:
     current = state["current"]
     private_m1 = state.get("private_m1") or {}
+    productization = state.get("productization") or {}
+    next_human_action = (
+        "(none by default; user computer is not routine project infrastructure)"
+        if productization.get("routine_user_computer_dependency") is False
+        else (private_m1.get("one_action_entry") or "(see PROJECT_STATE)")
+    )
     return f"""# START HERE — HT-CN Portable Continuation Bundle
 
 这是一个只读、白名单、可校验的跨 ChatGPT / 跨 AI 续接包。聊天不是当前状态权威。
@@ -152,8 +160,11 @@ def _start_here(state: dict[str, Any], git_info: dict[str, Any]) -> str:
 ## 当前 Gate
 
 - next major task: `{state["next_major_task"]["phase"]} — {state["next_major_task"]["title"]}`
-- next human action: `{private_m1.get("one_action_entry") or "(see PROJECT_STATE)"}`
-- expected evidence: `{private_m1.get("expected_evidence") or "(see PROJECT_STATE)"}`
+- development mainline: `{productization.get("development_mainline") or "(see policy)"}`
+- background evidence track: `{productization.get("background_evidence_track") or "(see policy)"}`
+- next human action: `{next_human_action}`
+- background evidence entry (non-blocking): `{private_m1.get("one_action_entry") or "(see PROJECT_STATE)"}`
+- expected evidence (when evidence track runs): `{private_m1.get("expected_evidence") or "(see PROJECT_STATE)"}`
 
 ## 强制读取顺序
 
@@ -161,9 +172,10 @@ def _start_here(state: dict[str, Any], git_info: dict[str, Any]) -> str:
 2. `HTCN_RESUME_PACK.md`
 3. `canonical/AGENTS.md`
 4. `canonical/governance/PROJECT_STATE.json`
-5. `canonical/PROJECT_BLUEPRINT.md`
-6. active Change、active spec、Attempt / Issue / Decision / Source ledgers
-7. 与本次任务直接相关的 required specs
+5. `canonical/governance/PRODUCT_COMPLETION_POLICY.json`
+6. `canonical/PROJECT_BLUEPRINT.md`
+7. active Change、active spec、Attempt / Issue / Decision / Source ledgers
+8. 与本次任务直接相关的 required specs
 
 先输出 Bootstrap Receipt，再工作。协议全文位于 `canonical/CHAT_CONTINUATION.md`。
 """

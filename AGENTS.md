@@ -90,7 +90,21 @@ Project State。详细格式、校验和隐私边界见 `CHAT_CONTINUATION.md`�
 - 前瞻证据不足时禁止胜率/alpha/盈利能力结论；
 - 不执行证券交易。
 
-## 6. 工作单元 Closeout（强制）
+## 6. Product Completion / Evidence Boundary（强制）
+
+任何 Agent 恢复项目后，必须读取 `governance/PRODUCT_COMPLETION_POLICY.json` 并遵守 D-081：
+
+- **M9 是产品开发主线**；不得等待 M7 自然积累数月/数年后才继续产品化。
+- **M7 是后台长期 evidence track**；证据积累继续，但不代表产品尚未完成。
+- **M8 / ISSUE-0066 只阻塞胜率、alpha、盈利能力、统计显著性和 evidence-based calibration 声明**；不得阻塞 M9 产品开发或 Stable Product Release。
+- 用户电脑不是日常基础设施。Hosted CI、repository fixtures、agent-controlled runtime 能完成的测试/迭代，不得要求用户电脑。
+- 不得把“每天运行 M7 BAT / 上传 ZIP / AI 人工验收”设计成产品运行方式。
+- 只有私有 M1 特有且不可复现的问题、一次性迁移、最终 UAT/用户主动本地预览或本地兼容性故障，才可请求用户电脑；请求前必须说明为什么自动化不能替代，以及执行次数上限。
+- Stable Product 的完成条件是自动数据、自动谐波 runtime、完整工作台、后台 evidence、可靠性/打包和零命令行日常操作，而不是 ISSUE-0066 关闭。
+
+若下一项开发工作仍指向“继续人工积累 M7”，必须先证明它是产品自动化建设本身或真实 blocker；否则应按 PROJECT_STATE.next_major_task 推进 M9。
+
+## 7. 工作单元 Closeout（强制）
 
 结束、切换对话、接近上下文上限、Gate 改变或 milestone 完成前：
 
@@ -105,7 +119,7 @@ Project State。详细格式、校验和隐私边界见 `CHAT_CONTINUATION.md`�
 9. CI Project OS gate 通过；
 10. merge 后必须做 post-merge state closeout，不能让 PROJECT_STATE 永久停在 feature-branch 状态。
 
-## 7. 无损恢复验收
+## 8. 无损恢复验收
 
 一个完全空白的新对话，不读取旧聊天全文，仅凭项目必须能回答：
 
@@ -117,5 +131,7 @@ Project State。详细格式、校验和隐私边界见 `CHAT_CONTINUATION.md`�
 - 最近一次成功/失败 attempt 是什么？
 - latest CI 与 state 是否一致？
 - 哪些能力是 supported/quarantined/unsupported？
+- 产品开发主线、后台 evidence track、ISSUE-0066 claims-only 边界是什么？
+- 当前是否真的需要用户电脑；若需要，自动化为什么不能替代？
 
 任何一项回答不了，都不得宣称“无缝续接”。

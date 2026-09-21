@@ -19,7 +19,7 @@
 
 1. 读取 `START_HERE.md`、`MANIFEST.json` 和 `HTCN_RESUME_PACK.md`；
 2. 按 manifest 校验文件数量、大小和 SHA-256；
-3. 读取 `canonical/AGENTS.md`、`canonical/governance/PROJECT_STATE.json` 和 `canonical/PROJECT_BLUEPRINT.md`；
+3. 读取 `canonical/AGENTS.md`、`canonical/governance/PROJECT_STATE.json`、`canonical/governance/PRODUCT_COMPLETION_POLICY.json` 和 `canonical/PROJECT_BLUEPRINT.md`；
 4. 读取 active Change、active spec、最新 Attempt、Open Issues、Decision Index、Source Coverage；
 5. 只在本次任务确实需要时读取其他 required specs；
 6. 若可访问 GitHub，核对 manifest HEAD 与 canonical `main`；若不能访问，明确写出“未在线核对”，不得伪称已验证；
@@ -37,9 +37,18 @@
 8. supported / partial / quarantined / unsupported 边界；
 9. 最近成功与失败 Attempt；
 10. bundle、GitHub、state、ledger 是否存在矛盾；
-11. 本次任务允许修改与禁止修改的范围。
+11. 本次任务允许修改与禁止修改的范围；
+12. 当前产品开发主线与后台 evidence/calibration 轨分别是什么、ISSUE-0066 阻塞什么/不阻塞什么、当前是否真的需要用户电脑。
 
 任何一项无法回答，都不能宣称“已经无损续接”。
+
+## Product Completion 交接硬规则
+
+- 恢复项目时必须把 M9 视为产品开发主线，把 M7 视为后台长期 evidence track。
+- M8/ISSUE-0066 只控制统计/胜率/alpha/盈利能力/calibration 声明，不得被解释为 M9 产品发布的等待条件。
+- 默认“下一项用户动作”应为无；不得因为 M7 日常积累要求用户每天开电脑、跑 BAT 或上传 ZIP。
+- 只有 `PRODUCT_COMPLETION_POLICY.json` 允许的 private/local-only 原因才能请求用户电脑。
+- 若统计证据不足，产品应显示“证据不足/能力未解锁”，而不是暂停产品开发。
 
 ## 旧聊天的正确用途
 
