@@ -107,6 +107,7 @@ def assess_m7_evidence_bundle(
     methodology_guard: dict[str, Any] | None = None
     outcome_guard: dict[str, Any] | None = None
     qfq: dict[str, Any] | None = None
+    append_precheck: dict[str, Any] | None = None
     try:
         with zipfile.ZipFile(bundle_path, "r") as archive:
             manifest = _json_member(archive, "bundle-manifest.json") or {}
@@ -121,6 +122,10 @@ def assess_m7_evidence_bundle(
             qfq = _json_member(
                 archive,
                 "reports/m4-qfq-readiness.json",
+            )
+            append_precheck = _json_member(
+                archive,
+                "reports/m7-append-precheck.json",
             )
     except (OSError, zipfile.BadZipFile, ValueError) as exc:
         blockers.append(
@@ -150,8 +155,36 @@ def assess_m7_evidence_bundle(
         if int(outcome_guard.get("error_count") or 0) != 0:
             blockers.append("outcome_engine_freeze_guard_errors")
 
+    append_action = (
+        None
+        if append_precheck is None
+        else str(append_precheck.get("action") or "")
+    )
+    idempotent_noop = append_action == "idempotent_noop"
+
     if qfq is None:
-        blockers.append("qfq_readiness_report_missing")
+        if not idempotent_noop:
+            blockers.append("qfq_readiness_report_missing")
+        elif append_precheck is None:
+            blockers.append("idempotent_noop_precheck_missing")
+        else:
+            precheck_latest_closed = str(
+                append_precheck.get("latest_closed_trade_date") or ""
+            )
+            precheck_latest_capture = str(
+                append_precheck.get("latest_committed_capture_date") or ""
+            )
+            pending_count = int(
+                append_precheck.get("pending_closed_trade_count") or 0
+            )
+            if append_precheck.get("status") != "ready":
+                blockers.append("idempotent_noop_precheck_not_ready")
+            if precheck_latest_closed != precheck_latest_capture:
+                blockers.append("idempotent_noop_market_clock_mismatch")
+            if pending_count != 0:
+                blockers.append("idempotent_noop_has_pending_closed_sessions")
+            if not blockers:
+                warnings.append("qfq_not_rerun_for_idempotent_noop")
     else:
         initialized = int(qfq.get("initialized_instruments") or 0)
         ready = int(qfq.get("formal_ready_after") or 0)
@@ -192,7 +225,9 @@ def assess_m7_evidence_bundle(
     else:
         accumulation_status = "accumulating"
 
-    classification = "new_capture"
+    classification = (
+        "idempotent_rerun" if idempotent_noop else "new_capture"
+    )
     (
         previous_date,
         previous_transaction,
@@ -252,6 +287,7 @@ def assess_m7_evidence_bundle(
         ),
         "accumulation_status": accumulation_status,
         "classification": classification,
+        "append_action": append_action,
         "statistical_inference_allowed": False,
         "alpha_inference_allowed": False,
         "win_rate_inference_allowed": False,

@@ -112,6 +112,12 @@
       "title": "Bundle-generation identity is distinct from immutable capture origin",
       "status": "active",
       "source": "governance/decisions/D-079-bundle-generation-vs-capture-origin.md"
+    },
+    {
+      "id": "D-080",
+      "title": "No new closed session means no append-only work; missed sessions fail closed",
+      "status": "active",
+      "source": "governance/decisions/D-080-m7-append-precheck.md"
     }
   ],
   "rules": {

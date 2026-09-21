@@ -302,3 +302,95 @@ def test_exporter_records_bundle_and_capture_identity_separately(
     assert payload["bundle_generation_code_head"] == "bundle-head"
     assert payload["latest_capture_code_head"] == "capture-head"
     assert payload["latest_capture_worktree_clean"] is True
+
+
+
+def test_acceptance_allows_no_qfq_report_for_verified_idempotent_noop(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "noop.zip"
+    transaction_id, _ = _write_acceptance_bundle(path)
+    with zipfile.ZipFile(path, "r") as source:
+        payloads = {
+            name: source.read(name)
+            for name in source.namelist()
+            if name not in {
+                "bundle-manifest.json",
+                "reports/m4-qfq-readiness.json",
+            }
+        }
+        manifest = json.loads(source.read("bundle-manifest.json"))
+    precheck = json.dumps({
+        "status": "ready",
+        "action": "idempotent_noop",
+        "append_required": False,
+        "latest_closed_trade_date": "2026-09-18",
+        "latest_committed_capture_date": "2026-09-18",
+        "pending_closed_trade_count": 0,
+    }).encode()
+    payloads["reports/m7-append-precheck.json"] = precheck
+    manifest["files"] = [
+        {
+            "arcname": name,
+            "size_bytes": len(payload),
+            "sha256": _sha(payload),
+            "required": name.startswith("authoritative/"),
+        }
+        for name, payload in sorted(payloads.items())
+    ]
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("bundle-manifest.json", json.dumps(manifest, sort_keys=True))
+        for name, payload in payloads.items():
+            archive.writestr(name, payload)
+
+    result = assess_m7_evidence_bundle(path)
+
+    assert result.status == "accepted"
+    assert result.classification == "idempotent_rerun"
+    assert "qfq_not_rerun_for_idempotent_noop" in result.warnings
+    assert result.summary["append_action"] == "idempotent_noop"
+
+
+def test_acceptance_rejects_no_qfq_when_noop_precheck_has_pending_session(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "bad-noop.zip"
+    _write_acceptance_bundle(path)
+    with zipfile.ZipFile(path, "r") as source:
+        payloads = {
+            name: source.read(name)
+            for name in source.namelist()
+            if name not in {
+                "bundle-manifest.json",
+                "reports/m4-qfq-readiness.json",
+            }
+        }
+        manifest = json.loads(source.read("bundle-manifest.json"))
+    precheck = json.dumps({
+        "status": "ready",
+        "action": "idempotent_noop",
+        "append_required": False,
+        "latest_closed_trade_date": "2026-09-22",
+        "latest_committed_capture_date": "2026-09-18",
+        "pending_closed_trade_count": 1,
+    }).encode()
+    payloads["reports/m7-append-precheck.json"] = precheck
+    manifest["files"] = [
+        {
+            "arcname": name,
+            "size_bytes": len(payload),
+            "sha256": _sha(payload),
+            "required": name.startswith("authoritative/"),
+        }
+        for name, payload in sorted(payloads.items())
+    ]
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("bundle-manifest.json", json.dumps(manifest, sort_keys=True))
+        for name, payload in payloads.items():
+            archive.writestr(name, payload)
+
+    result = assess_m7_evidence_bundle(path)
+
+    assert result.status == "not_ready"
+    assert "idempotent_noop_market_clock_mismatch" in result.blockers
+    assert "idempotent_noop_has_pending_closed_sessions" in result.blockers

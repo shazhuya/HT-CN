@@ -136,6 +136,7 @@ def build_bundle(
         "m4-methodology-freeze-guard.json",
         "m4-outcome-engine-freeze-guard.json",
         "m4-m1-update.log",
+        "m7-append-precheck.json",
         "m4-qfq-readiness.json",
         "m4-qfq-readiness.log",
         "m4-lifecycle-snapshot.json",
@@ -147,6 +148,8 @@ def build_bundle(
         "m4-prospective-observations.md",
         "m4-outcome-v2.json",
         "m4-outcome-v2.md",
+        "m7-accumulation-status.json",
+        "m7-accumulation-status.md",
     )
     for name in report_names:
         path = reports_root / name
@@ -184,6 +187,26 @@ def build_bundle(
         )
 
     latest_capture = committed[-1] if committed else None
+    append_precheck: dict[str, Any] = {}
+    precheck_path = reports_root / "m7-append-precheck.json"
+    if precheck_path.is_file():
+        try:
+            value = json.loads(precheck_path.read_text(encoding="utf-8"))
+            if isinstance(value, dict):
+                append_precheck = value
+        except (OSError, json.JSONDecodeError):
+            append_precheck = {}
+
+    accumulation_status: dict[str, Any] = {}
+    status_path = reports_root / "m7-accumulation-status.json"
+    if status_path.is_file():
+        try:
+            value = json.loads(status_path.read_text(encoding="utf-8"))
+            if isinstance(value, dict):
+                accumulation_status = value
+        except (OSError, json.JSONDecodeError):
+            accumulation_status = {}
+
     manifest: dict[str, Any] = {
         "schema_version": BUNDLE_SCHEMA_VERSION,
         "status": (
@@ -227,6 +250,17 @@ def build_bundle(
             if latest_capture is None
             else latest_capture.get("worktree_clean")
         ),
+        "append_precheck_status": append_precheck.get("status"),
+        "append_action": append_precheck.get("action"),
+        "append_required": append_precheck.get("append_required"),
+        "latest_closed_trade_date": append_precheck.get(
+            "latest_closed_trade_date"
+        ),
+        "pending_closed_trade_count": append_precheck.get(
+            "pending_closed_trade_count"
+        ),
+        "m7_accumulation_status": accumulation_status.get("status"),
+        "m7_issue_gate": accumulation_status.get("issue_gate"),
         "evidence_health_status": health.get("status"),
         "evidence_health_blocker_count": health.get("blocker_count"),
         "committed_capture_read_error": committed_read_error,
