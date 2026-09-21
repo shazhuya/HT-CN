@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.2-READY-TO-MERGE",
+  "state_id": "HTCN-M7.2-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
     "milestone": "M7",
     "phase": "M7.2",
     "title": "Private-M1 Evidence Append Resilience Repair",
-    "status": "ready_to_merge",
-    "active_change": "CR-0073",
-    "active_spec": "specs/m7-phase-2-private-m1-evidence-append-resilience.md",
-    "latest_attempt_id": "A-20260920-0073-006",
-    "latest_hosted_validation_attempt_id": "A-20260920-0073-006",
-    "work_branch": "m7/private-m1-resilience-v1",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260920-0073-007",
+    "latest_hosted_validation_attempt_id": "A-20260920-0073-007",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35520849502,
-      "run_number": 2422,
-      "event": "pull_request",
-      "head": "f5f8c91ebbf99345a7a866729a70abc05ad6d190",
+      "workflow_run": 35521182410,
+      "run_number": 2425,
+      "event": "push",
+      "head": "2963ce097a7456c83e4413a4b87e7a306f16a8a8",
       "pr": 61,
       "python_passed": 906,
       "warnings": 0,
@@ -48,14 +48,16 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10607889896,
-      "artifact_digest": "sha256:090fb2e28c7f44a1d2864953b3cda49bcc3ed05cc1b40ea0a1f259d2e3d9d718",
-      "scope": "PR #61 head passed deterministic and formal release integrity gates: 906 Python / 0 warnings, Ruff 0/0, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
+      "artifact_id": 10608141746,
+      "artifact_digest": "sha256:5e1513a37556aeccc443a23834be4fae3311ab9943bfa62ef99cd6a128592458",
+      "continuation_artifact_id": 10609015246,
+      "continuation_artifact_digest": "sha256:4ef718a0e77c3c4e16649ad07b57c82563b1624a5460302233f729ffc28b366d",
+      "scope": "PR #61 merged to canonical main as 2963ce097a7456c83e4413a4b87e7a306f16a8a8. Main #2425 passed Project OS, Source Coverage, Ruff 0/0, 906 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
     "current_market_full_closeout_ready": true,
-    "next_gate": "m7_first_canonical_main_prospective_append",
+    "next_gate": "m7_first_canonical_main_prospective_append_retry",
     "one_action_entry": "运行M7前瞻证据积累.bat",
     "expected_evidence": "artifacts/reports/m4-evidence-bundle.zip",
     "accepted_evidence_receipt": "governance/acceptance/M6.2-private-m1-evidence-acceptance.json",
@@ -63,12 +65,11 @@
     "expected_status_report": "artifacts/reports/m7-accumulation-status.json"
   },
   "next_major_task": {
-    "phase": "M7.2",
-    "title": "Merge validated resilience repair and re-run canonical-main release gates",
-    "status": "ready_to_merge",
-    "blocked_until": [
-      "final ledger-bearing PR head remains fully green"
-    ]
+    "phase": "M7",
+    "title": "Retry First Canonical-Main Prospective Evidence Append",
+    "status": "awaiting_private_run",
+    "blocked_until": [],
+    "one_action_entry": "运行M7前瞻证据积累.bat"
   },
   "freezes": {
     "m4_capture_methodology": {

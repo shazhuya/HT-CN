@@ -1,6 +1,6 @@
 # CR-0073 — M7.2 Private-M1 Evidence Append Resilience Repair
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: eca753f148871495482d86a69ca44f30c8730bb6
@@ -34,3 +34,7 @@ No change to any 37 frozen M4 methodology components, any 4 frozen Outcome Engin
 ## Acceptance
 
 See `specs/m7-phase-2-private-m1-evidence-append-resilience.md`.
+
+## Closeout
+
+Merged through PR #61 as `2963ce097a7456c83e4413a4b87e7a306f16a8a8`. Canonical main workflow `35521182410` / `#2425` passed all deterministic and formal release-integrity gates. The next empirical gate is the repaired private-M1 M7 rerun; ISSUE-0069 remains open until that evidence is accepted.
