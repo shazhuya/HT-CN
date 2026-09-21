@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.5-READY-TO-MERGE",
+  "state_id": "HTCN-M7.5-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,19 +23,21 @@
     "milestone": "M7",
     "phase": "M7.5",
     "title": "Evidence Acceptance and Idempotent Rerun Contract",
-    "status": "ready_to_merge",
-    "active_change": "CR-0076",
-    "active_spec": "specs/m7-phase-5-evidence-acceptance-idempotency.md",
-    "latest_attempt_id": "A-20260921-0076-006",
-    "latest_hosted_validation_attempt_id": "A-20260921-0076-006",
-    "work_branch": "m7/evidence-acceptance-idempotency-v1",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260921-0076-007",
+    "latest_hosted_validation_attempt_id": "A-20260921-0076-007",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35590259026,
-      "run_number": 2452,
-      "event": "pull_request",
-      "head": "82149a8e2e4eb6cfe57ab6cbef646e4b6f203501",
+      "workflow_run": 35590805595,
+      "run_number": 2455,
+      "event": "push",
+      "head": "1152d1fc80a78c2224cda6aa32c1bfdb80f21073",
       "pr": 64,
+      "final_pr_workflow_run": 35590566473,
+      "final_pr_run_number": 2454,
       "python_passed": 916,
       "warnings": 0,
       "ruff_observed": 0,
@@ -48,9 +50,11 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10634431564,
-      "artifact_digest": "sha256:badbd559bf4259f4f7e2587fa52a11e03dbac98aefa42eb7ed13b3b93fce4cce",
-      "scope": "PR #64 candidate passed Project OS, Source Coverage, Ruff 0/0, 916 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
+      "artifact_id": 10634811314,
+      "artifact_digest": "sha256:565770109c12acfb3a742a2d22c59d1332588c61f52758d4033c18f209fec3d1",
+      "continuation_artifact_id": 10634297428,
+      "continuation_artifact_digest": "sha256:d833b7ceaad9750407000c4481f65b0e7226066dc80222a77b20b8ed1d4f4f34",
+      "scope": "Final ledger-bearing PR #64 run #2454 passed all release gates, then PR #64 merged with ancestry preserved as 1152d1fc80a78c2224cda6aa32c1bfdb80f21073. Canonical main #2455 repeated Project OS, Source Coverage, Ruff 0/0, 916 Python tests / 0 warnings, Web, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4."
     }
   },
   "private_m1": {
@@ -64,15 +68,19 @@
     "m7_first_append_acceptance_receipt": "governance/acceptance/M7-first-prospective-capture-acceptance.json",
     "latest_accepted_m7_capture_date": "2026-09-21",
     "latest_accepted_m7_capture_transaction_id": "9964d49a9147b404cedb4f2f",
-    "latest_accepted_m7_evidence_bundle_sha256": "41ea62c21711858c61a43c98aa6959aaf5185773857f8d45ce995939713dc77b"
+    "latest_accepted_m7_evidence_bundle_sha256": "41ea62c21711858c61a43c98aa6959aaf5185773857f8d45ce995939713dc77b",
+    "evidence_acceptance_entry": "scripts/m7_evidence_acceptance.py",
+    "evidence_acceptance_contract": "M7.5",
+    "idempotent_same_day_rerun_supported": true
   },
   "next_major_task": {
-    "phase": "M7.5",
-    "title": "Merge validated evidence acceptance/idempotency contract",
-    "status": "ready_to_merge",
-    "blocked_until": [
-      "exact ledger-bearing PR head remains fully green"
-    ]
+    "phase": "M7",
+    "title": "Continue Frozen Prospective Evidence Accumulation",
+    "status": "active_evidence_accumulation",
+    "blocked_until": [],
+    "one_action_entry": "运行M7前瞻证据积累.bat",
+    "acceptance_entry": "scripts/m7_evidence_acceptance.py",
+    "inference_gate": "ISSUE-0066"
   },
   "freezes": {
     "m4_capture_methodology": {

@@ -1,6 +1,6 @@
 # CR-0076 — M7.5 Evidence Acceptance and Idempotent Rerun Contract
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 094ca01de6170a7e76ba1fb948996c26ed8bc940
@@ -30,3 +30,7 @@ No automatic trade execution, no statistical inference, no change to capture met
 ## Acceptance
 
 See `specs/m7-phase-5-evidence-acceptance-idempotency.md`.
+
+## Closeout
+
+Merged through PR #64 as `1152d1fc80a78c2224cda6aa32c1bfdb80f21073`. Final ledger-bearing PR workflow `35590566473` / `#2454` and canonical-main workflow `35590805595` / `#2455` both passed all deterministic and formal release gates. ISSUE-0070 is closed; continuous M7 accumulation continues under ISSUE-0066.

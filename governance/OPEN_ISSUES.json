@@ -72,7 +72,7 @@
         "M7 statistical conclusions"
       ],
       "next_action": "Continue running 运行M7前瞻证据积累.bat from clean canonical main after each closed A-share session. Accumulate frozen prospective captures and outcome follow-up; do not infer win rate, alpha or profitability early.",
-      "current_fact": "The first real M7 prospective capture is accepted for 2026-09-21: one committed capture, 68 captured candidates, 14 prospective outcome-cohort candidates/observations, and one committed Outcome v2 snapshot with all 14 currently right_censored_ongoing. Statistical conclusions remain gated."
+      "current_fact": "The first real M7 prospective capture remains accepted for 2026-09-21. M7.5 is now integrated, so future evidence bundles have automated read-only acceptance/idempotency checks while the statistical sample remains insufficient. Statistical, alpha, win-rate and profitability conclusions remain gated."
     },
     {
       "id": "ISSUE-0067",
@@ -113,13 +113,13 @@
       "id": "ISSUE-0070",
       "severity": "medium",
       "type": "operational_evidence",
-      "status": "open",
+      "status": "closed",
       "title": "M7 bundle acceptance is manual and conflates bundle-generation head with capture origin",
-      "blocks": [
-        "M7.5"
-      ],
-      "next_action": "Validate CR-0076: separate transport-generation identity from immutable capture identity and add read-only automated acceptance/idempotency audit.",
-      "current_fact": "m4-evidence-bundle(8).zip was a same-day rerun on main 094ca01d with exactly one committed 2026-09-21 capture, unchanged transaction 9964d49a9147b404cedb4f2f and unchanged outcome snapshot c348edab37a43eaaf7679299. This proves authoritative idempotency, but pre-M7.5 evidence_intake would falsely block because bundle code_head 094ca01d differs from immutable capture origin c822de2e."
+      "blocks": [],
+      "next_action": "None — M7.5 integrated automated read-only acceptance/idempotency semantics and separated bundle-generation identity from immutable capture origin.",
+      "current_fact": "PR #64 final ledger-bearing run #2454 and canonical main #2455 passed all release gates with 916 Python tests / 0 warnings, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4. New bundles carry explicit bundle-generation and latest-capture identities; same-date same-transaction reruns are accepted as idempotent while drift remains fail-closed.",
+      "resolution": "Closed by A-20260921-0076-007 after PR #64 merged as 1152d1fc80a78c2224cda6aa32c1bfdb80f21073 and canonical main #2455 passed full validation.",
+      "closed_in": "CR-0076"
     }
   ]
 }
