@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M7.3-IMPLEMENTING",
+  "state_id": "HTCN-M7.3-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,29 +23,34 @@
     "milestone": "M7",
     "phase": "M7.3",
     "title": "Provider-Derived Legacy QFQ Gap Execution Repair",
-    "status": "implementing",
+    "status": "ready_to_merge",
     "active_change": "CR-0074",
     "active_spec": "specs/m7-phase-3-provider-derived-legacy-qfq-gap-repair.md",
-    "latest_attempt_id": "A-20260921-0074-004",
-    "latest_hosted_validation_attempt_id": "A-20260921-0074-004",
+    "latest_attempt_id": "A-20260921-0074-005",
+    "latest_hosted_validation_attempt_id": "A-20260921-0074-005",
     "work_branch": "m7/provider-derived-legacy-gap-repair-v2",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35560087250,
-      "run_number": 2430,
-      "event": "push",
-      "head": "9e3f47fabf343fab386b21f670a393284683ff5b",
+      "workflow_run": 35560226381,
+      "run_number": 2432,
+      "event": "pull_request",
+      "head": "7cf7fe5a5dda09d813c94f9c2e02be33b1319750",
+      "pr": 62,
       "python_passed": 908,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
-      "web_build": "success",
-      "formal_main_release_integrity": "pending_pr",
-      "m4_methodology": "pending_pr",
-      "outcome_engine": "pending_pr",
-      "scope": "M7.3 branch candidate passed Project OS, Source Coverage, Ruff 0/0, 908 Python tests / 0 warnings, continuation-bundle self-verification and Web build. The exact five-date no-pre_close provider regression passed. PR-only browser/Phase18/Phase21 and both immutable freeze guards remain pending."
+      "formal_main_release_integrity": "success",
+      "existing_playwright_passed": 25,
+      "phase18": "valid",
+      "phase21": "valid",
+      "m4_methodology": "frozen_match_37",
+      "outcome_engine": "frozen_match_4",
+      "artifact_id": 10622410362,
+      "artifact_digest": "sha256:705e162390edfe02a2d65f81aa7dafedf47eae23ea2e2896722173efe5dc7cfe",
+      "scope": "PR #62 candidate passed Project OS, Source Coverage, Ruff 0/0, 908 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -59,13 +64,10 @@
   },
   "next_major_task": {
     "phase": "M7.3",
-    "title": "Formal PR validation of provider-derived legacy QFQ repair",
-    "status": "implementing",
+    "title": "Merge validated provider-derived legacy QFQ repair",
+    "status": "ready_to_merge",
     "blocked_until": [
-      "PR browser/Phase18/Phase21 gates",
-      "M4 methodology frozen_match_37",
-      "Outcome Engine frozen_match_4",
-      "canonical main post-merge validation"
+      "exact ledger-bearing PR head remains fully green"
     ]
   },
   "freezes": {
