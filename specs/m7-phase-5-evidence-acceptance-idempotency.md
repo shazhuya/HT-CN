@@ -1,6 +1,6 @@
 # M7.5 — Evidence Acceptance and Idempotent Rerun Contract
 
-status: planned
+status: implementing
 
 ## 1. Identity model
 
