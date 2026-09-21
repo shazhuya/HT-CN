@@ -1,6 +1,6 @@
 # CR-0077 — M7.6 Daily Append Precheck and Self-Contained Handoff
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 2ce240a2acb8032c3a4d06951279064acfd2cc18
@@ -27,3 +27,7 @@ No backfill, no trading logic, no methodology changes, no inference changes, no 
 ## Acceptance
 
 See `specs/m7-phase-6-daily-append-precheck-self-contained-handoff.md`.
+
+## Closeout
+
+Merged through PR #65 as `c3e97f8b75df22da99476dc430ffe3206965294c`. Final ledger-bearing PR workflow `35614134788` / `#2468` and canonical-main workflow `35614489214` / `#2469` both passed all deterministic and formal release gates. ISSUE-0071 is closed; M7 returns to continuous prospective evidence accumulation under ISSUE-0066.

@@ -159,7 +159,7 @@
         {
           "id": "M7.6",
           "title": "Daily Append Precheck and Self-Contained Handoff",
-          "status": "ready_to_merge",
+          "status": "closed",
           "exit_gate": [
             "M1-updated market clock is checked before any QFQ/capture/outcome append work",
             "same closed session already committed is a successful idempotent no-op without rerunning append-only QFQ/capture/outcome",

@@ -125,13 +125,13 @@
       "id": "ISSUE-0071",
       "severity": "medium",
       "type": "operational_evidence",
-      "status": "open",
+      "status": "closed",
       "title": "M7 operator reruns append-only work when no new closed session exists",
-      "blocks": [
-        "M7.6"
-      ],
-      "next_action": "Validate CR-0077/M7.6 in hosted CI, then require full formal release/freeze gates before merge.",
-      "current_fact": "M7.5 can classify an already-generated same-day bundle as idempotent, but the operator wrapper still runs QFQ/capture/outcome before that classification and packages the ZIP before M7 accumulation status. This wastes provider work and makes the handoff less self-contained without changing authoritative evidence."
+      "blocks": [],
+      "next_action": "None — M7.6 is integrated and canonical-main validated.",
+      "current_fact": "M7.6 now prechecks the M1-updated closed-session clock against the committed capture chain before append-only work. Same-day reruns become a successful idempotent no-op; exactly one new session preserves strict QFQ/capture/outcome; multiple missed sessions fail closed. The handoff ZIP now carries append-precheck and M7 accumulation status.",
+      "resolution": "Closed by A-20260921-0077-009 after final PR #65 run #2468 and canonical main #2469 passed all release gates with 926 Python tests / 0 warnings, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4.",
+      "closed_in": "CR-0077"
     }
   ]
 }
