@@ -1,6 +1,6 @@
 # M7.3 — Provider-Derived Legacy QFQ Gap Execution Repair
 
-status: implementing
+status: planned
 
 ## 1. Real failure evidence
 
