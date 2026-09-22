@@ -26,15 +26,15 @@
     "status": "implementing",
     "active_change": "CR-0083",
     "active_spec": "specs/m9-phase-5-reliability-packaging-zero-cli.md",
-    "latest_attempt_id": "A-20260922-0083-007",
-    "latest_hosted_validation_attempt_id": "A-20260922-0083-007",
+    "latest_attempt_id": "A-20260922-0083-008",
+    "latest_hosted_validation_attempt_id": "A-20260922-0083-008",
     "work_branch": "m9/reliability-packaging-zero-cli-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35731578156,
-      "run_number": 2564,
+      "workflow_run": 35731952657,
+      "run_number": 2565,
       "event": "push",
-      "head": "478c10b6f047b7bd4e6cd82ebeb9227cd94aaf9d",
+      "head": "46371a0f7aa87822867f1a733f71bbe85efabe57",
       "python_passed": 982,
       "warnings": 0,
       "ruff_observed": 0,
@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "M9.5 planned candidate green: release identity/package, supervisor, backup/restore/update, zero-CLI entrypoints and packaged no-Git runtime validation are implemented; formal PR release gates pending."
+      "scope": "Activated M9.5 state green: Project OS resolved CR-0083/D-086; Ruff 0/0, 982 Python/0 warnings, continuation bundle and Web build passed."
     }
   },
   "private_m1": {
