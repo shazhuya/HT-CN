@@ -77,10 +77,10 @@ test('HT-CN M3 fixture workbench renders lifecycle navigation and harmonic chart
   await expect(page.getByText(/不得把后验 D 时钟误认成实时执行时钟/)).toBeVisible()
   await expect(page.getByLabel('harmonic-chart')).toBeVisible()
   await expect(page.getByText('98.7')).toBeVisible()
-  await expect(page.getByText('0.618')).toBeVisible()
-  await expect(page.getByText('XA completion')).toBeVisible()
-
   const audit = page.locator('.audit-card')
+  await expect(audit.getByText('0.618', { exact: true })).toBeVisible()
+  await expect(audit.getByText('XA completion', { exact: true })).toBeVisible()
+
   await expect(audit.getByRole('heading', { name: '价格区语义' })).toBeVisible()
   await expect(audit.getByText('HT-CN收敛核心', { exact: true })).toBeVisible()
   await expect(audit.getByText('组件审计包络', { exact: true })).toBeVisible()
