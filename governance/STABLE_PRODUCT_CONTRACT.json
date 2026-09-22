@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "contract_id": "htcn-stable-product-v1",
+  "release_channel": "stable",
+  "stable_version": "1.0.0",
+  "product_capabilities": {
+    "automated_market_data": true,
+    "automated_harmonic_analysis": true,
+    "interactive_product_workbench": true,
+    "background_prospective_evidence": true,
+    "reliability_and_recovery": true,
+    "zero_cli_daily_operation": true,
+    "automatic_trading": false
+  },
+  "evidence_boundary": {
+    "issue_id": "ISSUE-0066",
+    "issue_may_remain_open": true,
+    "blocks_product_release": false,
+    "statistical_features_available": false,
+    "win_rate_claims_available": false,
+    "alpha_claims_available": false,
+    "profitability_claims_available": false,
+    "statistical_significance_claims_available": false,
+    "evidence_based_calibration_available": false,
+    "unavailable_reason": "insufficient_prospective_evidence"
+  },
+  "source_boundaries": {
+    "five_zero": "quarantined",
+    "alternate_bat": "fail_closed",
+    "hsi": "unsupported",
+    "shark_schema": "0XABC",
+    "source_raw_prz_mutable": false,
+    "m4_methodology_mutable": false,
+    "outcome_engine_mutable": false
+  },
+  "post_release": {
+    "m7_evidence_continues_in_background": true,
+    "m8_activation_requires_existing_authorization_gate": true,
+    "routine_user_computer_dependency": false,
+    "daily_zip_handoff_required": false,
+    "ai_manual_acceptance_required": false
+  }
+}
