@@ -24,7 +24,7 @@ def read_product_state_schema(root: str | Path) -> dict[str, Any] | None:
         return None
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        raise ValueError("product state schema payload must be an object")
+        raise TypeError("product state schema payload must be an object")
     return payload
 
 
