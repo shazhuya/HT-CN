@@ -8,7 +8,7 @@ import pandas as pd
 from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from htcn.app.daily_review_digest import (
+from htcn.app.background_evidence_service import (\n    read_background_evidence_service_status,\n)\nfrom htcn.app.daily_review_digest import (
     CHANGE_TYPE_ORDER,
     WORKFLOW_REVIEW_ORDER,
     build_latest_daily_review_digest,
@@ -102,7 +102,7 @@ def market_data_status() -> dict[str, object]:
     return read_market_data_service_status(MARKET_DATA_SERVICE_STATUS_PATH)
 
 
-@app.get("/api/harmonic/runtime/status")
+@app.get("/api/evidence/status")\ndef background_evidence_status() -> dict[str, object]:\n    return read_background_evidence_service_status(\n        BACKGROUND_EVIDENCE_SERVICE_STATUS_PATH\n    )\n\n\n@app.get("/api/harmonic/runtime/status")
 def harmonic_analysis_runtime_status() -> dict[str, object]:
     return read_harmonic_analysis_runtime_status(
         HARMONIC_ANALYSIS_RUNTIME_STATUS_PATH
