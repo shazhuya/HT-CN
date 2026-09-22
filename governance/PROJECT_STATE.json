@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "Activated M9.4 state passed Project OS with CR-0082/D-085 active, Source Coverage, Ruff 0/0, 964 Python tests / 0 warnings, portable continuation-bundle verification and Web build. Formal PR gates remain required for the new evidence-observability browser scenario, Phase18/21 and immutable M4 37/4 freeze guards."
+      "scope": "A-0082-007/#2539 green: Project OS, Source Coverage, Ruff 0/0, 964 Python/0 warnings, continuation bundle and Web. Formal PR release gates pending."
     }
   },
   "private_m1": {
@@ -71,18 +71,15 @@
     "title": "Formal Validation and Integration of Background Evidence, Calibration Boundary & Observability",
     "status": "implementing",
     "blocked_until": [
-      "activated-state hosted validation",
-      "formal PR evidence-observability browser acceptance",
-      "M4 methodology frozen_match_37",
-      "Outcome Engine frozen_match_4",
-      "canonical main post-merge validation"
+      "formal_pr_release_green",
+      "canonical_main_green"
     ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Integrate the background M7 evidence service, fail-closed M8 authorization boundary and product observability that distinguishes product faults from empirical insufficiency without changing frozen M4 semantics."
+    "objective": "Integrate background M7 maintenance, fail-closed M8 authorization, and fault-vs-insufficiency observability without changing frozen M4 semantics."
   },
   "freezes": {
     "m4_capture_methodology": {
