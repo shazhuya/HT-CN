@@ -26,15 +26,15 @@
     "status": "implementing",
     "active_change": "CR-0079",
     "active_spec": "specs/m9-phase-1-automated-market-data-scheduling-service.md",
-    "latest_attempt_id": "A-20260922-0079-002",
-    "latest_hosted_validation_attempt_id": "A-20260922-0079-002",
+    "latest_attempt_id": "A-20260922-0079-003",
+    "latest_hosted_validation_attempt_id": "A-20260922-0079-003",
     "work_branch": "m9/automated-market-data-scheduling-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35687237582,
-      "run_number": 2483,
+      "workflow_run": 35687710115,
+      "run_number": 2484,
       "event": "push",
-      "head": "b3eced7742b8157cb6039025b9825d574da07de7",
+      "head": "637f079d95f96af1440b62996c9df856e6e4305d",
       "python_passed": 940,
       "warnings": 0,
       "ruff_observed": 0,
@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "M9.1 planned candidate passed Project OS, Source Coverage, Ruff 0/0, 940 Python tests / 0 warnings, continuation-bundle verification and Web build. Automated market-data scheduling, retry, health state and Chinese API diagnostics are fixture-tested without user-computer dependency."
+      "scope": "Activated M9.1 state passed Project OS, Source Coverage, Ruff 0/0, 940 Python tests / 0 warnings, portable continuation-bundle verification and Web build. CR-0079, D-082 and the active spec are governance-aligned and ready for formal PR validation."
     }
   },
   "private_m1": {
