@@ -232,7 +232,7 @@
         {
           "id": "M9.4",
           "title": "Background Evidence, Calibration Boundary & Observability",
-          "status": "planned",
+          "status": "implementing",
           "exit_gate": [
             "M7 capture/outcome/health/cohort maintenance runs in the background without daily user action",
             "M8 stays disabled until evidence gates are genuinely satisfied",

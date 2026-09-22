@@ -1,6 +1,6 @@
 # M9.4 — Background Evidence, Calibration Boundary & Observability
 
-status: planned
+status: implementing
 
 ## 1. Objective
 

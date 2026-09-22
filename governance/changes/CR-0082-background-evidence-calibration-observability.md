@@ -1,6 +1,6 @@
 # CR-0082 — M9.4 Background Evidence, Calibration Boundary & Observability
 
-status: planned
+status: implementing
 baseline_ref: main
 baseline_head: 64f65055576e7c7940f217e3e4f872db41528c12
 implementation_baseline_head: 64f65055576e7c7940f217e3e4f872db41528c12
