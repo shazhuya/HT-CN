@@ -1,6 +1,6 @@
 # M9.2 — Automated Harmonic Analysis Runtime
 
-status: ready_to_merge
+status: closed
 
 ## 1. Objective
 

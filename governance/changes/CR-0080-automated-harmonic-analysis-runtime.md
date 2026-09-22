@@ -1,6 +1,6 @@
 # CR-0080 — M9.2 Automated Harmonic Analysis Runtime
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 34396aec87c589aae7a981fc029bc3e81f82f64d
@@ -34,3 +34,8 @@ Promote the existing deterministic HT-CN harmonic service and operator snapshot 
 ## Acceptance
 
 See specs/m9-phase-2-automated-harmonic-analysis-runtime.md.
+
+
+## Closeout
+
+PR #68 merged with ancestry preserved as `05febea5e2288a0b81c521686323f695f77bc8c9`. Final ledger-bearing PR workflow `35700515522` / `#2507` and canonical-main workflow `35700896168` / `#2508` both passed deterministic and formal main-release gates with 952 Python tests / 0 warnings, 25 browser tests, Phase18/21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4. M9.2 is closed and M9.3 End-to-End Product Workbench becomes the next productization task.
