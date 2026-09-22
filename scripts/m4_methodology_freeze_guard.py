@@ -4,6 +4,8 @@ import json
 import subprocess
 from pathlib import Path
 
+from htcn.app.evidence_identity import read_code_identity
+from htcn.app.release_identity import verify_release_identity
 from htcn.research.methodology_identity import (
     METHODOLOGY_CONTRACT_VERSION,
     METHODOLOGY_RELATIVE_PATHS,
@@ -24,8 +26,26 @@ def _git(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _release_attestation_errors(payload: object) -> list[str]:
+    if not isinstance(payload, dict):
+        return ["release_methodology_attestation_missing"]
+    errors: list[str] = []
+    if payload.get("status") != "frozen_match":
+        errors.append("release_methodology_attestation_not_frozen_match")
+    if payload.get("frozen_methodology_commit") != FROZEN_METHODOLOGY_COMMIT:
+        errors.append("release_methodology_frozen_commit_mismatch")
+    if payload.get("methodology_contract_version") != EXPECTED_CONTRACT_VERSION:
+        errors.append("release_methodology_contract_version_mismatch")
+    if payload.get("methodology_component_count") != EXPECTED_COMPONENT_COUNT:
+        errors.append("release_methodology_component_count_mismatch")
+    if payload.get("changed_methodology_components") not in ([], ()):
+        errors.append("release_methodology_changed_components_not_empty")
+    return errors
+
+
 def build_freeze_guard() -> dict[str, object]:
     errors: list[str] = []
+    root = Path(__file__).resolve().parents[1]
 
     if METHODOLOGY_CONTRACT_VERSION != EXPECTED_CONTRACT_VERSION:
         errors.append(
@@ -38,46 +58,56 @@ def build_freeze_guard() -> dict[str, object]:
             f"{len(METHODOLOGY_RELATIVE_PATHS)}!={EXPECTED_COMPONENT_COUNT}"
         )
 
-    ancestor = _git(
-        "merge-base",
-        "--is-ancestor",
-        FROZEN_METHODOLOGY_COMMIT,
-        "HEAD",
-    )
-    if ancestor.returncode != 0:
-        errors.append("frozen_methodology_commit_is_not_ancestor")
-
     missing = [
         relative
         for relative in METHODOLOGY_RELATIVE_PATHS
-        if not (Path(__file__).resolve().parents[1] / relative).is_file()
+        if not (root / relative).is_file()
     ]
     if missing:
         errors.append("methodology_component_missing:" + ",".join(sorted(missing)))
 
     changed: list[str] = []
-    if not missing and ancestor.returncode == 0:
-        diff = _git(
-            "diff",
-            "--name-only",
+    identity = read_code_identity(root)
+    if identity.source == "release_manifest":
+        release = verify_release_identity(root)
+        if not release.verified or not identity.worktree_clean:
+            errors.append("release_identity_invalid_for_methodology_guard")
+        errors.extend(
+            _release_attestation_errors(
+                release.attestations.get("m4_methodology")
+            )
+        )
+    else:
+        ancestor = _git(
+            "merge-base",
+            "--is-ancestor",
             FROZEN_METHODOLOGY_COMMIT,
             "HEAD",
-            "--",
-            *METHODOLOGY_RELATIVE_PATHS,
         )
-        if diff.returncode != 0:
-            errors.append("methodology_component_diff_failed")
-        else:
-            changed = sorted(
-                line.strip()
-                for line in diff.stdout.splitlines()
-                if line.strip()
+        if ancestor.returncode != 0:
+            errors.append("frozen_methodology_commit_is_not_ancestor")
+        if not missing and ancestor.returncode == 0:
+            diff = _git(
+                "diff",
+                "--name-only",
+                FROZEN_METHODOLOGY_COMMIT,
+                "HEAD",
+                "--",
+                *METHODOLOGY_RELATIVE_PATHS,
             )
-            if changed:
-                errors.append(
-                    "methodology_components_changed_since_freeze:"
-                    + ",".join(changed)
+            if diff.returncode != 0:
+                errors.append("methodology_component_diff_failed")
+            else:
+                changed = sorted(
+                    line.strip()
+                    for line in diff.stdout.splitlines()
+                    if line.strip()
                 )
+                if changed:
+                    errors.append(
+                        "methodology_components_changed_since_freeze:"
+                        + ",".join(changed)
+                    )
 
     return {
         "schema_version": 1,

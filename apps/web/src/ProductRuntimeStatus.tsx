@@ -17,6 +17,27 @@ export type EvidenceRuntimeStatusPayload = ProductRuntimeStatusPayload & {
   outcome_snapshot_count?: number
 }
 
+export type ProductSupervisorStatusPayload = {
+  status: string
+  healthy?: boolean
+  release_identity?: {
+    head?: string | null
+    worktree_clean?: boolean
+    source?: string
+    release_manifest_sha256?: string | null
+  } | null
+  children?: Record<string, { status?: string }>
+  static_web?: {
+    mode?: string
+    vite_required?: boolean
+  }
+  last_backup?: {
+    name?: string
+    size?: number
+  } | null
+  diagnostics_zh?: string[]
+}
+
 function statusLabel(payload: ProductRuntimeStatusPayload | null, kind: 'market' | 'harmonic') {
   if (!payload) return '未读取'
   if (payload.healthy) return kind === 'market' ? '数据已就绪' : '分析已同步'
@@ -57,17 +78,54 @@ function calibrationLabel(payload: EvidenceRuntimeStatusPayload | null) {
   return 'M8 未启用 · 统计证据不足'
 }
 
+function productLabel(payload: ProductSupervisorStatusPayload | null) {
+  if (!payload) return '未读取'
+  if (payload.status === 'not_started') return '尚未启动'
+  if (payload.status === 'ready') return '前置检查通过'
+  if (payload.status === 'healthy' || payload.healthy) return '运行正常'
+  if (payload.status === 'degraded') return '自动恢复中'
+  if (payload.status === 'blocked') return '运行阻断'
+  if (payload.status === 'stopped') return '已停止'
+  return payload.status
+}
+
+function productReleaseDetail(payload: ProductSupervisorStatusPayload | null) {
+  const identity = payload?.release_identity
+  if (!identity?.head) return 'release —'
+  const source = identity.source === 'release_manifest' ? 'verified package' : identity.source ?? 'unknown'
+  return `release ${identity.head.slice(0, 10)} · ${source}`
+}
+
+function productChildrenDetail(payload: ProductSupervisorStatusPayload | null) {
+  const rows = Object.values(payload?.children ?? {})
+  if (!rows.length) return '服务状态尚未生成'
+  const running = rows.filter((item) => item.status === 'running').length
+  return `${running}/${rows.length} 服务运行 · built Web / 无 Vite`
+}
+
 export default function ProductRuntimeStatus({
+  product,
   market,
   harmonic,
   evidence,
 }: {
+  product: ProductSupervisorStatusPayload | null
   market: ProductRuntimeStatusPayload | null
   harmonic: ProductRuntimeStatusPayload | null
   evidence: EvidenceRuntimeStatusPayload | null
 }) {
   return (
     <section className="product-runtime-strip" aria-label="product-runtime-status">
+      <article
+        data-testid="product-supervisor-card"
+        data-healthy={Boolean(product?.healthy || product?.status === 'ready')}
+        data-blocked={product?.status === 'blocked'}
+      >
+        <span>产品运行层</span>
+        <strong>{productLabel(product)}</strong>
+        <small>{productReleaseDetail(product)}</small>
+        <small>{productChildrenDetail(product)}</small>
+      </article>
       <article data-testid="market-data-runtime-card" data-healthy={Boolean(market?.healthy)}>
         <span>自动行情服务</span>
         <strong>{statusLabel(market, 'market')}</strong>
@@ -90,7 +148,7 @@ export default function ProductRuntimeStatus({
       </article>
       <div className="product-runtime-boundary">
         <strong>产品边界</strong>
-        <span>运行故障与证据不足分开显示；样本不足不会伪装成胜率、Alpha、盈利能力，也不会阻塞正常研究工作台。</span>
+        <span>Supervisor 只管理进程和恢复，不拥有行情、谐波或证据语义；运行故障与证据不足分开显示。</span>
       </div>
     </section>
   )
