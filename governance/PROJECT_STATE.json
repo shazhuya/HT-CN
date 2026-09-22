@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "Activated M9.5 state green: Project OS resolved CR-0083/D-086; Ruff 0/0, 982 Python/0 warnings, continuation bundle and Web build passed."
+      "scope": "A-0083-008/#2565 green; formal PR release gates pending."
     }
   },
   "private_m1": {
@@ -71,11 +71,7 @@
     "title": "Formal Validation and Integration of Reliability, Packaging & Zero-CLI Operation",
     "status": "implementing",
     "blocked_until": [
-      "activated_state_green",
-      "formal_release_package_no_git_validation",
-      "28_browser_tests_green",
-      "phase18_phase21_green",
-      "m4_37_4_freeze_green",
+      "formal_pr_green",
       "canonical_main_green"
     ],
     "development_mainline": "M9",
@@ -83,7 +79,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate and integrate verified release identity, supervised built-Web runtime, backup/restore/update and zero-CLI product entrypoints without changing frozen research semantics."
+    "objective": "Validate and merge the M9.5 packaged zero-CLI runtime without changing frozen research semantics."
   },
   "freezes": {
     "m4_capture_methodology": {
