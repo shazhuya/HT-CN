@@ -187,6 +187,7 @@ type Props = {
   bars: Bar[]
   pattern: Pattern | null
   focusPattern?: boolean
+  onCrosshairChange?: (snapshot: CrosshairSnapshot | null) => void
 }
 
 type LifecycleTarget = {
@@ -204,7 +205,7 @@ type SourceEvent = {
   emphasis: 'minor' | 'major' | 'confirm'
 }
 
-type CrosshairSnapshot = {
+export type CrosshairSnapshot = {
   tradeDate: string
   open: number
   high: number
@@ -355,7 +356,12 @@ function applyViewport(chart: IChartApi, bars: Bar[], pattern: Pattern | null, f
   })
 }
 
-export default function HarmonicChart({ bars, pattern, focusPattern = true }: Props) {
+export default function HarmonicChart({
+  bars,
+  pattern,
+  focusPattern = true,
+  onCrosshairChange,
+}: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null)
   const stageRef = useRef<HTMLDivElement | null>(null)
   const chartRef = useRef<IChartApi | null>(null)
@@ -435,20 +441,25 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
     const rangeHandler = () => scheduleViewportSync()
     chart.timeScale().subscribeVisibleLogicalRangeChange(rangeHandler)
 
+    const publishCrosshair = (snapshot: CrosshairSnapshot | null) => {
+      setCrosshair(snapshot)
+      onCrosshairChange?.(snapshot)
+    }
+
     chart.subscribeCrosshairMove((param) => {
       const key = timeKey(param.time)
       if (!key) {
-        setCrosshair(null)
+        publishCrosshair(null)
         return
       }
       const raw = param.seriesData.get(series)
       if (!raw || !('open' in raw) || !('high' in raw) || !('low' in raw) || !('close' in raw)) {
-        setCrosshair(null)
+        publishCrosshair(null)
         return
       }
       const bar = barsRef.current.find((item) => item.trade_date === key)
       if (!bar) {
-        setCrosshair(null)
+        publishCrosshair(null)
         return
       }
       const activePattern = patternRef.current
@@ -464,7 +475,7 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
           .map((event) => event.label)
         : []
 
-      setCrosshair({
+      publishCrosshair({
         tradeDate: key,
         open: Number(raw.open),
         high: Number(raw.high),
@@ -497,7 +508,12 @@ export default function HarmonicChart({ bars, pattern, focusPattern = true }: Pr
         animationFrameRef.current = null
       }
     }
-  }, [scheduleViewportSync])
+  }, [onCrosshairChange, scheduleViewportSync])
+
+  useEffect(() => {
+    setCrosshair(null)
+    onCrosshairChange?.(null)
+  }, [bars, pattern, onCrosshairChange])
 
   useEffect(() => {
     const series = seriesRef.current
