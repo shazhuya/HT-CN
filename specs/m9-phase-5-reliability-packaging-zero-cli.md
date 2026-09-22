@@ -1,6 +1,6 @@
 # M9.5 — Reliability, Packaging & Zero-CLI Operation
 
-status: implementing
+status: ready_to_merge
 
 ## 1. Objective
 

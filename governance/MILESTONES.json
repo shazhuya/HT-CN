@@ -243,7 +243,7 @@
         {
           "id": "M9.5",
           "title": "Reliability, Packaging & Zero-CLI Operation",
-          "status": "implementing",
+          "status": "ready_to_merge",
           "exit_gate": [
             "normal install/start/update/recovery does not require command-line operation",
             "data migration, backup and recovery are productized",

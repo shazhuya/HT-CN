@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9.5-IMPLEMENTING",
+  "state_id": "HTCN-M9.5-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,29 +23,35 @@
     "milestone": "M9",
     "phase": "M9.5",
     "title": "Reliability, Packaging & Zero-CLI Operation",
-    "status": "implementing",
+    "status": "ready_to_merge",
     "active_change": "CR-0083",
     "active_spec": "specs/m9-phase-5-reliability-packaging-zero-cli.md",
-    "latest_attempt_id": "A-20260922-0083-008",
-    "latest_hosted_validation_attempt_id": "A-20260922-0083-008",
+    "latest_attempt_id": "A-20260922-0083-011",
+    "latest_hosted_validation_attempt_id": "A-20260922-0083-011",
     "work_branch": "m9/reliability-packaging-zero-cli-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35731952657,
-      "run_number": 2565,
-      "event": "push",
-      "head": "46371a0f7aa87822867f1a733f71bbe85efabe57",
+      "workflow_run": 35734372505,
+      "run_number": 2571,
+      "event": "pull_request",
+      "head": "fca55872efb76e5ee8b99b7d7a266b44e5356e33",
+      "pr": 71,
       "python_passed": 982,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
+      "formal_main_release_integrity": "success",
       "web_build": "success",
-      "formal_main_release_integrity": "pending_pr",
-      "m4_methodology": "pending_pr",
-      "outcome_engine": "pending_pr",
-      "scope": "A-0083-008/#2565 green; formal PR release gates pending."
+      "existing_playwright_passed": 28,
+      "phase18": "valid",
+      "phase21": "valid",
+      "m4_methodology": "frozen_match_37",
+      "outcome_engine": "frozen_match_4",
+      "artifact_id": 10695889957,
+      "artifact_digest": "sha256:d8a8b9568d28b7386c18168c3310eaee1e162c065ae01728da93859a4c351858",
+      "scope": "PR #71 #2571 green; release ZIP/no-Git, 28 browser, Phase18/21 and 37/4 passed."
     }
   },
   "private_m1": {
@@ -68,10 +74,10 @@
   },
   "next_major_task": {
     "phase": "M9.5",
-    "title": "Formal Validation and Integration of Reliability, Packaging & Zero-CLI Operation",
-    "status": "implementing",
+    "title": "Ledger-Bearing Merge and Canonical Main Validation",
+    "status": "ready_to_merge",
     "blocked_until": [
-      "formal_pr_green",
+      "final_ledger_pr_green",
       "canonical_main_green"
     ],
     "development_mainline": "M9",
@@ -79,7 +85,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate and merge the M9.5 packaged zero-CLI runtime without changing frozen research semantics."
+    "objective": "Merge CR-0083 after the exact ledger-bearing head passes formal gates, then validate canonical main."
   },
   "freezes": {
     "m4_capture_methodology": {

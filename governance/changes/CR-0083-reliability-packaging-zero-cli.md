@@ -1,6 +1,6 @@
 # CR-0083 — M9.5 Reliability, Packaging & Zero-CLI Operation
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 86a618d20d47907e82a5557d6df791b8612dbcde
@@ -37,3 +37,12 @@ Turn the M9.1–M9.4 services and workbench into a product runtime that can be i
 ## Acceptance
 
 See specs/m9-phase-5-reliability-packaging-zero-cli.md.
+
+## Ready-to-merge evidence
+
+- PR #71 run #2571: Project OS, Source Coverage, Ruff 0/0, 982 Python / 0 warnings and Web green.
+- Release ZIP SHA-256: 8b6852e30dc0c85d17ba073357f063d55d457a9b35a784142e6ce97cfaf0aa35.
+- Extracted package had no .git and passed M4 methodology 37/37, Outcome Engine 4/4 and product-supervisor preflight.
+- 28/28 browser, Phase18, Phase21 and canonical checkout 37/4 gates passed.
+- Formal artifact: 10695889957 / sha256:d8a8b9568d28b7386c18168c3310eaee1e162c065ae01728da93859a4c351858.
+- Final merge still requires an exact ledger-bearing PR rerun and canonical-main post-merge validation.
