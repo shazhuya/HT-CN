@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9.4-READY-TO-MERGE",
+  "state_id": "HTCN-M9.4-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
     "milestone": "M9",
     "phase": "M9.4",
     "title": "Background Evidence, Calibration Boundary & Observability",
-    "status": "ready_to_merge",
-    "active_change": "CR-0082",
-    "active_spec": "specs/m9-phase-4-background-evidence-calibration-observability.md",
-    "latest_attempt_id": "A-20260922-0082-011",
-    "latest_hosted_validation_attempt_id": "A-20260922-0082-011",
-    "work_branch": "m9/background-evidence-observability-v1",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260922-0082-012",
+    "latest_hosted_validation_attempt_id": "A-20260922-0082-012",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35723677604,
-      "run_number": 2549,
-      "event": "pull_request",
-      "head": "10be0c9b33a0614fb8d42607db6a378e7426d87a",
+      "workflow_run": 35724417328,
+      "run_number": 2552,
+      "event": "push",
+      "head": "2b429dfc7878bed8e6bd5b90967d6a65db636451",
       "pr": 70,
       "python_passed": 965,
       "warnings": 0,
@@ -49,9 +49,9 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10692084450,
-      "artifact_digest": "sha256:891a269bc1fb643e4d016f0bfd46da74131e1325358f54660dacf65c41f0813d",
-      "scope": "PR #70 run #2549 green: 965 Python/0 warnings, Ruff 0/0, Web, 27 browser, Phase18/21, M4 37/37, Outcome 4/4."
+      "artifact_id": 10693131089,
+      "artifact_digest": "sha256:7891e1d04bbe53925a4940ed93279b7530f7504ac8043951d8df75711b124a57",
+      "scope": "PR #70 final #2551 and canonical main #2552 green; M9.4 closed."
     }
   },
   "private_m1": {
@@ -73,19 +73,16 @@
     "self_contained_handoff": true
   },
   "next_major_task": {
-    "phase": "M9.4",
-    "title": "Ledger-Bearing Merge and Canonical Main Validation",
-    "status": "ready_to_merge",
-    "blocked_until": [
-      "final_ledger_pr_green",
-      "canonical_main_green"
-    ],
+    "phase": "M9.5",
+    "title": "Reliability, Packaging & Zero-CLI Operation",
+    "status": "ready_not_started",
+    "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Merge CR-0082 only after the exact ledger-bearing PR head passes formal release gates, then validate canonical main."
+    "objective": "Add verified release identity, service supervision, packaging/update/recovery, backup/migration and zero-CLI daily operation."
   },
   "freezes": {
     "m4_capture_methodology": {

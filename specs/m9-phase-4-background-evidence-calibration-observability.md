@@ -1,6 +1,6 @@
 # M9.4 — Background Evidence, Calibration Boundary & Observability
 
-status: ready_to_merge
+status: closed
 
 ## 1. Objective
 

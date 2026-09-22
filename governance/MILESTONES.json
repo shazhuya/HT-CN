@@ -232,7 +232,7 @@
         {
           "id": "M9.4",
           "title": "Background Evidence, Calibration Boundary & Observability",
-          "status": "ready_to_merge",
+          "status": "closed",
           "exit_gate": [
             "M7 capture/outcome/health/cohort maintenance runs in the background without daily user action",
             "M8 stays disabled until evidence gates are genuinely satisfied",
@@ -243,7 +243,7 @@
         {
           "id": "M9.5",
           "title": "Reliability, Packaging & Zero-CLI Operation",
-          "status": "planned",
+          "status": "ready_not_started",
           "exit_gate": [
             "normal install/start/update/recovery does not require command-line operation",
             "data migration, backup and recovery are productized",

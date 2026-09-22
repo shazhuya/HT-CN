@@ -1,6 +1,6 @@
 # CR-0082 — M9.4 Background Evidence, Calibration Boundary & Observability
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 64f65055576e7c7940f217e3e4f872db41528c12
@@ -42,3 +42,11 @@ See specs/m9-phase-4-background-evidence-calibration-observability.md.
 - PR #70 run #2549: Project OS, Source Coverage, Ruff 0/0, 965 Python / 0 warnings, Web build, 27 browser tests, Phase18, Phase21, M4 methodology frozen_match_37, Outcome Engine frozen_match_4.
 - Formal release artifact: 10692084450 / sha256:891a269bc1fb643e4d016f0bfd46da74131e1325358f54660dacf65c41f0813d.
 - Final merge still requires an exact ledger-bearing PR rerun and canonical-main post-merge validation.
+
+## Closeout
+
+- PR #70 merged as `2b429dfc7878bed8e6bd5b90967d6a65db636451` after final ledger-bearing PR run #2551 passed all formal gates.
+- Canonical main run #2552 passed Project OS, Source Coverage, Ruff 0/0, 965 Python / 0 warnings, Web, 27 browser tests, Phase18, Phase21, M4 37/37 and Outcome 4/4.
+- Main release artifact: 10693131089 / sha256:7891e1d04bbe53925a4940ed93279b7530f7504ac8043951d8df75711b124a57.
+- Continuation artifact: 10693030873 / sha256:3c36c4d61d904d0de064819f7fa17e6ea4d0136f2249729c91ed4e5e03034f11.
+- M9.4 is closed. Next phase is M9.5 Reliability, Packaging & Zero-CLI Operation.
