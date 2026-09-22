@@ -45,6 +45,9 @@ from htcn.research.type_i_live_evidence import build_type_i_t5_events
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
 MARKET_DATA_SERVICE_STATUS_PATH = DATA_ROOT / "runtime" / "m9-market-data-service.json"
+BACKGROUND_EVIDENCE_SERVICE_STATUS_PATH = (
+    DATA_ROOT / "runtime" / "m9-background-evidence-service.json"
+)
 HARMONIC_ANALYSIS_RUNTIME_STATUS_PATH = (
     DATA_ROOT / "runtime" / "m9-harmonic-analysis-runtime.json"
 )
