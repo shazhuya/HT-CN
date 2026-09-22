@@ -45,7 +45,7 @@ from htcn.app.review_followup_journal import (
 )
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 from htcn.harmonic.rules import CARNEY_RULES
-from htcn.research.type_i_live_evidence import build_type_i_t5_events
+from htcn.research.type_i_live_evidence import build_type_i_t5_events\nfrom htcn.version import HTCN_VERSION
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
@@ -90,7 +90,7 @@ def _operator_service_factory() -> M3SourceClockHarmonicService:
     return M3SourceClockHarmonicService(DATA_ROOT)
 
 
-app = FastAPI(title="HT-CN API", version="0.4.0")
+app = FastAPI(title="HT-CN API", version=HTCN_VERSION)
 service = M3SourceClockHarmonicService(DATA_ROOT)
 
 app.add_middleware(
@@ -104,7 +104,7 @@ app.add_middleware(
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "ht-cn-api", "version": "0.4.0"}
+    return {"status": "ok", "service": "ht-cn-api", "version": HTCN_VERSION}
 
 
 @app.get("/api/product/status")

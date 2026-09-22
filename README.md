@@ -7,9 +7,9 @@ HT-CN 是面向中国 A 股的本地优先谐波研究与人工辅助决策系�
 ## 当前状态
 
 - 产品主线：**M9 — Stable Research/Product Release**；
-- 已关闭：M9.1 自动行情、M9.2 自动谐波运行时、M9.3 端到端工作台、M9.4 后台证据与可观测性；
-- 当前阶段：**M9.5 — Reliability, Packaging & Zero-CLI Operation**；
-- 日常产品目标：安装后通过单一 supervisor 启动 API、built Web、行情、谐波和证据服务，不再要求多终端、Vite dev server、每日 BAT/ZIP/AI acceptance；
+- 已关闭：M9.1 自动行情、M9.2 自动谐波运行时、M9.3 端到端工作台、M9.4 后台证据与可观测性、M9.5 可靠性/打包/零 CLI；
+- 当前阶段：**M9.6 — Stable Product Release Acceptance**；
+- 稳定版候选：**HT-CN Stable v1.0.0**，统一 supervisor + built Web + verified release identity + backup/restore/update；
 - M7 继续后台积累，M8/ISSUE-0066 只限制胜率、Alpha、盈利能力和统计校准，不阻塞产品运行；
 - 5-0 保持生产隔离，Alternate Bat 保持失败关闭，HSI 未支持。
 
@@ -42,7 +42,7 @@ HT-CN 是面向中国 A 股的本地优先谐波研究与人工辅助决策系�
 | `scripts/` | 数据、研究、产品、验收和 Project OS 入口 |
 | `specs/` | 各阶段冻结规范 |
 | `governance/` | Project State、Change、Decision、Issue、Attempt、Source Coverage 和质量基线 |
-| `tests/` | Python 回归测试 |
+| `tests/` | Python 回归测试 |\n| `docs/OPERATOR_RUNBOOK.md` | Stable 操作手册 |\n| `docs/RECOVERY_CONTRACT.md` | Stable 恢复/回滚合同 |
 
 ## Windows 用户入口
 
@@ -85,13 +85,7 @@ HT-CN 是面向中国 A 股的本地优先谐波研究与人工辅助决策系�
 见 [`CHAT_CONTINUATION.md`](CHAT_CONTINUATION.md)。可用
 `验证HT-CN续接包.bat` 独立检查 ZIP 是否与当前 HEAD 一致。
 
-当前 M6.2 真实私有收口：
-
-```text
-运行HT-CN M6.2真实Private-M1最终收口.bat
-```
-
-该入口不得自动安装依赖、拉取或重置 Git、修复行情数据或安装浏览器。任何失败必须保留证据并进入 Attempt Ledger，不能静默修改后伪装成一次成功运行。
+历史 M6.2 私有收口入口仍保留用于审计/故障复现，但不是 Stable 产品日常入口。正常用户不需要运行 M6.2/M7 evidence BAT、上传 ZIP 或让 AI 陪跑。
 
 ## 开发环境
 
