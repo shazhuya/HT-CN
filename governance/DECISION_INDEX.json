@@ -154,6 +154,12 @@
       "title": "M9.5 release identity is Git-fallback only and supervisor owns process lifecycle only",
       "status": "active",
       "source": "governance/decisions/D-086-m9-5-release-runtime-boundary.md"
+    },
+    {
+      "id": "D-087",
+      "title": "Stable v1.0.0 certifies product-runtime maturity, not statistical-performance maturity",
+      "status": "active",
+      "source": "governance/decisions/D-087-m9-6-stable-release-boundary.md"
     }
   ],
   "rules": {

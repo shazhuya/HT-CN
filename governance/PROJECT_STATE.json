@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9.5-CLOSED",
+  "state_id": "HTCN-M9.6-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,37 +21,31 @@
   },
   "current": {
     "milestone": "M9",
-    "phase": "M9.5",
-    "title": "Reliability, Packaging & Zero-CLI Operation",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260922-0083-012",
-    "latest_hosted_validation_attempt_id": "A-20260922-0083-012",
-    "work_branch": null,
+    "phase": "M9.6",
+    "title": "Stable Product Release Acceptance",
+    "status": "implementing",
+    "active_change": "CR-0084",
+    "active_spec": "specs/m9-phase-6-stable-product-release-acceptance.md",
+    "latest_attempt_id": "A-20260922-0084-002",
+    "latest_hosted_validation_attempt_id": "A-20260922-0084-002",
+    "work_branch": "m9/stable-product-release-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35735626708,
-      "run_number": 2574,
+      "workflow_run": 35757979218,
+      "run_number": 2583,
       "event": "push",
-      "head": "f9020cae465629b122fd96792f982b31d1bb2211",
-      "pr": 71,
-      "python_passed": 982,
+      "head": "e88384840f7306bbcf83081c5eff2335b6f15cad",
+      "python_passed": 986,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
-      "formal_main_release_integrity": "success",
       "web_build": "success",
-      "existing_playwright_passed": 28,
-      "phase18": "valid",
-      "phase21": "valid",
-      "m4_methodology": "frozen_match_37",
-      "outcome_engine": "frozen_match_4",
-      "artifact_id": 10698100881,
-      "artifact_digest": "sha256:10d31679265b0131eef97e045edc69e5667a88572cd96e6254018d869a0c4148",
-      "scope": "PR #71 final #2573 and canonical main #2574 green; M9.5 closed."
+      "formal_main_release_integrity": "pending_pr",
+      "m4_methodology": "pending_pr",
+      "outcome_engine": "pending_pr",
+      "scope": "M9.6 planned candidate green: Stable v1.0.0 contract/docs/acceptance, unified version and formal release wiring passed deterministic CI."
     }
   },
   "private_m1": {
@@ -74,15 +68,19 @@
   },
   "next_major_task": {
     "phase": "M9.6",
-    "title": "Stable Product Release Acceptance",
-    "status": "ready_not_started",
-    "blocked_until": [],
+    "title": "Formal Stable v1.0.0 Release Validation",
+    "status": "implementing",
+    "blocked_until": [
+      "activated_state_green",
+      "formal_stable_release_green",
+      "canonical_main_green"
+    ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Run stable-product end-to-end acceptance, finalize versioned release/operator docs/recovery contract, and close M9 without waiting for natural evidence accumulation."
+    "objective": "Validate and integrate HT-CN Stable v1.0.0 product-runtime release without enabling statistical claims or automatic trading."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -107,6 +105,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-phase-6-stable-product-release-acceptance.md",
     "specs/m9-phase-5-reliability-packaging-zero-cli.md",
     "specs/m9-phase-4-background-evidence-calibration-observability.md",
     "specs/m9-phase-3-end-to-end-product-workbench.md",

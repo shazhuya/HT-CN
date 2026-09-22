@@ -1,6 +1,6 @@
 # CR-0084 — M9.6 Stable Product Release Acceptance
 
-status: planned
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 42950efe26dea85fe11ea7484e3aa7f59802c32b
