@@ -14,6 +14,7 @@ from htcn.app.daily_review_digest import (
     build_latest_daily_review_digest,
     filter_daily_review_digest,
 )
+from htcn.app.harmonic_analysis_runtime import read_harmonic_analysis_runtime_status
 from htcn.app.harmonic_service import DatasetNotFoundError
 from htcn.app.market_data_service import read_market_data_service_status
 from htcn.app.operator_delta import build_operator_delta
@@ -44,6 +45,9 @@ from htcn.research.type_i_live_evidence import build_type_i_t5_events
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
 MARKET_DATA_SERVICE_STATUS_PATH = DATA_ROOT / "runtime" / "m9-market-data-service.json"
+HARMONIC_ANALYSIS_RUNTIME_STATUS_PATH = (
+    DATA_ROOT / "runtime" / "m9-harmonic-analysis-runtime.json"
+)
 OPERATOR_CACHE_ROOT = ROOT / "data" / "product" / "m5" / "operator_queue"
 OPERATOR_HISTORY_ROOT = ROOT / "data" / "product" / "m5" / "operator_history"
 REVIEW_JOURNAL_ROOT = ROOT / "data" / "product" / "m5" / "review_journal"
@@ -96,6 +100,13 @@ def health() -> dict[str, str]:
 @app.get("/api/market-data/status")
 def market_data_status() -> dict[str, object]:
     return read_market_data_service_status(MARKET_DATA_SERVICE_STATUS_PATH)
+
+
+@app.get("/api/harmonic/runtime/status")
+def harmonic_analysis_runtime_status() -> dict[str, object]:
+    return read_harmonic_analysis_runtime_status(
+        HARMONIC_ANALYSIS_RUNTIME_STATUS_PATH
+    )
 
 
 @app.get("/api/instruments")

@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9.1-CLOSED",
+  "state_id": "HTCN-M9.2-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,43 +21,37 @@
   },
   "current": {
     "milestone": "M9",
-    "phase": "M9.1",
-    "title": "Automated Market Data & Scheduling Service",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260922-0079-005",
-    "latest_hosted_validation_attempt_id": "A-20260922-0079-005",
-    "work_branch": null,
+    "phase": "M9.2",
+    "title": "Automated Harmonic Analysis Runtime",
+    "status": "ready_to_merge",
+    "active_change": "CR-0080",
+    "active_spec": "specs/m9-phase-2-automated-harmonic-analysis-runtime.md",
+    "latest_attempt_id": "A-20260922-0080-004",
+    "latest_hosted_validation_attempt_id": "A-20260922-0080-004",
+    "work_branch": "m9/automated-harmonic-analysis-runtime-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35688218646,
-      "run_number": 2489,
-      "event": "push",
-      "head": "ecfdd3116c358c60359f917752b6d06aedefc065",
-      "merge_commit": "ecfdd3116c358c60359f917752b6d06aedefc065",
-      "pr": 67,
-      "final_pr_workflow_run": 35688064505,
-      "final_pr_run_number": 2488,
-      "python_passed": 940,
+      "workflow_run": 35700200631,
+      "run_number": 2505,
+      "event": "pull_request",
+      "head": "208a153dc7bcb07b0ee0f11ba32d10884a4f6f0e",
+      "pr": 68,
+      "python_passed": 952,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
+      "web_build": "success",
       "formal_main_release_integrity": "success",
       "existing_playwright_passed": 25,
       "phase18": "valid",
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10677306693,
-      "artifact_digest": "sha256:86a8d2bc99cefc3158fc8f65a013d7a5c18ca0edeec18201a3439ceb5fb07da5",
-      "continuation_artifact_id": 10677790970,
-      "continuation_artifact_digest": "sha256:bf83b6d8c2a2ce43b982a799f45ee9d85a0ee7c039b44b6dabdf68f697b6e937",
-      "final_pr_artifact_id": 10677476206,
-      "final_pr_artifact_digest": "sha256:b568c47d7a0a8b16a9a97f33398c4ba60ac859150d979b9fb4799c1732b6af37",
-      "scope": "Final ledger-bearing PR #67 run #2488 and canonical main #2489 both passed deterministic and formal main-release gates: Project OS, Source Coverage, Ruff 0/0, 940 Python tests / 0 warnings, Web, 25 browser tests, Phase18/21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
+      "artifact_id": 10682326712,
+      "artifact_digest": "sha256:269dbb005a8d49458a4b76e5883a8bebdd3366a50bf529ab9fd34187d352a560",
+      "scope": "PR #68 passed deterministic and formal main-release gates: Project OS, Source Coverage, Ruff 0/0, 952 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -80,15 +74,18 @@
   },
   "next_major_task": {
     "phase": "M9.2",
-    "title": "Automated Harmonic Analysis Runtime",
-    "status": "ready_not_started",
-    "blocked_until": [],
+    "title": "Merge and Canonical-Main Validation of Automated Harmonic Analysis Runtime",
+    "status": "ready_to_merge",
+    "blocked_until": [
+      "final ledger-bearing PR validation",
+      "canonical main post-merge validation"
+    ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Automatically trigger controlled incremental harmonic analysis from new canonical bars while preserving Source identity, no-future-node rules, lifecycle provenance and viewport independence."
+    "objective": "Merge only after the exact final governance-bearing PR head remains green, then validate canonical main before closing M9.2 and advancing to M9.3."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -113,6 +110,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-phase-2-automated-harmonic-analysis-runtime.md",
     "specs/m9-phase-1-automated-market-data-scheduling-service.md",
     "specs/m9-phase-0-product-completion-decoupling.md",
     "specs/m7-phase-6-daily-append-precheck-self-contained-handoff.md",
