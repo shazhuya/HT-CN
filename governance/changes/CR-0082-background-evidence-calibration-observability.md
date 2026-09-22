@@ -1,6 +1,6 @@
 # CR-0082 — M9.4 Background Evidence, Calibration Boundary & Observability
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 64f65055576e7c7940f217e3e4f872db41528c12
@@ -36,3 +36,9 @@ Productize the established M7 prospective-evidence path as a background service 
 ## Acceptance
 
 See specs/m9-phase-4-background-evidence-calibration-observability.md.
+
+## Ready-to-merge evidence
+
+- PR #70 run #2549: Project OS, Source Coverage, Ruff 0/0, 965 Python / 0 warnings, Web build, 27 browser tests, Phase18, Phase21, M4 methodology frozen_match_37, Outcome Engine frozen_match_4.
+- Formal release artifact: 10692084450 / sha256:891a269bc1fb643e4d016f0bfd46da74131e1325358f54660dacf65c41f0813d.
+- Final merge still requires an exact ledger-bearing PR rerun and canonical-main post-merge validation.

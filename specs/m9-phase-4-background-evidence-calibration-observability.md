@@ -1,6 +1,6 @@
 # M9.4 — Background Evidence, Calibration Boundary & Observability
 
-status: implementing
+status: ready_to_merge
 
 ## 1. Objective
 
@@ -88,4 +88,5 @@ M9.4 may close only when:
 - M8 remains fail-closed under ISSUE-0066;
 - the product visibly distinguishes operational faults from evidence insufficiency;
 - all hosted Python/Web/browser/freeze gates remain green;
-- no user-computer validation is required;\n- M9.5 has an explicit release-identity exit gate so zero-CLI packaging preserves the M4 clean-code provenance guarantee without requiring Git worktree management.
+- no user-computer validation is required;
+- M9.5 has an explicit release-identity exit gate so zero-CLI packaging preserves the M4 clean-code provenance guarantee without requiring Git worktree management.
