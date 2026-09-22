@@ -1,6 +1,6 @@
 # CR-0081 — M9.3 End-to-End Product Workbench
 
-status: planned
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 1d779e00a25cea4820783d83c150b69c2deee72f

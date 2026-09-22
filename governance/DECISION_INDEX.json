@@ -136,6 +136,12 @@
       "title": "M9.2 reuses canonical operator snapshot identity; viewport is never an analysis trigger",
       "status": "active",
       "source": "governance/decisions/D-083-m9-2-harmonic-runtime-boundary.md"
+    },
+    {
+      "id": "D-084",
+      "title": "M9.3 shares canonical hover identity across panels but presentation never owns analysis",
+      "status": "active",
+      "source": "governance/decisions/D-084-m9-3-canonical-workbench-identity.md"
     }
   ],
   "rules": {

@@ -1,6 +1,6 @@
 # M9.3 — End-to-End Product Workbench
 
-status: planned
+status: implementing
 
 ## 1. Objective
 
