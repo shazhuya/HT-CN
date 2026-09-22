@@ -45,7 +45,8 @@ from htcn.app.review_followup_journal import (
 )
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 from htcn.harmonic.rules import CARNEY_RULES
-from htcn.research.type_i_live_evidence import build_type_i_t5_events\nfrom htcn.version import HTCN_VERSION
+from htcn.research.type_i_live_evidence import build_type_i_t5_events
+from htcn.version import HTCN_VERSION
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
