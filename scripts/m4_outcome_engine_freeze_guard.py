@@ -4,6 +4,8 @@ import json
 import subprocess
 from pathlib import Path
 
+from htcn.app.evidence_identity import read_code_identity
+from htcn.app.release_identity import verify_release_identity
 from htcn.research.outcome_engine_identity import (
     OUTCOME_ENGINE_CONTRACT_VERSION,
     OUTCOME_ENGINE_RELATIVE_PATHS,
@@ -32,6 +34,30 @@ def _git(*args: str) -> subprocess.CompletedProcess[str]:
         capture_output=True,
         check=False,
     )
+
+
+def _release_attestation_errors(payload: object) -> list[str]:
+    if not isinstance(payload, dict):
+        return ["release_outcome_attestation_missing"]
+    errors: list[str] = []
+    if payload.get("status") != "frozen_match":
+        errors.append("release_outcome_attestation_not_frozen_match")
+    if payload.get("frozen_outcome_engine_commit") != FROZEN_OUTCOME_ENGINE_COMMIT:
+        errors.append("release_outcome_frozen_commit_mismatch")
+    if payload.get("outcome_engine_contract_version") != EXPECTED_ENGINE_CONTRACT_VERSION:
+        errors.append("release_outcome_contract_version_mismatch")
+    if payload.get("outcome_engine_component_count") != EXPECTED_ENGINE_COMPONENT_COUNT:
+        errors.append("release_outcome_component_count_mismatch")
+    if payload.get("changed_outcome_engine_components") not in ([], ()):
+        errors.append("release_outcome_changed_components_not_empty")
+    if payload.get("active_outcome_protocol_id") != EXPECTED_ACTIVE_OUTCOME_PROTOCOL_ID:
+        errors.append("release_outcome_protocol_id_mismatch")
+    if (
+        payload.get("active_outcome_protocol_fingerprint")
+        != EXPECTED_ACTIVE_OUTCOME_PROTOCOL_FINGERPRINT
+    ):
+        errors.append("release_outcome_protocol_fingerprint_mismatch")
+    return errors
 
 
 def build_outcome_engine_freeze_guard() -> dict[str, object]:
@@ -94,15 +120,6 @@ def build_outcome_engine_freeze_guard() -> dict[str, object]:
             f"{type(exc).__name__}:{exc}"
         )
 
-    ancestor = _git(
-        "merge-base",
-        "--is-ancestor",
-        FROZEN_OUTCOME_ENGINE_COMMIT,
-        "HEAD",
-    )
-    if ancestor.returncode != 0:
-        errors.append("frozen_outcome_engine_commit_is_not_ancestor")
-
     root = Path(__file__).resolve().parents[1]
     missing = [
         relative
@@ -116,28 +133,47 @@ def build_outcome_engine_freeze_guard() -> dict[str, object]:
         )
 
     changed: list[str] = []
-    if not missing and ancestor.returncode == 0:
-        diff = _git(
-            "diff",
-            "--name-only",
+    identity = read_code_identity(root)
+    if identity.source == "release_manifest":
+        release = verify_release_identity(root)
+        if not release.verified or not identity.worktree_clean:
+            errors.append("release_identity_invalid_for_outcome_guard")
+        errors.extend(
+            _release_attestation_errors(
+                release.attestations.get("m4_outcome_engine")
+            )
+        )
+    else:
+        ancestor = _git(
+            "merge-base",
+            "--is-ancestor",
             FROZEN_OUTCOME_ENGINE_COMMIT,
             "HEAD",
-            "--",
-            *OUTCOME_ENGINE_RELATIVE_PATHS,
         )
-        if diff.returncode != 0:
-            errors.append("outcome_engine_component_diff_failed")
-        else:
-            changed = sorted(
-                line.strip()
-                for line in diff.stdout.splitlines()
-                if line.strip()
+        if ancestor.returncode != 0:
+            errors.append("frozen_outcome_engine_commit_is_not_ancestor")
+        if not missing and ancestor.returncode == 0:
+            diff = _git(
+                "diff",
+                "--name-only",
+                FROZEN_OUTCOME_ENGINE_COMMIT,
+                "HEAD",
+                "--",
+                *OUTCOME_ENGINE_RELATIVE_PATHS,
             )
-            if changed:
-                errors.append(
-                    "outcome_engine_components_changed_since_freeze:"
-                    + ",".join(changed)
+            if diff.returncode != 0:
+                errors.append("outcome_engine_component_diff_failed")
+            else:
+                changed = sorted(
+                    line.strip()
+                    for line in diff.stdout.splitlines()
+                    if line.strip()
                 )
+                if changed:
+                    errors.append(
+                        "outcome_engine_components_changed_since_freeze:"
+                        + ",".join(changed)
+                    )
 
     return {
         "schema_version": 1,
