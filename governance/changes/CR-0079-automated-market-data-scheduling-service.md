@@ -1,6 +1,6 @@
 # CR-0079 — M9.1 Automated Market Data & Scheduling Service
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 669d41fccc37a1f4acc1a9591793bc41c985c15f
@@ -33,3 +33,8 @@ M9.0 made productization the development mainline and explicitly prohibited rout
 ## Acceptance
 
 See `specs/m9-phase-1-automated-market-data-scheduling-service.md`.
+
+
+## Closeout
+
+PR #67 merged with ancestry preserved as `ecfdd3116c358c60359f917752b6d06aedefc065`. Final ledger-bearing PR workflow `35688064505` / `#2488` and canonical-main workflow `35688218646` / `#2489` both passed deterministic and formal main-release gates with 940 Python tests / 0 warnings, 25 browser tests, Phase18/21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4. M9.1 is closed and M9.2 becomes the next productization task.
