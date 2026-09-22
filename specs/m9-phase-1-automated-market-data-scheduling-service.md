@@ -1,6 +1,6 @@
 # M9.1 — Automated Market Data & Scheduling Service
 
-status: planned
+status: implementing
 
 ## 1. Service boundary
 
