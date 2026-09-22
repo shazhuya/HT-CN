@@ -26,15 +26,15 @@
     "status": "implementing",
     "active_change": "CR-0080",
     "active_spec": "specs/m9-phase-2-automated-harmonic-analysis-runtime.md",
-    "latest_attempt_id": "A-20260922-0080-002",
-    "latest_hosted_validation_attempt_id": "A-20260922-0080-002",
+    "latest_attempt_id": "A-20260922-0080-003",
+    "latest_hosted_validation_attempt_id": "A-20260922-0080-003",
     "work_branch": "m9/automated-harmonic-analysis-runtime-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35699661872,
-      "run_number": 2501,
+      "workflow_run": 35700032625,
+      "run_number": 2503,
       "event": "push",
-      "head": "de7cda77cca17789ce3bb9b68d08ccfbdbbfce1d",
+      "head": "9c857b9918500a2788fb3fb5a4a0db3402fa3ee0",
       "python_passed": 952,
       "warnings": 0,
       "ruff_observed": 0,
@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "M9.2 planned candidate passed Project OS, Source Coverage, Ruff 0/0, 952 Python tests / 0 warnings, continuation-bundle verification and Web build. Runtime scheduling, retry/degraded-watermark behavior, Source ownership boundaries, viewport independence, atomic Chinese diagnostics and status API are fixture-tested without user-computer dependency."
+      "scope": "Activated M9.2 state passed Project OS, Source Coverage, Ruff 0/0, 952 Python tests / 0 warnings, portable continuation-bundle verification and Web build. Project OS resolved phase=M9.2 with CR-0080, D-083 and the active spec governance-aligned."
     }
   },
   "private_m1": {
