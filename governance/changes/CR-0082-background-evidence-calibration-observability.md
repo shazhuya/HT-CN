@@ -31,7 +31,7 @@ Productize the established M7 prospective-evidence path as a background service 
 - no trading execution;
 - no historical M7 backfill;
 - no routine user-computer dependency;
-- product background evidence does not require a Git worktree, ZIP transport or AI acceptance.
+- normal daily evidence maintenance does not require the user to run Git/BAT/PowerShell, ZIP transport or AI acceptance; the existing authoritative capture still retains its clean-code-identity integrity gate until M9.5 packages an equivalent verified release identity.
 
 ## Acceptance
 

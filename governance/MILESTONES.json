@@ -248,7 +248,8 @@
             "normal install/start/update/recovery does not require command-line operation",
             "data migration, backup and recovery are productized",
             "common provider/network/data failures have automatic retry or clear Chinese remediation",
-            "daily usage requires no ZIP handoff or AI manual acceptance"
+            "daily usage requires no ZIP handoff or AI manual acceptance",
+            "packaged authoritative evidence uses a verified release identity that preserves clean-code provenance without requiring an interactive Git worktree"
           ]
         },
         {

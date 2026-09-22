@@ -52,7 +52,7 @@ No implicit sample-size threshold is invented in M9.4. Until a later evidence de
 
 ## 6. Scheduling and upstream coordination
 
-The background evidence service follows the latest closed canonical trade date after automated market-data readiness. It must be idempotent and safe to poll. Normal operation must require no BAT/PowerShell or user command line.
+The background evidence service follows the latest closed canonical trade date after automated market-data readiness. It must be idempotent and safe to poll. Normal daily operation must require no BAT/PowerShell or user command line. The frozen authoritative capture keeps its existing clean code-identity gate; M9.4 does not bypass that evidence-integrity rule. M9.5 packaging must provide an equivalent verified release identity so packaged zero-CLI operation does not depend on an interactive Git worktree.
 
 ## 7. Product observability
 
@@ -88,4 +88,4 @@ M9.4 may close only when:
 - M8 remains fail-closed under ISSUE-0066;
 - the product visibly distinguishes operational faults from evidence insufficiency;
 - all hosted Python/Web/browser/freeze gates remain green;
-- no user-computer validation is required.
+- no user-computer validation is required;\n- M9.5 has an explicit release-identity exit gate so zero-CLI packaging preserves the M4 clean-code provenance guarantee without requiring Git worktree management.
