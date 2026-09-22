@@ -23,18 +23,19 @@
     "milestone": "M9",
     "phase": "M9.1",
     "title": "Automated Market Data & Scheduling Service",
-    "status": "implementing",
+    "status": "ready_to_merge",
     "active_change": "CR-0079",
     "active_spec": "specs/m9-phase-1-automated-market-data-scheduling-service.md",
-    "latest_attempt_id": "A-20260922-0079-003",
-    "latest_hosted_validation_attempt_id": "A-20260922-0079-003",
+    "latest_attempt_id": "A-20260922-0079-004",
+    "latest_hosted_validation_attempt_id": "A-20260922-0079-004",
     "work_branch": "m9/automated-market-data-scheduling-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35687710115,
-      "run_number": 2484,
-      "event": "push",
-      "head": "637f079d95f96af1440b62996c9df856e6e4305d",
+      "workflow_run": 35687831902,
+      "run_number": 2486,
+      "event": "pull_request",
+      "head": "1ab4887dea1568d590bc05678d73822d85e9c7a0",
+      "pr": 67,
       "python_passed": 940,
       "warnings": 0,
       "ruff_observed": 0,
@@ -42,10 +43,15 @@
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
       "web_build": "success",
-      "formal_main_release_integrity": "pending_pr",
-      "m4_methodology": "pending_pr",
-      "outcome_engine": "pending_pr",
-      "scope": "Activated M9.1 state passed Project OS, Source Coverage, Ruff 0/0, 940 Python tests / 0 warnings, portable continuation-bundle verification and Web build. CR-0079, D-082 and the active spec are governance-aligned and ready for formal PR validation."
+      "formal_main_release_integrity": "success",
+      "existing_playwright_passed": 25,
+      "phase18": "valid",
+      "phase21": "valid",
+      "m4_methodology": "frozen_match_37",
+      "outcome_engine": "frozen_match_4",
+      "artifact_id": 10677311159,
+      "artifact_digest": "sha256:c6257cbce02b75a0f8aa4407ba83a3bdf2fe809e935ed041c4dc0f47c58538ef",
+      "scope": "PR #67 passed deterministic and formal main-release gates: Project OS, Source Coverage, Ruff 0/0, 940 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -68,13 +74,10 @@
   },
   "next_major_task": {
     "phase": "M9.1",
-    "title": "Formal Validation and Integration of Automated Market Data & Scheduling Service",
-    "status": "implementing",
+    "title": "Merge and Canonical-Main Validation of Automated Market Data Service",
+    "status": "ready_to_merge",
     "blocked_until": [
-      "activated-state hosted validation",
-      "formal PR main-release integrity and browser gates",
-      "M4 methodology frozen_match_37",
-      "Outcome Engine frozen_match_4",
+      "final ledger-bearing PR validation",
       "canonical main post-merge validation"
     ],
     "development_mainline": "M9",
@@ -82,7 +85,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Integrate the idempotent long-running market-data service so calendar-aware incremental data, strict QFQ readiness, provider retry/failover and Chinese health diagnostics run without daily user BAT/PowerShell operation."
+    "objective": "Merge only after the exact final governance-bearing PR head remains green, then validate canonical main before closing M9.1 and advancing to M9.2."
   },
   "freezes": {
     "m4_capture_methodology": {

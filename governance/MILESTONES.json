@@ -198,7 +198,7 @@
         {
           "id": "M9.1",
           "title": "Automated Market Data & Scheduling Service",
-          "status": "implementing",
+          "status": "ready_to_merge",
           "exit_gate": [
             "market calendar and incremental A-share data updates run as an application service",
             "QFQ/provider failover/retry/health are automated",

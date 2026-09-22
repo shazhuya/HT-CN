@@ -1,6 +1,6 @@
 # CR-0079 — M9.1 Automated Market Data & Scheduling Service
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 669d41fccc37a1f4acc1a9591793bc41c985c15f

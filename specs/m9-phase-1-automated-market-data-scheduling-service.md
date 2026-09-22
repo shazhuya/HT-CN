@@ -1,6 +1,6 @@
 # M9.1 — Automated Market Data & Scheduling Service
 
-status: implementing
+status: ready_to_merge
 
 ## 1. Service boundary
 
