@@ -137,6 +137,8 @@ jobs:
           path: |
             artifacts/screenshots/
             artifacts/reports/playwright/
+            artifacts/reports/m9-release-package.json
+            artifacts/release/
           if-no-files-found: warn
           retention-days: 14
 
@@ -189,13 +191,16 @@ jobs:
         working-directory: apps/web
         run: npm run build
 
+      - name: Build and verify M9.5 product release package
+        run: python scripts/m9_build_release_package.py --head ${{ github.event.pull_request.head.sha || github.sha }}
+
       - name: Install Playwright Chromium for formal main release
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
       - name: Run existing deterministic browser acceptance for main release
         working-directory: apps/web
-        run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts tests/execution-context.spec.ts tests/market-context.spec.ts tests/sector-context.spec.ts tests/concept-context.spec.ts tests/context-integrity.spec.ts tests/decision-narrative.spec.ts tests/decision-selection.spec.ts tests/operator-queue.spec.ts tests/operator-delta.spec.ts tests/operator-index.spec.ts tests/operator-history.spec.ts tests/daily-review-digest.spec.ts tests/review-followup-journal.spec.ts tests/product-workbench.spec.ts tests/evidence-observability.spec.ts
+        run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts tests/execution-context.spec.ts tests/market-context.spec.ts tests/sector-context.spec.ts tests/concept-context.spec.ts tests/context-integrity.spec.ts tests/decision-narrative.spec.ts tests/decision-selection.spec.ts tests/operator-queue.spec.ts tests/operator-delta.spec.ts tests/operator-index.spec.ts tests/operator-history.spec.ts tests/daily-review-digest.spec.ts tests/review-followup-journal.spec.ts tests/product-workbench.spec.ts tests/evidence-observability.spec.ts tests/product-reliability.spec.ts
 
       - name: Build M5 Phase18 portable visual browser fixture for main release
         run: python scripts/m5_build_portable_visual_browser_fixture.py

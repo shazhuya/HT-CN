@@ -394,7 +394,7 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.08; }
 /* M9.3 end-to-end product workbench */
 .product-runtime-strip {
   display: grid;
-  grid-template-columns: 180px 180px 240px minmax(0, 1fr);
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
   gap: 10px;
   margin: 0 0 18px;
 }
@@ -435,7 +435,18 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.08; }
   box-shadow: inset 3px 0 rgba(52, 211, 153, .62);
 }
 
+.product-runtime-strip article[data-insufficient="true"] {
+  border-color: #594d2d;
+  box-shadow: inset 3px 0 rgba(234, 179, 8, .62);
+}
+
+.product-runtime-strip article[data-blocked="true"] {
+  border-color: #63343a;
+  box-shadow: inset 3px 0 rgba(248, 113, 113, .62);
+}
+
 .product-runtime-boundary {
+  grid-column: 1 / -1;
   display: grid;
   align-content: center;
   gap: 4px;

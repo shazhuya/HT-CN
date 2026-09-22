@@ -17,6 +17,7 @@ from htcn.app.daily_review_digest import (
     build_latest_daily_review_digest,
     filter_daily_review_digest,
 )
+from htcn.app.evidence_identity import read_code_identity
 from htcn.app.harmonic_analysis_runtime import read_harmonic_analysis_runtime_status
 from htcn.app.harmonic_service import DatasetNotFoundError
 from htcn.app.market_data_service import read_market_data_service_status
@@ -34,6 +35,7 @@ from htcn.app.operator_snapshot import (
     build_or_load_operator_snapshot,
     latest_local_trade_date,
 )
+from htcn.app.product_supervisor import read_product_supervisor_status
 from htcn.app.review_followup_journal import (
     REVIEW_STATES,
     append_review_event,
@@ -54,6 +56,8 @@ BACKGROUND_EVIDENCE_SERVICE_STATUS_PATH = (
 HARMONIC_ANALYSIS_RUNTIME_STATUS_PATH = (
     DATA_ROOT / "runtime" / "m9-harmonic-analysis-runtime.json"
 )
+PRODUCT_SUPERVISOR_STATUS_PATH = DATA_ROOT / "runtime" / "m9-product-supervisor.json"
+BACKUP_ROOT = ROOT / "backups"
 OPERATOR_CACHE_ROOT = ROOT / "data" / "product" / "m5" / "operator_queue"
 OPERATOR_HISTORY_ROOT = ROOT / "data" / "product" / "m5" / "operator_history"
 REVIEW_JOURNAL_ROOT = ROOT / "data" / "product" / "m5" / "review_journal"
@@ -101,6 +105,24 @@ app.add_middleware(
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "ht-cn-api", "version": "0.4.0"}
+
+
+@app.get("/api/product/status")
+def product_runtime_status() -> dict[str, object]:
+    payload = dict(read_product_supervisor_status(PRODUCT_SUPERVISOR_STATUS_PATH))
+    if payload.get("release_identity") is None:
+        payload["release_identity"] = read_code_identity(ROOT).as_payload()
+    backups = sorted(
+        BACKUP_ROOT.glob("htcn-*.zip"),
+        key=lambda item: item.stat().st_mtime,
+        reverse=True,
+    )
+    if backups:
+        payload["last_backup"] = {
+            "name": backups[0].name,
+            "size": backups[0].stat().st_size,
+        }
+    return payload
 
 
 @app.get("/api/market-data/status")
