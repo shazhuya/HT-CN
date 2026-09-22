@@ -143,6 +143,7 @@ export default function App() {
   const [crosshair, setCrosshair] = useState<CrosshairSnapshot | null>(null)
   const [marketDataStatus, setMarketDataStatus] = useState<ProductRuntimeStatusPayload | null>(null)
   const [harmonicRuntimeStatus, setHarmonicRuntimeStatus] = useState<ProductRuntimeStatusPayload | null>(null)
+  const [evidenceRuntimeStatus, setEvidenceRuntimeStatus] = useState<EvidenceRuntimeStatusPayload | null>(null)
 
   useEffect(() => {
     fetch(`${API}/api/health`)
@@ -166,6 +167,11 @@ export default function App() {
     fetch(`${API}/api/harmonic/runtime/status`)
       .then((response) => response.json() as Promise<ProductRuntimeStatusPayload>)
       .then(setHarmonicRuntimeStatus)
+      .catch(() => undefined)
+
+    fetch(`${API}/api/evidence/status`)
+      .then((response) => response.json() as Promise<EvidenceRuntimeStatusPayload>)
+      .then(setEvidenceRuntimeStatus)
       .catch(() => undefined)
   }, [])
 

@@ -39,6 +39,23 @@ REPORT_PATHS = {
     "accumulation_status": REPORT_ROOT / "m7-accumulation-status.json",
 }
 
+DISPOSABLE_REPORT_PATHS = (
+    REPORT_ROOT / "m7-append-precheck.json",
+    REPORT_ROOT / "m7-append-action.txt",
+    REPORT_ROOT / "m4-qfq-readiness.json",
+    REPORT_ROOT / "m4-lifecycle-snapshot.json",
+    REPORT_ROOT / "m4-evidence-health.json",
+    REPORT_ROOT / "m4-evidence-health.md",
+    REPORT_ROOT / "m4-lifecycle-transitions.json",
+    REPORT_ROOT / "m4-lifecycle-transitions.md",
+    REPORT_ROOT / "m4-prospective-observations.json",
+    REPORT_ROOT / "m4-prospective-observations.md",
+    REPORT_ROOT / "m4-outcome-v2.json",
+    REPORT_ROOT / "m4-outcome-v2.md",
+    REPORT_ROOT / "m7-accumulation-status.json",
+    REPORT_ROOT / "m7-accumulation-status.md",
+)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -103,6 +120,14 @@ def _read_report(name: str) -> dict[str, Any] | None:
     if path is None:
         return None
     return _read_json(path)
+
+
+def _clear_cycle_reports() -> None:
+    for path in DISPOSABLE_REPORT_PATHS:
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            continue
 
 
 def _issue_0066_status() -> str:
@@ -204,6 +229,7 @@ def run_service_cycle(*, force: bool, interval_seconds: int) -> int:
         write_background_evidence_service_status(STATUS_PATH, payload)
         return 0 if bool(previous.get("healthy")) else 2
 
+    _clear_cycle_reports()
     cycle = execute_background_evidence_cycle(
         run_step=_run_step,
         read_report=_read_report,
