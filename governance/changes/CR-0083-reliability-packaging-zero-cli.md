@@ -1,6 +1,6 @@
 # CR-0083 — M9.5 Reliability, Packaging & Zero-CLI Operation
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 86a618d20d47907e82a5557d6df791b8612dbcde
@@ -46,3 +46,13 @@ See specs/m9-phase-5-reliability-packaging-zero-cli.md.
 - 28/28 browser, Phase18, Phase21 and canonical checkout 37/4 gates passed.
 - Formal artifact: 10695889957 / sha256:d8a8b9568d28b7386c18168c3310eaee1e162c065ae01728da93859a4c351858.
 - Final merge still requires an exact ledger-bearing PR rerun and canonical-main post-merge validation.
+
+## Closeout
+
+- PR #71 merged as `f9020cae465629b122fd96792f982b31d1bb2211` after exact ledger-bearing PR run #2573 passed all formal gates.
+- Final PR release package SHA-256: ec7ad09a2b1dbc6ba1f42dc4543069ebf05a62bb08015a17160e4ce40674c1b9.
+- Canonical main run #2574 passed Project OS, Source Coverage, Ruff 0/0, 982 Python / 0 warnings, Web, verified no-Git release package validation, 28 browser tests, Phase18, Phase21, M4 37/37 and Outcome 4/4.
+- Canonical main release package SHA-256: a43991976577efa8a88ff772285e1636109e21234a82e9964bb95fb2e9e281b8.
+- Main release artifact: 10698100881 / sha256:10d31679265b0131eef97e045edc69e5667a88572cd96e6254018d869a0c4148.
+- Continuation artifact: 10697446243 / sha256:e4a6e7d042f2f12ce4a24494e080cb567614ccd449818ea9eebffcee967410b7.
+- M9.5 is closed. Next phase is M9.6 Stable Product Release Acceptance.

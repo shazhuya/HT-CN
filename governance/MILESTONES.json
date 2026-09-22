@@ -243,7 +243,7 @@
         {
           "id": "M9.5",
           "title": "Reliability, Packaging & Zero-CLI Operation",
-          "status": "ready_to_merge",
+          "status": "closed",
           "exit_gate": [
             "normal install/start/update/recovery does not require command-line operation",
             "data migration, backup and recovery are productized",
@@ -255,7 +255,7 @@
         {
           "id": "M9.6",
           "title": "Stable Product Release Acceptance",
-          "status": "planned",
+          "status": "ready_not_started",
           "exit_gate": [
             "automated data, harmonic runtime, product workbench and background evidence service pass end-to-end acceptance",
             "formal browser/integration/freeze/release gates are green",
