@@ -143,7 +143,7 @@ def run_step_with_retry(
                     attempts=attempt,
                     exit_code=0,
                 )
-        except Exception as exc:  # execution boundary: preserve failure for retry/status
+        except Exception as exc:  # noqa: BLE001 - service retry boundary
             last_code = None
             last_error = f"{type(exc).__name__}: {exc}"
 
