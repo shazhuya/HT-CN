@@ -210,7 +210,7 @@
         {
           "id": "M9.2",
           "title": "Automated Harmonic Analysis Runtime",
-          "status": "planned",
+          "status": "implementing",
           "exit_gate": [
             "new canonical bars trigger controlled incremental harmonic analysis automatically",
             "forming patterns and lifecycle state evolve without fabricated future nodes",

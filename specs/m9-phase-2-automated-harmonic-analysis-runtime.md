@@ -1,6 +1,6 @@
 # M9.2 — Automated Harmonic Analysis Runtime
 
-status: planned
+status: implementing
 
 ## 1. Objective
 

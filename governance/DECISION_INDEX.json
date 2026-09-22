@@ -130,6 +130,12 @@
       "title": "M9.1 uses an idempotent service watermark over established data/QFQ primitives",
       "status": "active",
       "source": "governance/decisions/D-082-m9-1-market-data-service-boundary.md"
+    },
+    {
+      "id": "D-083",
+      "title": "M9.2 reuses canonical operator snapshot identity; viewport is never an analysis trigger",
+      "status": "active",
+      "source": "governance/decisions/D-083-m9-2-harmonic-runtime-boundary.md"
     }
   ],
   "rules": {
