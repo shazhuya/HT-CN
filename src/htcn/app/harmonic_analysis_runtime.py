@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from htcn.app.operator_input_identity import OperatorCacheInputIdentity
 from htcn.app.operator_queue import AnalysisService, AnalysisServiceFactory
@@ -89,7 +90,7 @@ def evaluate_harmonic_analysis_schedule(
 def _validate_product_boundaries(queue: dict[str, Any]) -> None:
     contract = queue.get("contract")
     if not isinstance(contract, dict):
-        raise ValueError("analysis runtime queue contract missing")
+        raise TypeError("analysis runtime queue contract missing")
     for field in (
         "predictive_score_used",
         "historical_outcome_used",
@@ -104,7 +105,7 @@ def _validate_product_boundaries(queue: dict[str, Any]) -> None:
 
     cache = queue.get("product_cache")
     if not isinstance(cache, dict):
-        raise ValueError("analysis runtime product-cache metadata missing")
+        raise TypeError("analysis runtime product-cache metadata missing")
     if cache.get("authoritative_evidence") is not False:
         raise ValueError("analysis runtime must not become authoritative evidence")
     if cache.get("writes_m4_evidence") is not False:
