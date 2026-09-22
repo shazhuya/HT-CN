@@ -1,6 +1,6 @@
 # CR-0081 — M9.3 End-to-End Product Workbench
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 1d779e00a25cea4820783d83c150b69c2deee72f
@@ -35,3 +35,7 @@ Turn the already-integrated M3/M5/M6.6/M9.1/M9.2 capabilities into one coherent 
 ## Acceptance
 
 See specs/m9-phase-3-end-to-end-product-workbench.md.
+
+## Formal PR validation
+
+PR #69 run #2525 passed the complete release gate: 952 Python tests / 0 warnings, Ruff 0/0, Web build, 26 browser tests including the dedicated M9.3 end-to-end workbench scenario, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4. Artifact: 10687973049, sha256:a57bf792a87634c03fcc93d35281a3194ffb65cceeb9733b9049dfa23cc1fc37.
