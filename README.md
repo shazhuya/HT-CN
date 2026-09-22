@@ -6,12 +6,11 @@ HT-CN 是面向中国 A 股的本地优先谐波研究与人工辅助决策系�
 
 ## 当前状态
 
-- 当前里程碑：**M6.2 — Real Private-M1 Closeout**；
-- 工程状态：M6.2 实现和正式主线 CI 已完成；
-- 真实状态：`awaiting_private_run`，真实私有 M1 最终证据尚未生成；
-- 当前唯一收口入口：`运行HT-CN M6.2真实Private-M1最终收口.bat`；
-- 预期唯一上传物：`artifacts/reports/htcn-m6-private-m1-closeout-evidence.zip`；
-- 原始 M1 数据、Parquet、DuckDB 和 daily delta 不上传；
+- 产品主线：**M9 — Stable Research/Product Release**；
+- 已关闭：M9.1 自动行情、M9.2 自动谐波运行时、M9.3 端到端工作台、M9.4 后台证据与可观测性；
+- 当前阶段：**M9.5 — Reliability, Packaging & Zero-CLI Operation**；
+- 日常产品目标：安装后通过单一 supervisor 启动 API、built Web、行情、谐波和证据服务，不再要求多终端、Vite dev server、每日 BAT/ZIP/AI acceptance；
+- M7 继续后台积累，M8/ISSUE-0066 只限制胜率、Alpha、盈利能力和统计校准，不阻塞产品运行；
 - 5-0 保持生产隔离，Alternate Bat 保持失败关闭，HSI 未支持。
 
 权威实时状态在 [`governance/PROJECT_STATE.json`](governance/PROJECT_STATE.json)。旧聊天和 `PROJECT_CONTEXT.md` 不能覆盖当前 Git、测试、正式 CI 与 Project State。
@@ -47,17 +46,20 @@ HT-CN 是面向中国 A 股的本地优先谐波研究与人工辅助决策系�
 
 ## Windows 用户入口
 
-首次安装：
+正常用户不需要输入命令。正式 release ZIP 已包含 built Web；Node/Vite 只用于源码开发构建，不属于日常运行依赖。
 
-```text
-安装HT-CN.bat
-```
+首次安装或修复运行环境：双击 `安装HT-CN.bat`。
 
-启动本地工作台：
+日常启动：双击 `启动HT-CN.bat`。它只启动一个后台 supervisor，由 supervisor 管理 API、静态 Web、M9.1 行情、M9.2 谐波和 M9.4 证据服务，并在子服务异常退出时自动退避重启。
 
-```text
-启动HT-CN.bat
-```
+其他一键入口：
+
+- `停止HT-CN.bat`：优雅停止 supervisor 与所有子服务；
+- `备份HT-CN.bat`：停机后生成带 SHA-256 清单的本地备份，再重新启动；
+- `恢复HT-CN.bat`：验证并恢复最新备份，恢复前再生成 pre-restore 快照；
+- `更新HT-CN.bat`：验证 `updates/` 中的 release ZIP，生成 pre-update 备份后应用更新并重启。
+
+正式 release 在无 `.git` 环境下使用 `HTCN_RELEASE_IDENTITY.json` 验证代码身份；开发 checkout 仍以 Git HEAD + clean worktree 为最高优先级，dirty Git 不能被 release manifest 覆盖。
 
 检查当前项目续接状态：
 
