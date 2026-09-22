@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9.4-CLOSED",
+  "state_id": "HTCN-M9.5-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,37 +21,31 @@
   },
   "current": {
     "milestone": "M9",
-    "phase": "M9.4",
-    "title": "Background Evidence, Calibration Boundary & Observability",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260922-0082-012",
-    "latest_hosted_validation_attempt_id": "A-20260922-0082-012",
-    "work_branch": null,
+    "phase": "M9.5",
+    "title": "Reliability, Packaging & Zero-CLI Operation",
+    "status": "implementing",
+    "active_change": "CR-0083",
+    "active_spec": "specs/m9-phase-5-reliability-packaging-zero-cli.md",
+    "latest_attempt_id": "A-20260922-0083-007",
+    "latest_hosted_validation_attempt_id": "A-20260922-0083-007",
+    "work_branch": "m9/reliability-packaging-zero-cli-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35724417328,
-      "run_number": 2552,
+      "workflow_run": 35731578156,
+      "run_number": 2564,
       "event": "push",
-      "head": "2b429dfc7878bed8e6bd5b90967d6a65db636451",
-      "pr": 70,
-      "python_passed": 965,
+      "head": "478c10b6f047b7bd4e6cd82ebeb9227cd94aaf9d",
+      "python_passed": 982,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
-      "formal_main_release_integrity": "success",
       "web_build": "success",
-      "existing_playwright_passed": 27,
-      "phase18": "valid",
-      "phase21": "valid",
-      "m4_methodology": "frozen_match_37",
-      "outcome_engine": "frozen_match_4",
-      "artifact_id": 10693131089,
-      "artifact_digest": "sha256:7891e1d04bbe53925a4940ed93279b7530f7504ac8043951d8df75711b124a57",
-      "scope": "PR #70 final #2551 and canonical main #2552 green; M9.4 closed."
+      "formal_main_release_integrity": "pending_pr",
+      "m4_methodology": "pending_pr",
+      "outcome_engine": "pending_pr",
+      "scope": "M9.5 planned candidate green: release identity/package, supervisor, backup/restore/update, zero-CLI entrypoints and packaged no-Git runtime validation are implemented; formal PR release gates pending."
     }
   },
   "private_m1": {
@@ -74,15 +68,22 @@
   },
   "next_major_task": {
     "phase": "M9.5",
-    "title": "Reliability, Packaging & Zero-CLI Operation",
-    "status": "ready_not_started",
-    "blocked_until": [],
+    "title": "Formal Validation and Integration of Reliability, Packaging & Zero-CLI Operation",
+    "status": "implementing",
+    "blocked_until": [
+      "activated_state_green",
+      "formal_release_package_no_git_validation",
+      "28_browser_tests_green",
+      "phase18_phase21_green",
+      "m4_37_4_freeze_green",
+      "canonical_main_green"
+    ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Add verified release identity, service supervision, packaging/update/recovery, backup/migration and zero-CLI daily operation."
+    "objective": "Validate and integrate verified release identity, supervised built-Web runtime, backup/restore/update and zero-CLI product entrypoints without changing frozen research semantics."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -107,6 +108,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-phase-5-reliability-packaging-zero-cli.md",
     "specs/m9-phase-4-background-evidence-calibration-observability.md",
     "specs/m9-phase-3-end-to-end-product-workbench.md",
     "specs/m9-phase-2-automated-harmonic-analysis-runtime.md",

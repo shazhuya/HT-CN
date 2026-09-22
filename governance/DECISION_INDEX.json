@@ -148,6 +148,12 @@
       "title": "M9.4 productizes M7 orchestration but not evidence semantics or calibration authority",
       "status": "active",
       "source": "governance/decisions/D-085-m9-4-background-evidence-boundary.md"
+    },
+    {
+      "id": "D-086",
+      "title": "M9.5 release identity is Git-fallback only and supervisor owns process lifecycle only",
+      "status": "active",
+      "source": "governance/decisions/D-086-m9-5-release-runtime-boundary.md"
     }
   ],
   "rules": {

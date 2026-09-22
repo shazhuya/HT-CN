@@ -1,6 +1,6 @@
 # M9.5 — Reliability, Packaging & Zero-CLI Operation
 
-status: planned
+status: implementing
 
 ## 1. Objective
 

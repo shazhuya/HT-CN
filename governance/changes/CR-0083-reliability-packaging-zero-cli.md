@@ -1,6 +1,6 @@
 # CR-0083 — M9.5 Reliability, Packaging & Zero-CLI Operation
 
-status: planned
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 86a618d20d47907e82a5557d6df791b8612dbcde
