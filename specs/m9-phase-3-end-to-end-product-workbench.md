@@ -1,6 +1,6 @@
 # M9.3 — End-to-End Product Workbench
 
-status: ready_to_merge
+status: closed
 
 ## 1. Objective
 

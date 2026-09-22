@@ -221,7 +221,7 @@
         {
           "id": "M9.3",
           "title": "End-to-End Product Workbench",
-          "status": "ready_to_merge",
+          "status": "closed",
           "exit_gate": [
             "symbol selection, candlesticks, harmonic overlays, ratios, PRZ, targets and lifecycle are integrated",
             "Chinese decision-support panel explains current state and next observation points",

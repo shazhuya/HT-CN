@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9.3-IMPLEMENTING",
+  "state_id": "HTCN-M9.3-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,19 +23,22 @@
     "milestone": "M9",
     "phase": "M9.3",
     "title": "End-to-End Product Workbench",
-    "status": "ready_to_merge",
-    "active_change": "CR-0081",
-    "active_spec": "specs/m9-phase-3-end-to-end-product-workbench.md",
-    "latest_attempt_id": "A-20260922-0081-004",
-    "latest_hosted_validation_attempt_id": "A-20260922-0081-004",
-    "work_branch": "m9/end-to-end-product-workbench-v1",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260922-0081-005",
+    "latest_hosted_validation_attempt_id": "A-20260922-0081-005",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35714594640,
-      "run_number": 2525,
-      "event": "pull_request",
-      "head": "238f0809e283688ac5652170796bbb26bdceb7fd",
+      "workflow_run": 35718116527,
+      "run_number": 2528,
+      "event": "push",
+      "head": "1527d7c1b4f5e7840a2ac0049e1a6c76ea08f040",
+      "merge_commit": "1527d7c1b4f5e7840a2ac0049e1a6c76ea08f040",
       "pr": 69,
+      "final_pr_workflow_run": 35717879546,
+      "final_pr_run_number": 2527,
       "python_passed": 952,
       "warnings": 0,
       "ruff_observed": 0,
@@ -49,9 +52,13 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10687973049,
-      "artifact_digest": "sha256:a57bf792a87634c03fcc93d35281a3194ffb65cceeb9733b9049dfa23cc1fc37",
-      "scope": "PR #69 exact-head validation passed Project OS, Source Coverage, Ruff 0/0, 952 Python tests / 0 warnings, Web build, 26 browser tests including the M9.3 end-to-end workbench, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
+      "artifact_id": 10690418865,
+      "artifact_digest": "sha256:2b7ad7724a810c4ad07bf1a8efb1248f8c4678a9641b648cba88cd31ee5cbc85",
+      "continuation_artifact_id": 10689802570,
+      "continuation_artifact_digest": "sha256:26f8dab1f2f3204f0de3e678e5e70cedb39b9e90b90ed7035ed10f2ee7c3001c",
+      "final_pr_artifact_id": 10689593793,
+      "final_pr_artifact_digest": "sha256:e1ddc79ff73808390971b9618cdf0b9672c66c1636ea972e3247f065cde21548",
+      "scope": "Final ledger-bearing PR #69 run #2527 and canonical main #2528 both passed Project OS, Source Coverage, Ruff 0/0, 952 Python tests / 0 warnings, Web build, 26 browser tests including M9.3 end-to-end acceptance, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -73,19 +80,16 @@
     "self_contained_handoff": true
   },
   "next_major_task": {
-    "phase": "M9.3",
-    "title": "Formal Validation and Integration of End-to-End Product Workbench",
-    "status": "ready_to_merge",
-    "blocked_until": [
-      "final ledger-bearing PR validation on governance-updated exact head",
-      "canonical main post-merge validation"
-    ],
+    "phase": "M9.4",
+    "title": "Background Evidence, Calibration Boundary & Observability",
+    "status": "ready_not_started",
+    "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Integrate the first coherent daily product surface from automated runtime readiness through symbol selection, canonical candles, harmonic/Source lifecycle inspection, Chinese decision narrative and shared crosshair identity, without letting presentation state own analysis."
+    "objective": "Run M7 capture/outcome/health/cohort maintenance as background product infrastructure, keep M8 fail-closed until evidence gates are genuinely satisfied, expose insufficient-evidence states without fake statistics, and distinguish product/runtime faults from evidence insufficiency in observable Chinese diagnostics."
   },
   "freezes": {
     "m4_capture_methodology": {
