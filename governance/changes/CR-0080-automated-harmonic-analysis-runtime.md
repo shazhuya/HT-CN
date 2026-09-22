@@ -2,10 +2,11 @@
 
 status: implementing
 baseline_ref: main
-baseline_head: 34396aec87c589aae7a981fc029bc3e81f82f64d
+baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 34396aec87c589aae7a981fc029bc3e81f82f64d
+target: main
+milestone: M9.2
 work_branch: m9/automated-harmonic-analysis-runtime-v1
-phase: M9.2
 
 ## Objective
 
