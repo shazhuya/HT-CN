@@ -163,6 +163,7 @@ def _write_upstream_wait(
         "service": "m9_background_evidence_service",
         "status": "waiting_market_data",
         "healthy": False,
+        "retry_required": True,
         "operational_state": "degraded",
         "operational_fault": True,
         "evidence_state": "blocked",
@@ -207,6 +208,7 @@ def run_service_cycle(*, force: bool, interval_seconds: int) -> int:
     decision = evaluate_background_evidence_schedule(
         target_trade_date=target_trade_date,
         last_success_trade_date=previous.get("last_success_trade_date"),
+        retry_required=bool(previous.get("retry_required")),
         force=force,
     )
     if not decision.due:
@@ -216,6 +218,7 @@ def run_service_cycle(*, force: bool, interval_seconds: int) -> int:
             "service": "m9_background_evidence_service",
             "status": "idle_current",
             "healthy": bool(previous.get("healthy")),
+            "retry_required": False,
             "target_trade_date": target_trade_date,
             "last_cycle_started_at_utc": _iso(started),
             "last_cycle_finished_at_utc": _iso(_utc_now()),
@@ -242,6 +245,7 @@ def run_service_cycle(*, force: bool, interval_seconds: int) -> int:
         "service": "m9_background_evidence_service",
         "status": cycle["overall_status"],
         "healthy": healthy,
+        "retry_required": not healthy,
         "operational_state": cycle["operational_state"],
         "operational_fault": cycle["operational_fault"],
         "evidence_state": cycle["evidence_state"],

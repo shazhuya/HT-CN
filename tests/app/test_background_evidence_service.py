@@ -80,6 +80,16 @@ def test_schedule_runs_for_new_closed_session() -> None:
     assert decision.reason == "new_closed_trade_session"
 
 
+def test_schedule_retries_failed_cycle_even_when_success_watermark_is_same_day() -> None:
+    decision = evaluate_background_evidence_schedule(
+        target_trade_date="2026-09-22",
+        last_success_trade_date="2026-09-22",
+        retry_required=True,
+    )
+    assert decision.due is True
+    assert decision.reason == "retry_required"
+
+
 def test_capture_due_runs_authoritative_chain_without_transport_bundle() -> None:
     payload, calls = _run_cycle()
 
@@ -114,6 +124,7 @@ def test_capture_failure_is_operational_blocker_and_calibration_stays_disabled()
     assert payload["healthy"] is False
     assert payload["operational_state"] == "blocked"
     assert payload["operational_fault"] is True
+    assert payload["retry_required"] is True
     assert payload["calibration_state"] == "disabled_operational_fault"
     assert payload["evidence_insufficient"] is False
 

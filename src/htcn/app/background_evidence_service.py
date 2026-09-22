@@ -103,6 +103,7 @@ def evaluate_background_evidence_schedule(
     *,
     target_trade_date: object,
     last_success_trade_date: object = None,
+    retry_required: bool = False,
     force: bool = False,
 ) -> BackgroundEvidenceScheduleDecision:
     target = _text(target_trade_date)
@@ -113,6 +114,13 @@ def evaluate_background_evidence_schedule(
         return BackgroundEvidenceScheduleDecision(
             due=True,
             reason="forced",
+            target_trade_date=target,
+            last_success_trade_date=previous,
+        )
+    if retry_required:
+        return BackgroundEvidenceScheduleDecision(
+            due=True,
+            reason="retry_required",
             target_trade_date=target,
             last_success_trade_date=previous,
         )
@@ -299,6 +307,7 @@ def _finish_cycle(
         "schema_version": 1,
         "overall_status": operational_state,
         "healthy": operational_state == "healthy",
+        "retry_required": operational_state != "healthy",
         "operational_state": operational_state,
         "operational_fault": operational_fault,
         "append_action": append_action,
@@ -418,6 +427,7 @@ def empty_background_evidence_service_status() -> dict[str, object]:
         "service": "m9_background_evidence_service",
         "status": "not_started",
         "healthy": False,
+        "retry_required": False,
         "operational_state": "not_started",
         "operational_fault": False,
         "evidence_state": "insufficient_evidence",
