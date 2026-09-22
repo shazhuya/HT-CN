@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
+import tempfile
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +34,53 @@ def _guard_payload(script: str) -> dict[str, Any]:
     if process.returncode != 0 or payload.get("status") != "frozen_match":
         raise RuntimeError(f"{script} failed release attestation: {payload}")
     return payload
+
+
+def _verify_packaged_runtime(package: Path) -> dict[str, object]:
+    verification = verify_release_package(package)
+    if not verification.get("verified"):
+        raise RuntimeError(f"release package verification failed: {verification}")
+    results: dict[str, object] = {}
+    with tempfile.TemporaryDirectory(prefix="htcn-packaged-runtime-") as temp:
+        stage = Path(temp)
+        with zipfile.ZipFile(package, "r") as archive:
+            archive.extractall(stage)
+        if (stage / ".git").exists():
+            raise RuntimeError("release package unexpectedly contains .git")
+        env = dict(os.environ)
+        env["PYTHONPATH"] = str(stage / "src") + (
+            os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
+        )
+        commands = {
+            "m4_methodology": [sys.executable, "scripts/m4_methodology_freeze_guard.py"],
+            "m4_outcome_engine": [sys.executable, "scripts/m4_outcome_engine_freeze_guard.py"],
+            "product_preflight": [sys.executable, "scripts/m9_product_supervisor.py", "--check"],
+        }
+        for name, command in commands.items():
+            process = subprocess.run(
+                command,
+                cwd=stage,
+                env=env,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+            )
+            results[name] = {
+                "exit_code": process.returncode,
+                "output_tail": process.stdout[-2000:],
+            }
+            if process.returncode != 0:
+                raise RuntimeError(
+                    f"packaged runtime check failed: {name}: {process.stdout[-2000:]}"
+                )
+    return {
+        "status": "success",
+        "git_present": False,
+        "checks": results,
+    }
 
 
 def main() -> int:
@@ -73,6 +123,7 @@ def main() -> int:
     if not verification.get("verified"):
         raise RuntimeError(f"release package verification failed: {verification}")
     payload["verification"] = verification
+    payload["packaged_runtime_validation"] = _verify_packaged_runtime(output)
 
     report = Path(args.report)
     report.parent.mkdir(parents=True, exist_ok=True)
