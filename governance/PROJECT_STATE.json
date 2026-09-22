@@ -23,18 +23,19 @@
     "milestone": "M9",
     "phase": "M9.2",
     "title": "Automated Harmonic Analysis Runtime",
-    "status": "implementing",
+    "status": "ready_to_merge",
     "active_change": "CR-0080",
     "active_spec": "specs/m9-phase-2-automated-harmonic-analysis-runtime.md",
-    "latest_attempt_id": "A-20260922-0080-003",
-    "latest_hosted_validation_attempt_id": "A-20260922-0080-003",
+    "latest_attempt_id": "A-20260922-0080-004",
+    "latest_hosted_validation_attempt_id": "A-20260922-0080-004",
     "work_branch": "m9/automated-harmonic-analysis-runtime-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35700032625,
-      "run_number": 2503,
-      "event": "push",
-      "head": "9c857b9918500a2788fb3fb5a4a0db3402fa3ee0",
+      "workflow_run": 35700200631,
+      "run_number": 2505,
+      "event": "pull_request",
+      "head": "208a153dc7bcb07b0ee0f11ba32d10884a4f6f0e",
+      "pr": 68,
       "python_passed": 952,
       "warnings": 0,
       "ruff_observed": 0,
@@ -42,10 +43,15 @@
       "project_os_integrity": "success",
       "source_coverage_freeze": "valid",
       "web_build": "success",
-      "formal_main_release_integrity": "pending_pr",
-      "m4_methodology": "pending_pr",
-      "outcome_engine": "pending_pr",
-      "scope": "Activated M9.2 state passed Project OS, Source Coverage, Ruff 0/0, 952 Python tests / 0 warnings, portable continuation-bundle verification and Web build. Project OS resolved phase=M9.2 with CR-0080, D-083 and the active spec governance-aligned."
+      "formal_main_release_integrity": "success",
+      "existing_playwright_passed": 25,
+      "phase18": "valid",
+      "phase21": "valid",
+      "m4_methodology": "frozen_match_37",
+      "outcome_engine": "frozen_match_4",
+      "artifact_id": 10682326712,
+      "artifact_digest": "sha256:269dbb005a8d49458a4b76e5883a8bebdd3366a50bf529ab9fd34187d352a560",
+      "scope": "PR #68 passed deterministic and formal main-release gates: Project OS, Source Coverage, Ruff 0/0, 952 Python tests / 0 warnings, Web build, 25 browser tests, Phase18, Phase21, M4 methodology frozen_match_37 and Outcome Engine frozen_match_4."
     }
   },
   "private_m1": {
@@ -68,13 +74,10 @@
   },
   "next_major_task": {
     "phase": "M9.2",
-    "title": "Formal Validation and Integration of Automated Harmonic Analysis Runtime",
-    "status": "implementing",
+    "title": "Merge and Canonical-Main Validation of Automated Harmonic Analysis Runtime",
+    "status": "ready_to_merge",
     "blocked_until": [
-      "activated-state hosted validation",
-      "formal PR main-release integrity and browser gates",
-      "M4 methodology frozen_match_37",
-      "Outcome Engine frozen_match_4",
+      "final ledger-bearing PR validation",
       "canonical main post-merge validation"
     ],
     "development_mainline": "M9",
@@ -82,7 +85,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Integrate the automated product harmonic runtime so new canonical data identity triggers controlled Source-aligned analysis, while same-input reruns are idempotent and viewport state never owns or triggers harmonic identity."
+    "objective": "Merge only after the exact final governance-bearing PR head remains green, then validate canonical main before closing M9.2 and advancing to M9.3."
   },
   "freezes": {
     "m4_capture_methodology": {

@@ -1,6 +1,6 @@
 # CR-0080 — M9.2 Automated Harmonic Analysis Runtime
 
-status: implementing
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 34396aec87c589aae7a981fc029bc3e81f82f64d
