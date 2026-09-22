@@ -157,7 +157,7 @@ def run_service_cycle(
 
     try:
         clock = latest_closed_trade_clock(build_provider())
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - provider/calendar service boundary
         _write_calendar_failure(
             previous=previous,
             started=started,
