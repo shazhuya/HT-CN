@@ -148,7 +148,7 @@ export default function ProductRuntimeStatus({
       </article>
       <div className="product-runtime-boundary">
         <strong>产品边界</strong>
-        <span>Supervisor 只管理进程和恢复，不拥有行情、谐波或证据语义；运行故障与证据不足继续分开显示。</span>
+        <span>Supervisor 只管理进程和恢复，不拥有行情、谐波或证据语义；运行故障与证据不足分开显示。</span>
       </div>
     </section>
   )
