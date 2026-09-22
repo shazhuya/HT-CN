@@ -26,15 +26,15 @@
     "status": "implementing",
     "active_change": "CR-0084",
     "active_spec": "specs/m9-phase-6-stable-product-release-acceptance.md",
-    "latest_attempt_id": "A-20260922-0084-002",
-    "latest_hosted_validation_attempt_id": "A-20260922-0084-002",
+    "latest_attempt_id": "A-20260922-0084-003",
+    "latest_hosted_validation_attempt_id": "A-20260922-0084-003",
     "work_branch": "m9/stable-product-release-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35757979218,
-      "run_number": 2583,
+      "workflow_run": 35758306758,
+      "run_number": 2584,
       "event": "push",
-      "head": "e88384840f7306bbcf83081c5eff2335b6f15cad",
+      "head": "ad04694acbcc73ebcbef98b8937803c1b2c9a3ea",
       "python_passed": 986,
       "warnings": 0,
       "ruff_observed": 0,
@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "M9.6 planned candidate green: Stable v1.0.0 contract/docs/acceptance, unified version and formal release wiring passed deterministic CI."
+      "scope": "Activated M9.6 state green: CR-0084/D-087 active; 986 Python/0 warnings, Ruff 0/0, continuation bundle and Web build passed."
     }
   },
   "private_m1": {
