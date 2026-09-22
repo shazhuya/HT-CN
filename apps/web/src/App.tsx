@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import HarmonicChart, { Bar, Pattern } from './HarmonicChart'
+import HarmonicChart, { Bar, CrosshairSnapshot, Pattern } from './HarmonicChart'
 import TypeIT5Evidence, { TypeIT5Event } from './TypeIT5Evidence'
 import AShareExecutionContext, { AShareExecutionContextPayload } from './AShareExecutionContext'
 import MarketContext, { MarketContextPayload } from './MarketContext'
@@ -8,6 +8,8 @@ import ConceptContext, { ConceptContextPayload } from './ConceptContext'
 import ContextIntegrity, { ContextIntegrityPayload } from './ContextIntegrity'
 import DecisionNarrative from './DecisionNarrative'
 import OperatorQueue from './OperatorQueue'
+import ProductRuntimeStatus, { ProductRuntimeStatusPayload } from './ProductRuntimeStatus'
+import WorkbenchContextPanel from './WorkbenchContextPanel'
 
 type Health = {
   status: string
@@ -138,6 +140,9 @@ export default function App() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [showAllIdentities, setShowAllIdentities] = useState(false)
   const [focusPattern, setFocusPattern] = useState(true)
+  const [crosshair, setCrosshair] = useState<CrosshairSnapshot | null>(null)
+  const [marketDataStatus, setMarketDataStatus] = useState<ProductRuntimeStatusPayload | null>(null)
+  const [harmonicRuntimeStatus, setHarmonicRuntimeStatus] = useState<ProductRuntimeStatusPayload | null>(null)
 
   useEffect(() => {
     fetch(`${API}/api/health`)
@@ -151,6 +156,16 @@ export default function App() {
     fetch(`${API}/api/instruments?limit=10000`)
       .then((response) => response.json())
       .then((payload: { items?: InstrumentRow[] }) => setInstruments(payload.items ?? []))
+      .catch(() => undefined)
+
+    fetch(`${API}/api/market-data/status`)
+      .then((response) => response.json() as Promise<ProductRuntimeStatusPayload>)
+      .then(setMarketDataStatus)
+      .catch(() => undefined)
+
+    fetch(`${API}/api/harmonic/runtime/status`)
+      .then((response) => response.json() as Promise<ProductRuntimeStatusPayload>)
+      .then(setHarmonicRuntimeStatus)
       .catch(() => undefined)
   }, [])
 
@@ -172,11 +187,15 @@ export default function App() {
 
   const patternKey = (pattern: Pattern) => `${pattern.state}:${pattern.pattern_id}:${pattern.scale}:${pattern.points.map((p) => p.index).join('-')}`
 
-  function runAnalysis() {
+  function runAnalysis(nextSymbol?: string) {
+    const targetSymbol = (nextSymbol ?? symbol).trim().toUpperCase()
+    if (!targetSymbol) return
+    if (targetSymbol !== symbol) setSymbol(targetSymbol)
     setLoading(true)
     setError(null)
     setSelectedKey(null)
-    fetch(`${API}/api/harmonic/${encodeURIComponent(symbol.trim())}?bars=${bars}&scales=3,5,8,13`)
+    setCrosshair(null)
+    fetch(`${API}/api/harmonic/${encodeURIComponent(targetSymbol)}?bars=${bars}&scales=3,5,8,13`)
       .then(async (response) => {
         if (!response.ok) {
           const body = (await response.json().catch(() => null)) as { detail?: string } | null
@@ -196,7 +215,7 @@ export default function App() {
     <main className="shell">
       <section className="hero compact">
         <div>
-          <p className="eyebrow">HT-CN LOCAL · M5 OPERATOR WORKBENCH</p>
+          <p className="eyebrow">HT-CN LOCAL · M9.3 END-TO-END PRODUCT WORKBENCH</p>
           <h1>A 股谐波研究与辅助决策系统</h1>
           <p className="subtitle">Carney 几何识别 · QFQ 连续价格 · 多尺度 Pivot · PRZ 审计</p>
         </div>
@@ -206,12 +225,16 @@ export default function App() {
         </div>
       </section>
 
+      <ProductRuntimeStatus market={marketDataStatus} harmonic={harmonicRuntimeStatus} />
+
       <OperatorQueue
         apiBase={API}
         onSelectInstrument={(instrumentId) => {
           setSymbol(instrumentId)
           setAnalysis(null)
           setSelectedKey(null)
+          setCrosshair(null)
+          runAnalysis(instrumentId)
         }}
       />
 
@@ -229,6 +252,9 @@ export default function App() {
             list="instrument-list"
             value={symbol}
             onChange={(event) => setSymbol(event.target.value.toUpperCase())}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') runAnalysis()
+            }}
             placeholder="SSE.688256"
           />
           <datalist id="instrument-list">
@@ -248,7 +274,7 @@ export default function App() {
             <option value={1200}>1200</option>
           </select>
         </label>
-        <button onClick={runAnalysis} disabled={loading || !symbol.trim()}>
+        <button onClick={() => runAnalysis()} disabled={loading || !symbol.trim()}>
           {loading ? '分析中…' : '运行谐波分析'}
         </button>
       </section>
@@ -280,9 +306,17 @@ export default function App() {
           <SectorContext context={analysis.sector_context} />
           <ConceptContext context={analysis.concept_context} />
           <TypeIT5Evidence events={analysis.type_i_t5_events ?? []} />
-          <DecisionNarrative narrative={selectedPattern?.decision_narrative} />
+          <section className="product-workbench" data-testid="product-workbench">
+            <div className="product-workbench-heading">
+              <div>
+                <p className="kicker">M9.3 · END-TO-END WORKFLOW</p>
+                <h2>端到端研究工作台</h2>
+              </div>
+              <span>标的 → K线 → 形态 → Source lifecycle → 下一观察点</span>
+            </div>
+            <DecisionNarrative narrative={selectedPattern?.decision_narrative} />
 
-          <section className="workspace">
+            <section className="workspace">
             <div className="chart-panel">
               <div className="panel-heading">
                 <div>
@@ -302,7 +336,12 @@ export default function App() {
                   )}
                 </div>
               </div>
-              <HarmonicChart bars={analysis.bars} pattern={selectedPattern} focusPattern={focusPattern} />
+              <HarmonicChart
+                bars={analysis.bars}
+                pattern={selectedPattern}
+                focusPattern={focusPattern}
+                onCrosshairChange={setCrosshair}
+              />
               <p className="engine-note">{analysis.engine_note}</p>
             </div>
 
@@ -313,6 +352,12 @@ export default function App() {
                   <h2>形态与价格区</h2>
                 </div>
               </div>
+              <WorkbenchContextPanel
+                instrumentId={analysis.instrument_id}
+                pattern={selectedPattern}
+                crosshair={crosshair}
+                latestBar={analysis.bars.at(-1)}
+              />
               <label className="toggle-line identity-toggle">
                 <input type="checkbox" checked={showAllIdentities} onChange={(event) => setShowAllIdentities(event.target.checked)} />
                 显示同节点备选身份
@@ -486,6 +531,7 @@ export default function App() {
                 </div>
               )}
             </aside>
+            </section>
           </section>
         </>
       )}
