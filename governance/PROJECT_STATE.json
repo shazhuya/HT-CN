@@ -26,15 +26,15 @@
     "status": "implementing",
     "active_change": "CR-0081",
     "active_spec": "specs/m9-phase-3-end-to-end-product-workbench.md",
-    "latest_attempt_id": "A-20260922-0081-001",
-    "latest_hosted_validation_attempt_id": "A-20260922-0081-001",
+    "latest_attempt_id": "A-20260922-0081-002",
+    "latest_hosted_validation_attempt_id": "A-20260922-0081-002",
     "work_branch": "m9/end-to-end-product-workbench-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35713521082,
-      "run_number": 2518,
+      "workflow_run": 35713814247,
+      "run_number": 2519,
       "event": "push",
-      "head": "7f4ae29a8429a2baf56b95d3449681af4b836537",
+      "head": "0bac466fe7330fa7dda343a1e5a8c28f726dd998",
       "python_passed": 952,
       "warnings": 0,
       "ruff_observed": 0,
@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "M9.3 planned candidate passed Project OS, Source Coverage, Ruff 0/0, 952 Python tests / 0 warnings, continuation-bundle verification and Web build. The product workbench composes M9.1/M9.2 runtime readiness, direct symbol deep-dive, canonical chart identity sharing and Chinese decision context without changing Source semantics."
+      "scope": "Activated M9.3 state passed Project OS, Source Coverage, Ruff 0/0, 952 Python tests / 0 warnings, portable continuation-bundle verification and Web build. Project OS resolved phase=M9.3 with CR-0081, D-084 and the active workbench spec governance-aligned."
     }
   },
   "private_m1": {
