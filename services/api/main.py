@@ -8,6 +8,9 @@ import pandas as pd
 from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
+from htcn.app.background_evidence_service import (
+    read_background_evidence_service_status,
+)
 from htcn.app.daily_review_digest import (
     CHANGE_TYPE_ORDER,
     WORKFLOW_REVIEW_ORDER,
@@ -45,6 +48,9 @@ from htcn.research.type_i_live_evidence import build_type_i_t5_events
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = ROOT / "data" / "market"
 MARKET_DATA_SERVICE_STATUS_PATH = DATA_ROOT / "runtime" / "m9-market-data-service.json"
+BACKGROUND_EVIDENCE_SERVICE_STATUS_PATH = (
+    DATA_ROOT / "runtime" / "m9-background-evidence-service.json"
+)
 HARMONIC_ANALYSIS_RUNTIME_STATUS_PATH = (
     DATA_ROOT / "runtime" / "m9-harmonic-analysis-runtime.json"
 )
@@ -100,6 +106,13 @@ def health() -> dict[str, str]:
 @app.get("/api/market-data/status")
 def market_data_status() -> dict[str, object]:
     return read_market_data_service_status(MARKET_DATA_SERVICE_STATUS_PATH)
+
+
+@app.get("/api/evidence/status")
+def background_evidence_status() -> dict[str, object]:
+    return read_background_evidence_service_status(
+        BACKGROUND_EVIDENCE_SERVICE_STATUS_PATH
+    )
 
 
 @app.get("/api/harmonic/runtime/status")

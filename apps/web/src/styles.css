@@ -394,7 +394,7 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.08; }
 /* M9.3 end-to-end product workbench */
 .product-runtime-strip {
   display: grid;
-  grid-template-columns: 190px 190px minmax(0, 1fr);
+  grid-template-columns: 180px 180px 240px minmax(0, 1fr);
   gap: 10px;
   margin: 0 0 18px;
 }

@@ -8,7 +8,7 @@ import ConceptContext, { ConceptContextPayload } from './ConceptContext'
 import ContextIntegrity, { ContextIntegrityPayload } from './ContextIntegrity'
 import DecisionNarrative from './DecisionNarrative'
 import OperatorQueue from './OperatorQueue'
-import ProductRuntimeStatus, { ProductRuntimeStatusPayload } from './ProductRuntimeStatus'
+import ProductRuntimeStatus, { EvidenceRuntimeStatusPayload, ProductRuntimeStatusPayload } from './ProductRuntimeStatus'
 import WorkbenchContextPanel from './WorkbenchContextPanel'
 
 type Health = {
@@ -143,6 +143,7 @@ export default function App() {
   const [crosshair, setCrosshair] = useState<CrosshairSnapshot | null>(null)
   const [marketDataStatus, setMarketDataStatus] = useState<ProductRuntimeStatusPayload | null>(null)
   const [harmonicRuntimeStatus, setHarmonicRuntimeStatus] = useState<ProductRuntimeStatusPayload | null>(null)
+  const [evidenceRuntimeStatus, setEvidenceRuntimeStatus] = useState<EvidenceRuntimeStatusPayload | null>(null)
 
   useEffect(() => {
     fetch(`${API}/api/health`)
@@ -166,6 +167,11 @@ export default function App() {
     fetch(`${API}/api/harmonic/runtime/status`)
       .then((response) => response.json() as Promise<ProductRuntimeStatusPayload>)
       .then(setHarmonicRuntimeStatus)
+      .catch(() => undefined)
+
+    fetch(`${API}/api/evidence/status`)
+      .then((response) => response.json() as Promise<EvidenceRuntimeStatusPayload>)
+      .then(setEvidenceRuntimeStatus)
       .catch(() => undefined)
   }, [])
 
@@ -215,7 +221,7 @@ export default function App() {
     <main className="shell">
       <section className="hero compact">
         <div>
-          <p className="eyebrow">HT-CN LOCAL · M9.3 END-TO-END PRODUCT WORKBENCH</p>
+          <p className="eyebrow">HT-CN LOCAL · M9.4 PRODUCT WORKBENCH + EVIDENCE OBSERVABILITY</p>
           <h1>A 股谐波研究与辅助决策系统</h1>
           <p className="subtitle">Carney 几何识别 · QFQ 连续价格 · 多尺度 Pivot · PRZ 审计</p>
         </div>
@@ -225,7 +231,7 @@ export default function App() {
         </div>
       </section>
 
-      <ProductRuntimeStatus market={marketDataStatus} harmonic={harmonicRuntimeStatus} />
+      <ProductRuntimeStatus market={marketDataStatus} harmonic={harmonicRuntimeStatus} evidence={evidenceRuntimeStatus} />
 
       <OperatorQueue
         apiBase={API}

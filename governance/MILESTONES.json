@@ -232,7 +232,7 @@
         {
           "id": "M9.4",
           "title": "Background Evidence, Calibration Boundary & Observability",
-          "status": "planned",
+          "status": "ready_to_merge",
           "exit_gate": [
             "M7 capture/outcome/health/cohort maintenance runs in the background without daily user action",
             "M8 stays disabled until evidence gates are genuinely satisfied",
@@ -248,7 +248,8 @@
             "normal install/start/update/recovery does not require command-line operation",
             "data migration, backup and recovery are productized",
             "common provider/network/data failures have automatic retry or clear Chinese remediation",
-            "daily usage requires no ZIP handoff or AI manual acceptance"
+            "daily usage requires no ZIP handoff or AI manual acceptance",
+            "packaged evidence uses verified release identity; no interactive Git worktree"
           ]
         },
         {

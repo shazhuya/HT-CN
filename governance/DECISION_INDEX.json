@@ -142,6 +142,12 @@
       "title": "M9.3 shares canonical hover identity across panels but presentation never owns analysis",
       "status": "active",
       "source": "governance/decisions/D-084-m9-3-canonical-workbench-identity.md"
+    },
+    {
+      "id": "D-085",
+      "title": "M9.4 productizes M7 orchestration but not evidence semantics or calibration authority",
+      "status": "active",
+      "source": "governance/decisions/D-085-m9-4-background-evidence-boundary.md"
     }
   ],
   "rules": {
