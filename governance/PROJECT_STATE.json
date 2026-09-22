@@ -26,15 +26,15 @@
     "status": "implementing",
     "active_change": "CR-0082",
     "active_spec": "specs/m9-phase-4-background-evidence-calibration-observability.md",
-    "latest_attempt_id": "A-20260922-0082-006",
-    "latest_hosted_validation_attempt_id": "A-20260922-0082-004",
+    "latest_attempt_id": "A-20260922-0082-007",
+    "latest_hosted_validation_attempt_id": "A-20260922-0082-007",
     "work_branch": "m9/background-evidence-observability-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35720468406,
-      "run_number": 2536,
+      "workflow_run": 35720975996,
+      "run_number": 2539,
       "event": "push",
-      "head": "49885d0befae690615a57c675e742885fa18b78c",
+      "head": "03be6d71eb21f511b61c4b8840e10bf1232c7766",
       "python_passed": 964,
       "warnings": 0,
       "ruff_observed": 0,
@@ -45,7 +45,7 @@
       "formal_main_release_integrity": "pending_pr",
       "m4_methodology": "pending_pr",
       "outcome_engine": "pending_pr",
-      "scope": "Corrected M9.4 planned candidate passed Project OS, Source Coverage, Ruff 0/0, 964 Python tests / 0 warnings, portable continuation-bundle verification and Web build. This remains the latest successful hosted validation while activation-governance failures are preserved separately in the Attempt Ledger."
+      "scope": "Activated M9.4 state passed Project OS with CR-0082/D-085 active, Source Coverage, Ruff 0/0, 964 Python tests / 0 warnings, portable continuation-bundle verification and Web build. Formal PR gates remain required for the new evidence-observability browser scenario, Phase18/21 and immutable M4 37/4 freeze guards."
     }
   },
   "private_m1": {
