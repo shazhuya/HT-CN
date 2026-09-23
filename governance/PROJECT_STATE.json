@@ -26,26 +26,27 @@
     "status": "implementing",
     "active_change": "CR-0084",
     "active_spec": "specs/m9-phase-6-stable-product-release-acceptance.md",
-    "latest_attempt_id": "A-20260922-0084-003",
-    "latest_hosted_validation_attempt_id": "A-20260922-0084-003",
+    "latest_attempt_id": "A-20260923-0084-004",
+    "latest_hosted_validation_attempt_id": "A-20260923-0084-004",
     "work_branch": "m9/stable-product-release-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35758306758,
-      "run_number": 2584,
-      "event": "push",
-      "head": "ad04694acbcc73ebcbef98b8937803c1b2c9a3ea",
+      "workflow_run": 35758512194,
+      "run_number": 2586,
+      "event": "pull_request",
+      "head": "cdb7ed712131386abaa6560f5f65d9462b63d097",
       "python_passed": 986,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
-      "project_os_integrity": "success",
-      "source_coverage_freeze": "valid",
-      "web_build": "success",
-      "formal_main_release_integrity": "pending_pr",
-      "m4_methodology": "pending_pr",
-      "outcome_engine": "pending_pr",
-      "scope": "Activated M9.6 state green: CR-0084/D-087 active; 986 Python/0 warnings, Ruff 0/0, continuation bundle and Web build passed."
+      "formal_main_release_integrity": "success",
+      "existing_browser_acceptance_passed": 29,
+      "m4_methodology": "frozen_match_37",
+      "outcome_engine": "frozen_match_4",
+      "artifact_id": 10709575483,
+      "artifact_digest": "sha256:e9090871f96a3f7b272a7a5a386de2839215055dbbc0eea53087dfec8ffa93b7",
+      "release_package_sha256": "432fc4c37547402a434368c48ecdb26656586fc33684adf1197a3995ae2741f6",
+      "scope": "PR #72 #2586 formal Stable v1.0.0 gates green; exact convergence head must rerun after CI ordering hardening."
     }
   },
   "private_m1": {
@@ -68,11 +69,10 @@
   },
   "next_major_task": {
     "phase": "M9.6",
-    "title": "Formal Stable v1.0.0 Release Validation",
+    "title": "Exact Stable v1.0.0 Ledger-Bearing Validation",
     "status": "implementing",
     "blocked_until": [
-      "activated_state_green",
-      "formal_stable_release_green",
+      "exact_converged_candidate_green",
       "canonical_main_green"
     ],
     "development_mainline": "M9",
@@ -80,7 +80,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate and integrate HT-CN Stable v1.0.0 product-runtime release without enabling statistical claims or automatic trading."
+    "objective": "Validate the sole PR #72 candidate with Stable acceptance ordered after browser/Phase18/21/37+4 gates, then merge and close M9 on canonical main."
   },
   "freezes": {
     "m4_capture_methodology": {

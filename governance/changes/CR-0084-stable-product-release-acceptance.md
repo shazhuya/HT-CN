@@ -37,3 +37,13 @@ Close M9 with a versioned stable HT-CN product release whose automated data, har
 ## Acceptance
 
 See specs/m9-phase-6-stable-product-release-acceptance.md.
+
+## Candidate convergence and formal validation
+
+- PR #72 is the canonical M9.6 candidate because it binds Stable v1.0.0 across Python package, API, UI, release manifest and release documentation.
+- PR #73 was independently audited and closed as superseded; its stricter ordering rule is retained here: M9.6 acceptance executes only after browser acceptance, Phase18/21 and both immutable M4 freeze guards succeed.
+- PR #72 run #2586 / workflow 35758512194 passed Project OS, Source Coverage, Ruff 0/0, 986 Python tests / 0 warnings, Web build, verified no-Git release ZIP v1.0.0, 29 browser tests, Phase18, Phase21, M4 methodology 37/37 and Outcome Engine 4/4.
+- Run #2586 release package SHA-256: 432fc4c37547402a434368c48ecdb26656586fc33684adf1197a3995ae2741f6.
+- Run #2586 artifact: 10709575483 / sha256:e9090871f96a3f7b272a7a5a386de2839215055dbbc0eea53087dfec8ffa93b7.
+- Because CI ordering changed after #2586, the new exact ledger-bearing candidate must rerun the full formal release gate before ready_to_merge.
+

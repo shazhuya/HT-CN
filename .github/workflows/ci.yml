@@ -194,9 +194,6 @@ jobs:
       - name: Build and verify M9.5 product release package
         run: python scripts/m9_build_release_package.py --head ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Verify M9.6 stable product release acceptance
-        run: python scripts/m9_stable_release_acceptance.py
-
       - name: Install Playwright Chromium for formal main release
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
@@ -230,6 +227,9 @@ jobs:
 
       - name: Verify M4 Outcome Engine freeze for main release
         run: python scripts/m4_outcome_engine_freeze_guard.py
+
+      - name: Verify M9.6 stable product release acceptance
+        run: python scripts/m9_stable_release_acceptance.py
 
       - name: Upload formal main release evidence
         if: always()
