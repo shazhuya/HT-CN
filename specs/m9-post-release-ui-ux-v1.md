@@ -1,6 +1,6 @@
 # M9 post-release — Stable UI/UX Product Refactor v1
 
-status: active
+status: implementing
 
 ## 1. User problem
 
