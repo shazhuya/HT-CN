@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-UI-UX-VALIDATION-GREEN",
+  "state_id": "HTCN-M9-POST-RELEASE-UI-UX-VALIDATION-FAILED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -24,10 +24,10 @@
     "milestone": "M9",
     "phase": "M9.post_release",
     "title": "Stable UI/UX Product Refactor",
-    "status": "validation_green",
+    "status": "validation_failed",
     "active_change": "CR-0085",
     "active_spec": "specs/m9-post-release-ui-ux-v1.md",
-    "latest_attempt_id": "A-20260923-0085-004",
+    "latest_attempt_id": "A-20260923-0085-005",
     "latest_hosted_validation_attempt_id": "A-20260923-0085-004",
     "work_branch": "m9/post-release-ui-ux-v1",
     "latest_validation": {
@@ -58,14 +58,14 @@
   "next_major_task": {
     "phase": "M9.post_release",
     "title": "Stable UI/UX Product Refactor",
-    "status": "validation_green",
+    "status": "validation_failed",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate the activated CR-0085 state on hosted CI, then advance the exact ledger-bearing candidate to merge."
+    "objective": "Correct the CR-0085 governance baseline contract and rerun activated-state hosted validation; UI candidate code remains unchanged."
   },
   "freezes": {
     "m4_capture_methodology": {
