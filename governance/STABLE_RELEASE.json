@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "release_version": "0.1.0",
+  "channel": "stable",
+  "milestone": "M9",
+  "phase": "M9.6",
+  "status": "candidate",
+  "release_package_builder": "scripts/m9_build_release_package.py",
+  "acceptance_entry": "scripts/m9_stable_release_acceptance.py",
+  "acceptance_report": "artifacts/reports/m9-stable-release-acceptance.json",
+  "operator_guide": "OPERATOR_GUIDE.md",
+  "recovery_contract": "RECOVERY_CONTRACT.md",
+  "issue_0066_scope": "claims_only",
+  "requires_issue_0066_closed": false,
+  "requires_user_computer": false,
+  "executes_securities_trades": false
+}
