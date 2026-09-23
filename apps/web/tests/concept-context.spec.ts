@@ -67,6 +67,7 @@ test('concept context keeps multi-membership and exposes raw relative-strength e
 
   await page.goto('/')
   await page.getByRole('button', { name: '运行谐波分析' }).click()
+  await page.getByRole('button', { name: '市场环境' }).click()
   const card = page.getByTestId('concept-context')
   await expect(card).toBeVisible()
   await expect(card.getByText('已解析 2/2')).toBeVisible()
