@@ -263,6 +263,16 @@
             "ISSUE-0066 may remain open but statistical features must remain explicitly unavailable",
             "versioned stable release, operator documentation and recovery contract are complete"
           ]
+        },
+        {
+          "id": "M9.post_release",
+          "title": "Stable Product Operations, Maintenance & UX Evolution",
+          "status": "implementing",
+          "exit_gate": [
+            "post-release changes preserve Stable Source/evidence/freeze boundaries",
+            "human-facing product changes pass hosted Web/browser regression",
+            "routine operation remains zero-CLI and does not require the user computer for ordinary validation"
+          ]
         }
       ]
     }
