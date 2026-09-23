@@ -165,7 +165,7 @@ test('M5 operator queue renders workflow buckets and selects an instrument', asy
   await expect(queue.getByText('rebuilt_force', { exact: true })).toBeVisible()
 
   await queue.getByRole('button', { name: 'SSE.600000' }).click()
-  await expect(page.getByRole('textbox', { name: '搜索股票' })).toHaveValue('SSE.600000')
+  await expect(page.locator('#global-symbol-search')).toHaveValue('SSE.600000')
 })
 
 
