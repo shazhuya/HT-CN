@@ -172,6 +172,6 @@ test('M5 operator history shows append-only summaries and instrument changes', a
 
   await latestDay.getByRole('button', { name: 'SSE.688256' }).click()
   await expect(
-    page.getByRole('textbox', { name: '搜索股票' }),
+    page.locator('#global-symbol-search'),
   ).toHaveValue('SSE.688256')
 })
