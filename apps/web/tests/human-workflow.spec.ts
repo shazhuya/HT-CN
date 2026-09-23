@@ -151,7 +151,7 @@ test('Stable application separates home, research, discovery and system destinat
   await expect(page.getByLabel('operator-queue')).toBeVisible()
 
   await page.getByLabel('应用导航').getByRole('button', { name: '首页', exact: true }).click()
-  const symbol = page.getByRole('textbox', { name: '搜索股票' })
+  const symbol = page.locator('#global-symbol-search')
   await symbol.fill('SSE.688256')
   await symbol.press('Enter')
 
