@@ -166,6 +166,12 @@
       "title": "Stable UI defaults to human workflow; engineering detail uses progressive disclosure",
       "status": "active",
       "source": "governance/decisions/D-088-human-centered-stable-ui.md"
+    },
+    {
+      "id": "D-089",
+      "title": "Stable product uses destination-based application navigation, not a long-page document",
+      "status": "active",
+      "source": "governance/decisions/D-089-destination-based-application-navigation.md"
     }
   ],
   "rules": {
