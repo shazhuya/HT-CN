@@ -70,3 +70,10 @@ See `specs/m9-post-release-ui-ux-v1.md`.
 ## Validation / closeout
 
 All meaningful implementation, browser validation, CI failures, fixes, merge and post-merge checks must be appended to the Attempt Ledger before closeout.
+
+## Hosted validation
+
+- Planned candidate `73fdcd4266e36af045e3c92a9249ad4c5555cadf` / run #2635 / workflow 35819904555 passed 986 Python tests / 0 warnings, Web build, 30 browser tests including the new human-workflow gate, Phase18/21, M4 37/37, Outcome 4/4 and Stable acceptance ready.
+- Activated-state governance failures #2643 were fail-closed and corrected without weakening Project OS; the only issue was CR baseline semantics.
+- Activated retry `685af634d960dc3fd272e0bb08a12c653c9bd7fd` / run #2650 / workflow 35820365847 passed the full sequence.
+- Exact ready-to-merge head `c1412b1e8a19a0ea45f236b8e7385c7560963d60` / run #2658 / workflow 35820614143 passed the full sequence; artifact 10734030056 / sha256:f4705d7a94019625849f560d6fd9e1b35f37eed908dd909e70bbca7f8c3871cc.
