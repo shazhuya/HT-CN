@@ -1,6 +1,6 @@
 # M9 post-release — Stable UI/UX Product Refactor v1
 
-status: implementing
+status: validation_green
 
 ## 1. User problem
 
