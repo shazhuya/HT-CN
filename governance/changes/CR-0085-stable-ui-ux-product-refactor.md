@@ -1,8 +1,9 @@
 # CR-0085 — Stable UI/UX Product Refactor
 
-status: validation_green
+status: validation_failed
 baseline_ref: main
-baseline_head: c41243102c60bbde62be35c69b6d23e913f5dbf5
+baseline_head: 9e228d204082fe19d169e099da16ade11adac658
+implementation_baseline_head: c41243102c60bbde62be35c69b6d23e913f5dbf5
 target: main
 milestone: M9.post_release
 work_branch: m9/post-release-ui-ux-v1
