@@ -48,6 +48,7 @@ export default function ApplicationShell({
               className={destination === item.id ? 'app-nav__item active' : 'app-nav__item'}
               onClick={() => onNavigate(item.id)}
               aria-current={destination === item.id ? 'page' : undefined}
+              aria-label={item.label}
             >
               <span className="app-nav__icon" aria-hidden="true">{item.icon}</span>
               <span>
