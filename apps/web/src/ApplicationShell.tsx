@@ -90,7 +90,7 @@ export default function ApplicationShell({
                 </option>
               ))}
             </datalist>
-            <button onClick={onOpenResearch} disabled={loading || !symbol.trim()}>
+            <button aria-label="打开研究工作台 · 运行谐波分析" onClick={onOpenResearch} disabled={loading || !symbol.trim()}>
               {loading ? '分析中…' : '打开'}
             </button>
           </div>
