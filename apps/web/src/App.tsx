@@ -84,7 +84,13 @@ export default function App() {
 
     fetch(`${API}/api/instruments?limit=10000`)
       .then((response) => response.json())
-      .then((payload: { items?: InstrumentRow[] }) => setInstruments(payload.items ?? []))
+      .then((payload: { items?: InstrumentRow[] }) => {
+        const items = payload.items ?? []
+        setInstruments(items)
+        if (items.length === 1) {
+          setSymbol((current) => current || items[0].instrument_id)
+        }
+      })
       .catch(() => undefined)
 
     fetch(`${API}/api/product/status`)
