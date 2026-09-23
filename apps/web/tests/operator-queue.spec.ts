@@ -142,8 +142,9 @@ test('M5 operator queue renders workflow buckets and selects an instrument', asy
   })
 
   await page.goto('/')
+  await page.getByRole('button', { name: '机会发现' }).click()
 
-  await expect(page.getByRole('heading', { name: 'A 股谐波研究与辅助决策系统' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '机会发现' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '今日观察队列' })).toBeVisible()
   await expect(page.getByText(/这是观察工作流顺序，不是收益率排名/)).toBeVisible()
 
@@ -164,7 +165,7 @@ test('M5 operator queue renders workflow buckets and selects an instrument', asy
   await expect(queue.getByText('rebuilt_force', { exact: true })).toBeVisible()
 
   await queue.getByRole('button', { name: 'SSE.600000' }).click()
-  await expect(page.getByLabel('analysis-controls').locator('input[list="instrument-list"]')).toHaveValue('SSE.600000')
+  await expect(page.getByRole('textbox', { name: '搜索股票' })).toHaveValue('SSE.600000')
 })
 
 
@@ -241,6 +242,7 @@ test('M5 operator index paginates locally without shrinking full queue', async (
   })
 
   await page.goto('/')
+  await page.getByRole('button', { name: '机会发现' }).click()
 
   const queue = page.getByLabel('operator-queue')
   const controls = page.getByLabel('operator-index-controls')
