@@ -57,6 +57,7 @@ test('industry context renders local aggregate and preserves harmonic boundaries
 
   await page.goto('/')
   await page.getByRole('button', { name: '运行谐波分析' }).click()
+  await page.getByRole('button', { name: '市场环境' }).click()
   const card = page.getByTestId('sector-context')
   await expect(card).toBeVisible()
   await expect(card.getByText('半导体')).toBeVisible()
