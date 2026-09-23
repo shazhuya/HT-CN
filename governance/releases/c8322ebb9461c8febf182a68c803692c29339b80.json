@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "release_id": "HTCN-Stable-v1.0.0-c8322ebb",
+  "milestone": "M9",
+  "phase": "M9.6",
+  "title": "HT-CN Stable v1.0.0 — Product Runtime Release",
+  "version": "1.0.0",
+  "channel": "stable",
+  "commit": "c8322ebb9461c8febf182a68c803692c29339b80",
+  "pr": 72,
+  "event": "push",
+  "branch": "main",
+  "workflow_run": 35813838510,
+  "deterministic_tests": {
+    "status": "success",
+    "python_passed": 986,
+    "warnings": 0,
+    "ruff_observed": 0,
+    "ruff_budget": 0,
+    "project_os_integrity": "success",
+    "source_coverage_freeze": "valid",
+    "web_build": "success",
+    "continuation_artifact_id": 10730483695,
+    "continuation_artifact_digest": "sha256:55b611ac6e8f22a8e0725a7fa9283d9eb232c9189572b1d0bb9db9f3f1534960"
+  },
+  "formal_main_release_integrity": {
+    "status": "success",
+    "stable_acceptance": "ready",
+    "release_package_sha256": "5909bd21f816e749a54475650b2b9d452137de3ff3e95fb8815dd5a6428036b9",
+    "existing_playwright_passed": 29,
+    "phase18": "valid",
+    "phase21": "valid",
+    "artifact_id": 10730059043,
+    "artifact_digest": "sha256:e9ab5cd8a6888fe73d0dadce62094e3cee772b30c825b1bef306650835c61fbb"
+  },
+  "freezes": {
+    "m4_methodology": {
+      "status": "frozen_match",
+      "components": 37
+    },
+    "outcome_engine": {
+      "status": "frozen_match",
+      "components": 4
+    },
+    "source_coverage": {
+      "status": "valid",
+      "items": 18,
+      "partial_items": 0
+    }
+  },
+  "boundaries": {
+    "issue_0066_scope": "claims_only",
+    "statistical_features_available": false,
+    "automatic_trading": false,
+    "five_zero": "quarantined",
+    "alternate_bat": "fail_closed",
+    "hsi": "unsupported",
+    "m7_continues_in_background": true,
+    "m8_requires_evidence_authorization": true,
+    "routine_user_computer_dependency": false
+  },
+  "claims": {
+    "stable_product_runtime_released": true,
+    "profitability_claim_allowed": false,
+    "alpha_claim_allowed": false,
+    "win_rate_claim_allowed": false,
+    "statistical_significance_claim_allowed": false
+  }
+}

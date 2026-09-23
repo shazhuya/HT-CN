@@ -1,6 +1,6 @@
 # M9.6 — Stable Product Release Acceptance
 
-status: ready_to_merge
+status: closed
 
 ## 1. Stable release meaning
 

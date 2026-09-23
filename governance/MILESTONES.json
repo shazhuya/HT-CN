@@ -180,7 +180,7 @@
     {
       "id": "M9",
       "title": "Stable Research/Product Release",
-      "status": "productization_active",
+      "status": "complete",
       "phases": [
         {
           "id": "M9.0",
@@ -255,7 +255,7 @@
         {
           "id": "M9.6",
           "title": "Stable Product Release Acceptance",
-          "status": "ready_to_merge",
+          "status": "closed",
           "exit_gate": [
             "automated data, harmonic runtime, product workbench and background evidence service pass end-to-end acceptance",
             "formal browser/integration/freeze/release gates are green",

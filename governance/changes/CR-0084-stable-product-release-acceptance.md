@@ -1,6 +1,6 @@
 # CR-0084 — M9.6 Stable Product Release Acceptance
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 42950efe26dea85fe11ea7484e3aa7f59802c32b
@@ -48,3 +48,13 @@ See specs/m9-phase-6-stable-product-release-acceptance.md.
 - Because CI ordering changed after #2586, the new exact ledger-bearing candidate must rerun the full formal release gate before ready_to_merge.
 - Exact convergence head `a7fb82e9468b17bbc0dab5dd5aab3b00ed4c92de` / run #2598 failed only the fixed Resume Pack compactness gate at 30158 characters after Project OS, Source Coverage and Ruff 0/0 passed; Python result was 985 passed / 1 failed. Keep the 30000-character gate and compact PROJECT_STATE instead of weakening validation.
 - Exact convergence retry `fff4c02b535f89853170cd0fdcc59e715592c5a7` / run #2600 / workflow 35813397345 passed the full formal sequence with 986 Python tests / 0 warnings, Stable v1.0.0 release package SHA-256 `49d0df954b81bb04d7c73c5a6f08dd2714183ae7408351ad34a7e66f3465107a`, 29 browser tests, Phase18/21, M4 37/37, Outcome 4/4, then Stable acceptance status=ready. Artifact 10730757725 / sha256:e5e219deebefa55105bafacf1876ad29dea59891a9a211741bcb24254196b3bf.
+
+## Closeout receipt
+
+- Final ledger-bearing PR #72 head `3db650b205e18109eb48432afa3f5a75b7277f4c` passed workflow 35813645376 / run #2602 with Stable v1.0.0 release package SHA-256 `6e90651c164549755cb5e74bc616ac9a39c92a7f09b0689223614118a402425c`; artifact 10730477219 / sha256:74d258bca513f648ff7f1e07b32178e92ac89f4bd1620718282b78282e53229a.
+- PR #72 merged with ancestry preserved as canonical main commit `c8322ebb9461c8febf182a68c803692c29339b80`.
+- Canonical main workflow 35813838510 / run #2603 passed 986 Python tests / 0 warnings, Web build, verified Stable v1.0.0 package SHA-256 `5909bd21f816e749a54475650b2b9d452137de3ff3e95fb8815dd5a6428036b9`, 29 browser tests, Phase18/21, M4 methodology 37/37, Outcome Engine 4/4 and final Stable acceptance status=ready.
+- Canonical release artifact: 10730059043 / sha256:e9ab5cd8a6888fe73d0dadce62094e3cee772b30c825b1bef306650835c61fbb.
+- Canonical continuation artifact: 10730483695 / sha256:55b611ac6e8f22a8e0725a7fa9283d9eb232c9189572b1d0bb9db9f3f1534960.
+- M9.6 and M9 are closed as Stable v1.0.0 product-runtime completion. ISSUE-0066 remains claims-only; M7 continues in the background and M8 remains evidence-authorized only. No routine user-computer action is required.
+

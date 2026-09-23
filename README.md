@@ -6,10 +6,10 @@ HT-CN 是面向中国 A 股的本地优先谐波研究与人工辅助决策系�
 
 ## 当前状态
 
-- 产品主线：**M9 — Stable Research/Product Release**；
-- 已关闭：M9.1 自动行情、M9.2 自动谐波运行时、M9.3 端到端工作台、M9.4 后台证据与可观测性、M9.5 可靠性/打包/零 CLI；
-- 当前阶段：**M9.6 — Stable Product Release Acceptance**；
-- 稳定版候选：**HT-CN Stable v1.0.0**，统一 supervisor + built Web + verified release identity + backup/restore/update；
+- 稳定发布：**HT-CN Stable v1.0.0 已发布，M9 产品化主线完成**；
+- 已关闭：M9.1 自动行情、M9.2 自动谐波运行时、M9.3 端到端工作台、M9.4 后台证据与可观测性、M9.5 可靠性/打包/零 CLI、M9.6 Stable Release Acceptance；
+- 当前阶段：**M9 post-release operations & maintenance**；
+- 稳定版：**HT-CN Stable v1.0.0**，统一 supervisor + built Web + verified release identity + backup/restore/update；
 - M7 继续后台积累，M8/ISSUE-0066 只限制胜率、Alpha、盈利能力和统计校准，不阻塞产品运行；
 - 5-0 保持生产隔离，Alternate Bat 保持失败关闭，HSI 未支持。
 
