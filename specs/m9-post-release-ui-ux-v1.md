@@ -1,6 +1,6 @@
 # M9 post-release — Stable UI/UX Product Refactor v1
 
-status: validation_failed
+status: ready_to_merge
 
 ## 1. User problem
 
