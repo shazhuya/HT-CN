@@ -1,6 +1,6 @@
 # CR-0085 — Stable UI/UX Product Refactor
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: c41243102c60bbde62be35c69b6d23e913f5dbf5
@@ -77,3 +77,11 @@ All meaningful implementation, browser validation, CI failures, fixes, merge and
 - Activated-state governance failures #2643 were fail-closed and corrected without weakening Project OS; the only issue was CR baseline semantics.
 - Activated retry `685af634d960dc3fd272e0bb08a12c653c9bd7fd` / run #2650 / workflow 35820365847 passed the full sequence.
 - Exact ready-to-merge head `c1412b1e8a19a0ea45f236b8e7385c7560963d60` / run #2658 / workflow 35820614143 passed the full sequence; artifact 10734030056 / sha256:f4705d7a94019625849f560d6fd9e1b35f37eed908dd909e70bbca7f8c3871cc.
+
+## Closeout
+
+- PR #74 merged with ancestry preserved as canonical main `aba7370772c24ff7da7a62dc6175bddce97c75bd`.
+- Canonical main workflow 35821170150 / run #2664 passed the full hosted product sequence, including 30 browser tests with the human-workflow gate, Phase18/21, M4 37/37, Outcome 4/4 and Stable acceptance.
+- Formal main artifact 10733931200 / sha256:e2efff20d244556b821bca81fbcc2fc0fe8e1cf47710302df2f5d487a72fd460.
+- Continuation artifact 10732823846 / sha256:73a8e46d016338b0f504da86dfc3c3b96786e9efa6d64b411b7cf974a4cd97ca.
+- No user-computer execution was required. Core harmonic, Source, M4, Outcome, evidence and automatic-trading boundaries are unchanged.
