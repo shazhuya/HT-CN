@@ -146,11 +146,11 @@ test('Stable application separates home, research, discovery and system destinat
   await expect(page.getByLabel('应用导航')).toBeVisible()
   await expect(page.getByLabel('operator-queue')).toHaveCount(0)
 
-  await page.getByRole('button', { name: '机会发现' }).click()
+  await page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true }).click()
   await expect(page.getByRole('heading', { name: '机会发现' })).toBeVisible()
   await expect(page.getByLabel('operator-queue')).toBeVisible()
 
-  await page.getByRole('button', { name: '首页' }).click()
+  await page.getByLabel('应用导航').getByRole('button', { name: '首页', exact: true }).click()
   const symbol = page.getByRole('textbox', { name: '搜索股票' })
   await symbol.fill('SSE.688256')
   await symbol.press('Enter')
@@ -178,7 +178,7 @@ test('Stable application separates home, research, discovery and system destinat
   await expect(page.locator('[data-research-tab="audit"]')).toBeVisible()
   expect(harmonicRequestCount).toBe(1)
 
-  await page.getByRole('button', { name: '系统状态' }).click()
+  await page.getByLabel('应用导航').getByRole('button', { name: '系统状态', exact: true }).click()
   await expect(page.getByRole('heading', { name: '系统状态' })).toBeVisible()
   await expect(page.getByTestId('market-data-runtime-card')).toBeVisible()
 })
