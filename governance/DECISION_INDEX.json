@@ -160,6 +160,12 @@
       "title": "Stable v1.0.0 certifies product-runtime maturity, not statistical-performance maturity",
       "status": "active",
       "source": "governance/decisions/D-087-m9-6-stable-release-boundary.md"
+    },
+    {
+      "id": "D-088",
+      "title": "Stable UI defaults to human workflow; engineering detail uses progressive disclosure",
+      "status": "active",
+      "source": "governance/decisions/D-088-human-centered-stable-ui.md"
     }
   ],
   "rules": {

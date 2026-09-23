@@ -279,3 +279,102 @@
     margin-left: 0;
   }
 }
+
+
+/* CR-0085 · candidate-first observation experience */
+.operator-queue__secondary-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 10px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, .12);
+}
+
+.operator-queue__secondary-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.operator-queue__secondary-heading span {
+  color: #71839a;
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.operator-queue__secondary-heading strong {
+  color: #d5dde7;
+  font-size: 13px;
+}
+
+.operator-queue__table-wrap {
+  border: 1px solid rgba(148, 163, 184, .10);
+  border-radius: 10px;
+  background: rgba(8, 13, 19, .36);
+}
+
+.operator-queue__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #0d141d;
+}
+
+.operator-queue__table tbody tr {
+  transition: background .12s ease;
+}
+
+.operator-queue__table tbody tr:hover {
+  background: rgba(124, 140, 255, .045);
+}
+
+.operator-queue__symbol {
+  color: #cbd3ff;
+}
+
+.operator-queue__symbol:hover {
+  color: #eef0ff;
+  text-decoration: none;
+}
+
+.operator-index-controls input,
+.operator-index-controls select,
+.operator-queue__controls button,
+.operator-index-controls__paging button {
+  border: 1px solid rgba(148, 163, 184, .14);
+  border-radius: 8px;
+  background: #0b121a;
+  color: #cfd8e4;
+  min-height: 34px;
+}
+
+.operator-index-controls input,
+.operator-index-controls select {
+  padding: 7px 9px;
+}
+
+.operator-queue__controls button,
+.operator-index-controls__paging button {
+  padding: 6px 10px;
+}
+
+.operator-queue__controls button:hover,
+.operator-index-controls__paging button:hover:not(:disabled) {
+  border-color: rgba(124, 140, 255, .35);
+  background: rgba(124, 140, 255, .08);
+}
+
+@media (max-width: 760px) {
+  .operator-queue {
+    padding: 12px;
+  }
+
+  .operator-queue__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .operator-queue__table {
+    min-width: 980px;
+  }
+}

@@ -229,83 +229,107 @@ export default function App() {
 
   return (
     <main className="shell">
-      <section className="hero compact">
-        <div>
-          <p className="eyebrow">HT-CN STABLE v1.0.0 · LOCAL PRODUCT RUNTIME</p>
-          <h1>A 股谐波研究与辅助决策系统</h1>
-          <p className="subtitle">Carney 几何识别 · QFQ 连续价格 · 多尺度 Pivot · PRZ 审计</p>
+      <header className="app-topbar">
+        <div className="brand-lockup">
+          <div className="brand-mark" aria-hidden="true">H</div>
+          <div>
+            <p className="eyebrow">HT-CN STABLE v1.0.0 · LOCAL PRODUCT RUNTIME</p>
+            <h1>A 股谐波研究与辅助决策系统</h1>
+            <p className="subtitle">把复杂研究压缩成：看图 · 看阶段 · 看下一关键条件</p>
+          </div>
         </div>
+        <nav className="top-nav" aria-label="主导航">
+          <a href="#workspace">研究工作台</a>
+          <a href="#watchlist">今日观察</a>
+          <a href="#research-context">研究信息</a>
+        </nav>
         <div className="health-pill" data-ok={Boolean(health)}>
           <span className="health-dot" />
           {health ? `API ${health.version}` : 'API 未连接'}
         </div>
-      </section>
+      </header>
 
-      <ProductRuntimeStatus
-        product={productSupervisorStatus}
-        market={marketDataStatus}
-        harmonic={harmonicRuntimeStatus}
-        evidence={evidenceRuntimeStatus}
-      />
+      <div className="runtime-shell">
+        <ProductRuntimeStatus
+          product={productSupervisorStatus}
+          market={marketDataStatus}
+          harmonic={harmonicRuntimeStatus}
+          evidence={evidenceRuntimeStatus}
+        />
+      </div>
 
-      <OperatorQueue
-        apiBase={API}
-        onSelectInstrument={(instrumentId) => {
-          setSymbol(instrumentId)
-          setAnalysis(null)
-          setSelectedKey(null)
-          setCrosshair(null)
-          runAnalysis(instrumentId)
-        }}
-      />
-
-      <section className="single-symbol-heading">
-        <div>
-          <p className="eyebrow">SINGLE INSTRUMENT DEEP DIVE</p>
-          <h2>单标的深度工作台</h2>
+      <section className="command-deck" id="workspace">
+        <div className="command-deck__intro">
+          <div>
+            <p className="kicker">研究入口</p>
+            <h2>先选股票，再看结构</h2>
+            <p>输入证券代码后直接回车。系统会读取本地最新数据并打开对应的谐波工作台。</p>
+          </div>
+          <div className="command-deck__hint">
+            <span>推荐窗口</span>
+            <strong>420 根 K 线</strong>
+            <small>适合日常波段结构观察</small>
+          </div>
         </div>
-      </section>
 
-      <section className="controls" aria-label="analysis-controls">
-        <label>
-          <span>证券代码</span>
-          <input
-            list="instrument-list"
-            value={symbol}
-            onChange={(event) => setSymbol(event.target.value.toUpperCase())}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') runAnalysis()
-            }}
-            placeholder="SSE.688256"
-          />
-          <datalist id="instrument-list">
-            {instruments.map((item) => (
-              <option key={item.instrument_id} value={item.instrument_id}>
-                {item.has_qfq_factor ? 'QFQ' : 'RAW'}
-              </option>
-            ))}
-          </datalist>
-        </label>
-        <label>
-          <span>K 线数量</span>
-          <select value={bars} onChange={(event) => setBars(Number(event.target.value))}>
-            <option value={240}>240</option>
-            <option value={420}>420</option>
-            <option value={720}>720</option>
-            <option value={1200}>1200</option>
-          </select>
-        </label>
-        <button onClick={() => runAnalysis()} disabled={loading || !symbol.trim()}>
-          {loading ? '分析中…' : '运行谐波分析'}
-        </button>
+        <section className="controls command-controls" aria-label="analysis-controls">
+          <label className="symbol-control">
+            <span>股票代码</span>
+            <input
+              list="instrument-list"
+              value={symbol}
+              onChange={(event) => setSymbol(event.target.value.toUpperCase())}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') runAnalysis()
+              }}
+              placeholder="SSE.688256"
+            />
+            <datalist id="instrument-list">
+              {instruments.map((item) => (
+                <option key={item.instrument_id} value={item.instrument_id}>
+                  {item.has_qfq_factor ? 'QFQ' : 'RAW'}
+                </option>
+              ))}
+            </datalist>
+          </label>
+          <label>
+            <span>观察范围</span>
+            <select value={bars} onChange={(event) => setBars(Number(event.target.value))}>
+              <option value={240}>240 根 · 短窗口</option>
+              <option value={420}>420 根 · 推荐</option>
+              <option value={720}>720 根 · 中长</option>
+              <option value={1200}>1200 根 · 长周期</option>
+            </select>
+          </label>
+          <button
+            className="primary-analysis-button"
+            aria-label="打开研究工作台 · 运行谐波分析"
+            onClick={() => runAnalysis()}
+            disabled={loading || !symbol.trim()}
+          >
+            {loading ? '正在读取与分析…' : '打开研究工作台'}
+          </button>
+        </section>
       </section>
 
       {error && <p className="error">{error}</p>}
 
       {!analysis && !error && (
-        <section className="placeholder">
-          <h2>选择观察队列中的标的，或直接输入代码</h2>
-          <p>Operator Queue 负责告诉你“今天先看什么”；这里继续做单标的几何、Source lifecycle、PRZ 与上下文深挖。</p>
+        <section className="placeholder start-placeholder">
+          <div className="start-placeholder__visual" aria-hidden="true">
+            <span className="start-placeholder__axis" />
+            <i /><i /><i /><i /><i /><i />
+          </div>
+          <div className="start-placeholder__copy">
+            <p className="kicker">准备就绪</p>
+            <h2>从一只你正在研究的股票开始</h2>
+            <p>在上方输入代码并回车。打开后先看主图，再看右侧“现在在哪 / 先看什么 / 下一步看什么”。</p>
+            <div className="start-steps">
+              <span><b>1</b> 输入代码</span>
+              <span><b>2</b> 看主图结构</span>
+              <span><b>3</b> 看下一关键条件</span>
+            </div>
+          </div>
         </section>
       )}
 
@@ -321,22 +345,14 @@ export default function App() {
 
           {analysis.warning && <div className="warning-card">{analysis.warning}</div>}
 
-          <ContextIntegrity context={analysis.context_integrity} />
-          <AShareExecutionContext context={analysis.a_share_execution_context} />
-          <MarketContext context={analysis.market_context} />
-          <SectorContext context={analysis.sector_context} />
-          <ConceptContext context={analysis.concept_context} />
-          <TypeIT5Evidence events={analysis.type_i_t5_events ?? []} />
           <section className="product-workbench" data-testid="product-workbench">
             <div className="product-workbench-heading">
               <div>
-                <p className="kicker">M9.3 · END-TO-END WORKFLOW</p>
+                <p className="kicker">实时单标的研究</p>
                 <h2>端到端研究工作台</h2>
               </div>
               <span>标的 → K线 → 形态 → Source lifecycle → 下一观察点</span>
             </div>
-            <DecisionNarrative narrative={selectedPattern?.decision_narrative} />
-
             <section className="workspace">
             <div className="chart-panel">
               <div className="panel-heading">
@@ -373,6 +389,7 @@ export default function App() {
                   <h2>形态与价格区</h2>
                 </div>
               </div>
+              <DecisionNarrative narrative={selectedPattern?.decision_narrative} />
               <WorkbenchContextPanel
                 instrumentId={analysis.instrument_id}
                 pattern={selectedPattern}
@@ -554,8 +571,47 @@ export default function App() {
             </aside>
             </section>
           </section>
+
+          <section className="research-context" id="research-context">
+            <div className="research-context__heading">
+              <div>
+                <p className="kicker">需要时再深入</p>
+                <h2>市场、执行与证据上下文</h2>
+              </div>
+              <p>这些信息帮助解释环境与约束，但不会反向改写谐波身份和 Source lifecycle。</p>
+            </div>
+            <div className="research-context__stack">
+              <ContextIntegrity context={analysis.context_integrity} />
+              <AShareExecutionContext context={analysis.a_share_execution_context} />
+              <MarketContext context={analysis.market_context} />
+              <SectorContext context={analysis.sector_context} />
+              <ConceptContext context={analysis.concept_context} />
+              <TypeIT5Evidence events={analysis.type_i_t5_events ?? []} />
+            </div>
+          </section>
         </>
       )}
+
+      <section className="discovery-section" id="watchlist">
+        <div className="section-heading">
+          <div>
+            <p className="kicker">全市场观察</p>
+            <h2>今天还有哪些结构值得看</h2>
+          </div>
+          <p>这里是候选发现与跨日复盘区。它负责“找标的”，不会覆盖上面的单标的判断。</p>
+        </div>
+        <OperatorQueue
+          apiBase={API}
+          onSelectInstrument={(instrumentId) => {
+            setSymbol(instrumentId)
+            setAnalysis(null)
+            setSelectedKey(null)
+            setCrosshair(null)
+            runAnalysis(instrumentId)
+            window.location.hash = 'workspace'
+          }}
+        />
+      </section>
     </main>
   )
 }

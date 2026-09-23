@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-STABLE-V1.0.0-RELEASED",
+  "state_id": "HTCN-M9-POST-RELEASE-UI-UX-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -22,19 +22,19 @@
   },
   "current": {
     "milestone": "M9",
-    "phase": "M9.6",
-    "title": "Stable Product Release Acceptance",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260923-0084-009",
-    "latest_hosted_validation_attempt_id": "A-20260923-0084-009",
-    "work_branch": null,
+    "phase": "M9.post_release",
+    "title": "Stable UI/UX Product Refactor",
+    "status": "ready_to_merge",
+    "active_change": "CR-0085",
+    "active_spec": "specs/m9-post-release-ui-ux-v1.md",
+    "latest_attempt_id": "A-20260923-0085-007",
+    "latest_hosted_validation_attempt_id": "A-20260923-0085-007",
+    "work_branch": "m9/post-release-ui-ux-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35814318855,
-      "head": "23eb9471d4f4e27d10a73781d13b2fc20dc5c0a6",
-      "scope": "Post-closeout Stable v1.0.0 canonical main #2605 fully green."
+      "workflow_run": 35820614143,
+      "head": "c1412b1e8a19a0ea45f236b8e7385c7560963d60",
+      "scope": "Exact ready-to-merge CR-0085 #2658 fully green; artifact 10734030056."
     }
   },
   "private_m1": {
@@ -57,15 +57,15 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Stable v1.0.0 Operations & Maintenance",
-    "status": "ready",
+    "title": "Stable UI/UX Product Refactor",
+    "status": "ready_to_merge",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Maintain Stable v1.0.0 while M7 accumulates automatically; enable M8/statistical surfaces only through existing evidence authorization."
+    "objective": "Validate this exact ledger-bearing ready-to-merge head. If green, merge PR #74 with ancestry preserved and validate canonical main."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -90,6 +90,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-post-release-ui-ux-v1.md",
     "specs/m9-phase-6-stable-product-release-acceptance.md",
     "specs/m9-phase-5-reliability-packaging-zero-cli.md",
     "specs/m9-phase-4-background-evidence-calibration-observability.md",
