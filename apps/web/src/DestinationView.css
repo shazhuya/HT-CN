@@ -1,0 +1,20 @@
+.destination-view .operator-queue {
+  margin: 0;
+  border-radius: 14px;
+  border-color: rgba(148,163,184,.11);
+  background: #0b1118;
+}
+
+.destination-view .operator-queue__heading .eyebrow {
+  display: none;
+}
+
+.destination-view .operator-queue__heading h2 {
+  font-size: 15px;
+}
+
+.destination-view .operator-queue__heading p {
+  max-width: 820px;
+  font-size: 10px;
+  line-height: 1.55;
+}

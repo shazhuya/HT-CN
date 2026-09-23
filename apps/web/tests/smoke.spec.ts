@@ -65,28 +65,24 @@ test('HT-CN M3 fixture workbench renders lifecycle navigation and harmonic chart
   })
 
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'A 股谐波研究与辅助决策系统' })).toBeVisible()
-  await expect(page.getByText('把复杂研究压缩成：看图 · 看阶段 · 看下一关键条件')).toBeVisible()
+  await expect(page.getByRole('heading', { name: '今天想研究什么？' })).toBeVisible()
+  await expect(page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: '运行谐波分析' }).click()
+  await expect(page.getByRole('heading', { name: 'SSE.688256' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Gartley · 已完成' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: '现在在哪 · 先看哪 · 到了再看哪' })).toBeVisible()
-  await expect(page.getByText('几何已完成 · 执行时钟未接入')).toBeVisible()
-  await expect(page.getByText(/不能把 D Pivot 直接等同于执行完成/)).toBeVisible()
-  await expect(page.getByText(/当前 payload 尚未提供 canonical source_lifecycle/)).toBeVisible()
-  await expect(page.getByText(/不得把后验 D 时钟误认成实时执行时钟/)).toBeVisible()
   await expect(page.getByLabel('harmonic-chart')).toBeVisible()
-  await expect(page.getByText('98.7')).toBeVisible()
-  const audit = page.locator('.audit-card')
+  await expect(page.getByTestId('lifecycle-compass')).toBeVisible()
+
+  await page.getByRole('button', { name: '形态与价位' }).click()
+  const audit = page.getByTestId('pattern-audit-panel')
   await expect(audit.getByText('0.618', { exact: true })).toBeVisible()
   await expect(audit.getByText('XA completion', { exact: true })).toBeVisible()
-
-  await expect(audit.getByRole('heading', { name: '价格区语义' })).toBeVisible()
-  await expect(audit.getByText('HT-CN收敛核心', { exact: true })).toBeVisible()
+  await expect(audit.getByRole('heading', { name: '价格区' })).toBeVisible()
+  await expect(audit.getByText('HT-CN 收敛核心', { exact: true })).toBeVisible()
   await expect(audit.getByText('组件审计包络', { exact: true })).toBeVisible()
   await expect(audit.getByText('Source PRZ', { exact: true })).toBeVisible()
   await expect(audit.getByText('未冻结 · fail closed', { exact: true })).toBeVisible()
-  await expect(audit.getByText(/图中着色区与旧 price_low\/high 均表示 HT-CN 收敛核心/)).toBeVisible()
 
   const outDir = '../../artifacts/screenshots'
   fs.mkdirSync(outDir, { recursive: true })

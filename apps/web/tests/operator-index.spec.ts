@@ -122,6 +122,7 @@ test('M5 full-universe operator index paginates and filters presentation only', 
   })
 
   await page.goto('/')
+  await page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true }).click()
 
   const queue = page.getByLabel('operator-queue')
   await expect(

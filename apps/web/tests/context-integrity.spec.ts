@@ -41,6 +41,7 @@ test('context integrity surfaces freshness and conflicts without turning them in
 
   await page.goto('/')
   await page.getByRole('button', { name: '运行谐波分析' }).click()
+  await page.getByRole('button', { name: '市场环境' }).click()
   const card = page.getByTestId('context-integrity')
   await expect(card).toBeVisible()
   await expect(card.getByText('存在上下文缺口 / 时钟不一致')).toBeVisible()

@@ -120,6 +120,7 @@ test('A-share execution context is separate, auditable, and does not replace sou
 
   await page.goto('/')
   await page.getByRole('button', { name: '运行谐波分析' }).click()
+  await page.getByRole('button', { name: '市场环境' }).click()
 
   const context = page.getByTestId('a-share-execution-context')
   await expect(context).toBeVisible()

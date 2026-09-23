@@ -276,6 +276,7 @@ test('M5 daily review digest keeps source totals while presentation filters dril
   })
 
   await page.goto('/')
+  await page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true }).click()
 
   const review = page.getByLabel('daily-review-digest')
   await expect(
@@ -304,6 +305,6 @@ test('M5 daily review digest keeps source totals while presentation filters dril
 
   await review.getByRole('button', { name: 'SSE.600000' }).click()
   await expect(
-    page.getByLabel('analysis-controls').locator('input[list="instrument-list"]'),
+    page.locator('#global-symbol-search'),
   ).toHaveValue('SSE.600000')
 })

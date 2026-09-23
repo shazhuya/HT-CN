@@ -32,7 +32,8 @@ test('Stable v1.0.0 exposes one version and keeps statistical claims unavailable
   })
 
   await page.goto('/')
-  await expect(page.getByText('HT-CN STABLE v1.0.0 · LOCAL PRODUCT RUNTIME')).toBeVisible()
+  await page.getByLabel('应用导航').getByRole('button', { name: '系统状态', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '系统状态' })).toBeVisible()
   await expect(page.getByText('API 1.0.0')).toBeVisible()
   const evidence = page.getByTestId('evidence-runtime-card')
   await expect(evidence).toContainText('证据积累中')

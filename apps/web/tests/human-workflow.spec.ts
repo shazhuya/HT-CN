@@ -110,8 +110,9 @@ const analysis = {
   engine_note: 'geometry_score 仅衡量几何贴合度，不代表胜率、预期收益或交易建议。',
 }
 
-test('Stable UI follows a human chart-first research journey', async ({ page }) => {
+test('Stable application separates home, research, discovery and system destinations', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
+  let harmonicRequestCount = 0
 
   await page.route('**/api/health', async (route) => {
     await route.fulfill({ json: { status: 'ok', service: 'ht-cn-api', version: '1.0.0' } })
@@ -135,24 +136,30 @@ test('Stable UI follows a human chart-first research journey', async ({ page }) 
     await route.fulfill({ status: 503, json: { detail: 'fixture intentionally unavailable' } })
   })
   await page.route('**/api/harmonic/SSE.688256?**', async (route) => {
+    harmonicRequestCount += 1
     await route.fulfill({ json: analysis })
   })
 
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { name: '先选股票，再看结构' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: '从一只你正在研究的股票开始' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '打开研究工作台' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '今天想研究什么？' })).toBeVisible()
+  await expect(page.getByLabel('应用导航')).toBeVisible()
+  await expect(page.getByLabel('operator-queue')).toHaveCount(0)
 
-  const symbol = page.getByLabel('analysis-controls').locator('input[list="instrument-list"]')
+  await page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '机会发现' })).toBeVisible()
+  await expect(page.getByLabel('operator-queue')).toBeVisible()
+
+  await page.getByLabel('应用导航').getByRole('button', { name: '首页', exact: true }).click()
+  const symbol = page.locator('#global-symbol-search')
   await symbol.fill('SSE.688256')
   await symbol.press('Enter')
 
   const workbench = page.getByTestId('product-workbench')
   const chart = page.getByLabel('harmonic-chart')
   const narrative = page.getByTestId('decision-narrative')
-  const queue = page.getByLabel('operator-queue')
 
+  await expect(page.getByRole('heading', { name: 'SSE.688256' })).toBeVisible()
   await expect(workbench).toBeVisible()
   await expect(chart).toBeVisible()
   await expect(narrative).toBeVisible()
@@ -161,13 +168,17 @@ test('Stable UI follows a human chart-first research journey', async ({ page }) 
   await expect(narrative).toContainText('到了再看什么')
   await expect(narrative).toContainText('下一关键价')
   await expect(narrative).toContainText('109.20')
+  expect(harmonicRequestCount).toBe(1)
 
-  const workbenchBox = await workbench.boundingBox()
-  const queueBox = await queue.boundingBox()
-  expect(workbenchBox).not.toBeNull()
-  expect(queueBox).not.toBeNull()
-  if (workbenchBox && queueBox) {
-    expect(workbenchBox.y).toBeLessThan(queueBox.y)
-    expect(workbenchBox.width).toBeGreaterThan(900)
-  }
+  await page.getByRole('button', { name: '形态与价位' }).click()
+  await expect(page.getByTestId('pattern-audit-panel')).toBeVisible()
+  await page.getByRole('button', { name: '市场环境' }).click()
+  await expect(page.locator('[data-research-tab="context"]')).toBeVisible()
+  await page.getByRole('button', { name: '审计' }).click()
+  await expect(page.locator('[data-research-tab="audit"]')).toBeVisible()
+  expect(harmonicRequestCount).toBe(1)
+
+  await page.getByLabel('应用导航').getByRole('button', { name: '系统状态', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '系统状态' })).toBeVisible()
+  await expect(page.getByTestId('market-data-runtime-card')).toBeVisible()
 })

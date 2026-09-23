@@ -149,6 +149,7 @@ test('M5 operator history shows append-only summaries and instrument changes', a
   })
 
   await page.goto('/')
+  await page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true }).click()
 
   const history = page.getByLabel('operator-history')
   await expect(
@@ -171,6 +172,6 @@ test('M5 operator history shows append-only summaries and instrument changes', a
 
   await latestDay.getByRole('button', { name: 'SSE.688256' }).click()
   await expect(
-    page.getByLabel('analysis-controls').locator('input[list="instrument-list"]'),
+    page.locator('#global-symbol-search'),
   ).toHaveValue('SSE.688256')
 })

@@ -147,15 +147,17 @@ test('M9.3 end-to-end workbench shares canonical identity across runtime, chart 
 
   await page.goto('/')
 
+  await page.getByLabel('应用导航').getByRole('button', { name: '系统状态', exact: true }).click()
   await expect(page.getByTestId('market-data-runtime-card')).toContainText('数据已就绪')
   await expect(page.getByTestId('harmonic-runtime-card')).toContainText('分析已同步')
 
-  const symbolInput = page.getByPlaceholder('SSE.688256')
+  const symbolInput = page.locator('#global-symbol-search')
+  await symbolInput.fill('SSE.688256')
   await symbolInput.press('Enter')
 
   await expect(page.getByTestId('product-workbench')).toBeVisible()
-  await expect(page.getByRole('heading', { name: '端到端研究工作台' })).toBeVisible()
-  await expect(page.getByText('标的 → K线 → 形态 → Source lifecycle → 下一观察点')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'SSE.688256' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '概要' })).toHaveAttribute('aria-selected', 'true')
   await expect(page.getByTestId('decision-narrative')).toContainText('随后观察 61.8% 目标 109.20')
   await expect(page.getByTestId('workbench-context-panel')).toContainText('Gartley')
   await expect(page.getByTestId('workbench-context-panel')).toContainText('type_i_confirmed')

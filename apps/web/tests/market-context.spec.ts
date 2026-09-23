@@ -42,6 +42,7 @@ test('core market context renders four benchmarks and stays separate from harmon
 
   await page.goto('/')
   await page.getByRole('button', { name: '运行谐波分析' }).click()
+  await page.getByRole('button', { name: '市场环境' }).click()
 
   const card = page.getByTestId('market-context')
   await expect(card).toBeVisible()

@@ -158,6 +158,7 @@ test('M5 operator delta shows daily lifecycle and next-key changes', async ({ pa
   })
 
   await page.goto('/')
+  await page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true }).click()
 
   const delta = page.getByLabel('operator-delta')
   await expect(delta.getByRole('heading', { name: '今日变化' })).toBeVisible()
@@ -169,6 +170,6 @@ test('M5 operator delta shows daily lifecycle and next-key changes', async ({ pa
 
   await delta.getByRole('button', { name: 'SSE.600000' }).click()
   await expect(
-    page.getByLabel('analysis-controls').locator('input[list="instrument-list"]'),
+    page.locator('#global-symbol-search'),
   ).toHaveValue('SSE.600000')
 })
