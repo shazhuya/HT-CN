@@ -1,0 +1,70 @@
+.system-view .product-runtime-strip {
+  margin: 0 0 10px;
+}
+
+.system-explain-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.system-explain-grid section {
+  padding: 16px;
+  border: 1px solid rgba(148,163,184,.11);
+  border-radius: 13px;
+  background: #0b1118;
+}
+
+.system-explain-grid span {
+  color: #708196;
+  font-size: 9px;
+}
+
+.system-explain-grid h2 {
+  margin: 5px 0 6px;
+  font-size: 15px;
+}
+
+.system-explain-grid p {
+  margin: 0;
+  color: #8191a5;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.system-diagnostics {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.system-diagnostics details {
+  border: 1px solid rgba(148,163,184,.10);
+  border-radius: 10px;
+  background: #0a1118;
+}
+
+.system-diagnostics summary {
+  padding: 11px 13px;
+  color: #9aa8b8;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.system-diagnostics ul {
+  margin: 0;
+  padding: 0 28px 13px;
+}
+
+.system-diagnostics li {
+  margin: 4px 0;
+  color: #74859a;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .system-explain-grid {
+    grid-template-columns: 1fr;
+  }
+}
