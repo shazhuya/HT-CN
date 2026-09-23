@@ -243,6 +243,7 @@ test('M5 review session saves follow-up without changing source review totals', 
   })
 
   await page.goto('/')
+  await page.getByRole('button', { name: '机会发现' }).click()
 
   const review = page.getByLabel('daily-review-digest')
   const summary = review.locator('.daily-review-digest__summary')
