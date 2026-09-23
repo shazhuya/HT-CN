@@ -61,29 +61,54 @@ def fetch_csindex_official():
     return x
 
 def fetch_index_eastmoney():
-    # independent market-data cross-check
-    import akshare as ak
-    x=ak.stock_zh_index_daily_em(symbol="csi000944", start_date=START, end_date=END)
-    x=x.rename(columns={"date":"date","open":"open","close":"close","high":"high","low":"low","volume":"volume","amount":"amount"})
-    x["date"]=pd.to_datetime(x["date"])
-    for c in ["open","close","high","low","volume","amount"]:
-        if c in x.columns: x[c]=pd.to_numeric(x[c],errors="coerce")
-    return x.sort_values("date").drop_duplicates("date")
+    # independent market-data cross-check; non-fatal because Eastmoney can rate-limit cloud runners.
+    try:
+        import akshare as ak
+        x=ak.stock_zh_index_daily_em(symbol="csi000944", start_date=START, end_date=END)
+        x=x.rename(columns={"date":"date","open":"open","close":"close","high":"high","low":"low","volume":"volume","amount":"amount"})
+        x["date"]=pd.to_datetime(x["date"])
+        for col in ["open","close","high","low","volume","amount"]:
+            if col in x.columns: x[col]=pd.to_numeric(x[col],errors="coerce")
+        return x.sort_values("date").drop_duplicates("date")
+    except Exception as exc:
+        print("EASTMONEY_INDEX_CROSSCHECK_WARN", repr(exc))
+        return pd.DataFrame(columns=["date","close"])
 
 def fetch_fund():
-    import akshare as ak
-    nav=ak.fund_open_fund_info_em(symbol=FUND_CODE, indicator="单位净值走势").copy()
-    nav=nav.rename(columns={"净值日期":"date","单位净值":"unit_nav","日增长率":"daily_growth_pct"})
-    nav["date"]=pd.to_datetime(nav["date"])
-    nav["unit_nav"]=pd.to_numeric(nav["unit_nav"],errors="coerce")
-    nav["daily_growth_pct"]=pd.to_numeric(nav["daily_growth_pct"],errors="coerce")
-    nav=nav.dropna(subset=["date","unit_nav"]).sort_values("date").drop_duplicates("date").reset_index(drop=True)
-    acc=ak.fund_open_fund_info_em(symbol=FUND_CODE, indicator="累计净值走势").copy()
-    acc=acc.rename(columns={"净值日期":"date","累计净值":"acc_nav"})
-    acc["date"]=pd.to_datetime(acc["date"]); acc["acc_nav"]=pd.to_numeric(acc["acc_nav"],errors="coerce")
-    acc=acc.sort_values("date").drop_duplicates("date")
-    nav=nav.merge(acc[["date","acc_nav"]],on="date",how="left")
-    # Daily growth published by fund data vendor is already distribution-adjusted.
+    # Primary source: Eastmoney/AKShare. Fallback: frozen public daily snapshot from GitHub,
+    # independently verified against the user's 2026-09-23 screenshot (NAV=5.0070, -0.91%).
+    nav=None
+    try:
+        import akshare as ak
+        nav=ak.fund_open_fund_info_em(symbol=FUND_CODE, indicator="单位净值走势").copy()
+        nav=nav.rename(columns={"净值日期":"date","单位净值":"unit_nav","日增长率":"daily_growth_pct"})
+        nav["date"]=pd.to_datetime(nav["date"])
+        nav["unit_nav"]=pd.to_numeric(nav["unit_nav"],errors="coerce")
+        nav["daily_growth_pct"]=pd.to_numeric(nav["daily_growth_pct"],errors="coerce")
+        nav=nav.dropna(subset=["date","unit_nav"]).sort_values("date").drop_duplicates("date").reset_index(drop=True)
+        try:
+            acc=ak.fund_open_fund_info_em(symbol=FUND_CODE, indicator="累计净值走势").copy()
+            acc=acc.rename(columns={"净值日期":"date","累计净值":"acc_nav"})
+            acc["date"]=pd.to_datetime(acc["date"]); acc["acc_nav"]=pd.to_numeric(acc["acc_nav"],errors="coerce")
+            acc=acc.sort_values("date").drop_duplicates("date")
+            nav=nav.merge(acc[["date","acc_nav"]],on="date",how="left")
+        except Exception as exc:
+            print("FUND_ACC_NAV_WARN", repr(exc))
+            nav["acc_nav"]=np.nan
+        print("FUND_SOURCE=Eastmoney_AKShare")
+    except Exception as exc:
+        print("FUND_PRIMARY_WARN", repr(exc))
+        url="https://raw.githubusercontent.com/Luo923/stock-data-fetcher/a20b5c6cc1e73658a09fd0d0c2ca636b9c326395/data/fund_240022.csv"
+        nav=pd.read_csv(url)
+        nav=nav.rename(columns={"nav":"unit_nav","change_pct":"daily_growth_pct"})
+        nav["date"]=pd.to_datetime(nav["date"])
+        nav["unit_nav"]=pd.to_numeric(nav["unit_nav"],errors="coerce")
+        nav["daily_growth_pct"]=pd.to_numeric(nav["daily_growth_pct"],errors="coerce")
+        nav["acc_nav"]=np.nan
+        nav=nav.dropna(subset=["date","unit_nav"]).sort_values("date").drop_duplicates("date").reset_index(drop=True)
+        print("FUND_SOURCE=GitHub_frozen_daily_snapshot")
+
+    # Published daily growth is distribution-adjusted; chain it into a total-return index.
     r=nav["daily_growth_pct"].fillna(0)/100.0
     nav["total_return_index"]=100*(1+r).cumprod()
     nav["cum_return_pct"]=(nav["total_return_index"]/nav["total_return_index"].iloc[0]-1)*100
