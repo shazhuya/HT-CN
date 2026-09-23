@@ -89,7 +89,7 @@ jobs:
       - name: Run deterministic browser acceptance
         if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/') || startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-') || startsWith(github.ref, 'refs/heads/m2/rsi-') || startsWith(github.head_ref, 'm2/rsi-')
         working-directory: apps/web
-        run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts tests/execution-context.spec.ts tests/market-context.spec.ts tests/sector-context.spec.ts tests/concept-context.spec.ts tests/context-integrity.spec.ts tests/decision-narrative.spec.ts tests/decision-selection.spec.ts tests/operator-queue.spec.ts tests/operator-delta.spec.ts tests/operator-index.spec.ts tests/operator-history.spec.ts tests/daily-review-digest.spec.ts tests/review-followup-journal.spec.ts
+        run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts tests/execution-context.spec.ts tests/market-context.spec.ts tests/sector-context.spec.ts tests/concept-context.spec.ts tests/context-integrity.spec.ts tests/decision-narrative.spec.ts tests/decision-selection.spec.ts tests/operator-queue.spec.ts tests/operator-delta.spec.ts tests/operator-index.spec.ts tests/operator-history.spec.ts tests/daily-review-digest.spec.ts tests/review-followup-journal.spec.ts tests/human-workflow.spec.ts
 
       - name: Build M5 Phase18 portable visual browser fixture
         if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/')
@@ -200,7 +200,7 @@ jobs:
 
       - name: Run existing deterministic browser acceptance for main release
         working-directory: apps/web
-        run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts tests/execution-context.spec.ts tests/market-context.spec.ts tests/sector-context.spec.ts tests/concept-context.spec.ts tests/context-integrity.spec.ts tests/decision-narrative.spec.ts tests/decision-selection.spec.ts tests/operator-queue.spec.ts tests/operator-delta.spec.ts tests/operator-index.spec.ts tests/operator-history.spec.ts tests/daily-review-digest.spec.ts tests/review-followup-journal.spec.ts tests/product-workbench.spec.ts tests/evidence-observability.spec.ts tests/product-reliability.spec.ts tests/stable-release.spec.ts
+        run: npx playwright test tests/smoke.spec.ts tests/lifecycle.spec.ts tests/execution-context.spec.ts tests/market-context.spec.ts tests/sector-context.spec.ts tests/concept-context.spec.ts tests/context-integrity.spec.ts tests/decision-narrative.spec.ts tests/decision-selection.spec.ts tests/operator-queue.spec.ts tests/operator-delta.spec.ts tests/operator-index.spec.ts tests/operator-history.spec.ts tests/daily-review-digest.spec.ts tests/review-followup-journal.spec.ts tests/human-workflow.spec.ts tests/product-workbench.spec.ts tests/evidence-observability.spec.ts tests/product-reliability.spec.ts tests/stable-release.spec.ts
 
       - name: Build M5 Phase18 portable visual browser fixture for main release
         run: python scripts/m5_build_portable_visual_browser_fixture.py
