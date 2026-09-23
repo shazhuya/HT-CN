@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-STABLE-V1.0.0-UI-UX-REFRESHED",
+  "state_id": "HTCN-M9-POST-RELEASE-APPLICATION-UX-V2-VALIDATION-GREEN",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
   "current": {
     "milestone": "M9",
     "phase": "M9.post_release",
-    "title": "Stable Product Operations & Maintenance",
-    "status": "ready",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260923-0085-008",
-    "latest_hosted_validation_attempt_id": "A-20260923-0085-008",
-    "work_branch": null,
+    "title": "Complete Application UX Shell Refactor",
+    "status": "validation_green",
+    "active_change": "CR-0086",
+    "active_spec": "specs/m9-post-release-application-shell-v2.md",
+    "latest_attempt_id": "A-20260923-0086-003",
+    "latest_hosted_validation_attempt_id": "A-20260923-0086-003",
+    "work_branch": "m9/post-release-ux-shell-v2",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35821170150,
-      "head": "aba7370772c24ff7da7a62dc6175bddce97c75bd",
-      "scope": "CR-0085 canonical main #2664 fully green after human-centered Stable UI/UX merge."
+      "workflow_run": 35860762701,
+      "head": "1b33abd1ae31b41e578929d0dd616c95822a5e8b",
+      "scope": "CR-0086 planned candidate #2735 fully green: Project OS, Python/Web, browser application workflows, Phase18/21, M4 37/37, Outcome 4/4, Stable acceptance."
     }
   },
   "private_m1": {
@@ -57,15 +57,15 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Stable v1.0.0 Operations & Maintenance",
-    "status": "ready",
+    "title": "Complete Application UX Shell Refactor",
+    "status": "validation_green",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Maintain the refreshed Stable v1.0.0 product and continue post-release reliability/UX maintenance while M7 accumulates automatically; activate M8/statistical surfaces only through the existing evidence authorization gate."
+    "objective": "Validate the activated CR-0086 authoritative state on hosted CI, then advance the exact ledger-bearing candidate to merge."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -90,6 +90,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-post-release-application-shell-v2.md",
     "specs/m9-phase-6-stable-product-release-acceptance.md",
     "specs/m9-phase-5-reliability-packaging-zero-cli.md",
     "specs/m9-phase-4-background-evidence-calibration-observability.md",
