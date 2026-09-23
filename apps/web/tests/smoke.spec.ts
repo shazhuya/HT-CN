@@ -66,7 +66,7 @@ test('HT-CN M3 fixture workbench renders lifecycle navigation and harmonic chart
 
   await page.goto('/')
   await expect(page.getByRole('heading', { name: '今天想研究什么？' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '机会发现' })).toBeVisible()
+  await expect(page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: '运行谐波分析' }).click()
   await expect(page.getByRole('heading', { name: 'SSE.688256' })).toBeVisible()
