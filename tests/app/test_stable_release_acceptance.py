@@ -25,11 +25,9 @@ def _release_report() -> dict[str, object]:
     }
 
 
-def test_m9_6_stable_release_contract_fails_closed_before_activation() -> None:
+def test_m9_6_stable_release_contract_accepts_activated_candidate() -> None:
     payload = evaluate_stable_release_acceptance(ROOT, release_report=_release_report())
-    assert payload["accepted"] is False
-    checks = {row["name"]: row for row in payload["checks"]}
-    assert checks["m9_6_state"]["passed"] is False
+    assert payload["accepted"] is True
     assert payload["statistical_claims_unlocked_by_this_acceptance"] is False
     assert payload["user_computer_required"] is False
     assert payload["is_trade_instruction"] is False

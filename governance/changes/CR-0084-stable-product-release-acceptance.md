@@ -1,8 +1,9 @@
 # CR-0084 — M9.6 Stable Product Release Acceptance
 
-status: planned
+status: implementing
 baseline_ref: main
-baseline_head: 42950efe26dea85fe11ea7484e3aa7f59802c32b
+baseline_head: 9e228d204082fe19d169e099da16ade11adac658
+implementation_baseline_head: 42950efe26dea85fe11ea7484e3aa7f59802c32b
 work_branch: m9/stable-product-release-acceptance-v1
 spec: specs/m9-phase-6-stable-product-release-acceptance.md
 
@@ -42,3 +43,10 @@ Complete M9.6 by adding a machine-enforced Stable Product release acceptance gat
 ## Current implementation note
 
 The container used by this agent cannot resolve `github.com` for direct `git clone`, but the connected GitHub integration has verified canonical main and supports repository writes/CI. This environment limitation is not a user-computer requirement and is not a project blocker.
+
+## Planned candidate validation
+
+- Run #2592 / workflow 35807165469 passed Project OS, Source Coverage, Ruff 0/0, 984 Python tests / 0 warnings, Web build, deterministic verified release package, 28 browser tests, Phase18, Phase21, M4 methodology 37/37 and Outcome Engine 4/4.
+- Artifact: 10728416383 / sha256:66f224f8a4b9b50d70a895fbd9949e395aec79b83fb4553240db80de22315886.
+- Release package SHA-256: b2066942156801eff235885c1e2dd657244dfff5d95a85e263019a8cf55140f1.
+- CR-0084 is now activated; the exact activated candidate must rerun all formal gates including the new M9.6 acceptance step.

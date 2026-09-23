@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9.5-CLOSED",
+  "state_id": "HTCN-M9.6-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,22 +21,22 @@
   },
   "current": {
     "milestone": "M9",
-    "phase": "M9.5",
-    "title": "Reliability, Packaging & Zero-CLI Operation",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260922-0083-012",
-    "latest_hosted_validation_attempt_id": "A-20260922-0083-012",
-    "work_branch": null,
+    "phase": "M9.6",
+    "title": "Stable Product Release Acceptance",
+    "status": "implementing",
+    "active_change": "CR-0084",
+    "active_spec": "specs/m9-phase-6-stable-product-release-acceptance.md",
+    "latest_attempt_id": "A-20260923-0084-003",
+    "latest_hosted_validation_attempt_id": "A-20260923-0084-003",
+    "work_branch": "m9/stable-product-release-acceptance-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35735626708,
-      "run_number": 2574,
-      "event": "push",
-      "head": "f9020cae465629b122fd96792f982b31d1bb2211",
-      "pr": 71,
-      "python_passed": 982,
+      "workflow_run": 35807165469,
+      "run_number": 2592,
+      "event": "pull_request",
+      "head": "50858c7f8462211172fb23cc08dba93d0eb23b16",
+      "pr": 73,
+      "python_passed": 984,
       "warnings": 0,
       "ruff_observed": 0,
       "ruff_budget": 0,
@@ -49,9 +49,10 @@
       "phase21": "valid",
       "m4_methodology": "frozen_match_37",
       "outcome_engine": "frozen_match_4",
-      "artifact_id": 10698100881,
-      "artifact_digest": "sha256:10d31679265b0131eef97e045edc69e5667a88572cd96e6254018d869a0c4148",
-      "scope": "PR #71 final #2573 and canonical main #2574 green; M9.5 closed."
+      "artifact_id": 10728416383,
+      "artifact_digest": "sha256:66f224f8a4b9b50d70a895fbd9949e395aec79b83fb4553240db80de22315886",
+      "release_package_sha256": "b2066942156801eff235885c1e2dd657244dfff5d95a85e263019a8cf55140f1",
+      "scope": "Planned M9.6 candidate #2592 green: 984 Python / 0 warnings, release package, 28 browser, Phase18/21 and M4 37/Outcome 4."
     }
   },
   "private_m1": {
@@ -74,15 +75,15 @@
   },
   "next_major_task": {
     "phase": "M9.6",
-    "title": "Stable Product Release Acceptance",
-    "status": "ready_not_started",
+    "title": "Stable Product Release Acceptance & Formal Integration",
+    "status": "implementing",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Run stable-product end-to-end acceptance, finalize versioned release/operator docs/recovery contract, and close M9 without waiting for natural evidence accumulation."
+    "objective": "Run the activated M9.6 composite release acceptance on the exact candidate, persist ledger-bearing validation, merge with ancestry preserved, validate canonical main, and close M9."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -107,6 +108,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-phase-6-stable-product-release-acceptance.md",
     "specs/m9-phase-5-reliability-packaging-zero-cli.md",
     "specs/m9-phase-4-background-evidence-calibration-observability.md",
     "specs/m9-phase-3-end-to-end-product-workbench.md",

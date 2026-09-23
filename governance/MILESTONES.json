@@ -255,7 +255,7 @@
         {
           "id": "M9.6",
           "title": "Stable Product Release Acceptance",
-          "status": "ready_not_started",
+          "status": "implementing",
           "exit_gate": [
             "automated data, harmonic runtime, product workbench and background evidence service pass end-to-end acceptance",
             "formal browser/integration/freeze/release gates are green",
