@@ -24,6 +24,7 @@ DEFAULT_INCLUDE_ROOTS = (
     "services",
     "research",
     "governance/acceptance",
+    "docs",
     "apps/web/dist",
 )
 DEFAULT_INCLUDE_FILES = (
@@ -36,6 +37,7 @@ DEFAULT_INCLUDE_FILES = (
     "governance/MILESTONES.json",
     "governance/SOURCE_COVERAGE.json",
     "governance/PRODUCT_COMPLETION_POLICY.json",
+    "governance/STABLE_PRODUCT_CONTRACT.json",
     "governance/QUALITY_BASELINE.json",
     "启动HT-CN.bat",
     "安装HT-CN.bat",

@@ -231,7 +231,7 @@ export default function App() {
     <main className="shell">
       <section className="hero compact">
         <div>
-          <p className="eyebrow">HT-CN LOCAL · M9.5 SUPERVISED ZERO-CLI PRODUCT RUNTIME</p>
+          <p className="eyebrow">HT-CN STABLE v1.0.0 · LOCAL PRODUCT RUNTIME</p>
           <h1>A 股谐波研究与辅助决策系统</h1>
           <p className="subtitle">Carney 几何识别 · QFQ 连续价格 · 多尺度 Pivot · PRZ 审计</p>
         </div>

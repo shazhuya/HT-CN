@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 import services.api.main as api_main
+from htcn.version import HTCN_VERSION
 from services.api.main import app
 
 
@@ -11,7 +12,7 @@ def test_health_endpoint() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "ht-cn-api",
-        "version": "0.4.0",
+        "version": HTCN_VERSION,
     }
 
 
