@@ -66,7 +66,7 @@ test('HT-CN M3 fixture workbench renders lifecycle navigation and harmonic chart
 
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'A 股谐波研究与辅助决策系统' })).toBeVisible()
-  await expect(page.getByText('Carney 几何识别 · QFQ 连续价格 · 多尺度 Pivot · PRZ 审计')).toBeVisible()
+  await expect(page.getByText('把复杂研究压缩成：看图 · 看阶段 · 看下一关键条件')).toBeVisible()
 
   await page.getByRole('button', { name: '运行谐波分析' }).click()
   await expect(page.getByRole('heading', { name: 'Gartley · 已完成' })).toBeVisible()
