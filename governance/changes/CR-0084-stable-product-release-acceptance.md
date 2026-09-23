@@ -46,4 +46,4 @@ See specs/m9-phase-6-stable-product-release-acceptance.md.
 - Run #2586 release package SHA-256: 432fc4c37547402a434368c48ecdb26656586fc33684adf1197a3995ae2741f6.
 - Run #2586 artifact: 10709575483 / sha256:e9090871f96a3f7b272a7a5a386de2839215055dbbc0eea53087dfec8ffa93b7.
 - Because CI ordering changed after #2586, the new exact ledger-bearing candidate must rerun the full formal release gate before ready_to_merge.
-
+- Exact convergence head `a7fb82e9468b17bbc0dab5dd5aab3b00ed4c92de` / run #2598 failed only the fixed Resume Pack compactness gate at 30158 characters after Project OS, Source Coverage and Ruff 0/0 passed; Python result was 985 passed / 1 failed. Keep the 30000-character gate and compact PROJECT_STATE instead of weakening validation.
