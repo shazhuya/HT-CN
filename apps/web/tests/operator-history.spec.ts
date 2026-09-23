@@ -149,7 +149,7 @@ test('M5 operator history shows append-only summaries and instrument changes', a
   })
 
   await page.goto('/')
-  await page.getByRole('button', { name: '机会发现' }).click()
+  await page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true }).click()
 
   const history = page.getByLabel('operator-history')
   await expect(
