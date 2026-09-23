@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9.6-IMPLEMENTING",
+  "state_id": "HTCN-M9.6-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,17 +23,17 @@
     "milestone": "M9",
     "phase": "M9.6",
     "title": "Stable Product Release Acceptance",
-    "status": "implementing",
+    "status": "ready_to_merge",
     "active_change": "CR-0084",
     "active_spec": "specs/m9-phase-6-stable-product-release-acceptance.md",
-    "latest_attempt_id": "A-20260923-0084-005",
-    "latest_hosted_validation_attempt_id": "A-20260923-0084-004",
+    "latest_attempt_id": "A-20260923-0084-006",
+    "latest_hosted_validation_attempt_id": "A-20260923-0084-006",
     "work_branch": "m9/stable-product-release-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35758512194,
-      "head": "cdb7ed712131386abaa6560f5f65d9462b63d097",
-      "scope": "PR #72 #2586 Stable v1.0.0 formal gates green; exact convergence rerun pending."
+      "workflow_run": 35813397345,
+      "head": "fff4c02b535f89853170cd0fdcc59e715592c5a7",
+      "scope": "PR #72 #2600 full Stable v1.0.0 formal sequence green; ledger-bearing rerun required."
     }
   },
   "private_m1": {
@@ -56,10 +56,10 @@
   },
   "next_major_task": {
     "phase": "M9.6",
-    "title": "Exact Stable v1.0.0 Validation",
-    "status": "implementing",
+    "title": "Merge Stable v1.0.0",
+    "status": "ready_to_merge",
     "blocked_until": [
-      "exact_candidate_green",
+      "ledger_bearing_pr_green",
       "canonical_main_green"
     ],
     "development_mainline": "M9",
@@ -67,7 +67,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate PR #72 after gate-order hardening, then merge and close M9."
+    "objective": "Validate the ready-to-merge ledger head, merge PR #72, validate canonical main, then close M9."
   },
   "freezes": {
     "m4_capture_methodology": {
