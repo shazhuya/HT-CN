@@ -64,6 +64,7 @@
     "profitability_claim_allowed": false,
     "alpha_claim_allowed": false,
     "win_rate_claim_allowed": false,
-    "statistical_significance_claim_allowed": false
+    "statistical_significance_claim_allowed": false,
+    "private_m1_current_market_closeout_ready": false
   }
 }

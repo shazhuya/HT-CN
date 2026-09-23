@@ -58,3 +58,10 @@ See specs/m9-phase-6-stable-product-release-acceptance.md.
 - Canonical continuation artifact: 10730483695 / sha256:55b611ac6e8f22a8e0725a7fa9283d9eb232c9189572b1d0bb9db9f3f1534960.
 - M9.6 and M9 are closed as Stable v1.0.0 product-runtime completion. ISSUE-0066 remains claims-only; M7 continues in the background and M8 remains evidence-authorized only. No routine user-computer action is required.
 
+## Post-closeout self-validation
+
+- Closeout head `ef5dc03d2989313a9ee6679c1d62793d7e794015` / workflow 35814161493 / run #2604 passed Project OS, Source Coverage and Ruff 0/0, then stopped at 985 Python passed / 1 failed.
+- The sole failure was release-ledger backward compatibility: `claims.private_m1_current_market_closeout_ready` was absent from the new Stable v1.0.0 release record.
+- Stable release semantics are unchanged. The compatibility field is explicitly set to `false`; this release does not claim that Stable Product publication itself proves private-M1 market closeout.
+- Formal gates were correctly skipped on #2604. Post-release maintenance remains blocked until the corrected canonical-main self-validation is green.
+

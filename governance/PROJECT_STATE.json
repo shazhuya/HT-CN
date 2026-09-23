@@ -27,7 +27,7 @@
     "status": "closed",
     "active_change": null,
     "active_spec": null,
-    "latest_attempt_id": "A-20260923-0084-007",
+    "latest_attempt_id": "A-20260923-0084-008",
     "latest_hosted_validation_attempt_id": "A-20260923-0084-007",
     "work_branch": null,
     "latest_validation": {
@@ -57,15 +57,17 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Stable v1.0.0 Operations & Maintenance",
-    "status": "ready",
-    "blocked_until": [],
+    "title": "Stable v1.0.0 Closeout Verification",
+    "status": "blocked",
+    "blocked_until": [
+      "closeout_self_validation_green"
+    ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Maintain Stable v1.0.0 while M7 continues automatically; enable M8/statistical surfaces only through existing evidence authorization."
+    "objective": "Clear the release-ledger compatibility self-check, then resume Stable v1.0.0 operations and maintenance."
   },
   "freezes": {
     "m4_capture_methodology": {
