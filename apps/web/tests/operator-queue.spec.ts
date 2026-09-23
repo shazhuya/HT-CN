@@ -142,7 +142,7 @@ test('M5 operator queue renders workflow buckets and selects an instrument', asy
   })
 
   await page.goto('/')
-  await page.getByRole('button', { name: '机会发现' }).click()
+  await page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true }).click()
 
   await expect(page.getByRole('heading', { name: '机会发现' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '今日观察队列' })).toBeVisible()
@@ -242,7 +242,7 @@ test('M5 operator index paginates locally without shrinking full queue', async (
   })
 
   await page.goto('/')
-  await page.getByRole('button', { name: '机会发现' }).click()
+  await page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true }).click()
 
   const queue = page.getByLabel('operator-queue')
   const controls = page.getByLabel('operator-index-controls')
