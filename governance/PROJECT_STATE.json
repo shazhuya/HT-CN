@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-STABLE-V1.0.0-RELEASED",
+  "state_id": "HTCN-M9-POST-RELEASE-UI-UX-VALIDATION-GREEN",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -22,19 +22,19 @@
   },
   "current": {
     "milestone": "M9",
-    "phase": "M9.6",
-    "title": "Stable Product Release Acceptance",
-    "status": "closed",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260923-0084-009",
-    "latest_hosted_validation_attempt_id": "A-20260923-0084-009",
-    "work_branch": null,
+    "phase": "M9.post_release",
+    "title": "Stable UI/UX Product Refactor",
+    "status": "validation_green",
+    "active_change": "CR-0085",
+    "active_spec": "specs/m9-post-release-ui-ux-v1.md",
+    "latest_attempt_id": "A-20260923-0085-004",
+    "latest_hosted_validation_attempt_id": "A-20260923-0085-004",
+    "work_branch": "m9/post-release-ui-ux-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35814318855,
-      "head": "23eb9471d4f4e27d10a73781d13b2fc20dc5c0a6",
-      "scope": "Post-closeout Stable v1.0.0 canonical main #2605 fully green."
+      "workflow_run": 35819904555,
+      "head": "73fdcd4266e36af045e3c92a9249ad4c5555cadf",
+      "scope": "CR-0085 planned candidate: 986 Python / 0 warnings, Web build, 30 browser tests including human workflow, Phase18/21, M4 37/37, Outcome 4/4, Stable acceptance ready."
     }
   },
   "private_m1": {
@@ -58,14 +58,14 @@
   "next_major_task": {
     "phase": "M9.post_release",
     "title": "Stable UI/UX Product Refactor",
-    "status": "ready",
+    "status": "validation_green",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate CR-0085 as a planned post-release candidate, then activate it only after hosted validation is green."
+    "objective": "Validate the activated CR-0085 state on hosted CI, then advance the exact ledger-bearing candidate to merge."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -90,6 +90,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-post-release-ui-ux-v1.md",
     "specs/m9-phase-6-stable-product-release-acceptance.md",
     "specs/m9-phase-5-reliability-packaging-zero-cli.md",
     "specs/m9-phase-4-background-evidence-calibration-observability.md",
