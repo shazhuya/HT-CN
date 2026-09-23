@@ -7,8 +7,8 @@ HT-CN 是面向中国 A 股的本地优先谐波研究与人工辅助决策系�
 ## 当前状态
 
 - 产品主线：**M9 — Stable Research/Product Release**；
-- 已关闭：M9.1 自动行情、M9.2 自动谐波运行时、M9.3 端到端工作台、M9.4 后台证据与可观测性、M9.5 可靠性/打包/零 CLI；
-- 当前阶段：**M9.6 — Stable Product Release Acceptance**；
+- 已关闭：M9.1 自动行情、M9.2 自动谐波运行时、M9.3 端到端工作台、M9.4 后台证据与可观测性；
+- 当前阶段：**M9.5 — Reliability, Packaging & Zero-CLI Operation**；
 - 日常产品目标：安装后通过单一 supervisor 启动 API、built Web、行情、谐波和证据服务，不再要求多终端、Vite dev server、每日 BAT/ZIP/AI acceptance；
 - M7 继续后台积累，M8/ISSUE-0066 只限制胜率、Alpha、盈利能力和统计校准，不阻塞产品运行；
 - 5-0 保持生产隔离，Alternate Bat 保持失败关闭，HSI 未支持。
@@ -84,8 +84,6 @@ HT-CN 是面向中国 A 股的本地优先谐波研究与人工辅助决策系�
 不需要每次通读全部旧聊天；旧对话只用于定向找回尚未落库的具体用户选择。完整协议
 见 [`CHAT_CONTINUATION.md`](CHAT_CONTINUATION.md)。可用
 `验证HT-CN续接包.bat` 独立检查 ZIP 是否与当前 HEAD 一致。
-
-Stable Product 操作指南见 [`OPERATOR_GUIDE.md`](OPERATOR_GUIDE.md)，恢复合同见 [`RECOVERY_CONTRACT.md`](RECOVERY_CONTRACT.md)。
 
 当前 M6.2 真实私有收口：
 

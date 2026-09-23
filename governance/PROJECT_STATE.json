@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9.6-IMPLEMENTING",
+  "state_id": "HTCN-M9.5-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -21,14 +21,14 @@
   },
   "current": {
     "milestone": "M9",
-    "phase": "M9.6",
-    "title": "Stable Product Release Acceptance",
-    "status": "implementing",
-    "active_change": "CR-0084",
-    "active_spec": "specs/m9-phase-6-stable-product-release-acceptance.md",
+    "phase": "M9.5",
+    "title": "Reliability, Packaging & Zero-CLI Operation",
+    "status": "closed",
+    "active_change": null,
+    "active_spec": null,
     "latest_attempt_id": "A-20260922-0083-012",
     "latest_hosted_validation_attempt_id": "A-20260922-0083-012",
-    "work_branch": "m9/stable-product-release-acceptance-v1",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
       "workflow_run": 35735626708,
@@ -74,15 +74,15 @@
   },
   "next_major_task": {
     "phase": "M9.6",
-    "title": "Stable Product Release Acceptance & Formal Integration",
-    "status": "implementing",
+    "title": "Stable Product Release Acceptance",
+    "status": "ready_not_started",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Build the M9.6 composite release acceptance gate, package operator/recovery contracts, pass exact-head formal PR validation, merge, validate canonical main, and close M9."
+    "objective": "Run stable-product end-to-end acceptance, finalize versioned release/operator docs/recovery contract, and close M9 without waiting for natural evidence accumulation."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -107,7 +107,6 @@
     }
   },
   "required_specs": [
-    "specs/m9-phase-6-stable-product-release-acceptance.md",
     "specs/m9-phase-5-reliability-packaging-zero-cli.md",
     "specs/m9-phase-4-background-evidence-calibration-observability.md",
     "specs/m9-phase-3-end-to-end-product-workbench.md",

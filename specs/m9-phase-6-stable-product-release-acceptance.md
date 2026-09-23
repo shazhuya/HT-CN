@@ -1,6 +1,6 @@
 # M9.6 — Stable Product Release Acceptance
 
-status: implementing
+status: planned
 
 ## 1. Objective
 

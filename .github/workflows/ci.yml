@@ -228,9 +228,6 @@ jobs:
       - name: Verify M4 Outcome Engine freeze for main release
         run: python scripts/m4_outcome_engine_freeze_guard.py
 
-      - name: Run M9.6 Stable Product release acceptance
-        run: python scripts/m9_stable_release_acceptance.py
-
       - name: Upload formal main release evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -238,9 +235,6 @@ jobs:
           name: htcn-main-release-integrity-${{ github.sha }}
           path: |
             artifacts/reports/m5-main-release-integrity.json
-            artifacts/reports/m9-release-package.json
-            artifacts/reports/m9-stable-release-acceptance.json
-            artifacts/release/
             artifacts/screenshots/
             artifacts/reports/playwright/
           if-no-files-found: warn
