@@ -1,6 +1,6 @@
 # M9 post-release — Complete Application Shell v2
 
-status: ready_to_merge
+status: closed
 
 ## 1. Product goal
 
