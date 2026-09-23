@@ -5,6 +5,12 @@ on:
       - research/huabao-resource-20260923
     paths:
       - research/huabao_resource_20260923.py
+  pull_request:
+    branches:
+      - main
+    paths:
+      - research/huabao_resource_20260923.py
+      - .github/workflows/huabao-resource-daily-research.yml
 permissions:
   contents: write
 jobs:
