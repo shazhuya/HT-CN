@@ -151,7 +151,7 @@ test('M9.3 end-to-end workbench shares canonical identity across runtime, chart 
   await expect(page.getByTestId('market-data-runtime-card')).toContainText('数据已就绪')
   await expect(page.getByTestId('harmonic-runtime-card')).toContainText('分析已同步')
 
-  const symbolInput = page.getByRole('textbox', { name: '搜索股票' })
+  const symbolInput = page.locator('#global-symbol-search')
   await symbolInput.fill('SSE.688256')
   await symbolInput.press('Enter')
 
