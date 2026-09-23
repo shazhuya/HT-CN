@@ -399,3 +399,37 @@ jobs:
           path: artifacts/ci-research/
           if-no-files-found: warn
           retention-days: 30
+
+
+  huabao-exact-research:
+    name: temporary-huabao-exact-daily-research
+    if: startsWith(github.head_ref, 'research/huabao-resource-20260923')
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install research dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pandas numpy matplotlib requests openpyxl akshare scipy
+
+      - name: Run exact daily research
+        run: python research/huabao_resource_20260923.py
+
+      - name: Upload exact daily research artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: huabao-resource-exact-daily-${{ github.sha }}
+          path: research/output_huabao_20260923/
+          if-no-files-found: warn
+          retention-days: 7
