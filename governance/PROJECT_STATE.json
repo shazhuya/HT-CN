@@ -27,14 +27,14 @@
     "status": "ready_to_merge",
     "active_change": "CR-0085",
     "active_spec": "specs/m9-post-release-ui-ux-v1.md",
-    "latest_attempt_id": "A-20260923-0085-006",
-    "latest_hosted_validation_attempt_id": "A-20260923-0085-006",
+    "latest_attempt_id": "A-20260923-0085-007",
+    "latest_hosted_validation_attempt_id": "A-20260923-0085-007",
     "work_branch": "m9/post-release-ui-ux-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35820365847,
-      "head": "685af634d960dc3fd272e0bb08a12c653c9bd7fd",
-      "scope": "Activated CR-0085 #2650 fully green: 986 Python / 0 warnings, Web, 30 browser tests, Phase18/21, M4 37/37, Outcome 4/4, Stable acceptance ready."
+      "workflow_run": 35820614143,
+      "head": "c1412b1e8a19a0ea45f236b8e7385c7560963d60",
+      "scope": "Exact ready-to-merge CR-0085 #2658 fully green; artifact 10734030056."
     }
   },
   "private_m1": {
@@ -65,7 +65,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Run one exact ledger-bearing ready-to-merge validation, then merge PR #74 with ancestry preserved and validate canonical main."
+    "objective": "Validate this exact ledger-bearing ready-to-merge head. If green, merge PR #74 with ancestry preserved and validate canonical main."
   },
   "freezes": {
     "m4_capture_methodology": {
