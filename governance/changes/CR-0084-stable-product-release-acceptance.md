@@ -50,3 +50,8 @@ The container used by this agent cannot resolve `github.com` for direct `git clo
 - Artifact: 10728416383 / sha256:66f224f8a4b9b50d70a895fbd9949e395aec79b83fb4553240db80de22315886.
 - Release package SHA-256: b2066942156801eff235885c1e2dd657244dfff5d95a85e263019a8cf55140f1.
 - CR-0084 is now activated; the exact activated candidate must rerun all formal gates including the new M9.6 acceptance step.
+
+## Activated validation note
+
+- Run #2594 failed only the Project OS Resume Pack compactness test at 30427 characters after Project OS, Source Coverage and Ruff 0/0 passed; Python result was 983 passed / 1 failed.
+- PROJECT_STATE is intentionally compacted to hosted-validation references; detailed evidence remains here and in the Attempt Ledger. The 30000-character contract is unchanged.
