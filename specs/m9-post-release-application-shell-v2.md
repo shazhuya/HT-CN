@@ -1,6 +1,6 @@
 # M9 post-release — Complete Application Shell v2
 
-status: implementing
+status: validation_green
 
 ## 1. Product goal
 
