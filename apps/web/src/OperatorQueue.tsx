@@ -451,44 +451,6 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
             <div><span>数据错误</span><strong>{payload.failed_instrument_count}</strong></div>
           </div>
 
-          <DailyReviewDigest
-            apiBase={apiBase}
-            onSelectInstrument={onSelectInstrument}
-          />
-
-          <OperatorHistory
-            apiBase={apiBase}
-            onSelectInstrument={onSelectInstrument}
-          />
-
-          <OperatorDeltaPanel
-            delta={delta}
-            loading={deltaLoading}
-            error={deltaError}
-            baselineMessage={baselineMessage}
-            onSelectInstrument={onSelectInstrument}
-            onResetBaseline={() => {
-              window.localStorage.removeItem(CURRENT_SNAPSHOT_KEY)
-              window.localStorage.removeItem(PREVIOUS_SNAPSHOT_KEY)
-              setDelta(null)
-              setDeltaError(null)
-              if (
-                payload.observation_integrity === 'single_as_of'
-                && payload.as_of_trade_date
-              ) {
-                window.localStorage.setItem(
-                  CURRENT_SNAPSHOT_KEY,
-                  JSON.stringify(payload),
-                )
-                setBaselineMessage(
-                  `已用 ${payload.as_of_trade_date} 重新建立产品观察基线。`,
-                )
-              } else {
-                setBaselineMessage('变化基线已清除。')
-              }
-            }}
-          />
-
           <section className="operator-index-controls" aria-label="operator-index-controls">
             <div className="operator-index-controls__top">
               <label className="operator-index-controls__search">
@@ -639,6 +601,51 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
               </div>
             )
           })}
+
+          <div className="operator-queue__secondary-heading">
+            <div>
+              <span>复盘与历史</span>
+              <strong>需要时再看跨日变化和历史记录</strong>
+            </div>
+          </div>
+
+          <DailyReviewDigest
+            apiBase={apiBase}
+            onSelectInstrument={onSelectInstrument}
+          />
+
+          <OperatorDeltaPanel
+            delta={delta}
+            loading={deltaLoading}
+            error={deltaError}
+            baselineMessage={baselineMessage}
+            onSelectInstrument={onSelectInstrument}
+            onResetBaseline={() => {
+              window.localStorage.removeItem(CURRENT_SNAPSHOT_KEY)
+              window.localStorage.removeItem(PREVIOUS_SNAPSHOT_KEY)
+              setDelta(null)
+              setDeltaError(null)
+              if (
+                payload.observation_integrity === 'single_as_of'
+                && payload.as_of_trade_date
+              ) {
+                window.localStorage.setItem(
+                  CURRENT_SNAPSHOT_KEY,
+                  JSON.stringify(payload),
+                )
+                setBaselineMessage(
+                  `已用 ${payload.as_of_trade_date} 重新建立产品观察基线。`,
+                )
+              } else {
+                setBaselineMessage('变化基线已清除。')
+              }
+            }}
+          />
+
+          <OperatorHistory
+            apiBase={apiBase}
+            onSelectInstrument={onSelectInstrument}
+          />
 
           {payload.errors.length > 0 && (
             <details className="operator-queue__errors">
