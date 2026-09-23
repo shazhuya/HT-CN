@@ -305,6 +305,6 @@ test('M5 daily review digest keeps source totals while presentation filters dril
 
   await review.getByRole('button', { name: 'SSE.600000' }).click()
   await expect(
-    page.getByRole('textbox', { name: '搜索股票' }),
+    page.locator('#global-symbol-search'),
   ).toHaveValue('SSE.600000')
 })
