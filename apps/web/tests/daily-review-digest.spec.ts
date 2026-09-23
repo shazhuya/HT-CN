@@ -276,7 +276,7 @@ test('M5 daily review digest keeps source totals while presentation filters dril
   })
 
   await page.goto('/')
-  await page.getByRole('button', { name: '机会发现' }).click()
+  await page.getByLabel('应用导航').getByRole('button', { name: '机会发现', exact: true }).click()
 
   const review = page.getByLabel('daily-review-digest')
   await expect(
