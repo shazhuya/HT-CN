@@ -46,7 +46,7 @@ test('M9.4 exposes evidence insufficiency without treating it as a product fault
   })
 
   await page.goto('/')
-  await page.getByRole('button', { name: '系统状态' }).click()
+  await page.getByLabel('应用导航').getByRole('button', { name: '系统状态', exact: true }).click()
 
   const card = page.getByTestId('evidence-runtime-card')
   await expect(card).toContainText('后台前瞻证据')
