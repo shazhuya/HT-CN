@@ -64,4 +64,5 @@ See specs/m9-phase-6-stable-product-release-acceptance.md.
 - The sole failure was release-ledger backward compatibility: `claims.private_m1_current_market_closeout_ready` was absent from the new Stable v1.0.0 release record.
 - Stable release semantics are unchanged. The compatibility field is explicitly set to `false`; this release does not claim that Stable Product publication itself proves private-M1 market closeout.
 - Formal gates were correctly skipped on #2604. Post-release maintenance remains blocked until the corrected canonical-main self-validation is green.
+- Corrected closeout head `23eb9471d4f4e27d10a73781d13b2fc20dc5c0a6` / workflow 35814318855 / run #2605 passed the full canonical-main sequence: 986 Python / 0 warnings, continuation bundle, Web, Stable v1.0.0 package, 29 browser tests, Phase18/21, M4 37/37, Outcome 4/4 and Stable acceptance ready. Post-release blocker cleared.
 

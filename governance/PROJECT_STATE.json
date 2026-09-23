@@ -27,14 +27,14 @@
     "status": "closed",
     "active_change": null,
     "active_spec": null,
-    "latest_attempt_id": "A-20260923-0084-008",
-    "latest_hosted_validation_attempt_id": "A-20260923-0084-007",
+    "latest_attempt_id": "A-20260923-0084-009",
+    "latest_hosted_validation_attempt_id": "A-20260923-0084-009",
     "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35813838510,
-      "head": "c8322ebb9461c8febf182a68c803692c29339b80",
-      "scope": "Stable v1.0.0 canonical main release #2603 green; M9 closed."
+      "workflow_run": 35814318855,
+      "head": "23eb9471d4f4e27d10a73781d13b2fc20dc5c0a6",
+      "scope": "Post-closeout Stable v1.0.0 canonical main #2605 fully green."
     }
   },
   "private_m1": {
@@ -57,17 +57,15 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Stable v1.0.0 Closeout Verification",
-    "status": "blocked",
-    "blocked_until": [
-      "closeout_self_validation_green"
-    ],
+    "title": "Stable v1.0.0 Operations & Maintenance",
+    "status": "ready",
+    "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Clear the release-ledger compatibility self-check, then resume Stable v1.0.0 operations and maintenance."
+    "objective": "Maintain Stable v1.0.0 while M7 accumulates automatically; enable M8/statistical surfaces only through existing evidence authorization."
   },
   "freezes": {
     "m4_capture_methodology": {
