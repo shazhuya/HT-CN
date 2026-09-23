@@ -170,6 +170,6 @@ test('M5 operator delta shows daily lifecycle and next-key changes', async ({ pa
 
   await delta.getByRole('button', { name: 'SSE.600000' }).click()
   await expect(
-    page.getByRole('textbox', { name: '搜索股票' }),
+    page.locator('#global-symbol-search'),
   ).toHaveValue('SSE.600000')
 })
