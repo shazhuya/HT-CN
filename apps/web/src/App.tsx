@@ -301,7 +301,12 @@ export default function App() {
               <option value={1200}>1200 根 · 长周期</option>
             </select>
           </label>
-          <button className="primary-analysis-button" onClick={() => runAnalysis()} disabled={loading || !symbol.trim()}>
+          <button
+            className="primary-analysis-button"
+            aria-label="打开研究工作台 · 运行谐波分析"
+            onClick={() => runAnalysis()}
+            disabled={loading || !symbol.trim()}
+          >
             {loading ? '正在读取与分析…' : '打开研究工作台'}
           </button>
         </section>
