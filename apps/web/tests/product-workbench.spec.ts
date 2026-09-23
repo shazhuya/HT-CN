@@ -147,7 +147,7 @@ test('M9.3 end-to-end workbench shares canonical identity across runtime, chart 
 
   await page.goto('/')
 
-  await page.getByRole('button', { name: '系统状态' }).click()
+  await page.getByLabel('应用导航').getByRole('button', { name: '系统状态', exact: true }).click()
   await expect(page.getByTestId('market-data-runtime-card')).toContainText('数据已就绪')
   await expect(page.getByTestId('harmonic-runtime-card')).toContainText('分析已同步')
 
