@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-APPLICATION-UX-V2-VALIDATION-GREEN",
+  "state_id": "HTCN-M9-POST-RELEASE-APPLICATION-UX-V2-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -24,17 +24,17 @@
     "milestone": "M9",
     "phase": "M9.post_release",
     "title": "Complete Application UX Shell Refactor",
-    "status": "validation_green",
+    "status": "ready_to_merge",
     "active_change": "CR-0086",
     "active_spec": "specs/m9-post-release-application-shell-v2.md",
-    "latest_attempt_id": "A-20260923-0086-003",
-    "latest_hosted_validation_attempt_id": "A-20260923-0086-003",
+    "latest_attempt_id": "A-20260923-0086-004",
+    "latest_hosted_validation_attempt_id": "A-20260923-0086-004",
     "work_branch": "m9/post-release-ux-shell-v2",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35860762701,
-      "head": "1b33abd1ae31b41e578929d0dd616c95822a5e8b",
-      "scope": "CR-0086 planned candidate #2735 fully green: Project OS, Python/Web, browser application workflows, Phase18/21, M4 37/37, Outcome 4/4, Stable acceptance."
+      "workflow_run": 35861190465,
+      "head": "6858b4153a26c438b55dce60a08248b664e8cc64",
+      "scope": "Activated CR-0086 #2742 fully green; application shell, browser flows, Phase18/21, M4 37/37, Outcome 4/4, Stable acceptance."
     }
   },
   "private_m1": {
@@ -58,14 +58,14 @@
   "next_major_task": {
     "phase": "M9.post_release",
     "title": "Complete Application UX Shell Refactor",
-    "status": "validation_green",
+    "status": "ready_to_merge",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate the activated CR-0086 authoritative state on hosted CI, then advance the exact ledger-bearing candidate to merge."
+    "objective": "Run one exact ledger-bearing ready-to-merge validation, then merge PR #75 with ancestry preserved and validate canonical main."
   },
   "freezes": {
     "m4_capture_methodology": {
