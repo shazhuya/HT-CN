@@ -1,6 +1,6 @@
 # CR-0086 — Complete Application UX Shell Refactor
 
-status: validation_green
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 669052a004bf133c6188374b1278d7d0b3d6d07a
@@ -50,3 +50,8 @@ No changes to harmonic identity, ratios, Source Raw PRZ, Source lifecycle owners
 ## Validation
 
 See `specs/m9-post-release-application-shell-v2.md`.
+
+## Hosted validation
+
+- Planned candidate `1b33abd1ae31b41e578929d0dd616c95822a5e8b` / run #2735 / workflow 35860762701 passed full hosted product validation after selector-only browser repairs.
+- Activated state `6858b4153a26c438b55dce60a08248b664e8cc64` / run #2742 / workflow 35861190465 passed Project OS, Web/application browser flows, Phase18/21, M4 37/37, Outcome 4/4 and Stable acceptance; artifact 10750691642 / sha256:927305bda8e0be5483cd0cd9283fd01cb8675dbb75c463197e258a6aad003c72.
