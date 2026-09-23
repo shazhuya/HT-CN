@@ -191,7 +191,7 @@ export default function ResearchWorkspace({
                   const key = patternKey(pattern)
                   const active = selectedPattern ? patternKey(selectedPattern) === key : false
                   return (
-                    <button key={key} className={active ? 'active' : ''} onClick={() => onSelectPattern(key)}>
+                    <button key={key} className={active ? 'pattern-item active' : 'pattern-item'} onClick={() => onSelectPattern(key)}>
                       <span>
                         <strong>{patternName(pattern.pattern_id)}</strong>
                         <small>{pattern.state === 'completed' ? '已完成' : '形成中'} · S{pattern.scale} · {pattern.direction === 'bullish' ? '看涨' : '看跌'}</small>
