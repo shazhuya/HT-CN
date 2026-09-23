@@ -51,6 +51,7 @@ test('M9.5 product runtime exposes verified release and supervised zero-Vite ope
   })
 
   await page.goto('/')
+  await page.getByRole('button', { name: '系统状态' }).click()
 
   const card = page.getByTestId('product-supervisor-card')
   await expect(card).toContainText('产品运行层')
