@@ -1,6 +1,6 @@
 # M9 post-release — Complete Application Shell v2
 
-status: validation_green
+status: ready_to_merge
 
 ## 1. Product goal
 
