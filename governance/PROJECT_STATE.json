@@ -27,14 +27,14 @@
     "status": "ready",
     "active_change": null,
     "active_spec": null,
-    "latest_attempt_id": "A-20260923-0086-006",
-    "latest_hosted_validation_attempt_id": "A-20260923-0086-006",
+    "latest_attempt_id": "A-20260924-0086-007",
+    "latest_hosted_validation_attempt_id": "A-20260924-0086-007",
     "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35862565910,
-      "head": "084a64ddfa7367fcf5c9e17430c618ac6238bf9a",
-      "scope": "CR-0086 canonical main #2757 fully green after complete destination-based application UX refactor."
+      "workflow_run": 35862989920,
+      "head": "d874a4d271fc2221577e9a7418714243f25fbf54",
+      "scope": "Terminal session-closeout seal #2762 fully green on canonical main after CR-0086 closeout; continuation artifact 10750503987."
     }
   },
   "private_m1": {
