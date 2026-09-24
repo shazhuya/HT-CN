@@ -25,7 +25,12 @@ const TABS: Array<{ id: ResearchTab; label: string }> = [
   { id: 'audit', label: '审计' },
 ]
 function patternKey(pattern: Pattern) {
-  return `${pattern.state}:${pattern.pattern_id}:${pattern.scale}:${pattern.points.map((point) => point.index).join('-')}`
+  return `${pattern.channel ?? 'authoritative'}:${pattern.state}:${pattern.pattern_id}:${pattern.scale}:${pattern.points.map((point) => point.index).join('-')}`
+}
+
+function patternStateLabel(pattern: Pattern) {
+  if (pattern.discovery_only) return '发现候选'
+  return pattern.state === 'completed' ? '已完成' : '形成中'
 }
 
 export default function ResearchWorkspace({
@@ -124,8 +129,8 @@ export default function ResearchWorkspace({
             <section className="research-chart-card" aria-label="谐波主图">
               <div className="research-chart-heading">
                 <div>
-                  <h2>{selectedPattern ? `${PATTERN_NAMES[selectedPattern.pattern_id] ?? selectedPattern.pattern_id} · ${selectedPattern.state === 'completed' ? '已完成' : '形成中'}` : 'K 线图'}</h2>
-                  <span>{selectedPattern ? `S${selectedPattern.scale} · ${selectedPattern.direction === 'bullish' ? '看涨' : '看跌'}` : '当前窗口暂无有效形态'}</span>
+                  <h2>{selectedPattern ? `${PATTERN_NAMES[selectedPattern.pattern_id] ?? selectedPattern.pattern_id} · ${patternStateLabel(selectedPattern)}` : 'K 线图'}</h2>
+                  <span>{selectedPattern ? `${selectedPattern.discovery_only ? '发现层 · ' : ''}S${selectedPattern.scale} · ${selectedPattern.direction === 'bullish' ? '看涨' : '看跌'}` : '当前窗口暂无有效形态'}</span>
                 </div>
                 <span className="research-chart-heading__tip">拖动平移 · 滚轮缩放 · 悬停查看节点</span>
               </div>
@@ -162,8 +167,10 @@ export default function ResearchWorkspace({
                     <section className="engine-boundary-card">
                       <h3>引擎边界</h3><p>{analysis.engine_note}</p>
                       <dl><div><dt>完成结构</dt><dd>{analysis.completed.length}</dd></div>
-                        <div><dt>形成中结构</dt><dd>{analysis.forming.length}</dd></div>
-                        <div><dt>Pivot 尺度</dt><dd>{analysis.scales.join(' / ')}</dd></div></dl>
+                        <div><dt>权威形成中</dt><dd>{analysis.forming.length}</dd></div>
+                        <div><dt>发现候选</dt><dd>{analysis.discovery?.length ?? 0}</dd></div>
+                        <div><dt>权威 Pivot</dt><dd>{analysis.scales.join(' / ')}</dd></div>
+                        <div><dt>发现 Pivot</dt><dd>{analysis.discovery_scales?.join(' / ') ?? '5 / 10 / 20'}</dd></div></dl>
                     </section>
                   </div>
                 )}
@@ -188,8 +195,18 @@ export default function ResearchWorkspace({
               <div className="research-inspector__scroll">
                 {detailsTab === 'decision' && (
                   <>
-                    <DecisionNarrative narrative={selectedPattern?.decision_narrative} />
-                    {!selectedPattern?.decision_narrative && <p className="research-inspector__empty">目前没有通过规则的主形态；先看 K 线与数据日期。</p>}
+                    {selectedPattern?.discovery_only ? (
+                      <section className="discovery-candidate-note" data-testid="discovery-candidate-note">
+                        <strong>发现候选 · 尚非权威身份</strong>
+                        <p>已确认 XABC 并投影冻结 Source PRZ；当前仅用于发现与观察，不虚构 D，也不生成 Type-I / Type-II 或买卖结论。</p>
+                        <small>{selectedPattern.discovery?.prz_status === 'tested' ? '价格已在 C 确认后测试 Source PRZ' : '价格尚未在可观察时钟内测试 Source PRZ'} · {selectedPattern.discovery?.path_kind === 'minor_swing_skip' ? '允许跳过一组次级摆动' : '连续摆动路径'}</small>
+                      </section>
+                    ) : (
+                      <>
+                        <DecisionNarrative narrative={selectedPattern?.decision_narrative} />
+                        {!selectedPattern?.decision_narrative && <p className="research-inspector__empty">目前没有通过规则的主形态；先看 K 线与数据日期。</p>}
+                      </>
+                    )}
                     <WorkbenchContextPanel instrumentId={analysis.instrument_id} pattern={selectedPattern} crosshair={crosshair} latestBar={latest} />
                     <section className="candidate-switcher" aria-label="形态候选">
                       <div className="candidate-switcher__heading">
@@ -200,18 +217,25 @@ export default function ResearchWorkspace({
                         const key = patternKey(pattern)
                         return (
                           <button key={key} className={selectedPattern && patternKey(selectedPattern) === key ? 'pattern-item active' : 'pattern-item'} onClick={() => onSelectPattern(key)}>
-                            <span><strong>{PATTERN_NAMES[pattern.pattern_id] ?? pattern.pattern_id}</strong><small>{pattern.state === 'completed' ? '已完成' : '形成中'} · S{pattern.scale}</small></span>
+                            <span><strong>{PATTERN_NAMES[pattern.pattern_id] ?? pattern.pattern_id}</strong><small>{patternStateLabel(pattern)} · S{pattern.scale}</small></span>
                             <b>{pattern.direction === 'bullish' ? '↗' : '↘'}</b>
                           </button>
                         )
                       })}
                     </section>
-                    <LifecycleCompass pattern={selectedPattern} bars={analysis.bars} />
+                    {!selectedPattern?.discovery_only && <LifecycleCompass pattern={selectedPattern} bars={analysis.bars} />}
                   </>
                 )}
                 {detailsTab === 'source' && (
                   <>
-                    <LifecycleCompass pattern={selectedPattern} bars={analysis.bars} />
+                    {selectedPattern?.discovery_only ? (
+                      <section className="discovery-candidate-note">
+                        <strong>Source 生命周期未启动</strong>
+                        <p>发现层只负责 XABC 与投影 PRZ；必须进入权威 identity / Source Clock 后才会出现正式生命周期。</p>
+                      </section>
+                    ) : (
+                      <LifecycleCompass pattern={selectedPattern} bars={analysis.bars} />
+                    )}
                     <WorkbenchContextPanel instrumentId={analysis.instrument_id} pattern={selectedPattern} crosshair={crosshair} latestBar={latest} />
                   </>
                 )}
