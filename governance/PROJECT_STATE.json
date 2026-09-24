@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-STABLE-V1.0.0-CHART-WORKSPACE-V3-CLOSED",
+  "state_id": "HTCN-M9-POST-RELEASE-RECOGNITION-RECALL-V1",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,13 +23,13 @@
   "current": {
     "milestone": "M9",
     "phase": "M9.post_release",
-    "title": "Stable Product Operations & Maintenance",
-    "status": "ready",
-    "active_change": null,
-    "active_spec": null,
+    "title": "Stable Product Recognition Recall Repair",
+    "status": "implementing",
+    "active_change": "CR-0088",
+    "active_spec": "specs/m9-post-release-recognition-recall-v1.md",
     "latest_attempt_id": "A-20260924-0087-010",
     "latest_hosted_validation_attempt_id": "A-20260924-0087-010",
-    "work_branch": null,
+    "work_branch": "m9/post-release-recognition-recall-v1",
     "latest_validation": {
       "result": "success",
       "workflow_run": 36000525578,
@@ -90,6 +90,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-post-release-recognition-recall-v1.md",
     "specs/m9-post-release-chart-workspace-v3.md",
     "specs/m9-phase-6-stable-product-release-acceptance.md",
     "specs/m9-phase-5-reliability-packaging-zero-cli.md",
