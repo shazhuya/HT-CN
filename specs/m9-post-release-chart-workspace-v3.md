@@ -1,6 +1,6 @@
 # M9 post-release — Chart-centered desktop workspace v3
 
-status: ready_to_merge
+status: closed
 
 ## Primary workflow
 
@@ -18,3 +18,5 @@ status: ready_to_merge
 ## Regression and closeout
 
 Web build, browser workflow and visual inspection at desktop/mobile sizes; Project OS, full hosted browser, Phase18/21, M4 37/37 and Outcome 4/4. Record all failures and successes in Attempt Ledger. Close CR only after canonical main validation.
+
+Closed after PR #77 merged as canonical main `ad086da6480b060691572528ae6bd6d2684a001d`; push run #2779 / 35999002742 passed the complete gate. User preview is the next product-feedback step, not an unrecorded development blocker.

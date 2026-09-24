@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-CHART-WORKSPACE-V3-READY-TO-MERGE",
+  "state_id": "HTCN-STABLE-V1.0.0-CHART-WORKSPACE-V3-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
   "current": {
     "milestone": "M9",
     "phase": "M9.post_release",
-    "title": "Chart-centered Desktop Workspace",
-    "status": "ready_to_merge",
-    "active_change": "CR-0087",
-    "active_spec": "specs/m9-post-release-chart-workspace-v3.md",
-    "latest_attempt_id": "A-20260924-0087-007",
-    "latest_hosted_validation_attempt_id": "A-20260924-0087-007",
-    "work_branch": "m9/post-release-chart-workspace-v3",
+    "title": "Stable Product Operations & Maintenance",
+    "status": "ready",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260924-0087-009",
+    "latest_hosted_validation_attempt_id": "A-20260924-0087-009",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35998115098,
-      "head": "e3e226d5846f689546473679ca0c430723bbb54e",
-      "scope": "Activated CR-0087 #2776 full hosted validation green: 31/31 browser, Phase18/21, Source Coverage, M4 37/37, Outcome 4/4, Stable acceptance."
+      "workflow_run": 35999002742,
+      "head": "ad086da6480b060691572528ae6bd6d2684a001d",
+      "scope": "CR-0087 merged via PR #77; canonical main #2779 fully green with chart workspace browser coverage, Phase18/21, Source Coverage, M4 37/37, Outcome 4/4 and Stable acceptance."
     }
   },
   "private_m1": {
@@ -57,15 +57,15 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Chart-centered Desktop Workspace",
-    "status": "ready_to_merge",
+    "title": "Stable v1.0.0 Operations & Maintenance",
+    "status": "ready",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate the exact CR-0087 ready-to-merge head, merge PR #77 with ancestry preserved and validate canonical main before closeout."
+    "objective": "Maintain the chart-centered Stable v1.0.0 application, collect direct user acceptance feedback from normal preview use, and open a new Change only for concrete follow-up UX or reliability defects; keep M7/M8 evidence gates unchanged."
   },
   "freezes": {
     "m4_capture_methodology": {

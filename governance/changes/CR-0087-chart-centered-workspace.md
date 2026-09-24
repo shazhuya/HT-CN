@@ -1,6 +1,6 @@
 # CR-0087 — Chart-centered desktop workspace
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 43ceed1fdf16dceb3aa746262b9566c96904b0af
@@ -31,3 +31,11 @@ Implementation underway on the named branch. The first hosted run #2770 / 359965
 Run #2774 / 35997576837 on `49d7ca1c9148221685c43c90775ec8bf92297388` passed all 31 browser cases, Phase18/21, Source Coverage, Project OS, Python/Web, M4 37/37, Outcome 4/4, release package and Stable acceptance. Artifact 10807255607 / sha256:58900fb4ae4cd63eee96f433c8713bb5d09f650485fae05d2b04b4dd17598617. Activate the change at validation_green and validate this ledger-bearing governance state before advancing to ready_to_merge.
 
 Activated validation_green head `e3e226d5846f689546473679ca0c430723bbb54e` passed run #2776 / 35998115098, including 31/31 application browser cases, frozen Phase18/21, M4 37/37, Outcome 4/4, Stable acceptance and Project OS. Artifact 10806079871 / sha256:a6705bed536b91cc8a93fd34a18a934c7279f6bfbeb90e3fcb3198304415badc. Advance to ready_to_merge and validate that exact ledger-bearing head before merge.
+
+## Closeout
+
+- Exact ready-to-merge head `a88c40b1ac462861e157ac016e1be517f76801e9` passed run #2778 / 35998511716 and artifact 10807591071 / sha256:72ee0bd3b31f31f81d8020597102c4635b9f67a76c03eb301bebba974eca9297.
+- PR #77 merged with ancestry preserved as canonical main `ad086da6480b060691572528ae6bd6d2684a001d`.
+- Canonical main run #2779 / 35999002742 passed all formal gates and produced release evidence artifact 10807716463 / sha256:6549446debf48a0f9314582b2888de10b9c66fabb9052b145b6c56338b8d896a plus continuation artifact 10807730886 / sha256:45473be10489d065e6945860619f37b9456e7c64f8db9282f8df890f2364378c.
+- The completed UI replaces the prior card-heavy workspace with the user-requested chart-first layout. No core harmonic identity, Source Raw PRZ, M4/Outcome methodology, statistical claims gate or automatic-trading boundary changed.
+- Next action is normal user preview/acceptance. Concrete defects or requested UX refinements must open a new Change; do not reopen CR-0087.
