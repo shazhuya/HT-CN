@@ -43,6 +43,8 @@ function readRecentSymbols() {
 
 export default function App() {
   const analysisRequest = useRef(0)
+  const firstLocation = useRef(window.location.hash)
+  const startupRestored = useRef(false)
   const [destination, setDestination] = useState<AppDestination>(() => destinationFromHash())
   const [health, setHealth] = useState<Health | null>(null)
   const [instruments, setInstruments] = useState<InstrumentRow[]>([])
@@ -88,6 +90,11 @@ export default function App() {
       .then((payload: { items?: InstrumentRow[] }) => {
         const items = payload.items ?? []
         setInstruments(items)
+        const last = readRecentSymbols()[0]
+        if (!firstLocation.current && !startupRestored.current && last && items.some((item) => item.instrument_id === last)) {
+          startupRestored.current = true
+          runAnalysis(last)
+        }
         if (items.length === 1) {
           setSymbol((current) => current || items[0].instrument_id)
         }

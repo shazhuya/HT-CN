@@ -60,7 +60,7 @@ export default function ApplicationShell({
         </div>
         <div className="app-commandbar__meta">
           <span className={health ? 'command-health ok' : 'command-health'} title={health ? `API ${health.version}` : '本机 API 尚未连接'}>
-            <i />{health ? '本机已连接' : '服务未连接'}
+            <i />{health ? '本机已连接' : '服务未连接'}{health && <small>API {health.version}</small>}
           </span>
           <button type="button" onClick={() => onNavigate('system')} aria-label="查看系统状态" title="系统状态">⋯</button>
         </div>

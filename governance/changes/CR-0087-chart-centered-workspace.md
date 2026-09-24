@@ -14,7 +14,7 @@ User acceptance feedback on Stable UX v2: the application remains difficult to o
 
 ## Objective
 
-Deliver a practical Windows desktop chart workspace with a compact global symbol command bar, narrow drawing/research tool rail, dominant synchronized candlestick chart, persistent watchlist and instrument details. Keep Chinese labels readable and make the Source lifecycle and candidate switcher reachable without a long engineering page.
+Deliver a practical Windows desktop chart workspace with a compact global symbol command bar, narrow drawing/research tool rail, dominant synchronized candlestick chart, persistent watchlist and instrument details. Replace the old card-heavy Home with a chart workspace entry and recent research. Reopen the last locally initialized instrument directly on launch. Keep Chinese labels readable and make the Source lifecycle and candidate switcher reachable without a long engineering page.
 
 ## Acceptance
 
@@ -26,4 +26,4 @@ The screenshot is a layout reference. No TradingView branding, account widgets, 
 
 ## Validation and next action
 
-Implementation underway on the named branch. Record local and hosted attempts before transition, merge and closeout.
+Implementation underway on the named branch. The first hosted run #2770 / 35996569389 passed Python/Project OS/Web but failed 11 browser cases: 9 ambiguous old selectors for tool-rail and tabs, one new watchlist combobox selector, one missing visible API version. The screenshot showed the new chart/watchlist layout rendering. Record fixes and rerun full hosted gates before transition, merge and closeout.

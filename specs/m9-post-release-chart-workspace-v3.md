@@ -5,6 +5,7 @@ status: planned
 ## Primary workflow
 
 - Desktop opens a single research symbol through a top command bar; Enter and Ctrl+K work.
+- First launch shows a chart-centric empty workspace and recent research; reopening the app resumes the last locally initialized instrument's chart.
 - Research uses a narrow icon navigation rail and chart tool rail, an expansive candlestick chart, and a right-side stock/details inspector.
 - The right inspector contains an interactive local watchlist, current decision narrative, canonical crosshair context, candidate identity selector and Source Clock details.
 - Select a stock in the watchlist to open its real local analysis. Save pinned symbols in browser localStorage; filter, add and remove are keyboard-accessible.

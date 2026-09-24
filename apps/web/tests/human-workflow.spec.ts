@@ -215,14 +215,14 @@ test('chart workspace keeps watchlist, inspector and viewport interactions in on
   await expect(page.getByLabel('自选股列表')).toContainText('其余证券暂不提供实时报价')
 
   await page.getByRole('button', { name: '添加自选股' }).click()
-  await page.getByRole('textbox', { name: '输入代码添加自选股' }).fill('SZSE.300394')
-  await page.getByRole('textbox', { name: '输入代码添加自选股' }).press('Enter')
+  await page.getByRole('combobox', { name: '输入代码添加自选股' }).fill('SZSE.300394')
+  await page.getByRole('combobox', { name: '输入代码添加自选股' }).press('Enter')
   await expect(page.getByRole('button', { name: '从自选股移除 SZSE.300394' })).toBeVisible()
 
   await page.getByLabel('股票详情页签').getByRole('button', { name: 'Source 时钟' }).click()
   await expect(page.getByTestId('lifecycle-compass')).toBeVisible()
   await page.getByLabel('股票详情页签').getByRole('button', { name: '当前判断' }).click()
-  await page.getByRole('button', { name: '图表工具：形态与价位' }).click()
+  await page.getByRole('button', { name: '打开结构明细' }).click()
   await expect(page.getByTestId('pattern-audit-panel')).toBeVisible()
   await page.getByRole('button', { name: '收起右侧详情栏' }).click()
   await expect(page.getByLabel('自选股列表')).toHaveCount(0)
@@ -233,4 +233,13 @@ test('chart workspace keeps watchlist, inspector and viewport interactions in on
   await expect(page.getByRole('heading', { name: 'SSE.688300' })).toBeVisible()
   expect(requests).toBe(2)
   await expect(page.getByLabel('自选股列表')).toContainText('SZSE.300394')
+
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'SSE.688300' })).toBeVisible()
+  expect(requests).toBe(3)
+  await expect(page.getByRole('button', { name: '从自选股移除 SZSE.300394' })).toBeVisible()
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.getByLabel('harmonic-chart')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
