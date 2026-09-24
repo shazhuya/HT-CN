@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import combinations
-from math import inf
-
 import pandas as pd
 
 from .candidates import SwingWindow
@@ -216,7 +214,11 @@ def _score_candidate(
     )
     skip_penalty = min(16.0, float(skipped_pivots) * 4.0)
     tolerance_penalty = 4.0 if source_tolerance_used else 0.0
-    width_penalty = min(20.0, (prz.source_prz_high - prz.source_prz_low) / max(xa, 1e-12) * 160.0)  # type: ignore[operator]
+    source_low, source_high = _source_prz_bounds(prz)
+    width_penalty = min(
+        20.0,
+        (source_high - source_low) / max(xa, 1e-12) * 160.0,
+    )
     age_penalty = min(20.0, max(0, bars_since_c) * 0.08)
     distance_penalty = min(25.0, max(0.0, distance_to_source_prz_xa) * 80.0)
     tested_bonus = 4.0 if tested else 0.0
@@ -331,43 +333,32 @@ def _project_window(
     return tuple(out)
 
 
-def discover_frame(
+def discover_pivots(
+    pivots_by_scale: dict[int, tuple[Pivot, ...] | list[Pivot]],
     frame: pd.DataFrame,
     *,
-    scales: tuple[int, ...] = DISCOVERY_SCALES,
     recent_pivots: int = 18,
     max_total_skips: int = 4,
     max_age_bars: int = 240,
     c_family_tolerance: float = DEFAULT_C_FAMILY_TOLERANCE,
     max_candidates: int = 60,
 ) -> DiscoveryScan:
-    """Return bounded, persistent high-recall XABC discovery candidates.
-
-    This function is intentionally separate from :func:`scan_frame`. It is a product
-    discovery channel, not a substitute for canonical completed/forming identity.
-    """
+    """Discover XABC candidates from explicit pivot streams for testing/runtime reuse."""
 
     if c_family_tolerance < 0:
         raise ValueError("c_family_tolerance must be non-negative")
     if max_candidates < 1:
         raise ValueError("max_candidates must be >= 1")
-    if frame.empty:
-        return DiscoveryScan(candidates=(), pivots_by_scale={}, pivot_consensus={}, diagnostics={
-            "windows_considered": 0,
-            "raw_candidates": 0,
-            "deduped_candidates": 0,
-        })
 
-    raw_pivots = detect_multi_scale_pivots(frame, scales=scales)
-    pivots_by_scale = {
+    normalized = {
         int(scale): tuple(pivots)
-        for scale, pivots in raw_pivots.items()
+        for scale, pivots in pivots_by_scale.items()
     }
-    consensus = build_pivot_consensus(pivots_by_scale)
-
+    consensus = build_pivot_consensus(normalized)
     windows_considered = 0
     candidates: list[DiscoveryCandidate] = []
-    for pivots in pivots_by_scale.values():
+
+    for pivots in normalized.values():
         windows = iter_discovery_xabc_windows(
             pivots,
             recent_pivots=recent_pivots,
@@ -405,11 +396,51 @@ def discover_frame(
 
     return DiscoveryScan(
         candidates=tuple(deduped),
-        pivots_by_scale=pivots_by_scale,
+        pivots_by_scale=normalized,
         pivot_consensus=consensus,
         diagnostics={
             "windows_considered": windows_considered,
             "raw_candidates": len(candidates),
             "deduped_candidates": len(deduped),
         },
+    )
+
+
+def discover_frame(
+    frame: pd.DataFrame,
+    *,
+    scales: tuple[int, ...] = DISCOVERY_SCALES,
+    recent_pivots: int = 18,
+    max_total_skips: int = 4,
+    max_age_bars: int = 240,
+    c_family_tolerance: float = DEFAULT_C_FAMILY_TOLERANCE,
+    max_candidates: int = 60,
+) -> DiscoveryScan:
+    """Return bounded, persistent high-recall XABC discovery candidates.
+
+    This function is intentionally separate from :func:`scan_frame`. It is a product
+    discovery channel, not a substitute for canonical completed/forming identity.
+    """
+
+    if frame.empty:
+        return DiscoveryScan(
+            candidates=(),
+            pivots_by_scale={},
+            pivot_consensus={},
+            diagnostics={
+                "windows_considered": 0,
+                "raw_candidates": 0,
+                "deduped_candidates": 0,
+            },
+        )
+
+    raw_pivots = detect_multi_scale_pivots(frame, scales=scales)
+    return discover_pivots(
+        raw_pivots,
+        frame,
+        recent_pivots=recent_pivots,
+        max_total_skips=max_total_skips,
+        max_age_bars=max_age_bars,
+        c_family_tolerance=c_family_tolerance,
+        max_candidates=max_candidates,
     )
