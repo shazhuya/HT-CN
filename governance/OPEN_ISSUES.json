@@ -145,6 +145,18 @@
       "current_fact": "M9 is now the machine-enforced development mainline; M7 is background evidence; M8/ISSUE-0066 gate statistical claims only. AGENTS, CHAT_CONTINUATION, Resume Pack and continuation bundle all carry the same policy. Routine daily user-computer/Private-M1/ZIP operation is prohibited as project infrastructure.",
       "resolution": "Closed by A-20260921-0078-005 after final PR #66 run #2477 and canonical main #2478 passed all release gates with 931 Python tests / 0 warnings, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4.",
       "closed_in": "CR-0078"
+    },
+    {
+      "id": "ISSUE-0073",
+      "severity": "high",
+      "type": "product_recognition",
+      "status": "open",
+      "title": "Stable harmonic recognition has systematic low recall",
+      "blocks": [
+        "practical chart recognition usability"
+      ],
+      "next_action": "Implement CR-0088 high-recall discovery channel and validate Pine-parity behaviors without weakening Source identity.",
+      "current_fact": "User acceptance and code audit show frontier-only XABC, consecutive-pivot-only windows and early strict identity gating can suppress real-market structures before they become useful product candidates."
     }
   ]
 }
