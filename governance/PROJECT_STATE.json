@@ -27,14 +27,14 @@
     "status": "ready",
     "active_change": null,
     "active_spec": null,
-    "latest_attempt_id": "A-20260924-0087-009",
-    "latest_hosted_validation_attempt_id": "A-20260924-0087-009",
+    "latest_attempt_id": "A-20260924-0087-010",
+    "latest_hosted_validation_attempt_id": "A-20260924-0087-010",
     "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35999002742,
-      "head": "ad086da6480b060691572528ae6bd6d2684a001d",
-      "scope": "CR-0087 merged via PR #77; canonical main #2779 fully green with chart workspace browser coverage, Phase18/21, Source Coverage, M4 37/37, Outcome 4/4 and Stable acceptance."
+      "workflow_run": 36000525578,
+      "head": "2e822f46ccff8437b7637d17bf11e53a4fb799d0",
+      "scope": "CR-0087 terminal closeout state on canonical main #2780 fully green after CR/spec closure and return to M9.post_release maintenance ready."
     }
   },
   "private_m1": {
