@@ -62,6 +62,10 @@ function evidenceLabel(state: string) {
   return '非 Type-II 候选'
 }
 
+function isDiscovery(pattern: Pattern) {
+  return pattern.discovery_only === true
+}
+
 function isStandaloneAbcd(pattern: Pattern) {
   return pattern.schema === 'ABCD'
 }
@@ -92,7 +96,7 @@ export default function PatternAuditPanel({ pattern }: { pattern: Pattern | null
         <div className="pattern-audit-heading">
           <div>
             <span>当前结构</span>
-            <h3>{patternName(pattern.pattern_id)} · {pattern.state === 'completed' ? '已完成' : '形成中'}</h3>
+            <h3>{patternName(pattern.pattern_id)} · {isDiscovery(pattern) ? '发现候选' : pattern.state === 'completed' ? '已完成' : '形成中'}</h3>
           </div>
           <b>S{pattern.scale} · {pattern.schema ?? 'XABCD'}</b>
         </div>
@@ -107,11 +111,32 @@ export default function PatternAuditPanel({ pattern }: { pattern: Pattern | null
         </div>
       </div>
 
+      {isDiscovery(pattern) && pattern.discovery && (
+        <section className="pattern-audit-section discovery-audit" data-testid="discovery-audit">
+          <h3>发现层状态 · 非权威身份</h3>
+          <dl>
+            <div><dt>路径</dt><dd>{pattern.discovery.path_kind === 'minor_swing_skip' ? `跨次级摆动 · 跳过 ${pattern.discovery.skipped_pivots} 个 pivot` : '连续摆动'}</dd></div>
+            <div><dt>可知时点</dt><dd>第 {pattern.discovery.known_from_bar} 根后</dd></div>
+            <div><dt>Source PRZ</dt><dd>{pattern.discovery.prz_status === 'tested' ? `已测试 · 第 ${pattern.discovery.first_prz_test_bar} 根` : '已投影 · 尚未测试'}</dd></div>
+            <div><dt>C 离散族</dt><dd>{pattern.discovery.source_family_aligned ? '3% 内对齐' : '结构区间有效 · 未达3%离散门槛'}</dd></div>
+            <div><dt>最近 C 目标</dt><dd>{fmt(pattern.discovery.c_family_target ?? undefined)}</dd></div>
+            <div><dt>C 相对偏差</dt><dd>{pattern.discovery.c_family_relative_error == null ? '—' : `${(pattern.discovery.c_family_relative_error * 100).toFixed(2)}%`}</dd></div>
+          </dl>
+          <p>这里只说明“值得继续观察”。它不创建 D、不启动 Source 生命周期，也不能用评分把未通过的 canonical identity 变成正式形态。</p>
+        </section>
+      )}
+
       <div className="pattern-audit-grid">
         <section className="pattern-audit-section">
           <h3>核心比例</h3>
           <dl>
-            {isShark(pattern) ? (
+            {isDiscovery(pattern) ? (
+              <>
+                <div><dt>B/XA</dt><dd>{fmt(pattern.metrics.b_xa)}</dd></div>
+                <div><dt>C/AB</dt><dd>{fmt(pattern.metrics.c_ab)}</dd></div>
+                <div><dt>D/XA</dt><dd>未生成</dd></div>
+              </>
+            ) : isShark(pattern) ? (
               <>
                 <div><dt>A/0X</dt><dd>{fmt(pattern.metrics.a_0x)}</dd></div>
                 <div><dt>B/XA</dt><dd>{fmt(pattern.metrics.b_xa)}</dd></div>
@@ -150,7 +175,7 @@ export default function PatternAuditPanel({ pattern }: { pattern: Pattern | null
             <div><dt>组件审计包络</dt><dd>{componentEnvelopeLabel(pattern)}</dd></div>
             <div><dt>Source PRZ</dt><dd>{sourcePrzLabel(pattern)}</dd></div>
           </dl>
-          <p>Source PRZ 与工程收敛区严格分层；未冻结时 Terminal / PEZ / Type-II 保持 fail closed。</p>
+          <p>{isDiscovery(pattern) ? '发现层只复用既有 Source PRZ 投影；即使价格测试该区，也不会自动生成 Terminal / PEZ / Type-II。' : 'Source PRZ 与工程收敛区严格分层；未冻结时 Terminal / PEZ / Type-II 保持 fail closed。'}</p>
         </section>
       </div>
 
