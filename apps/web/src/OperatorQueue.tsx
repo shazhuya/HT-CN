@@ -43,6 +43,7 @@ type OperatorQueueItem = {
   source_prz_low: number | null
   source_prz_high: number | null
   bars_since_terminal: number | null
+  discovery_only?: boolean
 }
 
 type OperatorQueuePayload = {
@@ -111,6 +112,7 @@ const LIFECYCLE_LABELS: Record<string, string> = {
   type_ii_terminal: 'Type-II Terminal',
   reversal_evidence: 'Reversal evidence',
   invalidated: '失效/不可升级',
+  discovery_candidate: '发现候选 · 非权威身份',
 }
 
 const PATTERN_LABELS: Record<string, string> = {
