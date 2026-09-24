@@ -144,6 +144,22 @@ export type SourceLifecycle = {
   retrospective_geometry_clock_used: boolean
 }
 
+export type DiscoveryMetadata = {
+  authoritative_identity: boolean
+  path_kind: 'consecutive' | 'minor_swing_skip'
+  skipped_pivots: number
+  known_from_bar: number
+  prz_status: 'projected' | 'tested'
+  first_prz_test_bar: number | null
+  c_family_target: number | null
+  c_family_relative_error: number | null
+  source_family_aligned: boolean
+  distance_to_source_prz_xa: number
+  mutates_source_identity: boolean
+  owns_lifecycle: boolean
+  fabricates_d: boolean
+}
+
 export type Pattern = {
   pattern_id: string
   schema?: 'XABCD' | 'ABCD' | '0XABC' | 'FIVE_ZERO'
@@ -155,6 +171,9 @@ export type Pattern = {
   pivot_support?: PivotSupport[]
   identity_conflicts?: string[]
   is_primary_identity?: boolean
+  channel?: 'authoritative' | 'discovery'
+  discovery_only?: boolean
+  discovery?: DiscoveryMetadata
   reaction_audit?: ReactionAudit
   reaction_targets?: ReactionTargets
   completion_class?: string
