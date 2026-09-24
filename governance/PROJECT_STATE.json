@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-STABLE-V1.0.0-APPLICATION-UX-V2",
+  "state_id": "HTCN-M9-POST-RELEASE-CHART-WORKSPACE-V3-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
   "current": {
     "milestone": "M9",
     "phase": "M9.post_release",
-    "title": "Stable Product Operations & Maintenance",
-    "status": "ready",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260924-0086-007",
-    "latest_hosted_validation_attempt_id": "A-20260924-0086-007",
-    "work_branch": null,
+    "title": "Chart-centered Desktop Workspace",
+    "status": "ready_to_merge",
+    "active_change": "CR-0087",
+    "active_spec": "specs/m9-post-release-chart-workspace-v3.md",
+    "latest_attempt_id": "A-20260924-0087-007",
+    "latest_hosted_validation_attempt_id": "A-20260924-0087-007",
+    "work_branch": "m9/post-release-chart-workspace-v3",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 35862989920,
-      "head": "d874a4d271fc2221577e9a7418714243f25fbf54",
-      "scope": "Terminal session-closeout seal #2762 fully green on canonical main after CR-0086 closeout; continuation artifact 10750503987."
+      "workflow_run": 35998115098,
+      "head": "e3e226d5846f689546473679ca0c430723bbb54e",
+      "scope": "Activated CR-0087 #2776 full hosted validation green: 31/31 browser, Phase18/21, Source Coverage, M4 37/37, Outcome 4/4, Stable acceptance."
     }
   },
   "private_m1": {
@@ -57,15 +57,15 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Stable v1.0.0 Operations & Maintenance",
-    "status": "ready",
+    "title": "Chart-centered Desktop Workspace",
+    "status": "ready_to_merge",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Maintain the destination-based Stable v1.0.0 application, continue post-release reliability/UX maintenance, and activate M8/statistical surfaces only through the existing evidence authorization gate."
+    "objective": "Validate the exact CR-0087 ready-to-merge head, merge PR #77 with ancestry preserved and validate canonical main before closeout."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -90,6 +90,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-post-release-chart-workspace-v3.md",
     "specs/m9-phase-6-stable-product-release-acceptance.md",
     "specs/m9-phase-5-reliability-packaging-zero-cli.md",
     "specs/m9-phase-4-background-evidence-calibration-observability.md",
