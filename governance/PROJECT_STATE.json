@@ -27,7 +27,7 @@
     "status": "ready",
     "active_change": null,
     "active_spec": null,
-    "latest_attempt_id": "A-20260924-0087-010",
+    "latest_attempt_id": "A-20260924-0088-003",
     "latest_hosted_validation_attempt_id": "A-20260924-0087-010",
     "work_branch": null,
     "latest_validation": {
@@ -57,7 +57,7 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Stable v1.0.0 Operations & Maintenance",
+    "title": "Recognition recall and conditional CD-leg scenario acceptance",
     "status": "ready",
     "blocked_until": [],
     "development_mainline": "M9",
@@ -65,7 +65,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Maintain the chart-centered Stable v1.0.0 application, collect direct user acceptance feedback from normal preview use, and open a new Change only for concrete follow-up UX or reliability defects; keep M7/M8 evidence gates unchanged."
+    "objective": "Prioritize ISSUE-0073 / planned CR-0088: reproduce real-bar recognition gaps and Pine comparisons at the same timeframe and price basis, then deliver separately typed candidate/CD projection with temporal validity, negative-case controls and real-case user acceptance. Daily data and automated CI can start now; hourly screenshot parity needs full hourly bars. Do not call the defect fixed or relax frozen Source identities to inflate output. Keep M7/M8 evidence gates unchanged."
   },
   "freezes": {
     "m4_capture_methodology": {

@@ -1,0 +1,38 @@
+# M9.post_release — Recognition recall audit and conditional CD-leg scenarios
+
+status: planned
+
+## Ground truth and versioned references (2026-09-24)
+
+- Canonical main at audit: `b412ffd8eb5e82416b46a8235fc9d6d68702a858`, online GitHub ref confirmed; latest main CI run 36000924226 / #2781 succeeded. Project State M9.post_release ready, no active CR/spec. No bundle conflict asserted in this session; canonical Git/state/ledgers agree.
+- User feedback from the latest separate harmonic discussion: live value lies in XABC → conditional CD projection, nearby reaction and second test; empty chart and completed-only presentation fail practical use. Pine R3.1–R3.5 and v6.7.1 are independent code references, not authority over frozen HT-CN source truth. No full old-chat reread needed.
+- Library primary code: `Ashare_Harmonic_Radar_R3_1.pine` through `R3_5.pine`; `A股谐波辅助决策雷达_Pro_v6.7.1.pine`. R3.5's own delivery report explicitly says its hourly example was **not** replayed on complete OHLC, Pine native compilation was not run, and its 233 tests are not independent market examples. Do not claim Pine parity from the report.
+- Scott Carney's primary AB=CD pattern description: https://harmonictrader.com/harmonic-patterns/abcd-pattern/ — C retracement described between 0.382 and 0.886; reciprocal BC projection should converge near AB=CD. This does not automatically authorize altering already frozen HT-CN Source contracts. Any source-definition change requires explicit Source reconciliation.
+
+## Concrete data replay (read-only; no private bars committed)
+
+| Dataset and SHA-256 | Granularity/basis | Rows and validation | Production S3/5/8/13 output | Extra S2 diagnostic |
+| --- | --- | --- | --- | --- |
+| `寒武纪_每日详细数据_20260302-20260918.csv`, `c9cf5d984bab64aba02a532c230d5b0af3ddebb0748af95f9606568be14e6c29` | 688256 **daily**, 2026-03-02..09-18; `*_raw` columns; vendor-derived, no claim of verified exchange provenance | 140 dates unique, 0 OHLC range inconsistencies | pivot counts 23/14/10/5; XABCD completed 0, current XABC forming 0; ABCD forming 1, Shark forming 1 | 31 S2 pivots; current XABCD forming still 0 |
+| Same file, `open/high/low/close` adjusted columns | 688256 daily, adjusted; file has multiple price bases, do not combine within one run | 140 dates unique, 0 OHLC range inconsistencies | pivot counts 21/14/8/5; XABCD completed 0, current XABC forming 0; ABCD forming 1, Shark forming 0 | 31 S2 pivots; current XABCD forming still 0 |
+| `cambricon_688256_daily_2025-09-03_2026-09-04.csv`, `b9507f92fe4fdba4ef1a5bc9c2d8257397533e0351386fe37e5784be8e0c8f3c` | 688256 **daily**, 2025-09-03..2026-09-04; basis needs further cross-source reconciliation | 244 dates unique, 0 OHLC range inconsistencies | pivots 37/20/14/10; XABCD completed 0, current XABC forming 0; ABCD forming 1 | S2=56; historically 3 source-valid forming XABC windows, current 0; ABCD forming 2 |
+
+These are reproducible product-engine outputs, **not** evidence that particular historic screenshot-labeled patterns should have qualified. The user screenshot and R3.5 case are hourly; neither file above is hourly. The first sample is partially overlapping with the second; do not count as two independent instruments or as a statistical recall rate. A confirmed pivot requires `right=scale` future bars to become knowable; final historical pivots cannot be naively substituted for prior live states.
+
+For the 140-row raw daily file, 40 historical XABC windows across production scales yielded 18 rule/window pairs passing B, 5 passing both B and C structural bands, and **0** passing the C harmonic-family ±3% operational match. The closest non-quarantined near case: Butterfly S3/S5 X=1199 (Jun 11), A=1620 (Jun 30), B=1291 (Jul 6), C=1569.97 (Jul 10); B/XA≈0.781, C/AB≈0.848, ~4.3% from nearest 0.886 family target. It is a historical *observation candidate*, **not** a Source-valid forming identity and not live at Sep 18. Two other nearby entries are quarantined Alternate Bat (June 11); never promote those. For the 244-row sample, 69 historical XABC windows on production scales gave 30 B-passing, 6 B+C band-passing and 0 C-family-passing; adding S2 yielded 3 historically strict forming, none at the latest frontier. No genuine Pine-equivalent run on the same bars/settings has yet been executed.
+
+Minimal deterministic boundary example (source-shaped synthetic **test**, not market evidence): X/A/B/C/D = 100/120/107.64/116.64/104.28 passes completed Gartley; changing only D to 104.29 causes completed XABCD=0, while the projected XABC remains and ideal core spans ~103.914–104.28. `rules.py` has exact canonical D/XA 0.786 without a hard-identity tolerance; this is intentional current Source gate. A nearby price reaction must be tracked separately without claiming strict D identity.
+
+## Code-level mismatch map
+
+| Path | HT-CN today | Pine reference | Corrective work |
+| --- | --- | --- | --- |
+| `harmonic/pivots.py`, `engine.py`, `app/harmonic_service.py` | Local right-confirmed scales 3/5/8/13 in production (420 daily bars); no S2 product layer by default | 6.7.1 confirmed 5/5 plus independent 2/2 short layer; R3.x defaults 5/10/20 | Test a separately labeled fast observation layer; preserve time-of-knowledge and don't silently mix completed identities/Source lifecycle. |
+| `candidates.py`, `scanner.py` | Only latest four **confirmed** pivots per scale become current forming XABC; prior XABC are archived only as windows, not persistent candidate episodes | Pine retains developing candidates, near/active/residual states and shows projected D while CD unfolds | Add persistent prospective candidate registration, later invalidation/expiry and no future-node fabrication. |
+| `rules.py`, `evaluator.py` | C band plus discrete-family ±3%, exact D/XA for some standard identities; all identity constraints must pass | v6.7.1 pre-scores a continuous C band; complete scorer can compensate for failed mandatory ratios | Separate observation/nearby candidate from strict Source identity; **never copy averaging as identity**. Document gate reasons. |
+| `prz.py`, `app/source_aligned_service.py` | Source Raw PRZ, engineering ideal core, execution clock distinct | 6.7.1 projects two D levels; R3.5 tracks strict measuring price and nearby response separately | Project conditional D measurements with grade and distance; track PRZ entry and observed reaction separately, no Source terminal backfill. |
+| `apps/web/src/ResearchWorkspace.tsx` | Shows strict `completed + forming` with primary identity filter; empty state says no candidate | Pine distinguishes watch, near, forming, touched, invalidated, history | UI must show candidates and reasons even with zero strict identities, with visible stage and clear non-identity labeling. |
+
+## Acceptance corpus and guardrails
+
+Keep separate corpora: same-period/hour 688256 screenshot cases with actual full OHLC; daily 688256 above; user-labeled negative topology (a later high exceeds A or earlier low precedes D); ideal book cases; and near miss / second test. Freeze price basis and right-confirmation timing. Measure candidate recall and false positives against explicit human review labels, not counts of decorative lines; compare Pine outputs on identical bars only. Gate candidate registration, staleness, C-family distinction, invalidation, no score rescue and no-lookahead. If hourly data cannot be obtained automatically, request exactly one bounded export rather than recurring computer operations. Implement through CR-0088 only after Gate 0 corpus and contract review.

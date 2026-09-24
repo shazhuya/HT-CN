@@ -145,6 +145,16 @@
       "current_fact": "M9 is now the machine-enforced development mainline; M7 is background evidence; M8/ISSUE-0066 gate statistical claims only. AGENTS, CHAT_CONTINUATION, Resume Pack and continuation bundle all carry the same policy. Routine daily user-computer/Private-M1/ZIP operation is prohibited as project infrastructure.",
       "resolution": "Closed by A-20260921-0078-005 after final PR #66 run #2477 and canonical main #2478 passed all release gates with 931 Python tests / 0 warnings, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4.",
       "closed_in": "CR-0078"
+    },
+    {
+      "id": "ISSUE-0073",
+      "severity": "high",
+      "type": "product_recognition_recall",
+      "status": "open",
+      "title": "Shipped harmonic recognition has near-zero usable XABCD candidates on observed real daily bars",
+      "blocks": ["claiming practical pattern recognition acceptance", "claiming Pine-equivalent CD-leg projection"],
+      "current_fact": "The 2026-09-24 CR-0088 audit replayed two overlapping real 688256 daily OHLC files. Production S3/5/8/13 returned zero standard completed and zero current forming XABCD on both; source-band B+C candidates exist but the current discrete ±3% C-family gate filters them. One sample has 3 historical valid XABC on S2, but no current frontier XABCD. The screenshots are hourly and have not been reproduced on equivalent full hourly OHLC. No Source methodology or product engine code was changed by this audit.",
+      "next_action": "Execute CR-0088 Gate 0: freeze labeled daily positive/negative replay cases and obtain exact 688256 hourly OHLC/price basis, then implement and validate a separate non-authoritative time-valid candidate/conditional CD projection channel. Keep Source identity and quarantines frozen; do not claim the defect is fixed before real-case acceptance."
     }
   ]
 }
