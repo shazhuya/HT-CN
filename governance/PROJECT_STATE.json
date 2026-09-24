@@ -27,14 +27,14 @@
     "status": "ready_not_started",
     "active_change": "CR-0088",
     "active_spec": "specs/m9-post-release-recognition-recall.md",
-    "latest_attempt_id": "A-20260924-0088-006",
-    "latest_hosted_validation_attempt_id": "A-20260924-0088-006",
+    "latest_attempt_id": "A-20260924-0088-007",
+    "latest_hosted_validation_attempt_id": "A-20260924-0088-007",
     "work_branch": "m9/recognition-recall-audit",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36003694212,
-      "head": "eb77659339ecf62b04d31f1048e2ea12dcfc16f1",
-      "scope": "CR-0088 draft PR #78 full CI #2788 green after MILESTONES/PROJECT_STATE drift repair; research/governance only, no recognition engine repair or hourly parity acceptance."
+      "workflow_run": 36004168925,
+      "head": "1cfb18bb9d789550af7871126077ffdc7f578527",
+      "scope": "CR-0088 draft PR #78 terminal ledger head full CI #2790 green; research/governance only, no recognition engine repair or hourly parity acceptance."
     }
   },
   "private_m1": {
