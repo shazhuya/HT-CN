@@ -26,4 +26,4 @@ The screenshot is a layout reference. No TradingView branding, account widgets, 
 
 ## Validation and next action
 
-Implementation underway on the named branch. The first hosted run #2770 / 35996569389 passed Python/Project OS/Web but failed 11 browser cases: 9 ambiguous old selectors for tool-rail and tabs, one new watchlist combobox selector, one missing visible API version. The screenshot showed the new chart/watchlist layout rendering. Record fixes and rerun full hosted gates before transition, merge and closeout.
+Implementation underway on the named branch. The first hosted run #2770 / 35996569389 passed Python/Project OS/Web but failed 11 browser cases: 9 ambiguous old selectors for tool-rail and tabs, one new watchlist combobox selector, one missing visible API version. The screenshot showed the new chart/watchlist layout rendering. Second run #2772 / 35997215934 passed 29/31 browser cases; the remaining cases were the audit tool accessible name colliding with the old tab selector, and a request counter matching runtime status polling. Both have been corrected for the next full hosted run. Require green hosted gates before activation, merge and closeout.

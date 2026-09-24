@@ -196,7 +196,7 @@ test('chart workspace keeps watchlist, inspector and viewport interactions in on
       { instrument_id: 'SZSE.300394', has_qfq_factor: true },
     ] } })
   })
-  await page.route('**/api/harmonic/**', async (route) => {
+  await page.route('**/api/harmonic/SSE.*', async (route) => {
     requests += 1
     const instrumentId = decodeURIComponent(new URL(route.request().url()).pathname.split('/').at(-1) ?? '')
     await route.fulfill({ json: { ...analysis, instrument_id: instrumentId } })

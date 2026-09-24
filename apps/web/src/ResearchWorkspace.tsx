@@ -119,7 +119,7 @@ export default function ResearchWorkspace({
               <button type="button" title="切换全部形态身份" aria-label="切换全部形态身份" aria-pressed={showAllIdentities} onClick={() => onShowAllIdentities(!showAllIdentities)}>◇</button>
               <button type="button" title="形态与价位" aria-label="打开结构明细" onClick={() => onTab('pattern')}>⌁</button>
               <button type="button" title="市场环境" aria-label="打开环境明细" onClick={() => onTab('context')}>▦</button>
-              <button type="button" title="审计记录" aria-label="打开审计记录" onClick={() => onTab('audit')}>≡</button>
+              <button type="button" title="审计记录" aria-label="打开记录明细" onClick={() => onTab('audit')}>≡</button>
             </div>
             <section className="research-chart-card" aria-label="谐波主图">
               <div className="research-chart-heading">
