@@ -29,7 +29,11 @@ export type Analysis = {
   bars: Bar[]
   completed: Pattern[]
   forming: Pattern[]
+  discovery?: Pattern[]
   pivot_counts: Record<string, number>
+  discovery_scales?: number[]
+  discovery_pivot_counts?: Record<string, number>
+  recognition_diagnostics?: Record<string, number>
   type_i_t5_events?: TypeIT5Event[]
   a_share_execution_context?: AShareExecutionContextPayload
   market_context?: MarketContextPayload
