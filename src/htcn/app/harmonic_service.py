@@ -11,6 +11,7 @@ from htcn.data.adjustment import AdjustmentFactorStore, apply_price_factors
 from htcn.data.delta import DailyHistoryView, MarketDailyDeltaStore
 from htcn.data.store import ParquetDailyStore
 from htcn.harmonic.abcd import ABCDFormingMatch, ABCDMatch
+from htcn.harmonic.discovery import DISCOVERY_SCALES, DiscoveryCandidate, discover_frame
 from htcn.harmonic.engine import CompletedMatch, FormingMatch, HarmonicScan, scan_frame
 from htcn.harmonic.five_zero import FiveZeroFormingMatch, FiveZeroMatch
 from htcn.harmonic.lifecycle import audit_completed_reaction
@@ -535,6 +536,59 @@ class LocalHarmonicService:
             "frontier": True,
         }
 
+    def _discovery_payload(
+        self,
+        item: DiscoveryCandidate,
+        dates: pd.Series,
+        pivots_by_scale: dict[int, tuple[Pivot, ...]],
+        pivot_consensus: dict,
+    ) -> dict[str, Any]:
+        """Render a non-authoritative discovery candidate without inventing D/lifecycle."""
+
+        return {
+            "pattern_id": item.pattern_id,
+            "schema": "XABCD",
+            "direction": item.direction.value,
+            "state": "forming",
+            "channel": "discovery",
+            "discovery_only": True,
+            "geometry_score": item.geometry_score,
+            "scale": item.scale,
+            "conflict_key": list(item.conflict_key),
+            "identity_conflicts": [f"discovery:{item.pattern_id}@S{item.scale}"],
+            "is_primary_identity": True,
+            "points": [self._point_payload(point, dates) for point in item.points],
+            "pivot_support": self._pivot_support_payload(
+                item.points,
+                source_scale=item.scale,
+                pivots_by_scale=pivots_by_scale,
+                consensus=pivot_consensus,
+            ),
+            "prz": self._prz_payload(item.prz),
+            "metrics": {
+                "b_xa": item.b_xa,
+                "c_ab": item.c_ab,
+            },
+            "source_tolerance_used": item.source_tolerance_used,
+            "bars_since_c": item.bars_since_c,
+            "frontier": False,
+            "discovery": {
+                "authoritative_identity": False,
+                "path_kind": item.path_kind,
+                "skipped_pivots": item.skipped_pivots,
+                "known_from_bar": item.known_from_bar,
+                "prz_status": item.prz_status,
+                "first_prz_test_bar": item.first_prz_test_bar,
+                "c_family_target": item.c_family_target,
+                "c_family_relative_error": item.c_family_relative_error,
+                "source_family_aligned": item.source_family_aligned,
+                "distance_to_source_prz_xa": item.distance_to_source_prz_xa,
+                "mutates_source_identity": False,
+                "owns_lifecycle": False,
+                "fabricates_d": False,
+            },
+        }
+
     @staticmethod
     def _bar_payload(frame: pd.DataFrame) -> list[dict[str, Any]]:
         out: list[dict[str, Any]] = []
@@ -560,6 +614,7 @@ class LocalHarmonicService:
         scales: tuple[int, ...] = (3, 5, 8, 13),
         max_completed: int = 30,
         max_forming: int = 30,
+        max_discovery: int = 60,
     ) -> dict[str, Any]:
         if bars < 80 or bars > 3000:
             raise ValueError("bars must be between 80 and 3000")
@@ -651,6 +706,34 @@ class LocalHarmonicService:
             ),
         )[:max_forming]
 
+        discovery_scan = discover_frame(
+            selected,
+            scales=DISCOVERY_SCALES,
+            max_candidates=max_discovery,
+        )
+        discovery_pivots: dict[int, tuple[Pivot, ...]] = {
+            int(scale): tuple(pivots)
+            for scale, pivots in discovery_scan.pivots_by_scale.items()
+        }
+        authoritative_xabc = {
+            (
+                str(pattern["pattern_id"]),
+                tuple(int(point["index"]) for point in pattern["points"][:4]),
+            )
+            for pattern in [*completed, *forming]
+            if pattern.get("schema") == "XABCD" and len(pattern.get("points") or []) >= 4
+        }
+        discovery = [
+            self._discovery_payload(
+                item,
+                dates,
+                discovery_pivots,
+                discovery_scan.pivot_consensus,
+            )
+            for item in discovery_scan.candidates
+            if (item.pattern_id, item.conflict_key) not in authoritative_xabc
+        ][:max_discovery]
+
         return {
             "instrument_id": instrument_id,
             "price_mode": price_mode,
@@ -664,6 +747,18 @@ class LocalHarmonicService:
             "bars": self._bar_payload(selected),
             "completed": completed,
             "forming": forming,
+            "discovery": discovery,
             "pivot_counts": {str(scale): len(pivots) for scale, pivots in scan.pivots_by_scale.items()},
-            "engine_note": "Carney 几何身份与后续证据严格分层：M/W XABCD、独立 AB=CD、Shark 0XABC 与 5-0 使用独立 schema；geometry_score 与 pivot_support 都不是胜率。Shark 单独审计 50%/61.8% 与 Reciprocal AB=CD 反应目标；其他完成结构可附带 Type-I/Type-II 与 Wilder RSI 证据，但不会自动转化为交易建议。",
+            "discovery_scales": list(DISCOVERY_SCALES),
+            "discovery_pivot_counts": {
+                str(scale): len(pivots)
+                for scale, pivots in discovery_scan.pivots_by_scale.items()
+            },
+            "recognition_diagnostics": {
+                "authoritative_completed": len(completed),
+                "authoritative_forming": len(forming),
+                "discovery_candidates": len(discovery),
+                **discovery_scan.diagnostics,
+            },
+            "engine_note": "Carney 权威身份与高召回发现层严格分离：completed/forming 继续执行冻结 Source 身份与生命周期；discovery 仅从已确认 XABC 投影现有 Source PRZ，可持久保留并有限跳过一组次级摆动，但绝不虚构 D、Type-I/II 或写入 M4 证据。geometry_score/pivot_support 只用于研究排序，不代表胜率或交易建议。",
         }
