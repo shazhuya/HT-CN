@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ApplicationShell from './ApplicationShell'
 import DiscoverView from './DiscoverView'
 import HomeView from './HomeView'
@@ -42,6 +42,7 @@ function readRecentSymbols() {
 }
 
 export default function App() {
+  const analysisRequest = useRef(0)
   const [destination, setDestination] = useState<AppDestination>(() => destinationFromHash())
   const [health, setHealth] = useState<Health | null>(null)
   const [instruments, setInstruments] = useState<InstrumentRow[]>([])
@@ -137,6 +138,7 @@ export default function App() {
     }
 
     const changingInstrument = analysis?.instrument_id !== target
+    const request = ++analysisRequest.current
     if (changingInstrument) setAnalysis(null)
 
     setSymbol(target)
@@ -156,14 +158,16 @@ export default function App() {
         return response.json() as Promise<Analysis>
       })
       .then((payload) => {
+        if (request !== analysisRequest.current) return
         setAnalysis(payload)
         rememberSymbol(payload.instrument_id)
       })
       .catch((error: Error) => {
+        if (request !== analysisRequest.current) return
         if (changingInstrument) setAnalysis(null)
         setAnalysisError(error.message)
       })
-      .finally(() => setLoading(false))
+      .finally(() => { if (request === analysisRequest.current) setLoading(false) })
   }
 
   function openResearch(nextSymbol?: string) {
@@ -239,6 +243,8 @@ export default function App() {
           onCrosshair={setCrosshair}
           tab={researchTab}
           onTab={setResearchTab}
+          instruments={instruments}
+          onOpenInstrument={openResearch}
         />
       )}
 

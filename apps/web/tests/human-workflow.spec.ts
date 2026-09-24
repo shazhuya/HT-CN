@@ -182,3 +182,55 @@ test('Stable application separates home, research, discovery and system destinat
   await expect(page.getByRole('heading', { name: '系统状态' })).toBeVisible()
   await expect(page.getByTestId('market-data-runtime-card')).toBeVisible()
 })
+
+test('chart workspace keeps watchlist, inspector and viewport interactions in one research surface', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  let requests = 0
+  await page.route('**/api/health', async (route) => {
+    await route.fulfill({ json: { status: 'ok', service: 'ht-cn-api', version: '1.0.0' } })
+  })
+  await page.route('**/api/instruments?**', async (route) => {
+    await route.fulfill({ json: { count: 3, items: [
+      { instrument_id: 'SSE.688256', has_qfq_factor: true },
+      { instrument_id: 'SSE.688300', has_qfq_factor: true },
+      { instrument_id: 'SZSE.300394', has_qfq_factor: true },
+    ] } })
+  })
+  await page.route('**/api/harmonic/**', async (route) => {
+    requests += 1
+    const instrumentId = decodeURIComponent(new URL(route.request().url()).pathname.split('/').at(-1) ?? '')
+    await route.fulfill({ json: { ...analysis, instrument_id: instrumentId } })
+  })
+
+  await page.goto('/')
+  await page.keyboard.press('Control+k')
+  await expect(page.locator('#global-symbol-search')).toBeFocused()
+  await page.locator('#global-symbol-search').fill('SSE.688256')
+  await page.locator('#global-symbol-search').press('Enter')
+
+  await expect(page.getByRole('heading', { name: 'SSE.688256' })).toBeVisible()
+  await expect(page.getByLabel('谐波主图')).toBeVisible()
+  await expect(page.getByLabel('自选股列表').getByRole('button', { name: '打开 SSE.688300 图表' })).toBeVisible()
+  await expect(page.getByLabel('自选股列表')).toContainText('最近收盘')
+  await expect(page.getByLabel('自选股列表')).toContainText('其余证券暂不提供实时报价')
+
+  await page.getByRole('button', { name: '添加自选股' }).click()
+  await page.getByRole('textbox', { name: '输入代码添加自选股' }).fill('SZSE.300394')
+  await page.getByRole('textbox', { name: '输入代码添加自选股' }).press('Enter')
+  await expect(page.getByRole('button', { name: '从自选股移除 SZSE.300394' })).toBeVisible()
+
+  await page.getByLabel('股票详情页签').getByRole('button', { name: 'Source 时钟' }).click()
+  await expect(page.getByTestId('lifecycle-compass')).toBeVisible()
+  await page.getByLabel('股票详情页签').getByRole('button', { name: '当前判断' }).click()
+  await page.getByRole('button', { name: '图表工具：形态与价位' }).click()
+  await expect(page.getByTestId('pattern-audit-panel')).toBeVisible()
+  await page.getByRole('button', { name: '收起右侧详情栏' }).click()
+  await expect(page.getByLabel('自选股列表')).toHaveCount(0)
+  await page.getByRole('button', { name: '打开右侧详情栏' }).click()
+  expect(requests).toBe(1)
+
+  await page.getByRole('button', { name: '打开 SSE.688300 图表' }).click()
+  await expect(page.getByRole('heading', { name: 'SSE.688300' })).toBeVisible()
+  expect(requests).toBe(2)
+  await expect(page.getByLabel('自选股列表')).toContainText('SZSE.300394')
+})

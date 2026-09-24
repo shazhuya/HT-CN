@@ -187,6 +187,7 @@ type Props = {
   bars: Bar[]
   pattern: Pattern | null
   focusPattern?: boolean
+  lifecyclePlacement?: 'inline' | 'external'
   onCrosshairChange?: (snapshot: CrosshairSnapshot | null) => void
 }
 
@@ -360,6 +361,7 @@ export default function HarmonicChart({
   bars,
   pattern,
   focusPattern = true,
+  lifecyclePlacement = 'inline',
   onCrosshairChange,
 }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null)
@@ -713,7 +715,7 @@ export default function HarmonicChart({
 
   return (
     <>
-      <LifecycleCompass pattern={pattern} bars={bars} />
+      {lifecyclePlacement === 'inline' && <LifecycleCompass pattern={pattern} bars={bars} />}
       <div className="chart-wrap interactive-chart-wrap" aria-label="harmonic-chart">
         <div className="interactive-chart-toolbar">
           <span>拖动平移 · 滚轮/坐标轴缩放 · 十字光标</span>
