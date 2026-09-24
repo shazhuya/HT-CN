@@ -1,6 +1,6 @@
 # M9 post-release — Chart-centered desktop workspace v3
 
-status: validation_green
+status: ready_to_merge
 
 ## Primary workflow
 
