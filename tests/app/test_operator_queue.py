@@ -52,6 +52,41 @@ def _pattern(
     }
 
 
+def _discovery_pattern() -> dict:
+    return {
+        "pattern_id": "gartley",
+        "schema": "XABCD",
+        "direction": "bullish",
+        "scale": 10,
+        "state": "forming",
+        "channel": "discovery",
+        "discovery_only": True,
+        "is_primary_identity": True,
+        "points": [
+            {"index": 1, "trade_date": "2026-09-10"},
+            {"index": 2, "trade_date": "2026-09-11"},
+            {"index": 3, "trade_date": "2026-09-14"},
+            {"index": 4, "trade_date": "2026-09-15"},
+        ],
+        "prz": {
+            "source_prz_low": 95.0,
+            "source_prz_high": 100.0,
+            "source_prz": {
+                "available": True,
+                "price_low": 95.0,
+                "price_high": 100.0,
+            },
+        },
+        "discovery": {
+            "prz_status": "projected",
+            "path_kind": "minor_swing_skip",
+            "authoritative_identity": False,
+            "fabricates_d": False,
+            "owns_lifecycle": False,
+        },
+    }
+
+
 class FakeService:
     def __init__(self, payloads: dict[str, dict]) -> None:
         self.payloads = payloads
@@ -145,6 +180,24 @@ def test_operator_queue_uses_workflow_bucket_not_predictive_score() -> None:
         item["predictive_score_used"] is False
         for item in payload["items"]
     )
+
+
+def test_operator_queue_includes_bounded_discovery_without_fabricating_lifecycle() -> None:
+    analysis = _analysis()
+    analysis["discovery"] = [_discovery_pattern()]
+    service = FakeService({"SSE.1": analysis})
+
+    payload = build_operator_queue(service, ["SSE.1"])
+
+    assert payload["candidate_count"] == 1
+    item = payload["items"][0]
+    assert item["pattern_state"] == "discovery"
+    assert item["discovery_only"] is True
+    assert item["lifecycle_state"] == "discovery_candidate"
+    assert item["action_state"] == "evidence_insufficient"
+    assert item["predictive_score_used"] is False
+    assert item["next_key_price"] is None
+    assert "geometry_score" not in item
 
 
 def test_operator_queue_filters_secondary_identity() -> None:
