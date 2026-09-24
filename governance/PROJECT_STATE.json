@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-STABLE-V1.0.0-CHART-WORKSPACE-V3-CLOSED",
+  "state_id": "HTCN-CR-0088-RECOGNITION-RECALL-READY-NOT-STARTED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -24,17 +24,17 @@
     "milestone": "M9",
     "phase": "M9.post_release",
     "title": "Stable Product Operations & Maintenance",
-    "status": "ready",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260924-0088-003",
-    "latest_hosted_validation_attempt_id": "A-20260924-0087-010",
-    "work_branch": null,
+    "status": "ready_not_started",
+    "active_change": "CR-0088",
+    "active_spec": "specs/m9-post-release-recognition-recall.md",
+    "latest_attempt_id": "A-20260924-0088-004",
+    "latest_hosted_validation_attempt_id": "A-20260924-0088-004",
+    "work_branch": "m9/recognition-recall-audit",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36000525578,
-      "head": "2e822f46ccff8437b7637d17bf11e53a4fb799d0",
-      "scope": "CR-0087 terminal closeout state on canonical main #2780 fully green after CR/spec closure and return to M9.post_release maintenance ready."
+      "workflow_run": 36002968366,
+      "head": "90d97647010109add5477124d06efc39926a09ac",
+      "scope": "CR-0088 research-only draft PR #78 CI #2784 fully green; no recognition engine changes or hourly parity acceptance."
     }
   },
   "private_m1": {
@@ -90,6 +90,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-post-release-recognition-recall.md",
     "specs/m9-post-release-chart-workspace-v3.md",
     "specs/m9-phase-6-stable-product-release-acceptance.md",
     "specs/m9-phase-5-reliability-packaging-zero-cli.md",

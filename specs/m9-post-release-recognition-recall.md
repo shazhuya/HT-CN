@@ -1,6 +1,6 @@
 # M9.post_release — Recognition recall audit and conditional CD-leg scenarios
 
-status: planned
+status: ready_not_started
 
 ## Ground truth and versioned references (2026-09-24)
 
@@ -19,7 +19,11 @@ status: planned
 
 These are reproducible product-engine outputs, **not** evidence that particular historic screenshot-labeled patterns should have qualified. The user screenshot and R3.5 case are hourly; neither file above is hourly. The first sample is partially overlapping with the second; do not count as two independent instruments or as a statistical recall rate. A confirmed pivot requires `right=scale` future bars to become knowable; final historical pivots cannot be naively substituted for prior live states.
 
+The current application analysis reads `ParquetDailyStore` / `DailyHistoryView` and `LocalHarmonicService.analyze` takes the last 420 **daily** bars by default. There is no evidenced hourly production data/scan path in this audit. The user's TradingView 1-hour chart is therefore not comparable to an HT-CN daily chart even at identical symbol and calendar dates. Same-timeframe parity requires either a sourced intraday ingestion/adjustment contract or an isolated, clearly labeled offline hourly replay before product support is promised.
+
 For the 140-row raw daily file, 40 historical XABC windows across production scales yielded 18 rule/window pairs passing B, 5 passing both B and C structural bands, and **0** passing the C harmonic-family ±3% operational match. The closest non-quarantined near case: Butterfly S3/S5 X=1199 (Jun 11), A=1620 (Jun 30), B=1291 (Jul 6), C=1569.97 (Jul 10); B/XA≈0.781, C/AB≈0.848, ~4.3% from nearest 0.886 family target. It is a historical *observation candidate*, **not** a Source-valid forming identity and not live at Sep 18. Two other nearby entries are quarantined Alternate Bat (June 11); never promote those. For the 244-row sample, 69 historical XABC windows on production scales gave 30 B-passing, 6 B+C band-passing and 0 C-family-passing; adding S2 yielded 3 historically strict forming, none at the latest frontier. No genuine Pine-equivalent run on the same bars/settings has yet been executed.
+
+For that July 10 Butterfly-prefix observation, the conditional 1.27 XA theoretical D is `1620 − 1.27 × (1620 − 1199) = 1085.33`; the 1.618–2.24 BC *measurement envelope* from C is approximately 945.08–1118.60. This is **not** a valid Source Raw PRZ, a predicted execution path, or a Sep 18 active pattern. The later low must be evaluated prospectively for touch/overshoot/invalidation; it cannot be used to backdate a July 10 conclusion. The explicit calculation shows why a separate CD-leg scenario channel could be useful even where strict classification remains empty.
 
 Minimal deterministic boundary example (source-shaped synthetic **test**, not market evidence): X/A/B/C/D = 100/120/107.64/116.64/104.28 passes completed Gartley; changing only D to 104.29 causes completed XABCD=0, while the projected XABC remains and ideal core spans ~103.914–104.28. `rules.py` has exact canonical D/XA 0.786 without a hard-identity tolerance; this is intentional current Source gate. A nearby price reaction must be tracked separately without claiming strict D identity.
 
