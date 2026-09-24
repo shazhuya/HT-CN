@@ -1,6 +1,6 @@
 # CR-0087 — Chart-centered desktop workspace
 
-status: planned
+status: validation_green
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 43ceed1fdf16dceb3aa746262b9566c96904b0af
@@ -27,3 +27,5 @@ The screenshot is a layout reference. No TradingView branding, account widgets, 
 ## Validation and next action
 
 Implementation underway on the named branch. The first hosted run #2770 / 35996569389 passed Python/Project OS/Web but failed 11 browser cases: 9 ambiguous old selectors for tool-rail and tabs, one new watchlist combobox selector, one missing visible API version. The screenshot showed the new chart/watchlist layout rendering. Second run #2772 / 35997215934 passed 29/31 browser cases; the remaining cases were the audit tool accessible name colliding with the old tab selector, and a request counter matching runtime status polling. Both have been corrected for the next full hosted run. Require green hosted gates before activation, merge and closeout.
+
+Run #2774 / 35997576837 on `49d7ca1c9148221685c43c90775ec8bf92297388` passed all 31 browser cases, Phase18/21, Source Coverage, Project OS, Python/Web, M4 37/37, Outcome 4/4, release package and Stable acceptance. Artifact 10807255607 / sha256:58900fb4ae4cd63eee96f433c8713bb5d09f650485fae05d2b04b4dd17598617. Activate the change at validation_green and validate this ledger-bearing governance state before advancing to ready_to_merge.

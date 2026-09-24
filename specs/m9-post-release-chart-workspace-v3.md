@@ -1,6 +1,6 @@
 # M9 post-release — Chart-centered desktop workspace v3
 
-status: planned
+status: validation_green
 
 ## Primary workflow
 
