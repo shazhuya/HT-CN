@@ -27,7 +27,7 @@
     "status": "ready_not_started",
     "active_change": "CR-0088",
     "active_spec": "specs/m9-post-release-recognition-recall.md",
-    "latest_attempt_id": "A-20260924-0088-004",
+    "latest_attempt_id": "A-20260924-0088-005",
     "latest_hosted_validation_attempt_id": "A-20260924-0088-004",
     "work_branch": "m9/recognition-recall-audit",
     "latest_validation": {

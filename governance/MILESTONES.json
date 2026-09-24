@@ -267,7 +267,7 @@
         {
           "id": "M9.post_release",
           "title": "Stable Product Operations, Maintenance & UX Evolution",
-          "status": "ready",
+          "status": "ready_not_started",
           "exit_gate": [
             "post-release changes preserve Stable Source/evidence/freeze boundaries",
             "human-facing product changes pass hosted Web/browser regression",
