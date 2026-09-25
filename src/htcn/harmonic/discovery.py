@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import combinations, pairwise
+
 import pandas as pd
 
 from .candidates import SwingWindow
