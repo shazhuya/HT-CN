@@ -1,3 +1,5 @@
+from itertools import pairwise
+
 import pandas as pd
 
 from htcn.harmonic.recognition_benchmark import (
@@ -101,11 +103,7 @@ def _piecewise_gartley() -> pd.DataFrame:
         (110, 141.4),
     ]
     closes = [0.0] * 111
-    for (left_i, left_p), (right_i, right_p) in zip(
-        anchors,
-        anchors[1:],
-        strict=False,
-    ):
+    for (left_i, left_p), (right_i, right_p) in pairwise(anchors):
         for index in range(left_i, right_i + 1):
             fraction = (index - left_i) / (right_i - left_i)
             closes[index] = left_p + (right_p - left_p) * fraction
