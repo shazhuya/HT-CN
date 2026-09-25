@@ -23,7 +23,12 @@ SINGLE_SCALE = (3,)
 MULTI_SCALE = (3, 5, 8)
 
 
-def _positive_metrics(cases, *, scales: tuple[int, ...]) -> dict[str, Any]:
+def _positive_metrics(
+    cases,
+    *,
+    scales: tuple[int, ...],
+    max_total_skips: int = 4,
+) -> dict[str, Any]:
     total_tp = total_fp = total_fn = exact = 0
     prediction_total = 0
     node_errors: list[int] = []
@@ -33,7 +38,11 @@ def _positive_metrics(cases, *, scales: tuple[int, ...]) -> dict[str, Any]:
     rows = []
 
     for case in cases:
-        predictions = graph_completed_predictions(case.frame, scales=scales)
+        predictions = graph_completed_predictions(
+            case.frame,
+            scales=scales,
+            max_total_skips=max_total_skips,
+        )
         metrics = score_predictions([case.truth], predictions, tolerance_bars=1)
         total_tp += metrics.true_positive
         total_fp += metrics.false_positive
@@ -61,6 +70,14 @@ def _positive_metrics(cases, *, scales: tuple[int, ...]) -> dict[str, Any]:
                 "fp": metrics.false_positive,
                 "fn": metrics.false_negative,
                 "exact": metrics.exact_match_count,
+                "prediction_details": [
+                    {
+                        "pattern_id": item.pattern_id,
+                        "direction": item.direction,
+                        "node_indices": list(item.node_indices),
+                    }
+                    for item in predictions
+                ],
             }
         )
 
@@ -107,14 +124,23 @@ def _positive_metrics(cases, *, scales: tuple[int, ...]) -> dict[str, Any]:
     }
 
 
-def _negative_metrics(cases, *, scales: tuple[int, ...]) -> dict[str, Any]:
+def _negative_metrics(
+    cases,
+    *,
+    scales: tuple[int, ...],
+    max_total_skips: int = 4,
+) -> dict[str, Any]:
     total_predictions = 0
     by_kind: dict[str, dict[str, int]] = defaultdict(
         lambda: {"cases": 0, "predictions": 0, "clean": 0}
     )
     rows = []
     for case in cases:
-        predictions = graph_completed_predictions(case.frame, scales=scales)
+        predictions = graph_completed_predictions(
+            case.frame,
+            scales=scales,
+            max_total_skips=max_total_skips,
+        )
         count = len(predictions)
         total_predictions += count
         bucket = by_kind[case.kind]
@@ -227,10 +253,46 @@ def build_report() -> dict[str, Any]:
                 "and future-tail streaming invariance. This remains controlled ground truth."
             ),
         },
-        "single_scale_graph": _positive_metrics(positives, scales=SINGLE_SCALE),
-        "multi_scale_graph": _positive_metrics(positives, scales=MULTI_SCALE),
-        "single_scale_negatives": _negative_metrics(negatives, scales=SINGLE_SCALE),
-        "multi_scale_negatives": _negative_metrics(negatives, scales=MULTI_SCALE),
+        "single_scale_graph_skip4": _positive_metrics(
+            positives,
+            scales=SINGLE_SCALE,
+            max_total_skips=4,
+        ),
+        "multi_scale_graph_skip4": _positive_metrics(
+            positives,
+            scales=MULTI_SCALE,
+            max_total_skips=4,
+        ),
+        "single_scale_graph_skip6": _positive_metrics(
+            positives,
+            scales=SINGLE_SCALE,
+            max_total_skips=6,
+        ),
+        "multi_scale_graph_skip6": _positive_metrics(
+            positives,
+            scales=MULTI_SCALE,
+            max_total_skips=6,
+        ),
+        "single_scale_negatives_skip4": _negative_metrics(
+            negatives,
+            scales=SINGLE_SCALE,
+            max_total_skips=4,
+        ),
+        "multi_scale_negatives_skip4": _negative_metrics(
+            negatives,
+            scales=MULTI_SCALE,
+            max_total_skips=4,
+        ),
+        "single_scale_negatives_skip6": _negative_metrics(
+            negatives,
+            scales=SINGLE_SCALE,
+            max_total_skips=6,
+        ),
+        "multi_scale_negatives_skip6": _negative_metrics(
+            negatives,
+            scales=MULTI_SCALE,
+            max_total_skips=6,
+        ),
         "streaming_future_tail": _streaming_metrics(streaming_cases),
     }
 
