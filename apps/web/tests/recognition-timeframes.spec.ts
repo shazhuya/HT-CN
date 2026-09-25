@@ -68,6 +68,33 @@ const pineCandidate = {
     research_only: false,
     qualified: true,
     precise: true,
+    neighborhood: {
+      source: 'pine_r35',
+      pine_source_sha256: '8bc49dc1ac2d0e6b829968aea0e72450c413bb0a0d8c1b1f6eabef57061ad68f',
+      state: 2,
+      pad: 0.43,
+      zone_low: 85.75,
+      zone_high: 86.63,
+      born_bar: 0,
+      first_extreme: 86.5,
+      first_bar: 0,
+      response_bar: 1,
+      response_price: 102,
+      reaction_peak: 103,
+      away: true,
+      away_bar: 1,
+      second_bar: null,
+      second_extreme: null,
+      second_response_bar: null,
+      second_response_price: null,
+      reason: '邻域反应已发生；非严格Type-I，不追认成交',
+      strict_takeover: false,
+      strict_prz_expanded: false,
+      creates_tbar: false,
+      creates_type_i: false,
+      creates_type_ii: false,
+      creates_trade_plan: false,
+    },
     projected_label: 'D',
     structural_limit: 83.48,
     pine_source_sha256: '84e1eb2267c9b80891e0ffb64a6d4abf5712fc5e756be81815e536f2fca4c3f5',
@@ -150,5 +177,10 @@ test('research workspace switches 1D -> 60m and labels Pine R3.4 candidates', as
   await expect(page.getByRole('heading', { name: 'AB=CD · 发现候选' })).toBeVisible()
   await expect(page.getByLabel('形态候选')).toContainText('R3.4')
   await expect(page.getByTestId('discovery-candidate-note')).toContainText('R3.4 行为基线候选')
+  await expect(page.getByTestId('discovery-candidate-note')).toContainText('R3.5邻域')
+  await expect(page.getByLabel('形态候选')).toContainText('邻域')
+  await page.getByLabel('打开结构明细').click()
+  await expect(page.getByTestId('r35-neighborhood-audit')).toContainText('首次邻域反应')
+  await expect(page.getByTestId('r35-neighborhood-audit')).toContainText('不扩大严格 PRZ')
   await expect(page.getByTestId('lifecycle-compass')).toHaveCount(0)
 })
