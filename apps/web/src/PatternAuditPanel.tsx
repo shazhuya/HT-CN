@@ -73,6 +73,16 @@ function isPineR34Discovery(pattern: Pattern) {
   return pattern.discovery_only === true && pattern.discovery?.source === 'pine_r34'
 }
 
+function neighborhoodStateLabel(state: number) {
+  if (state === 1) return '已进入邻域 · 等反应'
+  if (state === 2) return '首次邻域反应'
+  if (state === 3) return '再回邻域 · 等新反应'
+  if (state === 4) return '邻域二次反应'
+  if (state === 5) return '邻域观察已结束'
+  if (state === 6) return '严格测试已接管'
+  return '未进入邻域'
+}
+
 function isStandaloneAbcd(pattern: Pattern) {
   return pattern.schema === 'ABCD'
 }
@@ -146,6 +156,23 @@ export default function PatternAuditPanel({ pattern }: { pattern: Pattern | null
               <p>这里只说明“值得继续观察”。它不创建 D、不启动 Source 生命周期，也不能用评分把未通过的 canonical identity 变成正式形态。</p>
             </>
           )}
+        </section>
+      )}
+
+      {isPineR34Discovery(pattern) && pattern.discovery?.neighborhood && pattern.discovery.neighborhood.state > 0 && (
+        <section className="pattern-audit-section discovery-audit" data-testid="r35-neighborhood-audit">
+          <h3>R3.5 邻域反应 · 与严格 PRZ 分开</h3>
+          <dl>
+            <div><dt>状态</dt><dd>{neighborhoodStateLabel(pattern.discovery.neighborhood.state)}</dd></div>
+            <div><dt>邻域半宽</dt><dd>{pattern.discovery.neighborhood.pad.toFixed(2)}</dd></div>
+            <div><dt>邻域范围</dt><dd>{pattern.discovery.neighborhood.zone_low.toFixed(2)} – {pattern.discovery.neighborhood.zone_high.toFixed(2)}</dd></div>
+            <div><dt>首次极值</dt><dd>{fmt(pattern.discovery.neighborhood.first_extreme)}</dd></div>
+            <div><dt>首次反应价</dt><dd>{fmt(pattern.discovery.neighborhood.response_price)}</dd></div>
+            <div><dt>二测极值</dt><dd>{fmt(pattern.discovery.neighborhood.second_extreme)}</dd></div>
+            <div><dt>二次反应价</dt><dd>{fmt(pattern.discovery.neighborhood.second_response_price)}</dd></div>
+          </dl>
+          <p>{pattern.discovery.neighborhood.reason}</p>
+          <p>邻域只记录“差一点到严格完成区但已经发生的价格反应”。它不扩大严格 PRZ，不补造测量覆盖，也不生成 T-Bar、Type-I、Type-II 或交易计划。</p>
         </section>
       )}
 
