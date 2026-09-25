@@ -10,7 +10,6 @@ import pandas as pd
 from .recognition_benchmark import RecognitionTruth
 from .recognition_stress import STANDARD_XABCD
 
-
 HOLDOUT_SALT = "htcn-recognition-gate3-holdout-v1"
 NODE_INDICES = (20, 100, 180, 260, 340)
 ROWS = 381
