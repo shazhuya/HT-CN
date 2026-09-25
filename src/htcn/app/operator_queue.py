@@ -266,6 +266,7 @@ def _queue_item(
         "instrument_id": instrument_id,
         "last_trade_date": analysis.get("last_trade_date"),
         "price_mode": analysis.get("price_mode"),
+        "timeframe": analysis.get("timeframe") or "1d",
         "warning": analysis.get("warning"),
         "pattern_id": pattern.get("pattern_id"),
         "schema": pattern.get("schema"),
