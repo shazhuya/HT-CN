@@ -14,6 +14,7 @@ import pandas as pd
 
 from htcn.data.intraday import AkShareIntradayProvider, IntradayProviderError
 from htcn.data.providers.akshare_provider import AkShareProvider
+from htcn.data.providers.baostock_provider import BaoStockProvider
 from htcn.harmonic.pine_r34 import PINE_R34_SOURCE_SHA256, scan_pine_r34
 
 CORPUS: tuple[tuple[str, str, str], ...] = (
@@ -125,18 +126,48 @@ def _scan_record(
 
 
 def _fetch_daily(
-    provider: AkShareProvider,
+    primary: AkShareProvider,
+    fallback: BaoStockProvider,
     instrument_id: str,
     *,
     start: date,
     end: date,
-) -> pd.DataFrame:
-    return provider.get_daily_adjusted(
-        instrument_id,
-        start,
-        end,
-        mode="qfq",
-    ).sort_values("trade_date").reset_index(drop=True)
+    attempts: int = 2,
+) -> tuple[pd.DataFrame, str]:
+    failures: list[str] = []
+    for attempt in range(1, attempts + 1):
+        try:
+            frame = primary.get_daily_adjusted(
+                instrument_id,
+                start,
+                end,
+                mode="qfq",
+            ).sort_values("trade_date").reset_index(drop=True)
+            if not frame.empty:
+                return frame, "akshare_eastmoney"
+            failures.append(f"akshare attempt={attempt}: empty")
+        except (ConnectionError, RuntimeError, ValueError, TypeError, OSError) as exc:
+            failures.append(f"akshare attempt={attempt}:{type(exc).__name__}:{exc}")
+        if attempt < attempts:
+            time.sleep(attempt)
+
+    try:
+        frame = fallback.get_daily_adjusted(
+            instrument_id,
+            start,
+            end,
+            mode="qfq",
+        ).sort_values("trade_date").reset_index(drop=True)
+        if not frame.empty:
+            return frame, "baostock"
+        failures.append("baostock: empty")
+    except (ConnectionError, RuntimeError, ValueError, TypeError, OSError) as exc:
+        failures.append(f"baostock:{type(exc).__name__}:{exc}")
+
+    raise RuntimeError(
+        f"no daily QFQ provider succeeded for {instrument_id}: "
+        + " | ".join(failures)
+    )
 
 
 def _retry_intraday(
@@ -192,13 +223,15 @@ def build_report() -> dict[str, Any]:
     intraday_end = now.replace(tzinfo=None)
 
     daily_provider = AkShareProvider()
+    daily_fallback = BaoStockProvider()
     intraday_provider = AkShareIntradayProvider()
     series: list[dict[str, Any]] = []
 
     for instrument_id, name, segment in CORPUS:
         try:
-            daily = _fetch_daily(
+            daily, daily_source = _fetch_daily(
                 daily_provider,
+                daily_fallback,
                 instrument_id,
                 start=daily_start,
                 end=now.date(),
@@ -213,7 +246,7 @@ def build_report() -> dict[str, Any]:
                     name=name,
                     segment=segment,
                     timeframe="1d",
-                    provider="akshare_eastmoney",
+                    provider=daily_source,
                     adjustment="qfq",
                     frame=daily,
                     time_column="trade_date",
