@@ -10,7 +10,6 @@ from htcn.data.intraday import (
     ParquetIntradayCache,
 )
 
-
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 
 
