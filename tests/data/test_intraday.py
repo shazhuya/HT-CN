@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import pytest
@@ -8,6 +9,9 @@ from htcn.data.intraday import (
     IntradayProviderError,
     ParquetIntradayCache,
 )
+
+
+SHANGHAI = ZoneInfo("Asia/Shanghai")
 
 
 class StubAk:
@@ -60,8 +64,8 @@ def test_intraday_eastmoney_is_primary_and_normalized():
     result = provider.fetch(
         "SSE.688256",
         timeframe="60m",
-        start=datetime(2026, 9, 24, 9, 30),
-        end=datetime(2026, 9, 24, 15, 0),
+        start=datetime(2026, 9, 24, 9, 30, tzinfo=SHANGHAI),
+        end=datetime(2026, 9, 24, 15, 0, tzinfo=SHANGHAI),
     )
 
     assert result.provider == "akshare_eastmoney"
@@ -84,8 +88,8 @@ def test_intraday_sina_is_bounded_fallback():
     result = provider.fetch(
         "SZSE.300750",
         timeframe="15m",
-        start=datetime(2026, 9, 24, 14, 30),
-        end=datetime(2026, 9, 24, 15, 0),
+        start=datetime(2026, 9, 24, 14, 30, tzinfo=SHANGHAI),
+        end=datetime(2026, 9, 24, 15, 0, tzinfo=SHANGHAI),
     )
 
     assert result.provider == "akshare_sina"
@@ -105,8 +109,8 @@ def test_intraday_all_provider_failure_is_explicit():
         provider.fetch(
             "SSE.688256",
             timeframe="60m",
-            start=datetime(2026, 9, 1),
-            end=datetime(2026, 9, 24, 15, 0),
+            start=datetime(2026, 9, 1, tzinfo=SHANGHAI),
+            end=datetime(2026, 9, 24, 15, 0, tzinfo=SHANGHAI),
         )
 
 
@@ -115,8 +119,8 @@ def test_intraday_cache_roundtrip_preserves_provenance(tmp_path):
     bars = AkShareIntradayProvider(ak).fetch(
         "SSE.688256",
         timeframe="60m",
-        start=datetime(2026, 9, 24, 9, 30),
-        end=datetime(2026, 9, 24, 15, 0),
+        start=datetime(2026, 9, 24, 9, 30, tzinfo=SHANGHAI),
+        end=datetime(2026, 9, 24, 15, 0, tzinfo=SHANGHAI),
     )
     cache = ParquetIntradayCache(tmp_path)
 
@@ -136,6 +140,6 @@ def test_intraday_rejects_unsupported_timeframe():
         AkShareIntradayProvider(ak).fetch(
             "SSE.688256",
             timeframe="5m",
-            start=datetime(2026, 9, 1),
-            end=datetime(2026, 9, 24),
+            start=datetime(2026, 9, 1, tzinfo=SHANGHAI),
+            end=datetime(2026, 9, 24, tzinfo=SHANGHAI),
         )
