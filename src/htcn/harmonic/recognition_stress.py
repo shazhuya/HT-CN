@@ -92,8 +92,8 @@ def _minor_pair(
     second_fraction = rng.uniform(0.16, first_fraction - 0.07)
     first_t = rng.uniform(0.30, 0.43)
     second_t = rng.uniform(0.56, 0.70)
-    first_i = left_i + max(6, int(round(span_bars * first_t)))
-    second_i = left_i + max(first_i - left_i + 6, int(round(span_bars * second_t)))
+    first_i = left_i + max(6, round(span_bars * first_t))
+    second_i = left_i + max(first_i - left_i + 6, round(span_bars * second_t))
     second_i = min(second_i, right_i - 6)
 
     direction = 1.0 if right_p > left_p else -1.0
