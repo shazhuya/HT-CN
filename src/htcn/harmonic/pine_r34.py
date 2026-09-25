@@ -7,7 +7,6 @@ from math import floor, isfinite
 
 import pandas as pd
 
-
 PINE_R34_SOURCE_SHA256 = "84e1eb2267c9b80891e0ffb64a6d4abf5712fc5e756be81815e536f2fca4c3f5"
 PINE_R34_SCALES: tuple[int, ...] = (5, 10, 20)
 DISCRETE_PROJECTIONS: tuple[float, ...] = (
