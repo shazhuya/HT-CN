@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-STABLE-V1.0.0-PRODUCTION-RECOGNITION-CLOSED",
+  "state_id": "HTCN-M9-POST-RELEASE-CR0090-RECOGNITION-TRUST-GATE0-GREEN",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -24,17 +24,17 @@
     "milestone": "M9",
     "phase": "M9.post_release",
     "title": "Stable Product Operations & Maintenance",
-    "status": "ready",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260925-0089-003",
-    "latest_hosted_validation_attempt_id": "A-20260925-0089-003",
-    "work_branch": null,
+    "status": "validation_green",
+    "active_change": "CR-0090",
+    "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
+    "latest_attempt_id": "A-20260925-0090-001",
+    "latest_hosted_validation_attempt_id": "A-20260925-0090-001",
+    "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36130745870,
-      "head": "7a3af64de5c3bb447ffd525896ec45e1acbab28e",
-      "scope": "CR-0089 merged to canonical main and main run #2990 passed deterministic tests plus formal release integrity with M4 methodology and Outcome Engine freezes intact. PR #80 exact ready-to-merge head had already passed 30/30 hosted real-A-share 1D/60m/15m recognition acceptance."
+      "workflow_run": 36163533018,
+      "head": "0d193843f5600514cca874eff1f726586a9f1d78",
+      "scope": "CR-0090 Gate 0 correctness baseline green. Controlled clean XABCD authoritative 10/10 exact; 100 minor-swing stress cases all failed legacy at candidate_window_missing while experimental bounded graph with unchanged canonical classifier recovered 100/100 exact; graph hard-negative false positives 0/10; event-sourced streaming regression preserves a first-knowable geometry that final-history pivot collapse can erase."
     }
   },
   "private_m1": {
@@ -57,15 +57,20 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Stable v1.0.0 Operations & Practical Recognition Use",
-    "status": "ready",
-    "blocked_until": [],
+    "title": "CR-0090 Recognition Trustworthiness",
+    "status": "validation_green",
+    "blocked_until": [
+      "randomized/adversarial graph precision-recall stress",
+      "batch streaming/future-tail invariance",
+      "synthetic-in-real A-share noise benchmark",
+      "blind holdout before production integration"
+    ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Use the integrated production recognition engine in normal research. Open a new Change only for concrete recognition mismatches found in real use; do not reopen CR-0089 by default."
+    "objective": "Validate the bounded graph detector beyond controlled Gate 0 before any production integration. Keep Carney identity, Source Raw PRZ, M4 methodology and Outcome Engine frozen."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -90,6 +95,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-post-release-recognition-trustworthiness-v1.md",
     "specs/m9-post-release-production-recognition-acceptance-v1.md",
     "specs/m9-post-release-recognition-recall-v1.md",
     "specs/m9-post-release-chart-workspace-v3.md",
