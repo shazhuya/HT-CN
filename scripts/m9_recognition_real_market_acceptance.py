@@ -89,6 +89,7 @@ def _scan_record(
     adjustment: str,
     frame: pd.DataFrame,
     time_column: str,
+    expected_completed_trade_date: date,
 ) -> dict[str, Any]:
     selected = frame.tail(MAX_SCAN_BARS[timeframe]).reset_index(drop=True)
     scan = scan_pine_r34(selected)
@@ -103,6 +104,8 @@ def _scan_record(
     monitoring_standard = sum(not item.research_only for item in monitoring)
     monitoring_research = sum(item.research_only for item in monitoring)
     monitoring_observable = sum(item.observable for item in monitoring)
+    last_bar_stamp = pd.Timestamp(selected[time_column].iloc[-1])
+    last_bar_trade_date = last_bar_stamp.date()
     return {
         "instrument_id": instrument_id,
         "name": name,
@@ -114,7 +117,12 @@ def _scan_record(
         "rows_available": len(frame),
         "rows_scanned": len(selected),
         "first_bar": str(pd.Timestamp(selected[time_column].iloc[0])),
-        "last_bar": str(pd.Timestamp(selected[time_column].iloc[-1])),
+        "last_bar": str(last_bar_stamp),
+        "last_bar_trade_date": last_bar_trade_date.isoformat(),
+        "expected_completed_trade_date": expected_completed_trade_date.isoformat(),
+        "fresh_for_completed_session": (
+            last_bar_trade_date >= expected_completed_trade_date
+        ),
         "ohlcv_sha256": _frame_digest(selected, time_column=time_column),
         "historical_birth_count": sum(born_counts.values()),
         "born_counts": born_counts,
@@ -226,6 +234,30 @@ def _failure_record(
     }
 
 
+def _expected_completed_trade_date(
+    provider: BaoStockProvider,
+    now: datetime,
+) -> date:
+    calendar = sorted(
+        provider.get_trade_calendar(
+            (now - timedelta(days=20)).date(),
+            now.date(),
+        )
+    )
+    if not calendar:
+        raise RuntimeError("trading calendar returned no recent sessions")
+    today = now.date()
+    today_is_trading = today in calendar
+    # Daily data is considered complete only after the cash session has closed
+    # and providers have had a small publication buffer.
+    if today_is_trading and (now.hour, now.minute) < (15, 10):
+        prior = [value for value in calendar if value < today]
+        if not prior:
+            raise RuntimeError("no prior completed trading session in calendar")
+        return prior[-1]
+    return max(value for value in calendar if value <= today)
+
+
 def build_report() -> dict[str, Any]:
     shanghai = ZoneInfo("Asia/Shanghai")
     now = datetime.now(tz=shanghai)
@@ -235,6 +267,10 @@ def build_report() -> dict[str, Any]:
 
     daily_provider = AkShareProvider()
     daily_fallback = BaoStockProvider()
+    expected_completed_trade_date = _expected_completed_trade_date(
+        daily_fallback,
+        now,
+    )
     intraday_provider = AkShareIntradayProvider()
     series: list[dict[str, Any]] = []
 
@@ -261,6 +297,7 @@ def build_report() -> dict[str, Any]:
                     adjustment="qfq",
                     frame=daily,
                     time_column="trade_date",
+                    expected_completed_trade_date=expected_completed_trade_date,
                 )
             )
         except Exception as exc:  # noqa: BLE001 - acceptance must record provider failures
@@ -298,6 +335,7 @@ def build_report() -> dict[str, Any]:
                         adjustment=market.adjustment,
                         frame=market.frame,
                         time_column="trade_time",
+                        expected_completed_trade_date=expected_completed_trade_date,
                     )
                 )
             except Exception as exc:  # noqa: BLE001 - acceptance must record provider failures
@@ -313,6 +351,11 @@ def build_report() -> dict[str, Any]:
 
     successful = [row for row in series if row["status"] == "ok"]
     failed = [row for row in series if row["status"] != "ok"]
+    stale = [
+        row
+        for row in successful
+        if row.get("fresh_for_completed_session") is not True
+    ]
     by_timeframe: dict[str, dict[str, Any]] = {}
     for timeframe in TIMEFRAMES:
         scoped = [row for row in series if row["timeframe"] == timeframe]
@@ -373,6 +416,7 @@ def build_report() -> dict[str, Any]:
         "daily_coverage": by_timeframe["1d"]["coverage_ratio"] >= 0.7,
         "60m_coverage": by_timeframe["60m"]["coverage_ratio"] >= 0.7,
         "15m_coverage": by_timeframe["15m"]["coverage_ratio"] >= 0.7,
+        "completed_session_data_is_fresh": not stale,
         "recognition_not_near_zero": total_births >= max(20, len(successful)),
         "standard_family_output_exists": total_standard >= max(5, len(successful) // 3),
         "family_diversity": len(family_set) >= 3,
@@ -399,6 +443,8 @@ def build_report() -> dict[str, Any]:
         "acceptance_id": "m9-cr0089-real-market-recognition-v1",
         "status": status,
         "generated_at": now.isoformat(),
+        "expected_completed_trade_date": expected_completed_trade_date.isoformat(),
+        "stale_series": len(stale),
         "pine_r34_source_sha256": PINE_R34_SOURCE_SHA256,
         "corpus_size": len(CORPUS),
         "requested_series": len(series),
