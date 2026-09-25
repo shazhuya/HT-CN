@@ -1,6 +1,6 @@
 # M9 post-release — Harmonic recognition recall v1
 
-status: implementing
+status: planned
 
 ## Problem statement
 
