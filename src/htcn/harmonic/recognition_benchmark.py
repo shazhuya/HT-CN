@@ -317,7 +317,7 @@ def streaming_graph_completed_predictions(
     """
 
     born: dict[tuple[str, str, tuple[int, ...]], RecognitionPrediction] = {}
-    for scale in sorted(set(int(value) for value in scales)):
+    for scale in sorted({int(value) for value in scales}):
         events = detect_pivot_events(
             frame,
             left=scale,
