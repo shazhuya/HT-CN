@@ -17,6 +17,7 @@ import './HarmonicChartLifecycle.css'
 export type Bar = {
   index: number
   trade_date: string
+  time?: number
   open: number
   high: number
   low: number
@@ -145,8 +146,10 @@ export type SourceLifecycle = {
 }
 
 export type DiscoveryMetadata = {
+  source?: 'pine_r34' | 'extended_graph'
+  behavioral_baseline?: boolean
   authoritative_identity: boolean
-  path_kind: 'consecutive' | 'minor_swing_skip'
+  path_kind: 'consecutive' | 'minor_swing_skip' | 'pine_r34'
   skipped_pivots: number
   known_from_bar: number
   prz_status: 'projected' | 'tested'
@@ -155,6 +158,12 @@ export type DiscoveryMetadata = {
   c_family_relative_error: number | null
   source_family_aligned: boolean
   distance_to_source_prz_xa: number
+  research_only?: boolean
+  qualified?: boolean
+  precise?: boolean
+  projected_label?: string
+  structural_limit?: number
+  pine_source_sha256?: string
   mutates_source_identity: boolean
   owns_lifecycle: boolean
   fabricates_d: boolean
@@ -162,7 +171,7 @@ export type DiscoveryMetadata = {
 
 export type Pattern = {
   pattern_id: string
-  schema?: 'XABCD' | 'ABCD' | '0XABC' | 'FIVE_ZERO'
+  schema?: 'XABCD' | 'ABCD' | '0XABC' | '0XABCD' | 'FIVE_ZERO'
   direction: 'bullish' | 'bearish'
   state: 'forming' | 'completed'
   scale: number
@@ -349,6 +358,10 @@ function pointTradeDate(point: HarmonicPoint, bars: Bar[]): string | null {
   return bars.find((bar) => bar.index === point.index)?.trade_date ?? null
 }
 
+function barChartTime(bar: Bar): Time {
+  return (bar.time ?? bar.trade_date) as Time
+}
+
 function timeKey(time: Time | undefined): string | null {
   if (time == null) return null
   if (typeof time === 'string') return time
@@ -478,7 +491,9 @@ export default function HarmonicChart({
         publishCrosshair(null)
         return
       }
-      const bar = barsRef.current.find((item) => item.trade_date === key)
+      const bar = typeof param.time === 'number'
+        ? barsRef.current.find((item) => item.time === param.time)
+        : barsRef.current.find((item) => item.trade_date === key)
       if (!bar) {
         publishCrosshair(null)
         return
@@ -497,7 +512,7 @@ export default function HarmonicChart({
         : []
 
       publishCrosshair({
-        tradeDate: key,
+        tradeDate: bar.trade_date,
         open: Number(raw.open),
         high: Number(raw.high),
         low: Number(raw.low),
@@ -540,7 +555,7 @@ export default function HarmonicChart({
     const series = seriesRef.current
     if (!series) return
     const data: CandlestickData<Time>[] = bars.map((bar) => ({
-      time: bar.trade_date as Time,
+      time: barChartTime(bar),
       open: bar.open,
       high: bar.high,
       low: bar.low,
@@ -578,7 +593,7 @@ export default function HarmonicChart({
     const xForIndex = (index: number) => {
       const bar = byIndex.get(index)
       if (!bar) return null
-      return chart.timeScale().timeToCoordinate(bar.trade_date as Time)
+      return chart.timeScale().timeToCoordinate(barChartTime(bar))
     }
     const yForPrice = (price: number) => series.priceToCoordinate(price)
     const coordinate = (index: number, price: number) => {
