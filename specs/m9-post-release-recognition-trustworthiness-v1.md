@@ -123,3 +123,25 @@ The controlled result isolates candidate generation:
 
 This is sufficient to reject the consecutive-five-pivot candidate assumption as the sole production
 completed-XABCD path. It is not sufficient to promote the experimental graph to production.
+
+
+## Gate 1 evidence — adversarial graph depth and time-of-knowledge
+
+Hosted run `36166500765` / artifact `10878190860` validated the deterministic
+`recognition-adversarial-gate1-v1` corpus
+(`d1ca728306758a2ee2daf9bb1e4ec2e43cdf243ea034ce58ad7e56cd91cb8490`).
+
+Observed:
+- skip=4 recovers all one- and two-minor-pair cases but 0/40 three-pair cases;
+- skip=6 recovers 120/120 primary structures exactly with node MAE 0;
+- 30 independent invalid-B/C/D clean negatives remain fully rejected;
+- multi-scale S3/S5/S8 does not increase candidate count on this controlled corpus;
+- a single additional candidate in a positive frame is itself canonical-valid nested geometry, so
+  one-primary-truth precision is not a valid semantic FP estimate for contaminated positive paths;
+- forced same-kind future replacement makes final-history collapse erase 24/24 earlier patterns,
+  while event-sourced streaming preserves 24/24 with zero confirmed-history mutation.
+
+Decision:
+- Candidate Graph and Event-Sourced Recognition are mandatory for Detector V2;
+- skip=6 remains experimental until synthetic-in-real + blind/full-label precision gates pass;
+- canonical Carney identity and Source Raw PRZ remain frozen.
