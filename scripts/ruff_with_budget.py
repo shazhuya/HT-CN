@@ -54,6 +54,17 @@ def main() -> int:
         counts = Counter(str(row.get("code") or "UNKNOWN") for row in rows)
         summary = ", ".join(f"{code}={count}" for code, count in counts.most_common(12))
         print(f"[HT-CN QUALITY] top violations: {summary}", file=sys.stderr)
+        for row in rows[:20]:
+            location = row.get("location") or {}
+            filename = row.get("filename") or "<unknown>"
+            code = row.get("code") or "UNKNOWN"
+            message = row.get("message") or ""
+            row_number = location.get("row") or "?"
+            column = location.get("column") or "?"
+            print(
+                f"[HT-CN QUALITY] {filename}:{row_number}:{column} {code} {message}",
+                file=sys.stderr,
+            )
         print(
             "[HT-CN QUALITY] FATAL: lint debt increased; fix new violations or record an "
             "explicit CR before changing the baseline",
