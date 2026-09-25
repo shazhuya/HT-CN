@@ -145,6 +145,34 @@ export type SourceLifecycle = {
   retrospective_geometry_clock_used: boolean
 }
 
+export type R35NeighborhoodMetadata = {
+  source: 'pine_r35'
+  pine_source_sha256: string
+  state: number
+  pad: number
+  zone_low: number
+  zone_high: number
+  born_bar: number | null
+  first_extreme: number | null
+  first_bar: number | null
+  response_bar: number | null
+  response_price: number | null
+  reaction_peak: number | null
+  away: boolean
+  away_bar: number | null
+  second_bar: number | null
+  second_extreme: number | null
+  second_response_bar: number | null
+  second_response_price: number | null
+  reason: string
+  strict_takeover: boolean
+  strict_prz_expanded: false
+  creates_tbar: false
+  creates_type_i: false
+  creates_type_ii: false
+  creates_trade_plan: false
+}
+
 export type DiscoveryMetadata = {
   source?: 'pine_r34' | 'extended_graph'
   behavioral_baseline?: boolean
@@ -164,6 +192,7 @@ export type DiscoveryMetadata = {
   observable?: boolean
   monitoring_rank?: number | null
   recently_tested?: boolean
+  neighborhood?: R35NeighborhoodMetadata | null
   projected_label?: string
   structural_limit?: number
   pine_source_sha256?: string
@@ -679,6 +708,25 @@ export default function HarmonicChart({
         envelope?.price_high ?? pattern.prz.component_price_high,
         patternEndIndex,
         'overlay-zone component-envelope',
+      )
+    }
+
+    const neighborhood = pattern.discovery?.source === 'pine_r34'
+      ? pattern.discovery.neighborhood
+      : null
+    if (
+      neighborhood
+      && neighborhood.state > 0
+      && neighborhood.state < 5
+      && !neighborhood.strict_takeover
+    ) {
+      addZone(
+        'r35_neighborhood',
+        'R3.5 邻域 · 非严格PRZ',
+        neighborhood.zone_low,
+        neighborhood.zone_high,
+        neighborhood.born_bar ?? patternEndIndex,
+        'overlay-zone r35-neighborhood',
       )
     }
 
