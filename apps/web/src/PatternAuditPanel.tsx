@@ -20,7 +20,7 @@ function patternName(id: string) {
   return PATTERN_NAMES[id] ?? id
 }
 
-function fmt(value: number | undefined) {
+function fmt(value: number | null | undefined) {
   return value == null ? '—' : value.toFixed(3)
 }
 
