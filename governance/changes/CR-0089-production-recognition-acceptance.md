@@ -1,6 +1,6 @@
 # CR-0089 — Production recognition acceptance and Pine R3.4 parity
 
-status: planned
+status: validation_green
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: d795773f20956021878f812cdbf6c49e491edb86
@@ -54,3 +54,14 @@ This Change must not close merely because CI compiles.
 ## User-computer boundary
 
 Routine development, data acquisition, parity testing and CI must run in hosted/cloud infrastructure. The user's Windows machine is not an acceptance dependency. A user-side TradingView export may be requested only if a TradingView-private output cannot be reproduced from the retained Pine R3.4 source and matched OHLC.
+
+
+## Validation history
+
+### A-20260925-0089-001 — planned candidate hosted validation
+
+- head: `bb45ff25a0c112cf0b092c102b22b29a34b4561e`
+- workflow: `36107602296 / #2918`
+- result: success
+- covered: Project OS, Source Coverage, zero-debt Ruff, full Python suite including new Pine R3.4 and intraday provider tests, continuation bundle build, Node/Web production build.
+- interpretation: sufficient to activate this Change; **not** sufficient to close it. Real A-share acceptance, targeted browser acceptance and final frozen release gates remain required.
