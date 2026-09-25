@@ -462,3 +462,24 @@ def test_r34_precise_abcd_full_scan_keeps_two_measurement_convergence():
     assert candidate.m2 == pytest.approx(69.1)
     assert candidate.prz_low == pytest.approx(69.1)
     assert candidate.prz_high == pytest.approx(70.0)
+
+
+
+def test_r34_retains_confirmed_pivots_before_atr_seed_is_ready():
+    frame = _piecewise_frame(
+        [(5, 100.0), (15, 200.0), (25, 138.2), (35, 183.2), (55, 160.0)],
+        rows=60,
+    )
+
+    scan = scan_pine_r34(frame, scales=(2,), atr_length=14)
+    pivots = scan.pivots_by_scale[2]
+
+    assert any(
+        pivot.index == 5 and pivot.confirmed_at == 7 and pivot.kind == -1
+        for pivot in pivots
+    )
+    assert any(
+        item.pattern_id == "gartley"
+        and item.conflict_key == (5, 15, 25, 35)
+        for item in scan.candidates
+    )
