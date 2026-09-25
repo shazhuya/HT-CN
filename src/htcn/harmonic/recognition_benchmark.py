@@ -8,6 +8,7 @@ from typing import Literal
 import pandas as pd
 
 from .candidates import iter_completed_xabcd_windows
+from .discovery import iter_discovery_xabcd_windows
 from .engine import scan_frame
 from .models import PatternDirection, PivotKind
 from .pivots import detect_multi_scale_pivots
@@ -249,6 +250,51 @@ def authoritative_predictions(
         )
         for item in scan.completed
     )
+
+
+def graph_completed_predictions(
+    frame: pd.DataFrame,
+    *,
+    scales: tuple[int, ...],
+    recent_pivots: int = 20,
+    max_total_skips: int = 4,
+) -> tuple[RecognitionPrediction, ...]:
+    """Experimental completed-XABCD predictions using bounded graph candidate generation.
+
+    The classifier remains the canonical source-cleared classifier. Only candidate selection
+    differs from production so benchmark deltas can isolate the consecutive-window bottleneck.
+    """
+
+    pivots_by_scale = detect_multi_scale_pivots(frame, scales=scales)
+    predictions: list[RecognitionPrediction] = []
+    seen: set[tuple[str, str, tuple[int, ...]]] = set()
+    for scale, pivots in pivots_by_scale.items():
+        for candidate in iter_discovery_xabcd_windows(
+            pivots,
+            recent_pivots=recent_pivots,
+            max_total_skips=max_total_skips,
+        ):
+            window = candidate.window
+            points = window.harmonic_points()
+            nodes = tuple(int(point.index) for point in points)
+            for evaluation in classify_completed_xabcd(window):
+                key = (evaluation.pattern_id, evaluation.direction.value, nodes)
+                if key in seen:
+                    continue
+                seen.add(key)
+                predictions.append(
+                    RecognitionPrediction(
+                        prediction_id=(
+                            f"graph:{evaluation.pattern_id}:{evaluation.direction.value}:"
+                            f"S{scale}:" + "-".join(str(value) for value in nodes)
+                        ),
+                        pattern_id=evaluation.pattern_id,
+                        direction=evaluation.direction.value,
+                        labels=tuple(point.label for point in points),
+                        node_indices=nodes,
+                    )
+                )
+    return tuple(predictions)
 
 
 def diagnose_authoritative_truth(
