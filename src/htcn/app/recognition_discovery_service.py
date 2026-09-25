@@ -237,6 +237,7 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
         *,
         max_discovery: int,
         include_extended_graph: bool = True,
+        max_extended_graph: int = 12,
     ) -> dict[str, Any]:
         if frame.empty:
             analysis["discovery"] = []
@@ -307,6 +308,12 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
                 )
                 for payload in pine_items
             }
+            graph_candidates = [
+                item
+                for item in graph_scan.candidates
+                if (item.pattern_id, item.conflict_key) not in authoritative_keys
+                and (item.pattern_id, item.conflict_key) not in pine_keys
+            ]
             graph_items = [
                 self._graph_discovery_payload(
                     item,
@@ -314,11 +321,14 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
                     graph_pivots,
                     graph_scan.pivot_consensus,
                 )
-                for item in graph_scan.candidates
-                if (item.pattern_id, item.conflict_key) not in authoritative_keys
-                and (item.pattern_id, item.conflict_key) not in pine_keys
+                for item in graph_candidates[:max_extended_graph]
             ]
-            graph_diagnostics = graph_scan.diagnostics
+            graph_diagnostics = {
+                **graph_scan.diagnostics,
+                "eligible_candidates": len(graph_candidates),
+                "published_candidates": len(graph_items),
+                "hidden_candidates": max(0, len(graph_candidates) - len(graph_items)),
+            }
 
         discovery = [*pine_items, *graph_items][:max_discovery]
         analysis["discovery"] = discovery
@@ -343,7 +353,7 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
     def analyze(
         self,
         *args,
-        max_discovery: int = 80,
+        max_discovery: int = 24,
         **kwargs,
     ) -> dict[str, Any]:
         analysis = super().analyze(*args, **kwargs)
@@ -434,7 +444,7 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
         *,
         timeframe: str,
         bars: int = 720,
-        max_discovery: int = 80,
+        max_discovery: int = 24,
         force_refresh: bool = False,
     ) -> dict[str, Any]:
         if timeframe not in SUPPORTED_INTRADAY_TIMEFRAMES:
