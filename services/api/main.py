@@ -37,6 +37,7 @@ from htcn.app.operator_snapshot import (
 )
 from htcn.app.product_supervisor import read_product_supervisor_status
 from htcn.app.recognition_discovery_service import RecognitionDiscoveryService
+from htcn.data.intraday import IntradayProviderError, SUPPORTED_INTRADAY_TIMEFRAMES
 from htcn.app.review_followup_journal import (
     REVIEW_STATES,
     append_review_event,
@@ -442,25 +443,44 @@ def harmonic_analysis(
     instrument_id: str,
     bars: int = Query(default=420, ge=80, le=3000),
     scales: str = Query(default="3,5,8,13"),
+    timeframe: str = Query(default="1d"),
+    force_refresh: bool = Query(default=False),
 ) -> dict[str, object]:
+    normalized_timeframe = timeframe.strip().lower()
+    supported = {"1d", *SUPPORTED_INTRADAY_TIMEFRAMES}
+    if normalized_timeframe not in supported:
+        raise HTTPException(
+            status_code=400,
+            detail=f"timeframe must be one of {sorted(supported)}",
+        )
     try:
         parsed_scales = tuple(sorted({int(value.strip()) for value in scales.split(",") if value.strip()}))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail="scales must be comma-separated integers") from exc
     try:
-        analysis = service.analyze(instrument_id, bars=bars, scales=parsed_scales)
-        # M2.23 stays outside the static completed-pattern identity payload. Rebuild the exact
-        # selected continuous OHLC window from the service response, replay source-visible forming
-        # projections, then attach a separate Terminal-Bar/T+5 evidence stream.
-        analysis_frame = pd.DataFrame(analysis.get("bars") or [])
-        analysis["type_i_t5_events"] = build_type_i_t5_events(
-            analysis_frame,
-            instrument_id=instrument_id,
-            scales=parsed_scales,
-            max_events=12,
-        )
+        if normalized_timeframe == "1d":
+            analysis = service.analyze(instrument_id, bars=bars, scales=parsed_scales)
+            # M2.23 stays outside the static completed-pattern identity payload. Rebuild the exact
+            # selected continuous OHLC window from the service response, replay source-visible forming
+            # projections, then attach a separate Terminal-Bar/T+5 evidence stream.
+            analysis_frame = pd.DataFrame(analysis.get("bars") or [])
+            analysis["type_i_t5_events"] = build_type_i_t5_events(
+                analysis_frame,
+                instrument_id=instrument_id,
+                scales=parsed_scales,
+                max_events=12,
+            )
+        else:
+            analysis = service.analyze_intraday(
+                instrument_id,
+                timeframe=normalized_timeframe,
+                bars=bars,
+                force_refresh=force_refresh,
+            )
         return analysis
     except DatasetNotFoundError as exc:
         raise HTTPException(status_code=404, detail=f"local dataset not found: {instrument_id}") from exc
+    except IntradayProviderError as exc:
+        raise HTTPException(status_code=503, detail=f"intraday data unavailable: {exc}") from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
