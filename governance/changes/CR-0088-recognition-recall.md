@@ -29,3 +29,15 @@ Do not modify Source Raw PRZ definitions, CARNEY_RULES canonical identity, M4 fr
 ## Acceptance
 
 See `specs/m9-post-release-recognition-recall-v1.md`. Require deterministic Python tests for graph/path discovery, persistence, no-lookahead PRZ testing and strict-channel separation; API contract tests; browser tests proving discovery candidates render and are visibly labelled; full Project OS / Source Coverage / Python / Web / browser / Phase18 / Phase21 / M4 37/37 / Outcome 4/4 / Stable gates in hosted CI.
+
+## Absorbed prior CR-0088 audit evidence
+
+The earlier research-only branch `m9/recognition-recall-audit` / draft PR #78 is incorporated as evidence, not as a competing implementation. It replayed two overlapping real 688256 **daily** OHLC datasets and found:
+
+- 140-bar sample: production S3/5/8/13 produced zero standard XABCD completed and zero current XABCD forming; raw/adjusted bases were audited separately.
+- 244-bar sample: production S3/5/8/13 again produced zero standard completed and zero current forming XABCD; diagnostic S2 exposed three historical strict XABC windows, none current.
+- On the 140-bar raw sample, 40 historical XABC windows yielded 18 B-band pairs, 5 B+C structural-band pairs, and 0 candidates surviving the operational C-family ±3% gate. The closest non-quarantined case was a Butterfly prefix with C/AB≈0.848, about 4.3% from 0.886.
+- A source-shaped exact Gartley completed fixture accepts exact D/XA=0.786 while a 0.01 price-unit D movement can reject canonical completion. This demonstrates why a nearby/discovery channel must remain separate from authoritative identity rather than relaxing Source identity by score.
+- The user's TradingView comparison screenshot is **1-hour**, while the audited repository product path is daily. Exact hourly Pine parity remains unverified until full same-timeframe OHLC and price-basis settings are available. This implementation must not claim that daily evidence proves hourly parity.
+
+This Change therefore repairs the product's discovery/existence gate now, while retaining same-timeframe Pine parity as an explicit follow-up acceptance boundary rather than fabricating evidence.
