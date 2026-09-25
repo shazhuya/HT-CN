@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
 PINE_R35_SOURCE_SHA256 = "8bc49dc1ac2d0e6b829968aea0e72450c413bb0a0d8c1b1f6eabef57061ad68f"
 PINE_R35_NEIGHBORHOOD_ATR = 0.25
 PINE_R35_NEIGHBORHOOD_PCT = 0.5
