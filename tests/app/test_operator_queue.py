@@ -87,6 +87,49 @@ def _discovery_pattern() -> dict:
     }
 
 
+def _pine_discovery_pattern(
+    *,
+    pattern_id: str = "abcd",
+    distance_atr: float = 0.8,
+    research_only: bool = False,
+    qualified: bool = True,
+    last_index: int = 30,
+) -> dict:
+    return {
+        "pattern_id": pattern_id,
+        "schema": "ABCD" if pattern_id.startswith("abcd") else "0XABC",
+        "direction": "bullish",
+        "scale": 5,
+        "state": "forming",
+        "channel": "discovery",
+        "discovery_only": True,
+        "is_primary_identity": True,
+        "points": [
+            {"index": last_index - 20, "trade_date": "2026-09-10"},
+            {"index": last_index - 10, "trade_date": "2026-09-11"},
+            {"index": last_index, "trade_date": "2026-09-14"},
+        ],
+        "prz": {
+            "price_low": 86.18,
+            "price_high": 87.02,
+            "width": 0.84,
+            "components": [],
+        },
+        "metrics": {"distance_to_prz_atr": distance_atr},
+        "discovery": {
+            "source": "pine_r34",
+            "behavioral_baseline": True,
+            "prz_status": "projected",
+            "path_kind": "pine_r34",
+            "projected_label": "D",
+            "research_only": research_only,
+            "qualified": qualified,
+            "authoritative_identity": False,
+            "fabricates_d": False,
+            "owns_lifecycle": False,
+        },
+    }
+
 class FakeService:
     def __init__(self, payloads: dict[str, dict]) -> None:
         self.payloads = payloads
