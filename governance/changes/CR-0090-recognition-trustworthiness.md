@@ -2,7 +2,8 @@
 
 status: validation_green
 baseline_ref: main
-baseline_head: 04aa35737f7d58c2ab12bca62ba536c3970ce9ef
+baseline_head: 9e228d204082fe19d169e099da16ade11adac658
+implementation_baseline_head: 04aa35737f7d58c2ab12bca62ba536c3970ce9ef
 target: main
 milestone: M9.post_release
 work_branch: m9/recognition-trustworthiness-v1
