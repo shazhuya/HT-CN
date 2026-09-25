@@ -5,6 +5,7 @@ const discoveryItem = {
   instrument_id: 'SSE.688256',
   last_trade_date: '2026-09-24',
   price_mode: 'qfq',
+  timeframe: '1d',
   warning: null,
   pattern_id: 'gartley',
   schema: 'XABCD',
@@ -20,8 +21,8 @@ const discoveryItem = {
   first_watch: '先观察投影 Source PRZ；不得虚构 D 或 Source Terminal。',
   next_watch: '只有权威 identity / Source Clock 成立后才进入正式生命周期。',
   upgrade_blocker: 'Discovery 不是 canonical identity，不能用排名或评分升级。',
-  next_key_price: null,
-  next_key_price_role: null,
+  next_key_price: 104.6,
+  next_key_price_role: 'Source PRZ首触边界',
   execution_context_gate: 'discovery_only',
   context_cautions: ['minor_swing_skip'],
   source_prz_low: 104.0,
@@ -82,9 +83,10 @@ test('opportunity discovery visibly separates discovery-only candidates from Sou
 
   const queue = page.getByLabel('operator-queue')
   await expect(queue.getByRole('heading', { name: '证据不足' })).toBeVisible()
-  await expect(queue.getByText('Gartley · S10 · 发现候选 · 看涨')).toBeVisible()
+  await expect(queue.getByText('Gartley · S10 · 日线 · 发现候选 · 看涨')).toBeVisible()
   await expect(queue.getByText('发现候选', { exact: true })).toBeVisible()
   await expect(queue.getByText(/尚未进入权威 Source 生命周期/)).toBeVisible()
   await expect(queue.getByText(/不是低质量或收益率排名/)).toBeVisible()
-  await expect(queue.getByText('—', { exact: true }).first()).toBeVisible()
+  await expect(queue.getByText('104.60', { exact: true })).toBeVisible()
+  await expect(queue.getByText('Source PRZ首触边界', { exact: true })).toBeVisible()
 })
