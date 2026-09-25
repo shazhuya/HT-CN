@@ -9,12 +9,12 @@ import pandas as pd
 
 from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
 from htcn.data.intraday import (
+    SUPPORTED_INTRADAY_TIMEFRAMES,
     AkShareIntradayProvider,
     IntradayBars,
     IntradayProvider,
     IntradayProviderError,
     ParquetIntradayCache,
-    SUPPORTED_INTRADAY_TIMEFRAMES,
 )
 from htcn.harmonic.discovery import (
     DISCOVERY_SCALES,
