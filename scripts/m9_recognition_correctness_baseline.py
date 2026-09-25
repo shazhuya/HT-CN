@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict
-from itertools import pairwise
+from itertools import combinations, pairwise
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +21,7 @@ from htcn.harmonic.recognition_benchmark import (
 )
 
 REPORT_PATH = Path("artifacts/reports/m9-recognition-correctness-baseline.json")
-CORPUS_ID = "recognition-correctness-gate0-v2"
+CORPUS_ID = "recognition-correctness-gate0-v3"
 SCALES = (3,)
 
 STANDARD_XABCD = {
@@ -106,6 +106,81 @@ def _render_minor_swing_xabcd(
         (130, last_guard),
     ]
     return _render_path(anchors, rows=131), node_indices
+
+
+def _render_contaminated_xabcd(
+    prices: tuple[float, ...],
+    *,
+    contaminated_legs: tuple[str, ...],
+) -> tuple[pd.DataFrame, tuple[int, ...]]:
+    """Render the same major XABCD with bounded minor pairs on selected legs."""
+
+    labels = ("X", "A", "B", "C", "D")
+    node_indices = (20, 80, 140, 200, 260)
+    leg_names = ("XA", "AB", "BC", "CD")
+    points = dict(zip(labels, prices, strict=True))
+    indices = dict(zip(labels, node_indices, strict=True))
+    anchors: list[tuple[int, float]] = []
+
+    x, a, _, c, d = prices
+    first_guard = x + (1.0 if a > x else -1.0) * abs(a - x) * 0.2
+    last_guard = d - (1.0 if d > c else -1.0) * abs(d - c) * 0.2
+    anchors.append((0, first_guard))
+    anchors.append((node_indices[0], x))
+
+    for leg_name, left_label, right_label in zip(
+        leg_names,
+        labels,
+        labels[1:],
+        strict=True,
+    ):
+        left_i = indices[left_label]
+        right_i = indices[right_label]
+        left_p = points[left_label]
+        right_p = points[right_label]
+        if leg_name in contaminated_legs:
+            direction = 1.0 if right_p > left_p else -1.0
+            span = abs(right_p - left_p)
+            anchors.extend(
+                [
+                    (left_i + 20, left_p + direction * span * 0.45),
+                    (left_i + 40, left_p + direction * span * 0.28),
+                ]
+            )
+        anchors.append((right_i, right_p))
+
+    anchors.append((300, last_guard))
+    return _render_path(anchors, rows=301), node_indices
+
+
+def _minor_swing_matrix_cases():
+    leg_names = ("XA", "AB", "BC", "CD")
+    contamination_sets = [
+        (leg,)
+        for leg in leg_names
+    ] + list(combinations(leg_names, 2))
+    for pattern_id, prices in STANDARD_XABCD.items():
+        for direction, oriented in (
+            ("bullish", prices),
+            ("bearish", _mirror(prices)),
+        ):
+            for contaminated_legs in contamination_sets:
+                frame, indices = _render_contaminated_xabcd(
+                    oriented,
+                    contaminated_legs=tuple(contaminated_legs),
+                )
+                leg_key = "+".join(contaminated_legs)
+                yield (
+                    _truth(
+                        case_id=(
+                            f"minor_matrix:{leg_key}:{pattern_id}:{direction}"
+                        ),
+                        pattern_id=pattern_id,
+                        direction=direction,
+                        indices=indices,
+                    ),
+                    frame,
+                )
 
 
 def _render_hard_negative(
@@ -408,9 +483,11 @@ def build_report() -> dict[str, Any]:
     clean = list(_positive_cases("clean"))
     minor = list(_positive_cases("minor_swing"))
     negatives = list(_hard_negative_cases())
+    minor_matrix = list(_minor_swing_matrix_cases())
     groups = [
         ("clean_positive", clean),
         ("minor_swing_positive", minor),
+        ("minor_swing_matrix", minor_matrix),
         ("hard_negative", negatives),
     ]
     return {
@@ -421,6 +498,7 @@ def build_report() -> dict[str, Any]:
             "clean_positive_cases": len(clean),
             "minor_swing_positive_cases": len(minor),
             "hard_negative_cases": len(negatives),
+            "minor_swing_matrix_cases": len(minor_matrix),
             "standard_patterns": sorted(STANDARD_XABCD),
             "directions": ["bullish", "bearish"],
             "pivot_scales": list(SCALES),
@@ -435,6 +513,11 @@ def build_report() -> dict[str, Any]:
         "authoritative_clean_completed_xabcd": _completed_metrics(clean),
         "authoritative_minor_swing_completed_xabcd": _completed_metrics(minor),
         "authoritative_hard_negative": _hard_negative_metrics(negatives),
+        "authoritative_minor_swing_matrix": _completed_metrics(minor_matrix),
+        "graph_minor_swing_matrix": _completed_metrics(
+            minor_matrix,
+            graph_completed_predictions,
+        ),
         "graph_clean_completed_xabcd": _completed_metrics(
             clean,
             graph_completed_predictions,
