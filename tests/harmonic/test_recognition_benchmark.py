@@ -9,6 +9,7 @@ from htcn.harmonic.recognition_benchmark import (
     graph_completed_predictions,
     match_predictions,
     score_predictions,
+    streaming_graph_completed_predictions,
 )
 
 
@@ -186,3 +187,75 @@ def test_completed_graph_recovers_major_gartley_across_minor_swing_pair() -> Non
     assert metrics.true_positive == 1
     assert metrics.false_negative == 0
     assert metrics.exact_match_count == 1
+
+
+def _future_replacement_frame() -> pd.DataFrame:
+    anchors = [
+        (0, 120.0),
+        (10, 100.0),
+        (30, 200.0),
+        (50, 138.2),
+        (70, 183.2),
+        (90, 121.4),
+        (92, 123.5),
+        (93, 123.0),
+        (97, 118.0),
+        (100, 123.0),
+    ]
+    closes = [0.0] * 101
+    for (left_i, left_p), (right_i, right_p) in pairwise(anchors):
+        for index in range(left_i, right_i + 1):
+            fraction = (index - left_i) / (right_i - left_i)
+            closes[index] = left_p + (right_p - left_p) * fraction
+    return pd.DataFrame(
+        {
+            "open": closes,
+            "high": closes,
+            "low": closes,
+            "close": closes,
+            "volume": [1000.0] * len(closes),
+        }
+    )
+
+
+def test_streaming_graph_preserves_confirmed_pattern_after_future_same_kind_replacement() -> None:
+    full = _future_replacement_frame()
+    prefix = full.iloc[:94].reset_index(drop=True)
+    truth = RecognitionTruth(
+        case_id="future-invariance-gartley",
+        pattern_id="gartley",
+        direction="bullish",
+        labels=("X", "A", "B", "C", "D"),
+        node_indices=(10, 30, 50, 70, 90),
+    )
+
+    prefix_final = score_predictions(
+        [truth],
+        graph_completed_predictions(prefix, scales=(3,)),
+        tolerance_bars=0,
+    )
+    full_final = score_predictions(
+        [truth],
+        graph_completed_predictions(full, scales=(3,)),
+        tolerance_bars=0,
+    )
+    full_streaming_predictions = streaming_graph_completed_predictions(
+        full,
+        scales=(3,),
+    )
+    full_streaming = score_predictions(
+        [truth],
+        full_streaming_predictions,
+        tolerance_bars=0,
+    )
+
+    assert prefix_final.true_positive == 1
+    assert full_final.true_positive == 0
+    assert full_streaming.true_positive == 1
+    matched = next(
+        item
+        for item in full_streaming_predictions
+        if item.pattern_id == "gartley"
+        and item.node_indices == truth.node_indices
+    )
+    assert matched.known_at == 93
