@@ -97,8 +97,12 @@ def _scan_record(
         for key, value in dict(scan.diagnostics.get("born_counts") or {}).items()
     }
     candidates = list(scan.candidates)
+    monitoring = list(scan.monitoring_candidates)
     standard_stored = sum(not item.research_only for item in candidates)
     research_stored = sum(item.research_only for item in candidates)
+    monitoring_standard = sum(not item.research_only for item in monitoring)
+    monitoring_research = sum(item.research_only for item in monitoring)
+    monitoring_observable = sum(item.observable for item in monitoring)
     return {
         "instrument_id": instrument_id,
         "name": name,
