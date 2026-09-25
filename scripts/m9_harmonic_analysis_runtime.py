@@ -18,7 +18,7 @@ from htcn.app.operator_input_identity import build_operator_cache_input_identity
 from htcn.app.operator_process_lock import OperatorCacheProcessLock
 from htcn.app.operator_queue import discover_local_instruments
 from htcn.app.operator_snapshot import latest_local_trade_date
-from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
+from htcn.app.recognition_discovery_service import RecognitionDiscoveryService
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "market"
@@ -88,8 +88,8 @@ def _input_identity():
     )
 
 
-def _service_factory() -> M3SourceClockHarmonicService:
-    return M3SourceClockHarmonicService(DATA_ROOT)
+def _service_factory() -> RecognitionDiscoveryService:
+    return RecognitionDiscoveryService(DATA_ROOT)
 
 
 def _target_trade_date(market_status: dict[str, object]) -> str | None:
