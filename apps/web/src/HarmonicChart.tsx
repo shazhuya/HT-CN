@@ -499,15 +499,16 @@ export default function HarmonicChart({
         return
       }
       const activePattern = patternRef.current
+      const activeTradeDate = bar.trade_date
       const nodes = activePattern
         ? activePattern.points
-          .filter((point) => pointTradeDate(point, barsRef.current) === key)
+          .filter((point) => pointTradeDate(point, barsRef.current) === activeTradeDate)
           .map((point) => point.label)
         : []
       const lifecycle = activePattern?.source_lifecycle
       const lifecycleLabels = lifecycle
         ? sourceEvents(lifecycle)
-          .filter((event) => barsRef.current.find((item) => item.index === event.bar)?.trade_date === key)
+          .filter((event) => barsRef.current.find((item) => item.index === event.bar)?.trade_date === activeTradeDate)
           .map((event) => event.label)
         : []
 
