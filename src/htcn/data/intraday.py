@@ -27,7 +27,7 @@ class IntradayProvider(Protocol):
         start: datetime,
         end: datetime,
         adjust: str = "qfq",
-    ) -> "IntradayBars":
+    ) -> IntradayBars:
         ...
 
 
@@ -230,7 +230,7 @@ class AkShareIntradayProvider:
             if not result.frame.empty:
                 return result
             failures.append("eastmoney returned no rows")
-        except Exception as exc:  # provider/network errors are converted into explicit provenance
+        except Exception as exc:  # noqa: BLE001 - third-party provider boundary must fail over
             failures.append(f"eastmoney: {type(exc).__name__}: {exc}")
 
         try:
@@ -260,7 +260,7 @@ class AkShareIntradayProvider:
                     frame=bounded,
                 )
             failures.append("sina returned no rows in requested range")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - third-party provider boundary must fail over
             failures.append(f"sina: {type(exc).__name__}: {exc}")
 
         raise IntradayProviderError(
