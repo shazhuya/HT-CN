@@ -27,7 +27,7 @@
     "status": "ready_to_merge",
     "active_change": "CR-0088",
     "active_spec": "specs/m9-post-release-recognition-recall-v1.md",
-    "latest_attempt_id": "A-20260925-0088-011",
+    "latest_attempt_id": "A-20260925-0088-012",
     "latest_hosted_validation_attempt_id": "A-20260925-0088-010",
     "work_branch": "m9/post-release-recognition-recall-v1",
     "latest_validation": {
@@ -65,7 +65,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate the exact ready_to_merge head after synchronizing Change/spec metadata, then record a successful hosted attempt, merge PR #79 with ancestry preserved, and validate canonical main. Exact matched 1-hour Pine parity remains a separate unresolved evidence boundary."
+    "objective": "Validate the exact ready_to_merge head after milestone status synchronization, record a successful hosted attempt, merge PR #79 with ancestry preserved, then validate canonical main. Exact matched 1-hour Pine parity remains a separate unresolved evidence boundary."
   },
   "freezes": {
     "m4_capture_methodology": {
