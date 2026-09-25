@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Iterable
+from dataclasses import dataclass
+from itertools import pairwise
 from math import floor, isfinite
-from typing import Iterable
 
 import pandas as pd
 
@@ -373,7 +374,7 @@ def _geometry(
     direction = nodes[-1].kind
     ok = atr > 0
     reason = "前置比例/拓扑不符"
-    for left, right in zip(nodes, nodes[1:], strict=False):
+    for left, right in pairwise(nodes):
         ok = (
             ok
             and right.index > left.index
