@@ -16,6 +16,7 @@ from htcn.harmonic.recognition_benchmark import (
     RecognitionTruth,
     authoritative_predictions,
     diagnose_authoritative_truth,
+    graph_completed_predictions,
     score_predictions,
 )
 
@@ -240,13 +241,13 @@ def _prefix_recovery(
     }
 
 
-def _completed_metrics(cases) -> dict[str, Any]:
+def _completed_metrics(cases, predictor=authoritative_predictions) -> dict[str, Any]:
     rows = []
     diagnoses = []
     total_tp = total_fp = total_fn = exact = 0
     node_errors: list[int] = []
     for truth, frame in cases:
-        predictions = authoritative_predictions(frame, scales=SCALES)
+        predictions = predictor(frame, scales=SCALES)
         metrics = score_predictions(
             [truth],
             predictions,
@@ -329,11 +330,11 @@ def _prefix_channel(cases, predictor) -> dict[str, Any]:
     }
 
 
-def _hard_negative_metrics(cases) -> dict[str, Any]:
+def _hard_negative_metrics(cases, predictor=authoritative_predictions) -> dict[str, Any]:
     rows = []
     false_positive = 0
     for case_id, frame in cases:
-        predictions = authoritative_predictions(frame, scales=SCALES)
+        predictions = predictor(frame, scales=SCALES)
         count = len(predictions)
         false_positive += count
         rows.append(
@@ -434,6 +435,18 @@ def build_report() -> dict[str, Any]:
         "authoritative_clean_completed_xabcd": _completed_metrics(clean),
         "authoritative_minor_swing_completed_xabcd": _completed_metrics(minor),
         "authoritative_hard_negative": _hard_negative_metrics(negatives),
+        "graph_clean_completed_xabcd": _completed_metrics(
+            clean,
+            graph_completed_predictions,
+        ),
+        "graph_minor_swing_completed_xabcd": _completed_metrics(
+            minor,
+            graph_completed_predictions,
+        ),
+        "graph_hard_negative": _hard_negative_metrics(
+            negatives,
+            graph_completed_predictions,
+        ),
         "pine_r34_clean_xabc": _prefix_channel(clean, _pine_prefix_predictions),
         "pine_r34_minor_swing_xabc": _prefix_channel(minor, _pine_prefix_predictions),
         "extended_graph_clean_xabc": _prefix_channel(clean, _graph_prefix_predictions),
