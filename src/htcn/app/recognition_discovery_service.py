@@ -405,7 +405,7 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
                 raise IntradayProviderError("provider returned no intraday rows")
             self.intraday_cache.write(fetched)
             return fetched, None
-        except Exception as exc:  # noqa: BLE001 - provider boundary may raise third-party errors
+        except Exception as exc:
             if cached is None or cached.frame.empty:
                 if isinstance(exc, IntradayProviderError):
                     raise
