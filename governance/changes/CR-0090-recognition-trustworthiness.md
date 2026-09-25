@@ -12,8 +12,7 @@ work_branch: m9/recognition-trustworthiness-v1
 
 The production recognition work in CR-0089 proved hosted availability, practical candidate output,
 Pine R3.4 behavioral reproducibility and 1D/60m/15m coverage, but those gates do not measure
-detector correctness against independent ground truth. Candidate counts, coverage and green CI are
-not substitutes for TP/FP/FN, recall, precision or node error.
+detector correctness against independent ground truth. Candidate counts and green CI are not correctness evidence.
 
 The user explicitly requires the project to stop expanding peripheral product features and focus on
 the core question: can HT-CN recover the correct harmonic swing nodes from raw OHLC without future
