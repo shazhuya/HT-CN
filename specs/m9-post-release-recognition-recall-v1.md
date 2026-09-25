@@ -1,6 +1,6 @@
 # M9 post-release — Harmonic recognition recall v1
 
-status: planned
+status: validation_green
 
 ## Problem statement
 
@@ -49,3 +49,7 @@ These datasets are evidence references, not silently bundled proprietary/third-p
 - The repair may be declared product-functional when the separate discovery channel, persistence, bounded topology, no-lookahead clock, API/UI separation and full hosted gates pass.
 - It may **not** be declared Pine-hourly-equivalent until the exact hourly corpus is replayed under matched pivot/time/basis settings.
 - Real-bar recall/false-positive statistics, if later published, require an explicitly labeled corpus and denominator; candidate count alone is not accuracy or trading performance.
+
+## Hosted validation status
+
+PR #79 planned candidate `ede373cf1af0ebd25418b87af655dbc5aa888590` passed full hosted run #2866 / 36084996916, including the new discovery regressions plus all formal Stable release gates. The M4 methodology and Outcome Engine freeze guards remained unchanged at 37/37 and 4/4. The spec is activated at `validation_green`; same-timeframe 1-hour Pine parity remains intentionally outside this acceptance claim until matched input data/settings are replayed.

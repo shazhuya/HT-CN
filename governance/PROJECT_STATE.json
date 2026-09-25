@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-STABLE-V1.0.0-CHART-WORKSPACE-V3-CLOSED",
+  "state_id": "HTCN-M9-POST-RELEASE-RECOGNITION-RECALL-V1-VALIDATION-GREEN",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
   "current": {
     "milestone": "M9",
     "phase": "M9.post_release",
-    "title": "Stable Product Operations & Maintenance",
-    "status": "ready",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260924-0087-010",
-    "latest_hosted_validation_attempt_id": "A-20260924-0087-010",
-    "work_branch": null,
+    "title": "Stable Product Recognition Recall Repair",
+    "status": "validation_green",
+    "active_change": "CR-0088",
+    "active_spec": "specs/m9-post-release-recognition-recall-v1.md",
+    "latest_attempt_id": "A-20260925-0088-009",
+    "latest_hosted_validation_attempt_id": "A-20260925-0088-009",
+    "work_branch": "m9/post-release-recognition-recall-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36000525578,
-      "head": "2e822f46ccff8437b7637d17bf11e53a4fb799d0",
-      "scope": "CR-0087 terminal closeout state on canonical main #2780 fully green after CR/spec closure and return to M9.post_release maintenance ready."
+      "workflow_run": 36084996916,
+      "head": "ede373cf1af0ebd25418b87af655dbc5aa888590",
+      "scope": "CR-0088 planned PR #79 candidate fully green: persistent discovery Python/API/browser, existing Stable browser suite, Phase18/21, M4 37/37, Outcome 4/4 and Stable acceptance."
     }
   },
   "private_m1": {
@@ -57,15 +57,15 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Stable v1.0.0 Operations & Maintenance",
-    "status": "ready",
+    "title": "Stable Product Recognition Recall Repair",
+    "status": "validation_green",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Maintain the chart-centered Stable v1.0.0 application, collect direct user acceptance feedback from normal preview use, and open a new Change only for concrete follow-up UX or reliability defects; keep M7/M8 evidence gates unchanged."
+    "objective": "Validate the activated CR-0088 validation_green governance head on hosted CI, then advance to ready_to_merge, validate the exact ledger-bearing head, merge with ancestry preserved and validate canonical main. Keep exact matched 1-hour Pine parity explicitly separate from the product-functional discovery repair."
   },
   "freezes": {
     "m4_capture_methodology": {

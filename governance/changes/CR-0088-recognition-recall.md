@@ -1,6 +1,6 @@
 # CR-0088 — Harmonic recognition recall and persistent discovery layer
 
-status: planned
+status: validation_green
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: b412ffd8eb5e82416b46a8235fc9d6d68702a858
@@ -41,3 +41,9 @@ The earlier research-only branch `m9/recognition-recall-audit` / draft PR #78 is
 - The user's TradingView comparison screenshot is **1-hour**, while the audited repository product path is daily. Exact hourly Pine parity remains unverified until full same-timeframe OHLC and price-basis settings are available. This implementation must not claim that daily evidence proves hourly parity.
 
 This Change therefore repairs the product's discovery/existence gate now, while retaining same-timeframe Pine parity as an explicit follow-up acceptance boundary rather than fabricating evidence.
+
+## Validation and next action
+
+Planned PR #79 head `ede373cf1af0ebd25418b87af655dbc5aa888590` passed hosted run #2866 / 36084996916: Project OS, Source Coverage, zero-debt Ruff, Python/API, Web, discovery and legacy Stable browser acceptance, Phase18/21, M4 methodology 37/37, Outcome Engine 4/4, M9.5 release package and M9.6 Stable acceptance. Release artifact 10843815303, digest `sha256:7afa81b05caaa309db249b2acc6bb8f96c2eb0ce2bbb51a6dad0ee3e736ecaaa`.
+
+The implementation is now activated at `validation_green`. Validate this exact ledger-bearing governance state before advancing to `ready_to_merge`. This green result establishes the product-functional discovery repair, not exact 1-hour TradingView Pine parity; matched hourly OHLC / price basis / pivot settings remain a separate evidence boundary.

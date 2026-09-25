@@ -156,8 +156,8 @@
         "practical chart recognition acceptance",
         "claiming Pine-equivalent CD-leg projection"
       ],
-      "next_action": "Validate PR #79 high-recall discovery through deterministic/API/browser/full release gates and real-case product review. Keep exact 1-hour Pine parity as a separate unresolved acceptance boundary until matched hourly OHLC, price basis, pivot settings and time-of-knowledge are replayed.",
-      "current_fact": "Prior CR-0088 audit replayed two overlapping real 688256 daily OHLC datasets: production S3/5/8/13 returned zero standard completed and zero current forming XABCD on both; B+C source-band candidates existed but the operational discrete C-family gate removed them. PR #79 now implements a separately typed non-authoritative discovery channel while preserving canonical Source identity. The user's 1-hour Pine screenshot still lacks exact same-timeframe OHLC parity evidence."
+      "next_action": "Validate the activated CR-0088 validation_green governance head, then advance to ready_to_merge and canonical-main validation. Keep exact 1-hour Pine parity as a separately unresolved acceptance boundary until matched hourly OHLC, price basis, pivot settings and time-of-knowledge are replayed.",
+      "current_fact": "PR #79 planned candidate ede373cf... passed full hosted run #2866: product discovery/API/UI, existing Stable browser suite, Phase18/21, M4 37/37, Outcome 4/4 and Stable acceptance. The discovery/existence-gate repair is product-functional without modifying frozen canonical identity. Exact same-timeframe 1-hour Pine parity remains unverified."
     }
   ]
 }
