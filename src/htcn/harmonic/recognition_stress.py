@@ -257,7 +257,14 @@ def append_future_replacement_tail(
     frame: pd.DataFrame,
     truth: RecognitionTruth,
 ) -> pd.DataFrame:
-    """Append a deterministic same-kind replacement after D without changing the prefix."""
+    """Force a later same-kind extreme to replace D in a final-history collapse.
+
+    D receives exactly three higher/lower bars so it is knowable at scale=3.  The immediate
+    rebound peak is intentionally too small/early to become an opposite confirmed pivot.
+    A more extreme same-kind node then appears, followed by enough bars to confirm it.
+    Event-sourced recognition must preserve the earlier D-born pattern even though a final
+    collapsed pivot sequence can erase that historical event.
+    """
 
     if truth.labels != ("X", "A", "B", "C", "D"):
         raise ValueError("future-tail fixture requires X/A/B/C/D truth")
@@ -265,33 +272,35 @@ def append_future_replacement_tail(
     if d_index >= len(frame):
         raise ValueError("truth D must exist inside the source frame")
 
-    closes = frame["close"].astype(float).tolist()
-    d_price = float(closes[d_index])
-    c_price = float(closes[truth.node_indices[-2]])
-    direction = truth.direction
-    rebound = abs(c_price - d_price) * 0.12
-    replacement = abs(c_price - d_price) * 0.08
+    d_price = float(frame.iloc[d_index]["close"])
+    c_price = float(frame.iloc[truth.node_indices[-2]]["close"])
+    span = abs(c_price - d_price)
+    if span <= 0:
+        raise ValueError("C-D span must be positive")
 
-    prefix_end = min(len(closes) - 1, d_index + 12)
-    base = closes[: prefix_end + 1]
-    start = float(base[-1])
-    if direction == "bullish":
-        tail_anchors = [
-            (0, start),
-            (8, d_price + rebound),
-            (16, d_price - replacement),
-            (24, d_price + rebound * 0.8),
-        ]
-    else:
-        tail_anchors = [
-            (0, start),
-            (8, d_price - rebound),
-            (16, d_price + replacement),
-            (24, d_price - rebound * 0.8),
-        ]
-    tail = _render_path(tail_anchors, rows=25)
-    tail = tail.iloc[1:].reset_index(drop=True)
-    prefix = frame.iloc[: prefix_end + 1].reset_index(drop=True)
+    prefix = frame.iloc[: d_index + 1].reset_index(drop=True)
+    sign = 1.0 if truth.direction == "bullish" else -1.0
+    offsets = (
+        0.006,
+        0.004,
+        0.003,
+        0.001,
+        -0.050,
+        -0.030,
+        -0.010,
+        0.010,
+        0.020,
+    )
+    closes = [d_price + sign * span * offset for offset in offsets]
+    tail = pd.DataFrame(
+        {
+            "open": closes,
+            "high": closes,
+            "low": closes,
+            "close": closes,
+            "volume": [1000.0] * len(closes),
+        }
+    )
     return pd.concat([prefix, tail], ignore_index=True)
 
 
