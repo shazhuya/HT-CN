@@ -44,6 +44,9 @@ type OperatorQueueItem = {
   source_prz_low: number | null
   source_prz_high: number | null
   bars_since_terminal: number | null
+  discovery_source?: string
+  projection_basis?: string
+  projection_label?: string
 }
 
 type OperatorQueuePayload = {
@@ -123,6 +126,9 @@ const PATTERN_LABELS: Record<string, string> = {
   crab: 'Crab',
   deep_crab: 'Deep Crab',
   abcd: 'AB=CD',
+  abcd_127: '1.27 AB=CD',
+  abcd_1618: '1.618 AB=CD',
+  deep_gartley: 'Deep Gartley',
   shark: 'Shark',
   five_zero: '5-0',
 }
@@ -585,6 +591,13 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
                           <td>
                             <strong>{lifecycleLabel(item.lifecycle_state)}</strong>
                             <div className="operator-queue__meta">{item.current_position ?? '—'}</div>
+                            {item.discovery_only && item.source_prz_low != null && item.source_prz_high != null && (
+                              <div className="operator-queue__caution">
+                                {item.discovery_source === 'pine_r34' ? (item.projection_label ?? 'D') + '投影区' : 'Source PRZ投影'}
+                                {' '}
+                                {priceLabel(item.source_prz_low)}–{priceLabel(item.source_prz_high)}
+                              </div>
+                            )}
                           </td>
                           <td>
                             <strong>{priceLabel(item.next_key_price)}</strong>
