@@ -109,11 +109,58 @@ def test_r34_pivot_is_only_knowable_after_right_confirmation():
     assert pivot.kind == 1
 
 
-def test_r34_tied_extreme_is_fail_closed():
+def test_r34_pivot_plateau_keeps_latest_equal_high_like_pine():
     highs = [10.0, 12.0, 15.0, 15.0, 12.0, 10.0]
     lows = [8.0, 9.0, 10.0, 10.0, 9.0, 8.0]
-    assert _strict_pivot(highs, lows, confirmation_bar=4, strength=2, scale=2) is None
-    assert _strict_pivot(highs, lows, confirmation_bar=5, strength=2, scale=2) is None
+
+    # The earlier equal high is invalid because an equal value still exists on its
+    # newer/right side.
+    assert _strict_pivot(
+        highs,
+        lows,
+        confirmation_bar=4,
+        strength=2,
+        scale=2,
+    ) is None
+
+    # The later equal high is retained: the equal plateau value is only on its
+    # older/left side, matching Pine's last-occurrence pivot tie-break.
+    pivot = _strict_pivot(
+        highs,
+        lows,
+        confirmation_bar=5,
+        strength=2,
+        scale=2,
+    )
+    assert pivot is not None
+    assert pivot.index == 3
+    assert pivot.price == 15.0
+    assert pivot.kind == 1
+
+
+def test_r34_pivot_plateau_keeps_latest_equal_low_like_pine():
+    highs = [12.0, 11.0, 10.0, 10.0, 11.0, 12.0]
+    lows = [9.0, 8.0, 5.0, 5.0, 8.0, 9.0]
+
+    assert _strict_pivot(
+        highs,
+        lows,
+        confirmation_bar=4,
+        strength=2,
+        scale=2,
+    ) is None
+
+    pivot = _strict_pivot(
+        highs,
+        lows,
+        confirmation_bar=5,
+        strength=2,
+        scale=2,
+    )
+    assert pivot is not None
+    assert pivot.index == 3
+    assert pivot.price == 5.0
+    assert pivot.kind == -1
 
 
 def test_pine_atr_uses_wilder_rma_seed():
