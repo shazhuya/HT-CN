@@ -16,6 +16,7 @@ import type {
   Health,
   InstrumentRow,
   ResearchTab,
+  ResearchTimeframe,
 } from './appTypes'
 
 const API = 'http://127.0.0.1:8765'
@@ -51,6 +52,7 @@ export default function App() {
   const [symbol, setSymbol] = useState('')
   const [recentSymbols, setRecentSymbols] = useState<string[]>(readRecentSymbols)
   const [bars, setBars] = useState(420)
+  const [timeframe, setTimeframe] = useState<ResearchTimeframe>('1d')
 
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
@@ -137,18 +139,20 @@ export default function App() {
     })
   }
 
-  function runAnalysis(nextSymbol?: string) {
+  function runAnalysis(nextSymbol?: string, nextTimeframe?: ResearchTimeframe) {
     const target = (nextSymbol ?? symbol).trim().toUpperCase()
+    const targetTimeframe = nextTimeframe ?? timeframe
     if (!target) {
       navigate('research')
       return
     }
 
-    const changingInstrument = analysis?.instrument_id !== target
+    const changingInstrument = analysis?.instrument_id !== target || (analysis?.timeframe ?? '1d') !== targetTimeframe
     const request = ++analysisRequest.current
     if (changingInstrument) setAnalysis(null)
 
     setSymbol(target)
+    setTimeframe(targetTimeframe)
     setLoading(true)
     setAnalysisError(null)
     setSelectedKey(null)
@@ -156,7 +160,7 @@ export default function App() {
     setResearchTab('overview')
     navigate('research')
 
-    fetch(`${API}/api/harmonic/${encodeURIComponent(target)}?bars=${bars}&scales=3,5,8,13`)
+    fetch(`${API}/api/harmonic/${encodeURIComponent(target)}?bars=${bars}&scales=3,5,8,13&timeframe=${targetTimeframe}`)
       .then(async (response) => {
         if (!response.ok) {
           const body = (await response.json().catch(() => null)) as { detail?: string } | null
@@ -183,7 +187,7 @@ export default function App() {
       navigate('research')
       return
     }
-    if (analysis?.instrument_id === target) {
+    if (analysis?.instrument_id === target && (analysis.timeframe ?? '1d') === timeframe) {
       setSymbol(target)
       navigate('research')
       return
@@ -237,6 +241,8 @@ export default function App() {
           error={analysisError}
           bars={bars}
           onBarsChange={setBars}
+          timeframe={timeframe}
+          onTimeframeChange={(value) => runAnalysis(undefined, value)}
           onRefresh={() => runAnalysis()}
           patterns={patterns}
           rawPatternCount={rawPatterns.length}
