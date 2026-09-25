@@ -167,8 +167,8 @@
       "blocks": [
         "claiming Pine-equivalent 1-hour XABC/CD-leg projection parity"
       ],
-      "next_action": "Build a matched-timeframe acceptance fixture using identical 1-hour OHLC, price basis, pivot settings, session/calendar treatment and time-of-knowledge. Compare Pine and HT-CN node-by-node and PRZ-by-PRZ; do not infer parity from screenshots or daily-bar recall.",
-      "current_fact": "CR-0088 fixes product discovery recall and is canonical-main validated. It deliberately does not claim exact Pine parity because the prior evidence did not provide a matched 1-hour replay contract."
+      "next_action": "Run CR-0089 hosted real-market acceptance on matched 1D/60m/15m OHLC, then targeted browser acceptance. Compare deterministic Pine R3.4 source-node/PRZ behavior on the same data; keep user computer out of routine validation.",
+      "current_fact": "CR-0089 is active after planned candidate CI #2918 passed. The branch now contains a deterministic port of retained Pine R3.4 recognition behavior, separate pine_r34 vs extended_graph channels, 15m/60m AKShare provider failover/cache, API timeframe support and Web timeframe plumbing. Exact real-market acceptance and browser proof remain pending, so ISSUE-0074 stays open."
     }
   ]
 }
