@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-STABLE-V1.0.0-RECOGNITION-RECALL-V1-CLOSED",
+  "state_id": "HTCN-STABLE-V1.0.0-RECOGNITION-RECALL-V1-CLOSED-SEALED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -27,14 +27,14 @@
     "status": "ready",
     "active_change": null,
     "active_spec": null,
-    "latest_attempt_id": "A-20260925-0088-014",
-    "latest_hosted_validation_attempt_id": "A-20260925-0088-014",
+    "latest_attempt_id": "A-20260925-0088-015",
+    "latest_hosted_validation_attempt_id": "A-20260925-0088-015",
     "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36087644050,
-      "merge_commit": "481dd43fd0f685735afdea51fff0181b98ec5a96",
-      "scope": "CR-0088 merged with ancestry preserved on canonical main; run #2888 passed Project OS, Source Coverage, Ruff/Python/Web, formal browser/release gates, M4 37/37, Outcome 4/4 and Stable acceptance."
+      "workflow_run": 36087931185,
+      "head": "0cb50297c0c2ffee39ae1f1a1eec7dc608fe5254",
+      "scope": "Terminal CR-0088 closeout state on canonical main #2889 fully green after CR/spec closure, ISSUE-0073 closure, ISSUE-0074 parity split and return to M9.post_release maintenance ready."
     }
   },
   "private_m1": {
