@@ -244,7 +244,9 @@ def test_operator_queue_preserves_pine_r34_projected_completion_zone() -> None:
     assert item["source_prz_high"] == 87.02
     assert "R3.4 ABCD" in item["current_position"]
     assert "投影D完成区" in item["first_watch"]
-    assert item["next_key_price"] is None
+    assert item["next_key_price"] == 87.02
+    assert item["next_key_price_role"] == "投影D完成区首触边界"
+    assert item["timeframe"] == "1d"
     assert item["predictive_score_used"] is False
 
 
@@ -300,7 +302,9 @@ def test_operator_queue_includes_bounded_discovery_without_fabricating_lifecycle
     assert item["lifecycle_state"] == "discovery_candidate"
     assert item["action_state"] == "evidence_insufficient"
     assert item["predictive_score_used"] is False
-    assert item["next_key_price"] is None
+    assert item["next_key_price"] == 100.0
+    assert item["next_key_price_role"] == "Source PRZ首触边界"
+    assert item["timeframe"] == "1d"
     assert "geometry_score" not in item
 
 
