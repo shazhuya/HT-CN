@@ -120,33 +120,10 @@ def _corpus_fingerprint(cases) -> str:
 
 def build_report() -> dict:
     cases = list(_positive_cases())
-    authoritative_truths = [truth for truth, _ in cases]
-    authoritative_predictions_all: list[RecognitionPrediction] = []
-    diagnoses = []
-
-    # Each generated case is a separate market path. Prediction ids are case-prefixed so
-    # one-to-one matching cannot accidentally cross-credit identical node coordinates.
-    scoped_truths: list[RecognitionTruth] = []
-    for truth, frame in cases:
-        scoped_truth = RecognitionTruth(
-            case_id=truth.case_id,
-            pattern_id=truth.pattern_id,
-            direction=truth.direction,
-            labels=truth.labels,
-            node_indices=truth.node_indices,
-        )
-        scoped_truths.append(scoped_truth)
-        for prediction in authoritative_predictions(frame, scales=SCALES):
-            authoritative_predictions_all.append(
-                RecognitionPrediction(
-                    prediction_id=f"{truth.case_id}|{prediction.prediction_id}",
-                    pattern_id=prediction.pattern_id,
-                    direction=prediction.direction,
-                    labels=prediction.labels,
-                    node_indices=prediction.node_indices,
-                )
-            )
-        diagnoses.append(asdict(diagnose_authoritative_truth(frame, truth, scales=SCALES)))
+    diagnoses = [
+        asdict(diagnose_authoritative_truth(frame, truth, scales=SCALES))
+        for truth, frame in cases
+    ]
 
     # Score case-by-case to prevent a prediction from one independent path matching a truth
     # from another path that happens to share the same synthetic bar coordinates.
