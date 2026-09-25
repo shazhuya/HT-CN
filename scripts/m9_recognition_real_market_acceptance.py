@@ -323,6 +323,11 @@ def build_report() -> dict[str, Any]:
         monitoring_standard = sum(
             int(row["monitoring_standard_candidate_count"]) for row in ok
         )
+        hidden_remote = sum(int(row["hidden_remote_count"]) for row in ok)
+        max_monitoring = max(
+            (int(row["monitoring_candidate_count"]) for row in ok),
+            default=0,
+        )
         standard = sum(int(row["stored_standard_candidate_count"]) for row in ok)
         families: Counter[str] = Counter()
         for row in ok:
@@ -336,6 +341,8 @@ def build_report() -> dict[str, Any]:
             "live_candidate_count": live,
             "monitoring_candidate_count": monitoring,
             "monitoring_standard_candidate_count": monitoring_standard,
+            "hidden_remote_count": hidden_remote,
+            "max_monitoring_per_symbol": max_monitoring,
             "families": dict(sorted(families.items())),
         }
 
@@ -351,6 +358,9 @@ def build_report() -> dict[str, Any]:
     )
     total_monitoring_standard = sum(
         int(row["monitoring_standard_candidate_count"]) for row in successful
+    )
+    total_hidden_remote = sum(
+        int(row["hidden_remote_count"]) for row in successful
     )
     family_set = {
         family
@@ -369,10 +379,19 @@ def build_report() -> dict[str, Any]:
         "current_live_monitoring_exists": total_live >= 1,
         "practical_monitoring_exists": total_monitoring >= 1,
         "practical_standard_monitoring_exists": total_monitoring_standard >= 1,
+        "practical_monitoring_each_timeframe": all(
+            int(by_timeframe[timeframe]["monitoring_candidate_count"]) >= 1
+            for timeframe in TIMEFRAMES
+        ),
+        "standard_monitoring_each_timeframe": all(
+            int(by_timeframe[timeframe]["monitoring_standard_candidate_count"]) >= 1
+            for timeframe in TIMEFRAMES
+        ),
         "per_series_monitoring_is_bounded": all(
             int(row["monitoring_candidate_count"]) <= 12
             for row in successful
         ),
+        "remote_noise_is_actually_filtered": total_hidden_remote >= 1,
     }
     status = "pass" if all(gates.values()) else "fail"
     return {
@@ -392,6 +411,7 @@ def build_report() -> dict[str, Any]:
             "live_candidate_count": total_live,
             "monitoring_candidate_count": total_monitoring,
             "monitoring_standard_candidate_count": total_monitoring_standard,
+            "hidden_remote_count": total_hidden_remote,
             "distinct_families": sorted(family_set),
         },
         "gates": gates,
