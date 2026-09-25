@@ -22,6 +22,7 @@ type OperatorQueueItem = {
   instrument_id: string
   last_trade_date: string | null
   price_mode: string | null
+  timeframe?: string
   warning: string | null
   pattern_id: string
   schema: string
@@ -580,7 +581,7 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
                               {item.instrument_id}
                             </button>
                             <div className="operator-queue__meta">
-                              {patternLabel(item.pattern_id)} · S{item.scale} ·
+                              {patternLabel(item.pattern_id)} · S{item.scale} · {item.timeframe === '60m' ? '60分' : item.timeframe === '15m' ? '15分' : '日线'} ·
                               {item.discovery_only ? ' 发现候选 ·' : ''}
                               {item.direction === 'bullish' ? ' 看涨' : ' 看跌'}
                             </div>
