@@ -389,3 +389,76 @@ def test_r34_full_scan_first_post_birth_complete_prz_test_is_timestamped():
     assert candidate.born_bar == 37
     assert candidate.first_test_bar == 38
     assert candidate.test_count == 1
+
+
+
+@pytest.mark.parametrize(
+    ("pattern_id", "anchors", "expected_nodes", "expected_schema", "research_only"),
+    [
+        (
+            "abcd",
+            [(0, 150.0), (5, 180.0), (15, 100.0), (25, 150.0), (45, 120.0)],
+            (5, 15, 25),
+            "ABCD",
+            False,
+        ),
+        (
+            "shark",
+            [(5, 100.0), (15, 200.0), (25, 150.0), (35, 210.0), (55, 180.0)],
+            (5, 15, 25, 35),
+            "0XABC",
+            False,
+        ),
+        (
+            "five_zero",
+            [(0, 150.0), (5, 200.0), (15, 100.0), (25, 150.0), (35, 80.0), (45, 200.0), (65, 170.0)],
+            (5, 15, 25, 35, 45),
+            "0XABCD",
+            True,
+        ),
+    ],
+)
+def test_r34_full_scan_supports_all_source_topologies(
+    pattern_id,
+    anchors,
+    expected_nodes,
+    expected_schema,
+    research_only,
+):
+    frame = _piecewise_frame(anchors, rows=anchors[-1][0] + 8)
+    scan = scan_pine_r34(frame, scales=(2,))
+
+    candidate = next(
+        item
+        for item in scan.candidates
+        if item.pattern_id == pattern_id
+        and item.conflict_key == expected_nodes
+    )
+
+    assert candidate.schema == expected_schema
+    assert candidate.born_bar == expected_nodes[-1] + 2
+    assert candidate.research_only is research_only
+    assert candidate.prz_low > candidate.structural_limit
+    assert candidate.prz_high >= candidate.prz_low
+
+
+def test_r34_precise_abcd_full_scan_keeps_two_measurement_convergence():
+    frame = _piecewise_frame(
+        [(0, 150.0), (5, 180.0), (15, 100.0), (25, 150.0), (45, 120.0)],
+        rows=53,
+    )
+    scan = scan_pine_r34(frame, scales=(2,))
+    candidate = next(
+        item
+        for item in scan.candidates
+        if item.pattern_id == "abcd"
+        and item.conflict_key == (5, 15, 25)
+    )
+
+    assert candidate.precise
+    assert candidate.qualified
+    assert not candidate.research_only
+    assert candidate.m1 == pytest.approx(70.0)
+    assert candidate.m2 == pytest.approx(69.1)
+    assert candidate.prz_low == pytest.approx(69.1)
+    assert candidate.prz_high == pytest.approx(70.0)
