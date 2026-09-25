@@ -79,10 +79,14 @@ or more UI do not count as recognition improvement by themselves.
 Detector V2 is **Candidate Graph + Event-Sourced Recognition**. Skip=6 remains experimental.
 Carney identity, Source Raw PRZ, M4 methodology and Outcome Engine remain frozen.
 
-## Gate 2
+## Gate 2 — validated
 
-Before production promotion:
-- independent rule Oracle/full-label validation;
-- synthetic-in-real A-share noise;
-- blind holdout;
-- expanded zero-mutation streaming gate.
+Hosted run `36167742120` / artifact `10878004217`:
+- independent standard-XABCD rule oracle imports no production rule/evaluator/scanner/discovery/engine;
+- 121/121 production graph predictions agreed with the oracle;
+- 30 invalid-B/C/D negatives remained 0/30 predictions;
+- one contaminated positive frame contains two oracle-valid nested geometries, confirming that one-primary-truth precision alone can mislabel a valid nested candidate.
+
+## Gate 3
+
+Use the pinned 45-symbol A-share QFQ research snapshots to build synthetic-in-real noise cases with a pre-registered holdout. Detector V2 remains experimental until real-noise recall, candidate pressure and streaming invariance pass.
