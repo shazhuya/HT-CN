@@ -4,7 +4,10 @@ import pytest
 from htcn.harmonic.pine_r34 import (
     PINE_R34_SOURCE_SHA256,
     PineR34Pivot,
+    _candidate_rank,
+    _candidate_visible,
     _geometry,
+    _observable,
     _strict_pivot,
     pine_atr,
     scan_pine_r34,
@@ -134,3 +137,85 @@ def test_r34_scan_declares_retained_source_identity():
     scan = scan_pine_r34(empty)
     assert scan.candidates == ()
     assert PINE_R34_SOURCE_SHA256 == "84e1eb2267c9b80891e0ffb64a6d4abf5712fc5e756be81815e536f2fca4c3f5"
+
+
+
+@pytest.mark.parametrize(
+    ("price", "low", "high", "atr", "expected"),
+    [
+        (101.0, 100.0, 102.0, 2.0, True),
+        (105.0, 100.0, 102.0, 2.0, True),
+        (110.0, 100.0, 102.0, 2.0, False),
+        (101.0, 95.0, 105.0, 2.0, False),
+    ],
+)
+def test_r34_observable_matches_near_journey_and_width_filters(
+    price,
+    low,
+    high,
+    atr,
+    expected,
+):
+    assert _observable(price, low, high, atr) is expected
+
+
+def test_r34_candidate_rank_preserves_pine_priority_terms():
+    standard = _candidate_rank(
+        near_enough=True,
+        active_event=False,
+        rule=0,
+        source_age=10,
+        distance_atr=0.5,
+    )
+    abcd = _candidate_rank(
+        near_enough=True,
+        active_event=False,
+        rule=8,
+        source_age=10,
+        distance_atr=0.5,
+    )
+    active = _candidate_rank(
+        near_enough=True,
+        active_event=True,
+        rule=0,
+        source_age=10,
+        distance_atr=0.5,
+    )
+
+    assert standard - abcd == pytest.approx(20.0)
+    assert active - standard == pytest.approx(100000.0)
+
+
+def test_r34_candidate_visibility_hides_old_remote_structure_by_default():
+    assert _candidate_visible(
+        live=True,
+        near_enough=False,
+        developing=True,
+        age=180,
+        max_age=180,
+        research=False,
+    )
+    assert not _candidate_visible(
+        live=True,
+        near_enough=False,
+        developing=True,
+        age=181,
+        max_age=180,
+        research=False,
+    )
+    assert _candidate_visible(
+        live=True,
+        near_enough=False,
+        developing=False,
+        age=500,
+        max_age=180,
+        research=True,
+    )
+    assert not _candidate_visible(
+        live=False,
+        near_enough=True,
+        developing=True,
+        age=1,
+        max_age=180,
+        research=True,
+    )
