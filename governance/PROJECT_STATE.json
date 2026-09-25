@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-CR0090-RECOGNITION-TRUST-GATE0-GREEN",
+  "state_id": "HTCN-M9-POST-RELEASE-CR0090-RECOGNITION-TRUST-GATE1-GREEN",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -27,14 +27,14 @@
     "status": "validation_green",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260925-0090-001",
-    "latest_hosted_validation_attempt_id": "A-20260925-0090-001",
+    "latest_attempt_id": "A-20260925-0090-002",
+    "latest_hosted_validation_attempt_id": "A-20260925-0090-002",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36163533018,
-      "head": "0d193843f5600514cca874eff1f726586a9f1d78",
-      "scope": "CR-0090 Gate 0 correctness baseline green. Controlled clean XABCD authoritative 10/10 exact; 100 minor-swing stress cases all failed legacy at candidate_window_missing while experimental bounded graph with unchanged canonical classifier recovered 100/100 exact; graph hard-negative false positives 0/10; event-sourced streaming regression preserves a first-knowable geometry that final-history pivot collapse can erase."
+      "workflow_run": 36166500765,
+      "head": "07d2e46f38f034a9780497d72614a804e5fcb823",
+      "scope": "CR-0090 Gate 1 adversarial recognition green: randomized 120-case minor-swing corpus showed skip4 depth-3 recall 0/40 versus skip6 primary recovery 120/120 exact with node MAE 0; 30 invalid-B/C/D negatives rejected; S3/S5/S8 did not add candidate pressure; forced future replacement erased final-history results 24/24 while event-sourced streaming preserved 24/24 with zero confirmed-history mutation."
     }
   },
   "private_m1": {
@@ -57,20 +57,20 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "CR-0090 Recognition Trustworthiness",
+    "title": "CR-0090 Recognition Trustworthiness — Gate 2",
     "status": "validation_green",
     "blocked_until": [
-      "randomized/adversarial graph precision-recall stress",
-      "batch streaming/future-tail invariance",
+      "independent/full-label oracle for nested candidate precision",
       "synthetic-in-real A-share noise benchmark",
-      "blind holdout before production integration"
+      "blind holdout",
+      "zero streaming history mutation under expanded corpus"
     ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate the bounded graph detector beyond controlled Gate 0 before any production integration. Keep Carney identity, Source Raw PRZ, M4 methodology and Outcome Engine frozen."
+    "objective": "Advance Detector V2 using experimental skip6 bounded graph plus event-sourced time-of-knowledge, but do not integrate production until independent labeling, synthetic-in-real, blind holdout and streaming gates pass."
   },
   "freezes": {
     "m4_capture_methodology": {
