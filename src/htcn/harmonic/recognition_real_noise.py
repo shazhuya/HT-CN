@@ -186,9 +186,11 @@ def inject_pattern_into_real_background(
         highs[node_index] = price
         lows[node_index] = price
 
-    # Interior wicks may create minor pivots, but cannot exceed either endpoint of their
-    # containing major leg. This preserves known truth while retaining real local texture.
-    for left_index, right_index in pairwise(NODE_INDICES):
+    # Wicks may create minor pivots, but may not exceed either endpoint of the
+    # structural segment that contains them. Include the pre-X and post-D guards so
+    # the injected X and D are genuine turning extrema, not merely exact-price labels.
+    structural_indices = (0, *NODE_INDICES, ROWS - 1)
+    for left_index, right_index in pairwise(structural_indices):
         low_bound = min(closes[left_index], closes[right_index])
         high_bound = max(closes[left_index], closes[right_index])
         epsilon = max((high_bound - low_bound) * 1e-6, 1e-9)
