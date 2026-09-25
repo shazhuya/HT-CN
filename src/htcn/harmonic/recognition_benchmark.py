@@ -11,7 +11,11 @@ from .candidates import iter_completed_xabcd_windows
 from .discovery import iter_discovery_xabcd_windows
 from .engine import scan_frame
 from .models import PatternDirection, PivotKind
-from .pivots import detect_multi_scale_pivots
+from .pivots import (
+    detect_multi_scale_pivots,
+    detect_pivot_events,
+    visible_confirmed_pivots,
+)
 from .scanner import classify_completed_xabcd
 
 
@@ -43,6 +47,7 @@ class RecognitionPrediction:
     direction: str
     labels: tuple[str, ...]
     node_indices: tuple[int, ...]
+    known_at: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -295,6 +300,66 @@ def graph_completed_predictions(
                     )
                 )
     return tuple(predictions)
+
+
+def streaming_graph_completed_predictions(
+    frame: pd.DataFrame,
+    *,
+    scales: tuple[int, ...],
+    recent_pivots: int = 20,
+    max_total_skips: int = 4,
+) -> tuple[RecognitionPrediction, ...]:
+    """Event-sourced completed graph predictions at their first knowable cutoff.
+
+    Unlike final-history pivot collapse, this replays confirmed pivot events in time-of-knowledge
+    order. Once a completed geometry is observable it remains an immutable historical event even
+    if a later same-kind pivot replaces the live swing endpoint.
+    """
+
+    born: dict[tuple[str, str, tuple[int, ...]], RecognitionPrediction] = {}
+    for scale in sorted(set(int(value) for value in scales)):
+        events = detect_pivot_events(
+            frame,
+            left=scale,
+            right=scale,
+            scale=scale,
+        )
+        cutoffs = sorted({int(event.confirmed_at) for event in events})
+        for cutoff in cutoffs:
+            pivots = visible_confirmed_pivots(events, cutoff=cutoff)
+            for candidate in iter_discovery_xabcd_windows(
+                pivots,
+                recent_pivots=recent_pivots,
+                max_total_skips=max_total_skips,
+            ):
+                window = candidate.window
+                points = window.harmonic_points()
+                nodes = tuple(int(point.index) for point in points)
+                for evaluation in classify_completed_xabcd(window):
+                    key = (evaluation.pattern_id, evaluation.direction.value, nodes)
+                    if key in born:
+                        continue
+                    born[key] = RecognitionPrediction(
+                        prediction_id=(
+                            f"streaming_graph:{evaluation.pattern_id}:"
+                            f"{evaluation.direction.value}:S{scale}:"
+                            + "-".join(str(value) for value in nodes)
+                        ),
+                        pattern_id=evaluation.pattern_id,
+                        direction=evaluation.direction.value,
+                        labels=tuple(point.label for point in points),
+                        node_indices=nodes,
+                        known_at=cutoff,
+                    )
+    return tuple(
+        sorted(
+            born.values(),
+            key=lambda item: (
+                item.known_at if item.known_at is not None else -1,
+                item.prediction_id,
+            ),
+        )
+    )
 
 
 def diagnose_authoritative_truth(
