@@ -246,9 +246,15 @@ class AkShareIntradayProvider:
                 provider="akshare_sina",
                 adjustment=adjust,
             )
+            start_bound = pd.Timestamp(start)
+            end_bound = pd.Timestamp(end)
+            if start_bound.tzinfo is not None:
+                start_bound = start_bound.tz_convert("Asia/Shanghai").tz_localize(None)
+            if end_bound.tzinfo is not None:
+                end_bound = end_bound.tz_convert("Asia/Shanghai").tz_localize(None)
             bounded = result.frame.loc[
-                (result.frame["trade_time"] >= pd.Timestamp(start))
-                & (result.frame["trade_time"] <= pd.Timestamp(end))
+                (result.frame["trade_time"] >= start_bound)
+                & (result.frame["trade_time"] <= end_bound)
             ].reset_index(drop=True)
             if not bounded.empty:
                 return IntradayBars(
