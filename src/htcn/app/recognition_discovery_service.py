@@ -219,11 +219,20 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
                 "observable": item.observable,
                 "monitoring_rank": item.monitoring_rank,
                 "recently_tested": item.recently_tested,
+                "neighborhood": (
+                    item.neighborhood.as_payload(
+                        prz_low=item.prz_low,
+                        prz_high=item.prz_high,
+                    )
+                    if item.neighborhood is not None
+                    else None
+                ),
                 "projected_label": item.projected_label,
                 "structural_limit": item.structural_limit,
                 "pine_source_sha256": (
                     "84e1eb2267c9b80891e0ffb64a6d4abf5712fc5e756be81815e536f2fca4c3f5"
                 ),
+                "practical_overlay": "pine_r35_neighborhood",
                 "mutates_source_identity": False,
                 "owns_lifecycle": False,
                 "fabricates_d": False,
@@ -374,8 +383,9 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
         )
         analysis["engine_note"] = (
             str(analysis.get("engine_note") or "")
-            + " CR-0089 recognition：Pine R3.4 行为基线(5/10/20)与 extended_graph 分离；"
-            "前者用于同数据行为对照，后者只补充高召回 XABCD。两者都不拥有 Source lifecycle、"
+            + " CR-0089 recognition：Pine R3.4 识别基线(5/10/20)与 extended_graph 分离；"
+            "R3.5 邻域层只记录严格完成区附近的真实价格反应，不扩张严格PRZ、不追认T-Bar。"
+            "extended_graph 只补充高召回 XABCD。各发现层都不拥有 Source lifecycle、"
             "不写 M4 evidence、不虚构完成节点，也不改变 canonical identity。"
         ).strip()
         return analysis
