@@ -203,7 +203,6 @@ def _clean_negative_prices(
 ) -> tuple[float, ...]:
     x, a, b, c, d = STANDARD_XABCD[base_pattern]
     xa = a - x
-    ab = b - a
 
     if kind == "invalid_b":
         # B/XA = 0.70: outside every executable standard XABCD B identity/tolerance.
