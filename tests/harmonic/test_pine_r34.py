@@ -266,3 +266,124 @@ def test_r34_candidate_visibility_hides_old_remote_structure_by_default():
         max_age=180,
         research=True,
     )
+
+
+
+def _piecewise_frame(
+    anchors: list[tuple[int, float]],
+    *,
+    rows: int,
+    wick: float = 0.25,
+    overrides: dict[int, dict[str, float]] | None = None,
+) -> pd.DataFrame:
+    closes: list[float] = [0.0] * rows
+    for segment, ((left_i, left_p), (right_i, right_p)) in enumerate(
+        zip(anchors, anchors[1:], strict=False)
+    ):
+        span = right_i - left_i
+        assert span > 0, segment
+        for index in range(left_i, right_i + 1):
+            fraction = (index - left_i) / span
+            closes[index] = left_p + (right_p - left_p) * fraction
+    first_i, first_p = anchors[0]
+    for index in range(first_i):
+        closes[index] = first_p + (first_i - index) * 0.05
+    last_i, last_p = anchors[-1]
+    for index in range(last_i, rows):
+        closes[index] = last_p - (index - last_i) * 0.05
+
+    rows_out: list[dict[str, float]] = []
+    overrides = overrides or {}
+    for index, close in enumerate(closes):
+        row = {
+            "open": close,
+            "high": close + wick,
+            "low": close - wick,
+            "close": close,
+            "volume": 1000.0,
+        }
+        row.update(overrides.get(index, {}))
+        rows_out.append(row)
+    return pd.DataFrame(rows_out)
+
+
+def test_r34_full_scan_gartley_locks_nodes_birth_and_projected_prz():
+    frame = _piecewise_frame(
+        [(5, 100.0), (15, 200.0), (25, 138.2), (35, 183.2), (55, 160.0)],
+        rows=60,
+    )
+
+    scan = scan_pine_r34(frame, scales=(2,))
+    candidate = next(
+        item
+        for item in scan.candidates
+        if item.pattern_id == "gartley"
+        and item.conflict_key == (5, 15, 25, 35)
+    )
+
+    assert [node.kind for node in candidate.source_nodes] == [-1, 1, -1, 1]
+    assert [node.confirmed_at for node in candidate.source_nodes] == [7, 17, 27, 37]
+    assert candidate.born_bar == 37
+    assert candidate.m1 == pytest.approx(121.40)
+    assert candidate.m2 == pytest.approx(121.40)
+    assert candidate.m3 == pytest.approx(119.57)
+    assert candidate.prz_low == pytest.approx(119.57)
+    assert candidate.prz_high == pytest.approx(121.40)
+    assert candidate.structural_limit == pytest.approx(100.0)
+    assert candidate.live
+
+
+def test_r34_full_scan_never_backfills_prz_touch_before_c_confirmation():
+    frame = _piecewise_frame(
+        [(5, 100.0), (15, 200.0), (25, 138.2), (35, 183.2), (55, 160.0)],
+        rows=60,
+        overrides={
+            # C is not knowable until bar 37. This pre-confirmation bar touches the
+            # projected Gartley PRZ but must never be donated to the future structure.
+            36: {
+                "open": 180.0,
+                "high": 182.0,
+                "low": 120.0,
+                "close": 180.0,
+            },
+        },
+    )
+
+    scan = scan_pine_r34(frame, scales=(2,))
+    candidate = next(
+        item
+        for item in scan.candidates
+        if item.pattern_id == "gartley"
+        and item.conflict_key == (5, 15, 25, 35)
+    )
+
+    assert candidate.born_bar == 37
+    assert candidate.first_test_bar is None
+    assert candidate.test_count == 0
+
+
+def test_r34_full_scan_first_post_birth_complete_prz_test_is_timestamped():
+    frame = _piecewise_frame(
+        [(5, 100.0), (15, 200.0), (25, 138.2), (35, 183.2), (55, 160.0)],
+        rows=60,
+        overrides={
+            38: {
+                "open": 123.0,
+                "high": 123.5,
+                "low": 119.0,
+                "close": 122.0,
+            },
+        },
+    )
+
+    scan = scan_pine_r34(frame, scales=(2,))
+    candidate = next(
+        item
+        for item in scan.candidates
+        if item.pattern_id == "gartley"
+        and item.conflict_key == (5, 15, 25, 35)
+    )
+
+    assert candidate.born_bar == 37
+    assert candidate.first_test_bar == 38
+    assert candidate.test_count == 1
