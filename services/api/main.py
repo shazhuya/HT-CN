@@ -43,7 +43,7 @@ from htcn.app.review_followup_journal import (
     filter_review_session,
     query_review_journal,
 )
-from htcn.app.source_clock_lifecycle_service import M3SourceClockHarmonicService
+from htcn.app.recognition_discovery_service import RecognitionDiscoveryService
 from htcn.harmonic.rules import CARNEY_RULES
 from htcn.research.type_i_live_evidence import build_type_i_t5_events
 from htcn.version import HTCN_VERSION
@@ -87,12 +87,12 @@ def _operator_build_workers() -> int:
 OPERATOR_BUILD_WORKERS = _operator_build_workers()
 
 
-def _operator_service_factory() -> M3SourceClockHarmonicService:
-    return M3SourceClockHarmonicService(DATA_ROOT)
+def _operator_service_factory() -> RecognitionDiscoveryService:
+    return RecognitionDiscoveryService(DATA_ROOT)
 
 
 app = FastAPI(title="HT-CN API", version=HTCN_VERSION)
-service = M3SourceClockHarmonicService(DATA_ROOT)
+service = RecognitionDiscoveryService(DATA_ROOT)
 
 app.add_middleware(
     CORSMiddleware,
