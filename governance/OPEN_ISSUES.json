@@ -149,14 +149,15 @@
     {
       "id": "ISSUE-0073",
       "severity": "high",
-      "type": "product_recognition",
+      "type": "product_recognition_recall",
       "status": "open",
-      "title": "Stable harmonic recognition has systematic low recall",
+      "title": "Shipped harmonic recognition has near-zero usable XABCD candidates on observed real daily bars",
       "blocks": [
-        "practical chart recognition usability"
+        "practical chart recognition acceptance",
+        "claiming Pine-equivalent CD-leg projection"
       ],
-      "next_action": "Implement CR-0088 high-recall discovery channel and validate Pine-parity behaviors without weakening Source identity.",
-      "current_fact": "User acceptance and code audit show frontier-only XABC, consecutive-pivot-only windows and early strict identity gating can suppress real-market structures before they become useful product candidates."
+      "next_action": "Validate PR #79 high-recall discovery through deterministic/API/browser/full release gates and real-case product review. Keep exact 1-hour Pine parity as a separate unresolved acceptance boundary until matched hourly OHLC, price basis, pivot settings and time-of-knowledge are replayed.",
+      "current_fact": "Prior CR-0088 audit replayed two overlapping real 688256 daily OHLC datasets: production S3/5/8/13 returned zero standard completed and zero current forming XABCD on both; B+C source-band candidates existed but the operational discrete C-family gate removed them. PR #79 now implements a separately typed non-authoritative discovery channel while preserving canonical Source identity. The user's 1-hour Pine screenshot still lacks exact same-timeframe OHLC parity evidence."
     }
   ]
 }
