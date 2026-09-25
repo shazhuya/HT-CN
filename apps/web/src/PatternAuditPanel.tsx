@@ -9,6 +9,9 @@ const PATTERN_NAMES: Record<string, string> = {
   crab: 'Crab',
   deep_crab: 'Deep Crab',
   abcd: 'AB=CD',
+  abcd_127: 'AB=CD 1.27',
+  abcd_1618: 'AB=CD 1.618',
+  deep_gartley: 'Deep Gartley',
   shark: 'Shark',
   five_zero: '5-0',
 }
@@ -17,7 +20,7 @@ function patternName(id: string) {
   return PATTERN_NAMES[id] ?? id
 }
 
-function fmt(value: number | undefined) {
+function fmt(value: number | null | undefined) {
   return value == null ? '—' : value.toFixed(3)
 }
 
@@ -64,6 +67,20 @@ function evidenceLabel(state: string) {
 
 function isDiscovery(pattern: Pattern) {
   return pattern.discovery_only === true
+}
+
+function isPineR34Discovery(pattern: Pattern) {
+  return pattern.discovery_only === true && pattern.discovery?.source === 'pine_r34'
+}
+
+function neighborhoodStateLabel(state: number) {
+  if (state === 1) return '已进入邻域 · 等反应'
+  if (state === 2) return '首次邻域反应'
+  if (state === 3) return '再回邻域 · 等新反应'
+  if (state === 4) return '邻域二次反应'
+  if (state === 5) return '邻域观察已结束'
+  if (state === 6) return '严格测试已接管'
+  return '未进入邻域'
 }
 
 function isStandaloneAbcd(pattern: Pattern) {
@@ -113,16 +130,49 @@ export default function PatternAuditPanel({ pattern }: { pattern: Pattern | null
 
       {isDiscovery(pattern) && pattern.discovery && (
         <section className="pattern-audit-section discovery-audit" data-testid="discovery-audit">
-          <h3>发现层状态 · 非权威身份</h3>
+          <h3>{isPineR34Discovery(pattern) ? 'R3.4 行为基线' : '发现层状态'} · 非权威身份</h3>
+          {isPineR34Discovery(pattern) ? (
+            <>
+              <dl>
+                <div><dt>行为通道</dt><dd>Pine R3.4 · S{pattern.scale}</dd></div>
+                <div><dt>源节点可知</dt><dd>第 {pattern.discovery.known_from_bar} 根</dd></div>
+                <div><dt>投影完成点</dt><dd>{pattern.discovery.projected_label ?? 'D'}</dd></div>
+                <div><dt>投影区状态</dt><dd>{pattern.discovery.prz_status === 'tested' ? `已测试 · 第 ${pattern.discovery.first_prz_test_bar} 根` : '已投影 · 尚未测试'}</dd></div>
+                <div><dt>行为规则</dt><dd>{pattern.discovery.research_only ? '研究级' : pattern.discovery.qualified === false ? '仅观察' : '通过'}</dd></div>
+                <div><dt>结构极限</dt><dd>{fmt(pattern.discovery.structural_limit)}</dd></div>
+              </dl>
+              <p>这里复现保留的 R3.4 识别行为，用于实战发现与 Pine 对打；它不自动升级为 Carney Source 权威身份，也不启动 Source 生命周期。</p>
+            </>
+          ) : (
+            <>
+              <dl>
+                <div><dt>路径</dt><dd>{pattern.discovery.path_kind === 'minor_swing_skip' ? `跨次级摆动 · 跳过 ${pattern.discovery.skipped_pivots} 个 pivot` : '连续摆动'}</dd></div>
+                <div><dt>可知时点</dt><dd>第 {pattern.discovery.known_from_bar} 根后</dd></div>
+                <div><dt>Source PRZ</dt><dd>{pattern.discovery.prz_status === 'tested' ? `已测试 · 第 ${pattern.discovery.first_prz_test_bar} 根` : '已投影 · 尚未测试'}</dd></div>
+                <div><dt>C 离散族</dt><dd>{pattern.discovery.source_family_aligned ? '3% 内对齐' : '结构区间有效 · 未达3%离散门槛'}</dd></div>
+                <div><dt>最近 C 目标</dt><dd>{fmt(pattern.discovery.c_family_target ?? undefined)}</dd></div>
+                <div><dt>C 相对偏差</dt><dd>{pattern.discovery.c_family_relative_error == null ? '—' : `${(pattern.discovery.c_family_relative_error * 100).toFixed(2)}%`}</dd></div>
+              </dl>
+              <p>这里只说明“值得继续观察”。它不创建 D、不启动 Source 生命周期，也不能用评分把未通过的 canonical identity 变成正式形态。</p>
+            </>
+          )}
+        </section>
+      )}
+
+      {isPineR34Discovery(pattern) && pattern.discovery?.neighborhood && pattern.discovery.neighborhood.state > 0 && (
+        <section className="pattern-audit-section discovery-audit" data-testid="r35-neighborhood-audit">
+          <h3>R3.5 邻域反应 · 与严格 PRZ 分开</h3>
           <dl>
-            <div><dt>路径</dt><dd>{pattern.discovery.path_kind === 'minor_swing_skip' ? `跨次级摆动 · 跳过 ${pattern.discovery.skipped_pivots} 个 pivot` : '连续摆动'}</dd></div>
-            <div><dt>可知时点</dt><dd>第 {pattern.discovery.known_from_bar} 根后</dd></div>
-            <div><dt>Source PRZ</dt><dd>{pattern.discovery.prz_status === 'tested' ? `已测试 · 第 ${pattern.discovery.first_prz_test_bar} 根` : '已投影 · 尚未测试'}</dd></div>
-            <div><dt>C 离散族</dt><dd>{pattern.discovery.source_family_aligned ? '3% 内对齐' : '结构区间有效 · 未达3%离散门槛'}</dd></div>
-            <div><dt>最近 C 目标</dt><dd>{fmt(pattern.discovery.c_family_target ?? undefined)}</dd></div>
-            <div><dt>C 相对偏差</dt><dd>{pattern.discovery.c_family_relative_error == null ? '—' : `${(pattern.discovery.c_family_relative_error * 100).toFixed(2)}%`}</dd></div>
+            <div><dt>状态</dt><dd>{neighborhoodStateLabel(pattern.discovery.neighborhood.state)}</dd></div>
+            <div><dt>邻域半宽</dt><dd>{pattern.discovery.neighborhood.pad.toFixed(2)}</dd></div>
+            <div><dt>邻域范围</dt><dd>{pattern.discovery.neighborhood.zone_low.toFixed(2)} – {pattern.discovery.neighborhood.zone_high.toFixed(2)}</dd></div>
+            <div><dt>首次极值</dt><dd>{fmt(pattern.discovery.neighborhood.first_extreme)}</dd></div>
+            <div><dt>首次反应价</dt><dd>{fmt(pattern.discovery.neighborhood.response_price)}</dd></div>
+            <div><dt>二测极值</dt><dd>{fmt(pattern.discovery.neighborhood.second_extreme)}</dd></div>
+            <div><dt>二次反应价</dt><dd>{fmt(pattern.discovery.neighborhood.second_response_price)}</dd></div>
           </dl>
-          <p>这里只说明“值得继续观察”。它不创建 D、不启动 Source 生命周期，也不能用评分把未通过的 canonical identity 变成正式形态。</p>
+          <p>{pattern.discovery.neighborhood.reason}</p>
+          <p>邻域只记录“差一点到严格完成区但已经发生的价格反应”。它不扩大严格 PRZ，不补造测量覆盖，也不生成 T-Bar、Type-I、Type-II 或交易计划。</p>
         </section>
       )}
 
@@ -130,7 +180,15 @@ export default function PatternAuditPanel({ pattern }: { pattern: Pattern | null
         <section className="pattern-audit-section">
           <h3>核心比例</h3>
           <dl>
-            {isDiscovery(pattern) ? (
+            {isPineR34Discovery(pattern) ? (
+              <>
+                <div><dt>R3.4 M1</dt><dd>{fmt(pattern.metrics.m1)}</dd></div>
+                <div><dt>R3.4 M2</dt><dd>{fmt(pattern.metrics.m2)}</dd></div>
+                <div><dt>R3.4 M3</dt><dd>{fmt(pattern.metrics.m3)}</dd></div>
+                <div><dt>结构极限</dt><dd>{fmt(pattern.metrics.structural_limit)}</dd></div>
+                <div><dt>距投影区 / ATR</dt><dd>{fmt(pattern.metrics.distance_to_prz_atr)}</dd></div>
+              </>
+            ) : isDiscovery(pattern) ? (
               <>
                 <div><dt>B/XA</dt><dd>{fmt(pattern.metrics.b_xa)}</dd></div>
                 <div><dt>C/AB</dt><dd>{fmt(pattern.metrics.c_ab)}</dd></div>
@@ -171,11 +229,15 @@ export default function PatternAuditPanel({ pattern }: { pattern: Pattern | null
         <section className="pattern-audit-section">
           <h3>价格区</h3>
           <dl>
-            <div><dt>HT-CN 收敛核心</dt><dd>{idealCoreLabel(pattern)}</dd></div>
+            <div><dt>{isPineR34Discovery(pattern) ? 'R3.4 投影完成区' : 'HT-CN 收敛核心'}</dt><dd>{idealCoreLabel(pattern)}</dd></div>
             <div><dt>组件审计包络</dt><dd>{componentEnvelopeLabel(pattern)}</dd></div>
-            <div><dt>Source PRZ</dt><dd>{sourcePrzLabel(pattern)}</dd></div>
+            {!isPineR34Discovery(pattern) && <div><dt>Source PRZ</dt><dd>{sourcePrzLabel(pattern)}</dd></div>}
           </dl>
-          <p>{isDiscovery(pattern) ? '发现层只复用既有 Source PRZ 投影；即使价格测试该区，也不会自动生成 Terminal / PEZ / Type-II。' : 'Source PRZ 与工程收敛区严格分层；未冻结时 Terminal / PEZ / Type-II 保持 fail closed。'}</p>
+          <p>{isPineR34Discovery(pattern)
+            ? 'R3.4 投影区用于行为对照与监控；它不是 Source Raw PRZ，也不会自动生成 Source Terminal / PEZ / Type-II。'
+            : isDiscovery(pattern)
+              ? '发现层只复用既有 Source PRZ 投影；即使价格测试该区，也不会自动生成 Terminal / PEZ / Type-II。'
+              : 'Source PRZ 与工程收敛区严格分层；未冻结时 Terminal / PEZ / Type-II 保持 fail closed。'}</p>
         </section>
       </div>
 

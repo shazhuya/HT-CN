@@ -16,6 +16,7 @@ import type {
   Health,
   InstrumentRow,
   ResearchTab,
+  ResearchTimeframe,
 } from './appTypes'
 
 const API = 'http://127.0.0.1:8765'
@@ -29,6 +30,56 @@ function destinationFromHash(): AppDestination {
 
 function patternKey(pattern: Pattern) {
   return `${pattern.channel ?? 'authoritative'}:${pattern.state}:${pattern.pattern_id}:${pattern.scale}:${pattern.points.map((point) => point.index).join('-')}`
+}
+
+function discoveryDistance(pattern: Pattern) {
+  const metricDistance = pattern.metrics?.distance_to_prz_atr
+  if (typeof metricDistance === 'number' && Number.isFinite(metricDistance)) return metricDistance
+  const projectedDistance = pattern.discovery?.distance_to_source_prz_xa
+  if (typeof projectedDistance === 'number' && Number.isFinite(projectedDistance)) return projectedDistance
+  return Number.POSITIVE_INFINITY
+}
+
+function sortDiscoveryForMonitoring(items: Pattern[]) {
+  return [...items].sort((left, right) => {
+    const leftPine = left.discovery?.source === 'pine_r34'
+    const rightPine = right.discovery?.source === 'pine_r34'
+
+    // The backend already reproduces R3.4 candidate-table ranking. Do not
+    // silently re-rank two Pine candidates in the UI.
+    if (leftPine && rightPine) {
+      const leftRank = left.discovery?.monitoring_rank
+      const rightRank = right.discovery?.monitoring_rank
+      if (
+        typeof leftRank === 'number'
+        && Number.isFinite(leftRank)
+        && typeof rightRank === 'number'
+        && Number.isFinite(rightRank)
+        && Math.abs(leftRank - rightRank) > 1e-9
+      ) return rightRank - leftRank
+    }
+
+    // Behavioral R3.4 candidates are the primary discovery baseline; the
+    // extended graph remains a supplementary recall channel.
+    if (leftPine !== rightPine) return leftPine ? -1 : 1
+
+    const leftResearch = left.discovery?.research_only ? 1 : 0
+    const rightResearch = right.discovery?.research_only ? 1 : 0
+    if (leftResearch !== rightResearch) return leftResearch - rightResearch
+
+    const leftQualified = left.discovery?.qualified === false ? 1 : 0
+    const rightQualified = right.discovery?.qualified === false ? 1 : 0
+    if (leftQualified !== rightQualified) return leftQualified - rightQualified
+
+    const distanceGap = discoveryDistance(left) - discoveryDistance(right)
+    if (Number.isFinite(distanceGap) && Math.abs(distanceGap) > 1e-9) return distanceGap
+
+    const leftKnown = left.discovery?.known_from_bar ?? -1
+    const rightKnown = right.discovery?.known_from_bar ?? -1
+    if (leftKnown !== rightKnown) return rightKnown - leftKnown
+
+    return right.scale - left.scale
+  })
 }
 
 function readRecentSymbols() {
@@ -51,6 +102,7 @@ export default function App() {
   const [symbol, setSymbol] = useState('')
   const [recentSymbols, setRecentSymbols] = useState<string[]>(readRecentSymbols)
   const [bars, setBars] = useState(420)
+  const [timeframe, setTimeframe] = useState<ResearchTimeframe>('1d')
 
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
@@ -137,18 +189,20 @@ export default function App() {
     })
   }
 
-  function runAnalysis(nextSymbol?: string) {
+  function runAnalysis(nextSymbol?: string, nextTimeframe?: ResearchTimeframe) {
     const target = (nextSymbol ?? symbol).trim().toUpperCase()
+    const targetTimeframe = nextTimeframe ?? timeframe
     if (!target) {
       navigate('research')
       return
     }
 
-    const changingInstrument = analysis?.instrument_id !== target
+    const changingInstrument = analysis?.instrument_id !== target || (analysis?.timeframe ?? '1d') !== targetTimeframe
     const request = ++analysisRequest.current
     if (changingInstrument) setAnalysis(null)
 
     setSymbol(target)
+    setTimeframe(targetTimeframe)
     setLoading(true)
     setAnalysisError(null)
     setSelectedKey(null)
@@ -156,7 +210,7 @@ export default function App() {
     setResearchTab('overview')
     navigate('research')
 
-    fetch(`${API}/api/harmonic/${encodeURIComponent(target)}?bars=${bars}&scales=3,5,8,13`)
+    fetch(`${API}/api/harmonic/${encodeURIComponent(target)}?bars=${bars}&scales=3,5,8,13&timeframe=${targetTimeframe}`)
       .then(async (response) => {
         if (!response.ok) {
           const body = (await response.json().catch(() => null)) as { detail?: string } | null
@@ -183,7 +237,7 @@ export default function App() {
       navigate('research')
       return
     }
-    if (analysis?.instrument_id === target) {
+    if (analysis?.instrument_id === target && (analysis.timeframe ?? '1d') === timeframe) {
       setSymbol(target)
       navigate('research')
       return
@@ -193,7 +247,9 @@ export default function App() {
 
   const rawPatterns = useMemo(() => {
     if (!analysis) return []
-    return [...analysis.completed, ...analysis.forming, ...(analysis.discovery ?? [])]
+    const authoritative = [...analysis.completed, ...analysis.forming]
+    const discovery = sortDiscoveryForMonitoring(analysis.discovery ?? [])
+    return [...authoritative, ...discovery]
   }, [analysis])
 
   const patterns = useMemo(() => {
@@ -237,6 +293,8 @@ export default function App() {
           error={analysisError}
           bars={bars}
           onBarsChange={setBars}
+          timeframe={timeframe}
+          onTimeframeChange={(value) => runAnalysis(undefined, value)}
           onRefresh={() => runAnalysis()}
           patterns={patterns}
           rawPatternCount={rawPatterns.length}

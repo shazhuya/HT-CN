@@ -162,13 +162,13 @@
       "id": "ISSUE-0074",
       "severity": "research",
       "type": "recognition_parity",
-      "status": "open",
+      "status": "resolved_pending_merge",
       "title": "Exact matched 1-hour Pine parity remains unverified",
       "blocks": [
-        "claiming Pine-equivalent 1-hour XABC/CD-leg projection parity"
+        "canonical-main integration of CR-0089"
       ],
-      "next_action": "Build a matched-timeframe acceptance fixture using identical 1-hour OHLC, price basis, pivot settings, session/calendar treatment and time-of-knowledge. Compare Pine and HT-CN node-by-node and PRZ-by-PRZ; do not infer parity from screenshots or daily-bar recall.",
-      "current_fact": "CR-0088 fixes product discovery recall and is canonical-main validated. It deliberately does not claim exact Pine parity because the prior evidence did not provide a matched 1-hour replay contract."
+      "next_action": "Merge CR-0089 only after the exact ready_to_merge PR head passes formal release/frozen-methodology gates, then validate canonical main.",
+      "current_fact": "CR-0089 now reproduces the retained Pine R3.4 recognition contract from raw OHLC with 5/10/20 confirmed pivots, family-specific geometry/PRZ, persistence, no-lookahead and bounded candidate visibility. Hosted acceptance passed 30/30 real A-share series across 1D/60m/15m with current standard candidates on every timeframe. R3.5 near-miss behavior is implemented as a separate non-strict neighborhood overlay and was observed on real market data (268 neighborhood observations, 92 reactions). No TradingView-private runtime export was required because the retained Pine source is the frozen behavioral oracle; this resolution claims source-behavioral parity, not pixel/UI parity with TradingView."
     }
   ]
 }

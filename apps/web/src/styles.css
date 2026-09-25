@@ -231,6 +231,14 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.08; }
   stroke-dasharray: 6 4;
 }
 
+.overlay-zone.r35-neighborhood {
+  fill: rgba(233, 185, 95, .055);
+  stroke: rgba(233, 185, 95, .62);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+}
+
+
 .overlay-zone.source-pez {
   fill: rgba(255, 179, 71, .10);
   stroke: rgba(255, 187, 84, .86);

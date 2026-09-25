@@ -17,9 +17,13 @@ export type InstrumentRow = {
   has_qfq_factor: boolean
 }
 
+export type ResearchTimeframe = '1d' | '60m' | '15m'
+
 export type Analysis = {
   instrument_id: string
+  timeframe?: ResearchTimeframe
   price_mode: string
+  data_provenance?: Record<string, unknown>
   warning: string | null
   bars_requested: number
   bars_returned: number
@@ -33,7 +37,8 @@ export type Analysis = {
   pivot_counts: Record<string, number>
   discovery_scales?: number[]
   discovery_pivot_counts?: Record<string, number>
-  recognition_diagnostics?: Record<string, number>
+  recognition_diagnostics?: Record<string, number | string | object>
+  pine_r34_diagnostics?: Record<string, unknown>
   type_i_t5_events?: TypeIT5Event[]
   a_share_execution_context?: AShareExecutionContextPayload
   market_context?: MarketContextPayload

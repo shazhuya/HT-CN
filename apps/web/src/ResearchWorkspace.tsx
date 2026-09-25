@@ -11,12 +11,13 @@ import SectorContext from './SectorContext'
 import TypeIT5Evidence from './TypeIT5Evidence'
 import WatchlistPanel from './WatchlistPanel'
 import WorkbenchContextPanel from './WorkbenchContextPanel'
-import type { Analysis, InstrumentRow, ResearchTab } from './appTypes'
+import type { Analysis, InstrumentRow, ResearchTab, ResearchTimeframe } from './appTypes'
 import './ResearchWorkspace.css'
 
 const PATTERN_NAMES: Record<string, string> = {
   gartley: 'Gartley', bat: 'Bat', alternate_bat: 'Alternate Bat', butterfly: 'Butterfly',
-  crab: 'Crab', deep_crab: 'Deep Crab', abcd: 'AB=CD', shark: 'Shark', five_zero: '5-0',
+  crab: 'Crab', deep_crab: 'Deep Crab', abcd: 'AB=CD', abcd_127: 'AB=CD 1.27',
+  abcd_1618: 'AB=CD 1.618', deep_gartley: 'Deep Gartley', shark: 'Shark', five_zero: '5-0',
 }
 const TABS: Array<{ id: ResearchTab; label: string }> = [
   { id: 'overview', label: '概要' },
@@ -33,8 +34,24 @@ function patternStateLabel(pattern: Pattern) {
   return pattern.state === 'completed' ? '已完成' : '形成中'
 }
 
+function candidateDistanceLabel(pattern: Pattern) {
+  if (!pattern.discovery_only) return null
+  if (pattern.discovery?.prz_status === 'tested') return '已测试投影区'
+  const distanceAtr = pattern.metrics?.distance_to_prz_atr
+  if (typeof distanceAtr === 'number' && Number.isFinite(distanceAtr)) {
+    if (distanceAtr <= 1.5) return `距PRZ ${distanceAtr.toFixed(2)} ATR · 接近`
+    if (distanceAtr <= 3) return `距PRZ ${distanceAtr.toFixed(2)} ATR · 途中`
+    return `距PRZ ${distanceAtr.toFixed(2)} ATR · 远端`
+  }
+  const distanceXa = pattern.discovery?.distance_to_source_prz_xa
+  if (typeof distanceXa === 'number' && Number.isFinite(distanceXa)) {
+    return `距投影区 ${(distanceXa * 100).toFixed(1)}% 参考腿`
+  }
+  return null
+}
+
 export default function ResearchWorkspace({
-  analysis, loading, error, bars, onBarsChange, onRefresh, patterns, rawPatternCount,
+  analysis, loading, error, bars, onBarsChange, timeframe, onTimeframeChange, onRefresh, patterns, rawPatternCount,
   selectedPattern, onSelectPattern, showAllIdentities, onShowAllIdentities,
   focusPattern, onFocusPattern, crosshair, onCrosshair, tab, onTab, instruments, onOpenInstrument,
 }: {
@@ -43,6 +60,8 @@ export default function ResearchWorkspace({
   error: string | null
   bars: number
   onBarsChange: (bars: number) => void
+  timeframe: ResearchTimeframe
+  onTimeframeChange: (timeframe: ResearchTimeframe) => void
   onRefresh: () => void
   patterns: Pattern[]
   rawPatternCount: number
@@ -82,14 +101,16 @@ export default function ResearchWorkspace({
   const latest = analysis.bars.at(-1)
   const previous = analysis.bars.at(-2)
   const change = latest && previous && previous.close !== 0 ? (latest.close / previous.close - 1) * 100 : null
+  const timeframeLabel = timeframe === '1d' ? '日K' : timeframe === '60m' ? '60分钟' : '15分钟'
+  const dataKind = analysis.data_provenance?.kind === 'intraday_research' ? '分钟研究' : '本地日线'
 
   return (
     <section className={inspectorOpen ? 'research-view' : 'research-view inspector-collapsed'} aria-label="个股研究">
       <div className="research-header">
         <div className="research-header__identity">
           <h1>{analysis.instrument_id}</h1>
-          <span>{analysis.price_mode.toUpperCase()} · 日K</span>
-          <span className="research-header__date">{analysis.last_trade_date} 最近交易日</span>
+          <span>{analysis.price_mode.toUpperCase()} · {timeframeLabel}</span>
+          <span className="research-header__date">{analysis.last_trade_date} 最近K线 · {dataKind}</span>
         </div>
         <div className="research-header__quote" title="本地数据最后一根 K 线，不是实时报价">
           <strong>{latest?.close.toFixed(2) ?? '—'}</strong>
@@ -97,6 +118,11 @@ export default function ResearchWorkspace({
           <small>本地收盘</small>
         </div>
         <div className="research-controls" aria-label="analysis-controls">
+          <label><span className="visually-hidden">K线周期</span>
+            <select value={timeframe} onChange={(event) => onTimeframeChange(event.target.value as ResearchTimeframe)} aria-label="K线周期">
+              <option value="1d">日K</option><option value="60m">60分</option><option value="15m">15分</option>
+            </select>
+          </label>
           <label><span className="visually-hidden">观察范围</span>
             <select value={bars} onChange={(event) => onBarsChange(Number(event.target.value))} aria-label="观察范围">
               <option value={240}>240 根</option><option value={420}>420 根</option>
@@ -130,7 +156,7 @@ export default function ResearchWorkspace({
               <div className="research-chart-heading">
                 <div>
                   <h2>{selectedPattern ? `${PATTERN_NAMES[selectedPattern.pattern_id] ?? selectedPattern.pattern_id} · ${patternStateLabel(selectedPattern)}` : 'K 线图'}</h2>
-                  <span>{selectedPattern ? `${selectedPattern.discovery_only ? '发现层 · ' : ''}S${selectedPattern.scale} · ${selectedPattern.direction === 'bullish' ? '看涨' : '看跌'}` : '当前窗口暂无有效形态'}</span>
+                  <span>{selectedPattern ? `${selectedPattern.discovery_only ? (selectedPattern.discovery?.source === 'pine_r34' ? 'R3.4基线 · ' : '扩展发现 · ') : ''}S${selectedPattern.scale} · ${selectedPattern.direction === 'bullish' ? '看涨' : '看跌'}` : '当前窗口暂无有效形态'}</span>
                 </div>
                 <span className="research-chart-heading__tip">拖动平移 · 滚轮缩放 · 悬停查看节点</span>
               </div>
@@ -169,6 +195,8 @@ export default function ResearchWorkspace({
                       <dl><div><dt>完成结构</dt><dd>{analysis.completed.length}</dd></div>
                         <div><dt>权威形成中</dt><dd>{analysis.forming.length}</dd></div>
                         <div><dt>发现候选</dt><dd>{analysis.discovery?.length ?? 0}</dd></div>
+                        <div><dt>R3.4 实战 / 存活</dt><dd>{String(analysis.recognition_diagnostics?.pine_r34_monitoring ?? '—')} / {String(analysis.recognition_diagnostics?.pine_r34_live ?? '—')}</dd></div>
+                        <div><dt>R3.4 隐藏远端</dt><dd>{String(analysis.recognition_diagnostics?.pine_r34_hidden_remote ?? '—')}</dd></div>
                         <div><dt>权威 Pivot</dt><dd>{analysis.scales.join(' / ')}</dd></div>
                         <div><dt>发现 Pivot</dt><dd>{analysis.discovery_scales?.join(' / ') ?? '5 / 10 / 20'}</dd></div></dl>
                     </section>
@@ -197,9 +225,19 @@ export default function ResearchWorkspace({
                   <>
                     {selectedPattern?.discovery_only ? (
                       <section className="discovery-candidate-note" data-testid="discovery-candidate-note">
-                        <strong>发现候选 · 尚非权威身份</strong>
-                        <p>已确认 XABC 并投影冻结 Source PRZ；当前仅用于发现与观察，不虚构 D，也不生成 Type-I / Type-II 或买卖结论。</p>
-                        <small>{selectedPattern.discovery?.prz_status === 'tested' ? '价格已在 C 确认后测试 Source PRZ' : '价格尚未在可观察时钟内测试 Source PRZ'} · {selectedPattern.discovery?.path_kind === 'minor_swing_skip' ? '允许跳过一组次级摆动' : '连续摆动路径'}</small>
+                        <strong>{selectedPattern.discovery?.source === 'pine_r34' ? 'R3.4 行为基线候选' : '扩展发现候选'} · 尚非权威身份</strong>
+                        <p>{selectedPattern.discovery?.source === 'pine_r34'
+                          ? '按保留的 Pine R3.4 识别行为顺序重放：确认摆动、投影完成区、持续观察；不把行为基线冒充 Source 权威身份。'
+                          : '扩展图搜索用于补充标准 XABCD 高召回；不虚构 D，也不生成 Type-I / Type-II 或买卖结论。'}</p>
+                        <small>
+                          {selectedPattern.discovery?.prz_status === 'tested' ? '价格已在结构可知后测试严格投影区' : '严格投影区尚未完整测试'}
+                          {' · '}
+                          {selectedPattern.discovery?.neighborhood && selectedPattern.discovery.neighborhood.state > 0
+                            ? `R3.5邻域：${selectedPattern.discovery.neighborhood.reason}`
+                            : 'R3.5邻域：尚无独立记录'}
+                          {' · '}
+                          {selectedPattern.discovery?.research_only ? '研究级' : selectedPattern.discovery?.qualified === false ? '仅观察' : '行为规则通过'}
+                        </small>
                       </section>
                     ) : (
                       <>
@@ -217,7 +255,16 @@ export default function ResearchWorkspace({
                         const key = patternKey(pattern)
                         return (
                           <button key={key} className={selectedPattern && patternKey(selectedPattern) === key ? 'pattern-item active' : 'pattern-item'} onClick={() => onSelectPattern(key)}>
-                            <span><strong>{PATTERN_NAMES[pattern.pattern_id] ?? pattern.pattern_id}</strong><small>{patternStateLabel(pattern)} · S{pattern.scale}</small></span>
+                            <span>
+                              <strong>{PATTERN_NAMES[pattern.pattern_id] ?? pattern.pattern_id}</strong>
+                              <small>
+                                {patternStateLabel(pattern)} · S{pattern.scale}
+                                {pattern.discovery?.source === 'pine_r34' ? ' · R3.4' : pattern.discovery?.source === 'extended_graph' ? ' · 扩展' : ''}
+                                {pattern.discovery?.neighborhood && pattern.discovery.neighborhood.state > 0 && pattern.discovery.neighborhood.state < 5 ? ' · 邻域' : ''}
+                                {pattern.discovery?.research_only ? ' · 研究' : ''}
+                              </small>
+                              {candidateDistanceLabel(pattern) && <small className="pattern-item__distance">{candidateDistanceLabel(pattern)}</small>}
+                            </span>
                             <b>{pattern.direction === 'bullish' ? '↗' : '↘'}</b>
                           </button>
                         )

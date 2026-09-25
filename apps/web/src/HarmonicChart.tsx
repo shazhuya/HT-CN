@@ -17,6 +17,7 @@ import './HarmonicChartLifecycle.css'
 export type Bar = {
   index: number
   trade_date: string
+  time?: number
   open: number
   high: number
   low: number
@@ -144,9 +145,39 @@ export type SourceLifecycle = {
   retrospective_geometry_clock_used: boolean
 }
 
+export type R35NeighborhoodMetadata = {
+  source: 'pine_r35'
+  pine_source_sha256: string
+  state: number
+  pad: number
+  zone_low: number
+  zone_high: number
+  born_bar: number | null
+  first_extreme: number | null
+  first_bar: number | null
+  response_bar: number | null
+  response_price: number | null
+  reaction_peak: number | null
+  away: boolean
+  away_bar: number | null
+  second_bar: number | null
+  second_extreme: number | null
+  second_response_bar: number | null
+  second_response_price: number | null
+  reason: string
+  strict_takeover: boolean
+  strict_prz_expanded: false
+  creates_tbar: false
+  creates_type_i: false
+  creates_type_ii: false
+  creates_trade_plan: false
+}
+
 export type DiscoveryMetadata = {
+  source?: 'pine_r34' | 'extended_graph'
+  behavioral_baseline?: boolean
   authoritative_identity: boolean
-  path_kind: 'consecutive' | 'minor_swing_skip'
+  path_kind: 'consecutive' | 'minor_swing_skip' | 'pine_r34'
   skipped_pivots: number
   known_from_bar: number
   prz_status: 'projected' | 'tested'
@@ -155,6 +186,16 @@ export type DiscoveryMetadata = {
   c_family_relative_error: number | null
   source_family_aligned: boolean
   distance_to_source_prz_xa: number
+  research_only?: boolean
+  qualified?: boolean
+  precise?: boolean
+  observable?: boolean
+  monitoring_rank?: number | null
+  recently_tested?: boolean
+  neighborhood?: R35NeighborhoodMetadata | null
+  projected_label?: string
+  structural_limit?: number
+  pine_source_sha256?: string
   mutates_source_identity: boolean
   owns_lifecycle: boolean
   fabricates_d: boolean
@@ -162,7 +203,7 @@ export type DiscoveryMetadata = {
 
 export type Pattern = {
   pattern_id: string
-  schema?: 'XABCD' | 'ABCD' | '0XABC' | 'FIVE_ZERO'
+  schema?: 'XABCD' | 'ABCD' | '0XABC' | '0XABCD' | 'FIVE_ZERO'
   direction: 'bullish' | 'bearish'
   state: 'forming' | 'completed'
   scale: number
@@ -199,7 +240,7 @@ export type Pattern = {
     source_prz?: SourcePrzLayer
     components: PrzComponent[]
   }
-  metrics: Record<string, number>
+  metrics: Record<string, number | null>
 }
 
 type Props = {
@@ -349,6 +390,10 @@ function pointTradeDate(point: HarmonicPoint, bars: Bar[]): string | null {
   return bars.find((bar) => bar.index === point.index)?.trade_date ?? null
 }
 
+function barChartTime(bar: Bar): Time {
+  return (bar.time ?? bar.trade_date) as Time
+}
+
 function timeKey(time: Time | undefined): string | null {
   if (time == null) return null
   if (typeof time === 'string') return time
@@ -478,26 +523,29 @@ export default function HarmonicChart({
         publishCrosshair(null)
         return
       }
-      const bar = barsRef.current.find((item) => item.trade_date === key)
+      const bar = typeof param.time === 'number'
+        ? barsRef.current.find((item) => item.time === param.time)
+        : barsRef.current.find((item) => item.trade_date === key)
       if (!bar) {
         publishCrosshair(null)
         return
       }
       const activePattern = patternRef.current
+      const activeTradeDate = bar.trade_date
       const nodes = activePattern
         ? activePattern.points
-          .filter((point) => pointTradeDate(point, barsRef.current) === key)
+          .filter((point) => pointTradeDate(point, barsRef.current) === activeTradeDate)
           .map((point) => point.label)
         : []
       const lifecycle = activePattern?.source_lifecycle
       const lifecycleLabels = lifecycle
         ? sourceEvents(lifecycle)
-          .filter((event) => barsRef.current.find((item) => item.index === event.bar)?.trade_date === key)
+          .filter((event) => barsRef.current.find((item) => item.index === event.bar)?.trade_date === activeTradeDate)
           .map((event) => event.label)
         : []
 
       publishCrosshair({
-        tradeDate: key,
+        tradeDate: bar.trade_date,
         open: Number(raw.open),
         high: Number(raw.high),
         low: Number(raw.low),
@@ -540,7 +588,7 @@ export default function HarmonicChart({
     const series = seriesRef.current
     if (!series) return
     const data: CandlestickData<Time>[] = bars.map((bar) => ({
-      time: bar.trade_date as Time,
+      time: barChartTime(bar),
       open: bar.open,
       high: bar.high,
       low: bar.low,
@@ -578,7 +626,7 @@ export default function HarmonicChart({
     const xForIndex = (index: number) => {
       const bar = byIndex.get(index)
       if (!bar) return null
-      return chart.timeScale().timeToCoordinate(bar.trade_date as Time)
+      return chart.timeScale().timeToCoordinate(barChartTime(bar))
     }
     const yForPrice = (price: number) => series.priceToCoordinate(price)
     const coordinate = (index: number, price: number) => {
@@ -660,6 +708,25 @@ export default function HarmonicChart({
         envelope?.price_high ?? pattern.prz.component_price_high,
         patternEndIndex,
         'overlay-zone component-envelope',
+      )
+    }
+
+    const neighborhood = pattern.discovery?.source === 'pine_r34'
+      ? pattern.discovery.neighborhood
+      : null
+    if (
+      neighborhood
+      && neighborhood.state > 0
+      && neighborhood.state < 5
+      && !neighborhood.strict_takeover
+    ) {
+      addZone(
+        'r35_neighborhood',
+        'R3.5 邻域 · 非严格PRZ',
+        neighborhood.zone_low,
+        neighborhood.zone_high,
+        neighborhood.born_bar ?? patternEndIndex,
+        'overlay-zone r35-neighborhood',
       )
     }
 

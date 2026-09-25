@@ -81,6 +81,16 @@ jobs:
         working-directory: apps/web
         run: npm run build
 
+      - name: Install Playwright Chromium for CR-0089 recognition acceptance
+        if: startsWith(github.ref, 'refs/heads/m9/production-recognition-acceptance') || startsWith(github.head_ref, 'm9/production-recognition-acceptance')
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Run CR-0089 recognition browser acceptance
+        if: startsWith(github.ref, 'refs/heads/m9/production-recognition-acceptance') || startsWith(github.head_ref, 'm9/production-recognition-acceptance')
+        working-directory: apps/web
+        run: npx playwright test tests/smoke.spec.ts tests/product-workbench.spec.ts tests/recognition-discovery.spec.ts tests/recognition-timeframes.spec.ts --reporter=list
+
       - name: Install Playwright Chromium for M5/M3/M2 source gates
         if: startsWith(github.ref, 'refs/heads/m5/') || startsWith(github.head_ref, 'm5/') || startsWith(github.ref, 'refs/heads/m3/') || startsWith(github.head_ref, 'm3/') || startsWith(github.ref, 'refs/heads/m2/source-') || startsWith(github.head_ref, 'm2/source-') || startsWith(github.ref, 'refs/heads/m2/five-zero-') || startsWith(github.head_ref, 'm2/five-zero-') || startsWith(github.ref, 'refs/heads/m2/shark-') || startsWith(github.head_ref, 'm2/shark-') || startsWith(github.ref, 'refs/heads/m2/rsi-') || startsWith(github.head_ref, 'm2/rsi-')
         working-directory: apps/web
@@ -141,6 +151,41 @@ jobs:
             artifacts/release/
           if-no-files-found: warn
           retention-days: 14
+
+
+  cr0089-real-market-recognition:
+    name: cr0089-real-a-share-recognition
+    if: startsWith(github.ref, 'refs/heads/m9/production-recognition-acceptance') || startsWith(github.head_ref, 'm9/production-recognition-acceptance')
+    needs: deterministic-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install pinned Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.lock
+          python -m pip install --no-deps -e .
+
+      - name: Run hosted real A-share recognition acceptance
+        run: python -u scripts/m9_recognition_real_market_acceptance.py
+
+      - name: Upload CR-0089 real-market recognition evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m9-cr0089-real-market-recognition-${{ github.sha }}
+          path: artifacts/reports/m9-recognition-real-market-acceptance.json
+          if-no-files-found: warn
+          retention-days: 30
 
 
   main-release-integrity:

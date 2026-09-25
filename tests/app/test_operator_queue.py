@@ -87,6 +87,49 @@ def _discovery_pattern() -> dict:
     }
 
 
+def _pine_discovery_pattern(
+    *,
+    pattern_id: str = "abcd",
+    distance_atr: float = 0.8,
+    research_only: bool = False,
+    qualified: bool = True,
+    last_index: int = 30,
+) -> dict:
+    return {
+        "pattern_id": pattern_id,
+        "schema": "ABCD" if pattern_id.startswith("abcd") else "0XABC",
+        "direction": "bullish",
+        "scale": 5,
+        "state": "forming",
+        "channel": "discovery",
+        "discovery_only": True,
+        "is_primary_identity": True,
+        "points": [
+            {"index": last_index - 20, "trade_date": "2026-09-10"},
+            {"index": last_index - 10, "trade_date": "2026-09-11"},
+            {"index": last_index, "trade_date": "2026-09-14"},
+        ],
+        "prz": {
+            "price_low": 86.18,
+            "price_high": 87.02,
+            "width": 0.84,
+            "components": [],
+        },
+        "metrics": {"distance_to_prz_atr": distance_atr},
+        "discovery": {
+            "source": "pine_r34",
+            "behavioral_baseline": True,
+            "prz_status": "projected",
+            "path_kind": "pine_r34",
+            "projected_label": "D",
+            "research_only": research_only,
+            "qualified": qualified,
+            "authoritative_identity": False,
+            "fabricates_d": False,
+            "owns_lifecycle": False,
+        },
+    }
+
 class FakeService:
     def __init__(self, payloads: dict[str, dict]) -> None:
         self.payloads = payloads
@@ -182,6 +225,69 @@ def test_operator_queue_uses_workflow_bucket_not_predictive_score() -> None:
     )
 
 
+
+def test_operator_queue_preserves_pine_r34_projected_completion_zone() -> None:
+    analysis = _analysis()
+    analysis["discovery"] = [_pine_discovery_pattern()]
+    service = FakeService({"SSE.1": analysis})
+
+    payload = build_operator_queue(service, ["SSE.1"])
+
+    assert payload["candidate_count"] == 1
+    item = payload["items"][0]
+    assert item["pattern_id"] == "abcd"
+    assert item["schema"] == "ABCD"
+    assert item["discovery_source"] == "pine_r34"
+    assert item["projection_basis"] == "pine_r34_projected_completion_zone"
+    assert item["projection_label"] == "D"
+    assert item["source_prz_low"] == 86.18
+    assert item["source_prz_high"] == 87.02
+    assert "R3.4 ABCD" in item["current_position"]
+    assert "投影D完成区" in item["first_watch"]
+    assert item["next_key_price"] == 87.02
+    assert item["next_key_price_role"] == "投影D完成区首触边界"
+    assert item["timeframe"] == "1d"
+    assert item["predictive_score_used"] is False
+
+
+def test_operator_queue_selects_practical_discovery_before_remote_or_research() -> None:
+    analysis = _analysis()
+    analysis["discovery"] = [
+        _pine_discovery_pattern(
+            pattern_id="abcd_127",
+            distance_atr=0.2,
+            research_only=True,
+            last_index=60,
+        ),
+        _pine_discovery_pattern(
+            pattern_id="abcd",
+            distance_atr=2.5,
+            research_only=False,
+            last_index=40,
+        ),
+        _pine_discovery_pattern(
+            pattern_id="abcd",
+            distance_atr=0.7,
+            research_only=False,
+            last_index=30,
+        ),
+        _pine_discovery_pattern(
+            pattern_id="abcd",
+            distance_atr=5.0,
+            research_only=False,
+            last_index=70,
+        ),
+    ]
+    service = FakeService({"SSE.1": analysis})
+
+    payload = build_operator_queue(service, ["SSE.1"])
+
+    assert payload["candidate_count"] == 3
+    selected = payload["items"]
+    assert all(item["pattern_id"] == "abcd" for item in selected)
+    assert all("research_only" not in item["context_cautions"] for item in selected)
+
+
 def test_operator_queue_includes_bounded_discovery_without_fabricating_lifecycle() -> None:
     analysis = _analysis()
     analysis["discovery"] = [_discovery_pattern()]
@@ -196,7 +302,9 @@ def test_operator_queue_includes_bounded_discovery_without_fabricating_lifecycle
     assert item["lifecycle_state"] == "discovery_candidate"
     assert item["action_state"] == "evidence_insufficient"
     assert item["predictive_score_used"] is False
-    assert item["next_key_price"] is None
+    assert item["next_key_price"] == 100.0
+    assert item["next_key_price_role"] == "Source PRZ首触边界"
+    assert item["timeframe"] == "1d"
     assert "geometry_score" not in item
 
 
