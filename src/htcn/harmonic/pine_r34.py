@@ -7,6 +7,13 @@ from math import floor, isfinite
 
 import pandas as pd
 
+from htcn.harmonic.pine_r35 import (
+    PINE_R35_NEIGHBORHOOD_LIFE,
+    PineR35Neighborhood,
+    neighborhood_pad,
+    step_neighborhood,
+)
+
 PINE_R34_SOURCE_SHA256 = "84e1eb2267c9b80891e0ffb64a6d4abf5712fc5e756be81815e536f2fca4c3f5"
 PINE_R34_SCALES: tuple[int, ...] = (5, 10, 20)
 PINE_R34_NEAR_ATR = 1.5
@@ -140,6 +147,7 @@ class PineR34Candidate:
     observable: bool = False
     monitoring_rank: float | None = None
     recently_tested: bool = False
+    neighborhood: PineR35Neighborhood | None = None
 
     @property
     def conflict_key(self) -> tuple[int, ...]:
@@ -196,6 +204,14 @@ class PineR34Candidate:
             "observable": self.observable,
             "monitoring_rank": self.monitoring_rank,
             "recently_tested": self.recently_tested,
+            "neighborhood": (
+                self.neighborhood.as_payload(
+                    prz_low=self.prz_low,
+                    prz_high=self.prz_high,
+                )
+                if self.neighborhood is not None
+                else None
+            ),
             "source": "pine_r34",
             "pine_source_sha256": PINE_R34_SOURCE_SHA256,
         }
@@ -727,6 +743,7 @@ def scan_pine_r34(
     developing_age: int = PINE_R34_DEVELOPING_AGE,
     visible_width_atr: float = PINE_R34_VISIBLE_WIDTH_ATR,
     fresh_bars: int = PINE_R34_FRESH_BARS,
+    neighborhood_life: int = PINE_R35_NEIGHBORHOOD_LIFE,
 ) -> PineR34Scan:
     """Sequentially reproduce the recognition portion of standalone Pine R3.4.
 
@@ -947,6 +964,12 @@ def scan_pine_r34(
                     bc_ideal=geometry.bc_ideal,
                     c_error=geometry.c_error,
                     convergence_error=geometry.convergence_error,
+                    neighborhood=PineR35Neighborhood(
+                        pad=neighborhood_pad(
+                            float(current_atr),
+                            float(geometry.m1),
+                        )
+                    ),
                 )
                 next_id += 1
                 seen.add(key)
@@ -985,6 +1008,36 @@ def scan_pine_r34(
 
                 candidates.append(candidate)
                 born_counts[candidate.pattern_id] = born_counts.get(candidate.pattern_id, 0) + 1
+
+        # R3.5 neighborhood processing is deliberately after strict pattern updates
+        # and new-pattern registration. It sees only information knowable on this bar
+        # and cannot backfill pre-birth reactions.
+        if bar > 0:
+            for candidate in candidates:
+                if (
+                    not candidate.qualified
+                    or candidate.neighborhood is None
+                    or candidate.neighborhood.pad <= 0
+                ):
+                    continue
+                step_neighborhood(
+                    candidate.neighborhood,
+                    direction=candidate.direction,
+                    prz_low=candidate.prz_low,
+                    prz_high=candidate.prz_high,
+                    atr_at_birth=candidate.atr_at_birth,
+                    low=lows[bar],
+                    high=highs[bar],
+                    open_price=opens[bar],
+                    close=closes[bar],
+                    previous_high=highs[bar - 1],
+                    previous_low=lows[bar - 1],
+                    bar=bar,
+                    strict_tested=candidate.test_count > 0,
+                    live=candidate.live,
+                    window=neighborhood_life,
+                    tick_size=tick_size,
+                )
 
     latest_bar = len(source) - 1
     latest_close = closes[-1]
@@ -1086,5 +1139,18 @@ def scan_pine_r34(
             "candidate_table_limit": candidate_table_limit,
             "developing_age": developing_age,
             "visible_width_atr": visible_width_atr,
+            "neighborhood_candidate_count": sum(
+                item.neighborhood is not None and item.neighborhood.state > 0
+                for item in candidates
+            ),
+            "neighborhood_active_count": sum(
+                item.neighborhood is not None
+                and item.neighborhood.state in {1, 2, 3, 4}
+                for item in candidates
+            ),
+            "neighborhood_strict_takeover_count": sum(
+                item.neighborhood is not None and item.neighborhood.state == 6
+                for item in candidates
+            ),
         },
     )
