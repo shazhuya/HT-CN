@@ -230,7 +230,11 @@ export default function ResearchWorkspace({
                           ? '按保留的 Pine R3.4 识别行为顺序重放：确认摆动、投影完成区、持续观察；不把行为基线冒充 Source 权威身份。'
                           : '扩展图搜索用于补充标准 XABCD 高召回；不虚构 D，也不生成 Type-I / Type-II 或买卖结论。'}</p>
                         <small>
-                          {selectedPattern.discovery?.prz_status === 'tested' ? '价格已在结构可知后测试投影区' : '价格尚未在可观察时钟内测试投影区'}
+                          {selectedPattern.discovery?.prz_status === 'tested' ? '价格已在结构可知后测试严格投影区' : '严格投影区尚未完整测试'}
+                          {' · '}
+                          {selectedPattern.discovery?.neighborhood && selectedPattern.discovery.neighborhood.state > 0
+                            ? `R3.5邻域：${selectedPattern.discovery.neighborhood.reason}`
+                            : 'R3.5邻域：尚无独立记录'}
                           {' · '}
                           {selectedPattern.discovery?.research_only ? '研究级' : selectedPattern.discovery?.qualified === false ? '仅观察' : '行为规则通过'}
                         </small>
@@ -256,6 +260,7 @@ export default function ResearchWorkspace({
                               <small>
                                 {patternStateLabel(pattern)} · S{pattern.scale}
                                 {pattern.discovery?.source === 'pine_r34' ? ' · R3.4' : pattern.discovery?.source === 'extended_graph' ? ' · 扩展' : ''}
+                                {pattern.discovery?.neighborhood && pattern.discovery.neighborhood.state > 0 && pattern.discovery.neighborhood.state < 5 ? ' · 邻域' : ''}
                                 {pattern.discovery?.research_only ? ' · 研究' : ''}
                               </small>
                               {candidateDistanceLabel(pattern) && <small className="pattern-item__distance">{candidateDistanceLabel(pattern)}</small>}
