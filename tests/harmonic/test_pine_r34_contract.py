@@ -3,7 +3,6 @@ from pathlib import Path
 
 from htcn.harmonic import pine_r34
 
-
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_PATH = ROOT / "research" / "pine-r34-recognition-contract-v1.json"
 
