@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-RECOGNITION-RECALL-V1-VALIDATION-GREEN",
+  "state_id": "HTCN-M9-POST-RELEASE-RECOGNITION-RECALL-V1-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -24,17 +24,17 @@
     "milestone": "M9",
     "phase": "M9.post_release",
     "title": "Stable Product Recognition Recall Repair",
-    "status": "validation_green",
+    "status": "ready_to_merge",
     "active_change": "CR-0088",
     "active_spec": "specs/m9-post-release-recognition-recall-v1.md",
-    "latest_attempt_id": "A-20260925-0088-009",
-    "latest_hosted_validation_attempt_id": "A-20260925-0088-009",
+    "latest_attempt_id": "A-20260925-0088-010",
+    "latest_hosted_validation_attempt_id": "A-20260925-0088-010",
     "work_branch": "m9/post-release-recognition-recall-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36084996916,
-      "head": "ede373cf1af0ebd25418b87af655dbc5aa888590",
-      "scope": "CR-0088 planned PR #79 candidate fully green: persistent discovery Python/API/browser, existing Stable browser suite, Phase18/21, M4 37/37, Outcome 4/4 and Stable acceptance."
+      "workflow_run": 36085399695,
+      "head": "d6e3dd0a909b00f387f87042709faa29e81fb9ae",
+      "scope": "CR-0088 validation_green governance head passed hosted push and pull_request CI with the full planned recognition-recall, Stable browser, Phase18/21, M4 37/37 and Outcome 4/4 gates."
     }
   },
   "private_m1": {
@@ -58,14 +58,14 @@
   "next_major_task": {
     "phase": "M9.post_release",
     "title": "Stable Product Recognition Recall Repair",
-    "status": "validation_green",
+    "status": "ready_to_merge",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate the activated CR-0088 validation_green governance head on hosted CI, then advance to ready_to_merge, validate the exact ledger-bearing head, merge with ancestry preserved and validate canonical main. Keep exact matched 1-hour Pine parity explicitly separate from the product-functional discovery repair."
+    "objective": "Validate the exact ready_to_merge ledger-bearing head, then merge PR #79 with ancestry preserved and validate canonical main. Exact matched 1-hour Pine parity remains a separate unresolved evidence boundary."
   },
   "freezes": {
     "m4_capture_methodology": {
