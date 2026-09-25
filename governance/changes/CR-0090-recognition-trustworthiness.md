@@ -86,6 +86,18 @@ or more UI do not count as recognition improvement by themselves.
 - interpretation: the primary proven bottleneck is consecutive-pivot candidate construction, not the frozen Carney classifier or PRZ mathematics.
 - limitation: this is controlled ground truth, not a real-market semantic accuracy claim.
 
+### Gate 1 pre-registered interpretation
+
+Before observing Gate 1 results, the following decision rules are frozen:
+
+- if depth-1/depth-2 remain strong but depth-3 recall collapses, treat the bounded skip budget as the
+  next candidate-generation bottleneck; do not relax Carney ratios or PRZ;
+- if multi-scale recall improves but false positives/predictions-per-case rise materially, add
+  graph-level dominated-path pruning and cross-scale geometry dedupe before increasing search depth;
+- if independent invalid-B/invalid-C/invalid-D negatives produce false positives, fix graph path
+  admissibility or dedupe first; canonical identity remains frozen;
+- streaming confirmed-history mutation must remain zero before any production promotion.
+
 ### Next gate
 
 Do not integrate the experimental graph into production yet. Expand adversarial coverage with:
