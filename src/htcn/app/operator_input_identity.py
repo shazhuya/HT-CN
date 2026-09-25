@@ -35,6 +35,7 @@ ANALYSIS_APP_FILES: tuple[str, ...] = (
     "src/htcn/app/market_context.py",
     "src/htcn/app/operator_input_identity.py",
     "src/htcn/app/operator_queue.py",
+    "src/htcn/app/recognition_discovery_service.py",
     "src/htcn/app/operator_snapshot.py",
     "src/htcn/app/sector_context.py",
     "src/htcn/app/source_aligned_service.py",
