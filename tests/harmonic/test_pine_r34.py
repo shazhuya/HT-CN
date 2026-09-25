@@ -1,3 +1,5 @@
+from itertools import pairwise
+
 import pandas as pd
 import pytest
 
@@ -278,7 +280,7 @@ def _piecewise_frame(
 ) -> pd.DataFrame:
     closes: list[float] = [0.0] * rows
     for segment, ((left_i, left_p), (right_i, right_p)) in enumerate(
-        zip(anchors, anchors[1:], strict=False)
+        pairwise(anchors)
     ):
         span = right_i - left_i
         assert span > 0, segment
