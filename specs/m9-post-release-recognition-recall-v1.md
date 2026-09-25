@@ -32,3 +32,20 @@ HT-CN's authoritative harmonic engine is intentionally strict, but Stable produc
 - Existing authoritative tests remain unchanged and green.
 - New tests prove: persistent historical XABC remains in discovery after a later pivot; a candidate with C inside the source structural envelope but outside the 3% discrete-family gate remains discovery-only; a two-pivot minor swing can be skipped; no PRZ test is backfilled before C confirmation; exact authoritative fixtures still dedupe correctly.
 - Stable browser flow can select and render a discovery-only candidate when authoritative arrays are empty.
+
+## Real-bar audit baseline carried into this implementation
+
+Prior CR-0088 research established that the empty-product problem is observable on real daily bars, not merely a synthetic complaint. The audited datasets/hashes were:
+
+- `寒武纪_每日详细数据_20260302-20260918.csv` — SHA-256 `c9cf5d984bab64aba02a532c230d5b0af3ddebb0748af95f9606568be14e6c29`, 140 daily rows.
+- `cambricon_688256_daily_2025-09-03_2026-09-04.csv` — SHA-256 `b9507f92fe4fdba4ef1a5bc9c2d8257397533e0351386fe37e5784be8e0c8f3c`, 244 daily rows.
+
+Production S3/5/8/13 returned zero current standard XABCD forming and zero standard XABCD completed on both audited daily samples. The 140-row raw sample had five historical B+C structural-band rule/window pairs but zero surviving the C discrete-family ±3% operational match. This is the concrete reason discovery existence may not be gated by discrete-family proximity.
+
+These datasets are evidence references, not silently bundled proprietary/third-party market data. If their bytes are unavailable in CI, deterministic geometry fixtures must reproduce the measured gate boundaries and the real-data hashes/results remain in governance. A future same-timeframe Pine parity claim requires the actual 1-hour OHLC/basis/settings; daily data must never be substituted for that claim.
+
+## Additional acceptance boundary
+
+- The repair may be declared product-functional when the separate discovery channel, persistence, bounded topology, no-lookahead clock, API/UI separation and full hosted gates pass.
+- It may **not** be declared Pine-hourly-equivalent until the exact hourly corpus is replayed under matched pivot/time/basis settings.
+- Real-bar recall/false-positive statistics, if later published, require an explicitly labeled corpus and denominator; candidate count alone is not accuracy or trading performance.
