@@ -50,6 +50,19 @@ jobs:
       - name: Run Python tests
         run: python scripts/pytest_with_warning_budget.py
 
+      - name: Run recognition correctness Gate 0 baseline
+        if: startsWith(github.ref, 'refs/heads/m9/recognition-trustworthiness') || startsWith(github.head_ref, 'm9/recognition-trustworthiness')
+        run: python scripts/m9_recognition_correctness_baseline.py
+
+      - name: Upload recognition correctness Gate 0 report
+        if: always() && (startsWith(github.ref, 'refs/heads/m9/recognition-trustworthiness') || startsWith(github.head_ref, 'm9/recognition-trustworthiness'))
+        uses: actions/upload-artifact@v4
+        with:
+          name: htcn-recognition-correctness-${{ github.sha }}
+          path: artifacts/reports/m9-recognition-correctness-baseline.json
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Build and verify portable chat continuation bundle
         run: python scripts/build_chat_continuation_bundle.py
 
