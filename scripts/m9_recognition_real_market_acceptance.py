@@ -16,7 +16,6 @@ from htcn.data.intraday import AkShareIntradayProvider, IntradayProviderError
 from htcn.data.providers.akshare_provider import AkShareProvider
 from htcn.harmonic.pine_r34 import PINE_R34_SOURCE_SHA256, scan_pine_r34
 
-
 CORPUS: tuple[tuple[str, str, str], ...] = (
     ("SSE.688256", "寒武纪", "STAR_AI"),
     ("SZSE.300394", "天孚通信", "CPO"),
