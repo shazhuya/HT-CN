@@ -1,6 +1,6 @@
 # CR-0090 — Recognition trustworthiness and detector correctness
 
-status: planned
+status: validation_green
 baseline_ref: main
 baseline_head: 04aa35737f7d58c2ab12bca62ba536c3970ce9ef
 target: main
@@ -68,3 +68,29 @@ Forbidden in this Change:
 A version is better only when fixed benchmark evidence improves detector correctness without
 violating no-lookahead or materially collapsing precision. More candidates, more files, more tests
 or more UI do not count as recognition improvement by themselves.
+
+
+## A-20260925-0090-001 — Gate 0 correctness baseline
+
+- validated head: `0d193843f5600514cca874eff1f726586a9f1d78`
+- workflow: `36163533018 / #3018`
+- result: success
+- corpus: `recognition-correctness-gate0-v3`
+- corpus SHA-256: `c0104be8801dff56eca1828e48d6e413b0ca6ecb4167c5a80e0224a8d06999cc`
+- controlled clean positives: authoritative 10/10 exact.
+- bounded minor-swing stress matrix: authoritative 0/100; all 100 losses were `candidate_window_missing` while the truth pivots existed.
+- experimental bounded graph + unchanged canonical classifier: 100/100 exact, 0 false positives on the stress matrix.
+- controlled hard negatives: graph 10/10 clean rejection.
+- future replacement regression: final-history pivot collapse can erase an earlier valid geometry; event-sourced streaming graph preserves the first knowable completed event.
+- interpretation: the primary proven bottleneck is consecutive-pivot candidate construction, not the frozen Carney classifier or PRZ mathematics.
+- limitation: this is controlled ground truth, not a real-market semantic accuracy claim.
+
+### Next gate
+
+Do not integrate the experimental graph into production yet. Expand adversarial coverage with:
+- randomized minor-swing amplitude/time placement;
+- near-boundary hard negatives;
+- multi-scale graph pressure/duplicate control;
+- batch future-tail invariance;
+- synthetic-in-real A-share noise;
+- blind holdout.
