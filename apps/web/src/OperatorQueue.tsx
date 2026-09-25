@@ -44,7 +44,6 @@ type OperatorQueueItem = {
   source_prz_low: number | null
   source_prz_high: number | null
   bars_since_terminal: number | null
-  discovery_only?: boolean
 }
 
 type OperatorQueuePayload = {
