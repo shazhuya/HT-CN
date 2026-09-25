@@ -150,14 +150,25 @@
       "id": "ISSUE-0073",
       "severity": "high",
       "type": "product_recognition_recall",
-      "status": "open",
+      "status": "closed",
       "title": "Shipped harmonic recognition has near-zero usable XABCD candidates on observed real daily bars",
+      "blocks": [],
+      "next_action": "None for the shipped daily-bar recognition recall defect. Exact matched 1-hour Pine parity continues separately as ISSUE-0074.",
+      "current_fact": "CR-0088 is integrated on canonical main 481dd43f... and main run #2888 passed all formal gates. Stable now exposes persistent non-authoritative XABC discovery candidates, projected Source PRZ, bounded minor-swing skip paths and full-market discovery visibility without weakening canonical Source identity.",
+      "resolution": "Closed by canonical-main merge validation A-20260925-0088-014. The original near-zero product recall defect is repaired and main-validated; exact same-timeframe Pine parity was intentionally split into ISSUE-0074 because it requires matched 1-hour OHLC, price basis, pivot settings and time-of-knowledge evidence.",
+      "closed_in": "CR-0088"
+    },
+    {
+      "id": "ISSUE-0074",
+      "severity": "research",
+      "type": "recognition_parity",
+      "status": "open",
+      "title": "Exact matched 1-hour Pine parity remains unverified",
       "blocks": [
-        "practical chart recognition acceptance",
-        "claiming Pine-equivalent CD-leg projection"
+        "claiming Pine-equivalent 1-hour XABC/CD-leg projection parity"
       ],
-      "next_action": "Validate the activated CR-0088 validation_green governance head, then advance to ready_to_merge and canonical-main validation. Keep exact 1-hour Pine parity as a separately unresolved acceptance boundary until matched hourly OHLC, price basis, pivot settings and time-of-knowledge are replayed.",
-      "current_fact": "PR #79 planned candidate ede373cf... passed full hosted run #2866: product discovery/API/UI, existing Stable browser suite, Phase18/21, M4 37/37, Outcome 4/4 and Stable acceptance. The discovery/existence-gate repair is product-functional without modifying frozen canonical identity. Exact same-timeframe 1-hour Pine parity remains unverified."
+      "next_action": "Build a matched-timeframe acceptance fixture using identical 1-hour OHLC, price basis, pivot settings, session/calendar treatment and time-of-knowledge. Compare Pine and HT-CN node-by-node and PRZ-by-PRZ; do not infer parity from screenshots or daily-bar recall.",
+      "current_fact": "CR-0088 fixes product discovery recall and is canonical-main validated. It deliberately does not claim exact Pine parity because the prior evidence did not provide a matched 1-hour replay contract."
     }
   ]
 }

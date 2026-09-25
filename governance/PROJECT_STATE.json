@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-RECOGNITION-RECALL-V1-READY-TO-MERGE",
+  "state_id": "HTCN-STABLE-V1.0.0-RECOGNITION-RECALL-V1-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
   "current": {
     "milestone": "M9",
     "phase": "M9.post_release",
-    "title": "Stable Product Recognition Recall Repair",
-    "status": "ready_to_merge",
-    "active_change": "CR-0088",
-    "active_spec": "specs/m9-post-release-recognition-recall-v1.md",
-    "latest_attempt_id": "A-20260925-0088-013",
-    "latest_hosted_validation_attempt_id": "A-20260925-0088-013",
-    "work_branch": "m9/post-release-recognition-recall-v1",
+    "title": "Stable Product Operations & Maintenance",
+    "status": "ready",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260925-0088-014",
+    "latest_hosted_validation_attempt_id": "A-20260925-0088-014",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36087132540,
-      "head": "63491a5330e2a7c207a8bde66b65aa85a1397ce7",
-      "scope": "Exact CR-0088 ready-to-merge head fully green across Project OS, Source Coverage, Ruff, 993 Python/API tests, Web/browser release gates, M4 37/37, Outcome 4/4 and Stable acceptance."
+      "workflow_run": 36087644050,
+      "merge_commit": "481dd43fd0f685735afdea51fff0181b98ec5a96",
+      "scope": "CR-0088 merged with ancestry preserved on canonical main; run #2888 passed Project OS, Source Coverage, Ruff/Python/Web, formal browser/release gates, M4 37/37, Outcome 4/4 and Stable acceptance."
     }
   },
   "private_m1": {
@@ -57,15 +57,15 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Stable Product Recognition Recall Repair",
-    "status": "ready_to_merge",
+    "title": "Stable v1.0.0 Operations & Maintenance",
+    "status": "ready",
     "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate the final ledger-bearing ready_to_merge head, then merge PR #79 with ancestry preserved and validate canonical main. Exact matched 1-hour Pine parity remains a separate unresolved evidence boundary."
+    "objective": "Use the integrated high-recall discovery layer in normal Stable research and collect direct acceptance evidence. Exact matched 1-hour Pine parity remains a separate research acceptance item (ISSUE-0074), not a blocker for the shipped daily-bar discovery repair."
   },
   "freezes": {
     "m4_capture_methodology": {

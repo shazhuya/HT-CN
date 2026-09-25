@@ -1,6 +1,6 @@
 # M9 post-release — Harmonic recognition recall v1
 
-status: ready_to_merge
+status: closed
 
 ## Problem statement
 

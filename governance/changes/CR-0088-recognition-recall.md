@@ -1,6 +1,6 @@
 # CR-0088 — Harmonic recognition recall and persistent discovery layer
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: b412ffd8eb5e82416b46a8235fc9d6d68702a858
@@ -47,3 +47,11 @@ This Change therefore repairs the product's discovery/existence gate now, while 
 Planned PR #79 head `ede373cf1af0ebd25418b87af655dbc5aa888590` passed hosted run #2866 / 36084996916: Project OS, Source Coverage, zero-debt Ruff, Python/API, Web, discovery and legacy Stable browser acceptance, Phase18/21, M4 methodology 37/37, Outcome Engine 4/4, M9.5 release package and M9.6 Stable acceptance. Release artifact 10843815303, digest `sha256:7afa81b05caaa309db249b2acc6bb8f96c2eb0ce2bbb51a6dad0ee3e736ecaaa`.
 
 The implementation is now activated at `validation_green`. Validate this exact ledger-bearing governance state before advancing to `ready_to_merge`. This green result establishes the product-functional discovery repair, not exact 1-hour TradingView Pine parity; matched hourly OHLC / price basis / pivot settings remain a separate evidence boundary.
+
+## Closeout
+
+- merged_pr: 79
+- canonical_merge_commit: `481dd43fd0f685735afdea51fff0181b98ec5a96`
+- canonical_main_validation: `36087644050 / #2888` — success
+- product recall defect: closed
+- exact matched 1-hour Pine parity: intentionally moved to `ISSUE-0074`; no parity claim is made by this closeout.
