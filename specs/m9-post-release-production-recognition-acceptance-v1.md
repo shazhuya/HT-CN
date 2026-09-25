@@ -1,6 +1,6 @@
 # M9 post-release — Production recognition acceptance v1
 
-status: planned
+status: validation_green
 
 ## Product completion definition
 
