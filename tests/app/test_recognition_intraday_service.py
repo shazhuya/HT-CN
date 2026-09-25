@@ -28,7 +28,7 @@ class FixtureIntradayProvider:
             timeframe=timeframe,
             adjustment=adjust,
             provider="fixture_intraday",
-            fetched_at=pd.Timestamp("2026-09-25 15:00", tz="Asia/Shanghai"),
+            fetched_at=pd.Timestamp.now(tz="Asia/Shanghai"),
             frame=self.frame.copy(),
         )
 
