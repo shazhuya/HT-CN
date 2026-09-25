@@ -539,7 +539,7 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
             <strong>排序含义：</strong>
             execution evaluation → reaction observation → waiting → evidence insufficient。
             这是观察工作流顺序，不是收益率排名。
-            发现候选归入 evidence insufficient，仅表示“尚未进入权威 Source 生命周期”，不是低质量。
+            发现候选归入 evidence insufficient，仅表示“尚未进入权威 Source 生命周期”，不是低质量或收益率排名。
           </div>
 
           {orderedStates.map((state) => {
