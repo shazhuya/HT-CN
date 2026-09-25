@@ -6,6 +6,7 @@ from htcn.harmonic.recognition_benchmark import (
     RecognitionPrediction,
     RecognitionTruth,
     diagnose_authoritative_truth,
+    graph_completed_predictions,
     match_predictions,
     score_predictions,
 )
@@ -136,3 +137,52 @@ def test_authoritative_failure_diagnosis_accepts_known_gartley() -> None:
     assert result.stage == "accepted"
     assert result.scales_with_all_truth_nodes == (3,)
     assert result.scales_with_exact_candidate == (3,)
+
+
+def _minor_swing_gartley() -> pd.DataFrame:
+    anchors = [
+        (0, 120.0),
+        (10, 100.0),
+        (30, 200.0),
+        (44, 172.19),
+        (54, 182.696),
+        (70, 138.2),
+        (90, 183.2),
+        (110, 121.4),
+        (130, 141.4),
+    ]
+    closes = [0.0] * 131
+    for (left_i, left_p), (right_i, right_p) in pairwise(anchors):
+        for index in range(left_i, right_i + 1):
+            fraction = (index - left_i) / (right_i - left_i)
+            closes[index] = left_p + (right_p - left_p) * fraction
+    return pd.DataFrame(
+        {
+            "open": closes,
+            "high": closes,
+            "low": closes,
+            "close": closes,
+            "volume": [1000.0] * len(closes),
+        }
+    )
+
+
+def test_completed_graph_recovers_major_gartley_across_minor_swing_pair() -> None:
+    frame = _minor_swing_gartley()
+    truth = _truth("minor-major-gartley")
+    truth = RecognitionTruth(
+        case_id=truth.case_id,
+        pattern_id=truth.pattern_id,
+        direction=truth.direction,
+        labels=truth.labels,
+        node_indices=(10, 30, 70, 90, 110),
+    )
+
+    legacy = diagnose_authoritative_truth(frame, truth, scales=(3,))
+    graph = graph_completed_predictions(frame, scales=(3,))
+    metrics = score_predictions([truth], graph, tolerance_bars=0)
+
+    assert legacy.stage == "candidate_window_missing"
+    assert metrics.true_positive == 1
+    assert metrics.false_negative == 0
+    assert metrics.exact_match_count == 1
