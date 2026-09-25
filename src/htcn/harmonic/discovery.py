@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from itertools import combinations
+from itertools import combinations, pairwise
 import pandas as pd
 
 from .candidates import SwingWindow
@@ -74,7 +74,7 @@ class _DiscoveryWindow:
 
 
 def _validate_pivots(pivots: tuple[Pivot, ...]) -> None:
-    if any(left.index >= right.index for left, right in zip(pivots, pivots[1:])):
+    if any(left.index >= right.index for left, right in pairwise(pivots)):
         raise ValueError("pivot sequence must be strictly increasing")
     if len({pivot.scale for pivot in pivots}) > 1:
         raise ValueError("discovery path must remain on one pivot scale")
@@ -105,7 +105,7 @@ def iter_discovery_xabc_windows(
     out: list[_DiscoveryWindow] = []
 
     for positions in combinations(range(len(recent)), 4):
-        steps = tuple(right - left for left, right in zip(positions, positions[1:]))
+        steps = tuple(right - left for left, right in pairwise(positions))
         if any(step not in (1, 3) for step in steps):
             continue
         skipped = sum(step - 1 for step in steps)
@@ -113,7 +113,7 @@ def iter_discovery_xabc_windows(
             continue
 
         chunk = tuple(recent[position] for position in positions)
-        if any(left.kind == right.kind for left, right in zip(chunk, chunk[1:])):
+        if any(left.kind == right.kind for left, right in pairwise(chunk)):
             continue
 
         path_kind = "consecutive" if skipped == 0 else "minor_swing_skip"
