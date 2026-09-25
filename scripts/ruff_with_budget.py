@@ -65,6 +65,13 @@ def main() -> int:
                 f"[HT-CN QUALITY] {filename}:{row_number}:{column} {code} {message}",
                 file=sys.stderr,
             )
+            fix = row.get("fix")
+            if fix:
+                print(
+                    "[HT-CN QUALITY] suggested_fix="
+                    + json.dumps(fix, ensure_ascii=False, sort_keys=True),
+                    file=sys.stderr,
+                )
         print(
             "[HT-CN QUALITY] FATAL: lint debt increased; fix new violations or record an "
             "explicit CR before changing the baseline",
