@@ -362,6 +362,62 @@ def streaming_graph_completed_predictions(
     )
 
 
+def diagnose_truth_pivot_path(
+    frame: pd.DataFrame,
+    truth: RecognitionTruth,
+    *,
+    scales: tuple[int, ...],
+    recent_pivots: int = 20,
+) -> dict[str, object]:
+    """Describe whether known truth nodes survive the pivot layer and graph frontier.
+
+    This is benchmark-only diagnostics. It does not change candidate generation or identity.
+    """
+
+    direction = PatternDirection(truth.direction)
+    expected_kinds = (
+        (PivotKind.LOW, PivotKind.HIGH, PivotKind.LOW, PivotKind.HIGH, PivotKind.LOW)
+        if direction is PatternDirection.BULLISH
+        else (PivotKind.HIGH, PivotKind.LOW, PivotKind.HIGH, PivotKind.LOW, PivotKind.HIGH)
+    )
+    expected = tuple(
+        (int(index), kind)
+        for index, kind in zip(truth.node_indices, expected_kinds, strict=True)
+    )
+    by_scale: dict[str, object] = {}
+    for scale, pivots in detect_multi_scale_pivots(frame, scales=scales).items():
+        keyed = {(int(pivot.index), pivot.kind): position for position, pivot in enumerate(pivots)}
+        positions = tuple(keyed.get(node) for node in expected)
+        all_present = all(position is not None for position in positions)
+        payload: dict[str, object] = {
+            "pivot_count": len(pivots),
+            "all_truth_nodes_present": all_present,
+            "truth_positions": list(positions),
+            "recent_offset": max(0, len(pivots) - max(5, int(recent_pivots))),
+        }
+        if all_present:
+            concrete = tuple(int(position) for position in positions if position is not None)
+            steps = tuple(right - left for left, right in pairwise(concrete))
+            skipped = tuple(step - 1 for step in steps)
+            recent_offset = int(payload["recent_offset"])
+            payload.update(
+                {
+                    "leg_steps": list(steps),
+                    "leg_skipped_pivots": list(skipped),
+                    "total_skipped_pivots": sum(skipped),
+                    "max_leg_step": max(steps),
+                    "all_truth_nodes_within_recent_frontier": min(concrete) >= recent_offset,
+                    "current_step13_compatible": all(step in (1, 3) for step in steps),
+                }
+            )
+        by_scale[str(scale)] = payload
+    return {
+        "case_id": truth.case_id,
+        "recent_pivots": int(recent_pivots),
+        "scales": by_scale,
+    }
+
+
 def diagnose_authoritative_truth(
     frame: pd.DataFrame,
     truth: RecognitionTruth,
