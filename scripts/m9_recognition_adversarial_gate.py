@@ -174,7 +174,11 @@ def _negative_metrics(
     }
 
 
-def _streaming_metrics(cases) -> dict[str, Any]:
+def _streaming_metrics(
+    cases,
+    *,
+    max_total_skips: int,
+) -> dict[str, Any]:
     rows = []
     preserved = 0
     final_history_mutated = 0
@@ -182,17 +186,26 @@ def _streaming_metrics(cases) -> dict[str, Any]:
         tailed = append_future_replacement_tail(case.frame, case.truth)
         prefix_metrics = score_predictions(
             [case.truth],
-            graph_completed_predictions(case.frame, scales=SINGLE_SCALE),
+            graph_completed_predictions(
+                case.frame,
+                scales=SINGLE_SCALE,
+                max_total_skips=max_total_skips,
+            ),
             tolerance_bars=0,
         )
         final_metrics = score_predictions(
             [case.truth],
-            graph_completed_predictions(tailed, scales=SINGLE_SCALE),
+            graph_completed_predictions(
+                tailed,
+                scales=SINGLE_SCALE,
+                max_total_skips=max_total_skips,
+            ),
             tolerance_bars=0,
         )
         streaming_predictions = streaming_graph_completed_predictions(
             tailed,
             scales=SINGLE_SCALE,
+            max_total_skips=max_total_skips,
         )
         streaming_metrics = score_predictions(
             [case.truth],
@@ -233,7 +246,7 @@ def _streaming_metrics(cases) -> dict[str, Any]:
 def build_report() -> dict[str, Any]:
     positives = positive_stress_cases(seeds_per_depth=4)
     negatives = negative_stress_cases(copies_per_kind=10)
-    streaming_cases = tuple(case for case in positives if case.minor_pairs <= 2)[:24]
+    streaming_cases = positives[:24]
 
     return {
         "schema": 1,
@@ -293,7 +306,10 @@ def build_report() -> dict[str, Any]:
             scales=MULTI_SCALE,
             max_total_skips=6,
         ),
-        "streaming_future_tail": _streaming_metrics(streaming_cases),
+        "streaming_future_tail_skip6": _streaming_metrics(
+            streaming_cases,
+            max_total_skips=6,
+        ),
     }
 
 
