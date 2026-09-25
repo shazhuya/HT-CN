@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-CR0089-READY-TO-MERGE",
+  "state_id": "HTCN-STABLE-V1.0.0-PRODUCTION-RECOGNITION-CLOSED",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -24,17 +24,17 @@
     "milestone": "M9",
     "phase": "M9.post_release",
     "title": "Stable Product Operations & Maintenance",
-    "status": "ready_to_merge",
-    "active_change": "CR-0089",
-    "active_spec": "specs/m9-post-release-production-recognition-acceptance-v1.md",
-    "latest_attempt_id": "A-20260925-0089-002",
-    "latest_hosted_validation_attempt_id": "A-20260925-0089-002",
-    "work_branch": "m9/production-recognition-acceptance-v1",
+    "status": "ready",
+    "active_change": null,
+    "active_spec": null,
+    "latest_attempt_id": "A-20260925-0089-003",
+    "latest_hosted_validation_attempt_id": "A-20260925-0089-003",
+    "work_branch": null,
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36114380454,
-      "head": "f6ec535039b7ff86275a1a305531aabbc6427efa",
-      "scope": "CR-0089 production recognition candidate passed zero-debt Ruff, 1046 Python tests, Web build, 5/5 targeted browser acceptance and hosted real-A-share recognition on 30/30 1D/60m/15m series. Real-market totals: 4482 historical births, 803 stored standard candidates, 230 bounded monitoring candidates, 53 monitoring standard candidates, 199 remote-noise candidates filtered, 268 R3.5 neighborhood observations and 92 real neighborhood reactions."
+      "workflow_run": 36130745870,
+      "head": "7a3af64de5c3bb447ffd525896ec45e1acbab28e",
+      "scope": "CR-0089 merged to canonical main and main run #2990 passed deterministic tests plus formal release integrity with M4 methodology and Outcome Engine freezes intact. PR #80 exact ready-to-merge head had already passed 30/30 hosted real-A-share 1D/60m/15m recognition acceptance."
     }
   },
   "private_m1": {
@@ -57,18 +57,15 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "CR-0089 Production Recognition Acceptance",
-    "status": "ready_to_merge",
-    "blocked_until": [
-      "formal pull-request release/frozen-methodology validation",
-      "canonical main merge validation"
-    ],
+    "title": "Stable v1.0.0 Operations & Practical Recognition Use",
+    "status": "ready",
+    "blocked_until": [],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Close ISSUE-0074 by proving the retained Pine R3.4 behavioral channel on matched 1D/60m/15m OHLC, deliver practical multi-family recognition in Stable, and keep Source identity/frozen research boundaries unchanged."
+    "objective": "Use the integrated production recognition engine in normal research. Open a new Change only for concrete recognition mismatches found in real use; do not reopen CR-0089 by default."
   },
   "freezes": {
     "m4_capture_methodology": {

@@ -162,13 +162,13 @@
       "id": "ISSUE-0074",
       "severity": "research",
       "type": "recognition_parity",
-      "status": "resolved_pending_merge",
+      "status": "closed",
       "title": "Exact matched 1-hour Pine parity remains unverified",
-      "blocks": [
-        "canonical-main integration of CR-0089"
-      ],
-      "next_action": "Merge CR-0089 only after the exact ready_to_merge PR head passes formal release/frozen-methodology gates, then validate canonical main.",
-      "current_fact": "CR-0089 now reproduces the retained Pine R3.4 recognition contract from raw OHLC with 5/10/20 confirmed pivots, family-specific geometry/PRZ, persistence, no-lookahead and bounded candidate visibility. Hosted acceptance passed 30/30 real A-share series across 1D/60m/15m with current standard candidates on every timeframe. R3.5 near-miss behavior is implemented as a separate non-strict neighborhood overlay and was observed on real market data (268 neighborhood observations, 92 reactions). No TradingView-private runtime export was required because the retained Pine source is the frozen behavioral oracle; this resolution claims source-behavioral parity, not pixel/UI parity with TradingView."
+      "blocks": [],
+      "next_action": "None for the retained Pine R3.4 source-behavioral recognition contract. Future concrete mismatches from real use should open a new Change with matched OHLC evidence.",
+      "current_fact": "CR-0089 is merged on canonical main 7a3af64d... . The retained Pine R3.4 recognition behavior is implemented deterministically from raw OHLC across 1D/60m/15m, with R3.5 neighborhood reaction kept separate and non-strict. PR #80 passed 30/30 hosted real-A-share series and canonical main #2990 passed final release/frozen-boundary validation.",
+      "resolution": "Closed by CR-0089 after source-behavioral parity, no-lookahead, bounded-candidate, real-market, browser, formal release and canonical-main validation. This does not claim pixel/UI equivalence with TradingView; it closes the retained-source recognition-behavior gap.",
+      "closed_in": "CR-0089"
     }
   ]
 }

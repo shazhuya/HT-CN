@@ -1,6 +1,6 @@
 # M9 post-release — Production recognition acceptance v1
 
-status: ready_to_merge
+status: closed
 
 ## Product completion definition
 

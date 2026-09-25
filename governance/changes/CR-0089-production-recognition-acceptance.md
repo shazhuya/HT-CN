@@ -1,6 +1,6 @@
 # CR-0089 — Production recognition acceptance and Pine R3.4 parity
 
-status: ready_to_merge
+status: closed
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: d795773f20956021878f812cdbf6c49e491edb86
@@ -79,3 +79,16 @@ Routine development, data acquisition, parity testing and CI must run in hosted/
 - R3.5 practical overlay: 268 real-market neighborhood observations; 92 neighborhood reactions; 195 later strict-test takeovers. Neighborhood never expands strict PRZ or fabricates T-Bar/Type-I/Type-II.
 - user computer: not used.
 - decision: recognition hard acceptance is satisfied; advance to `ready_to_merge` and require formal PR release/frozen-boundary validation before merge.
+
+
+## Closeout
+
+- merged_pr: 80
+- canonical_merge_commit: `7a3af64de5c3bb447ffd525896ec45e1acbab28e`
+- canonical_main_validation: `36130745870 / #2990` — success
+- exact PR validation: `36130206690 / #2989` — success
+- real-market acceptance artifact: `10860764320`
+- formal PR release artifact: `10861907447`
+- canonical main release artifact: `10861613618`
+- user computer used: no
+- recognition result: production recall and practical monitoring acceptance closed; 1D/60m/15m supported, R3.4 behavioral recognition retained, R3.5 neighborhood kept non-strict, remote-noise filtering active.
