@@ -21,16 +21,9 @@ leakage or uncontrolled false positives?
 
 ## Objective
 
-Build a detector-correctness program before changing recognition algorithms:
-
-1. freeze 04aa3573... as the V1 production baseline;
-2. define machine-readable ground truth and one-to-one prediction matching;
-3. report recall, precision, F1, exact-node rate and per-node bar error;
-4. attribute authoritative misses to pivot, candidate-window or rule stages;
-5. add controlled positive, adversarial negative and later synthetic-in-real corpora;
-6. add streaming/future-tail invariance gates;
-7. compare V1 authoritative, Pine R3.4 behavioral and future experimental detectors on the same corpus;
-8. do not change Carney identity, Source Raw PRZ, M4 methodology or Outcome Engine to improve benchmark scores.
+Build a correctness program before production detector changes: fixed ground truth, one-to-one
+matching, node error, failure-stage attribution, adversarial/synthetic-in-real corpora and streaming
+invariance. Carney identity, Source Raw PRZ, M4 methodology and Outcome Engine stay frozen.
 
 ## Phase 0 gate
 
