@@ -270,7 +270,8 @@ def main() -> int:
 
     report = {
         "schema": 1,
-        "gate_id": "recognition-synthetic-real-gate3-v1",
+        "gate_id": "recognition-synthetic-real-gate3-v2",
+        "fixture_version": "real-noise-injection-v2-turning-guards",
         "snapshot_dataset_id": manifest.get("dataset_id"),
         "snapshot_cutoff": manifest.get("snapshot_cutoff"),
         "requested_symbols": len(manifest["instruments"]),
