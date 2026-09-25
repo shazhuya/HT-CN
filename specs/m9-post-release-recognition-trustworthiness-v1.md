@@ -1,6 +1,6 @@
 # M9 post-release — Recognition trustworthiness v1
 
-status: planned
+status: validation_green
 change: CR-0090
 
 ## Problem
@@ -106,3 +106,20 @@ This work must not modify:
 - canonical Source Raw PRZ;
 - CARNEY_RULES to rescue detector recall;
 - Five-Zero/Alternate-Bat production status.
+
+
+## Gate 0 evidence — 2026-09-25
+
+Hosted run `36163533018` validated corpus
+`recognition-correctness-gate0-v3`
+(`c0104be8801dff56eca1828e48d6e413b0ca6ecb4167c5a80e0224a8d06999cc`).
+
+The controlled result isolates candidate generation:
+- clean authoritative XABCD: 10/10 exact;
+- minor-swing matrix authoritative XABCD: 0/100;
+- all 100 misses: `candidate_window_missing`, not `pivot_missing`;
+- bounded graph candidate generation + unchanged canonical classifier: 100/100 exact;
+- hard-negative graph false positives: 0/10.
+
+This is sufficient to reject the consecutive-five-pivot candidate assumption as the sole production
+completed-XABCD path. It is not sufficient to promote the experimental graph to production.
