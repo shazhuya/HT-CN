@@ -11,7 +11,6 @@ import pandas as pd
 
 from .recognition_benchmark import RecognitionTruth
 
-
 STANDARD_XABCD: dict[str, tuple[float, ...]] = {
     "gartley": (100.0, 200.0, 138.2, 183.2, 121.4),
     "bat": (100.0, 200.0, 150.0, 188.6, 111.4),
