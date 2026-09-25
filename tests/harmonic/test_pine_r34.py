@@ -313,6 +313,7 @@ def test_r34_full_scan_gartley_locks_nodes_birth_and_projected_prz():
     frame = _piecewise_frame(
         [(5, 100.0), (15, 200.0), (25, 138.2), (35, 183.2), (55, 160.0)],
         rows=60,
+        wick=0.0,
     )
 
     scan = scan_pine_r34(frame, scales=(2,))
@@ -344,6 +345,7 @@ def test_r34_full_scan_never_backfills_prz_touch_before_c_confirmation():
     frame = _piecewise_frame(
         [(5, 100.0), (15, 200.0), (25, 138.2), (35, 183.2), (55, 160.0)],
         rows=60,
+        wick=0.0,
         overrides={
             # C is not knowable until bar 37. This pre-confirmation bar touches the
             # projected Gartley PRZ but must never be donated to the future structure.
@@ -430,7 +432,11 @@ def test_r34_full_scan_supports_all_source_topologies(
     expected_schema,
     research_only,
 ):
-    frame = _piecewise_frame(anchors, rows=anchors[-1][0] + 8)
+    frame = _piecewise_frame(
+        anchors,
+        rows=anchors[-1][0] + 8,
+        wick=0.0,
+    )
     scan = scan_pine_r34(frame, scales=(2,))
 
     candidate = next(
@@ -451,6 +457,7 @@ def test_r34_precise_abcd_full_scan_keeps_two_measurement_convergence():
     frame = _piecewise_frame(
         [(0, 150.0), (5, 180.0), (15, 100.0), (25, 150.0), (45, 120.0)],
         rows=53,
+        wick=0.0,
     )
     scan = scan_pine_r34(frame, scales=(2,))
     candidate = next(
