@@ -225,6 +225,67 @@ def test_operator_queue_uses_workflow_bucket_not_predictive_score() -> None:
     )
 
 
+
+def test_operator_queue_preserves_pine_r34_projected_completion_zone() -> None:
+    analysis = _analysis()
+    analysis["discovery"] = [_pine_discovery_pattern()]
+    service = FakeService({"SSE.1": analysis})
+
+    payload = build_operator_queue(service, ["SSE.1"])
+
+    assert payload["candidate_count"] == 1
+    item = payload["items"][0]
+    assert item["pattern_id"] == "abcd"
+    assert item["schema"] == "ABCD"
+    assert item["discovery_source"] == "pine_r34"
+    assert item["projection_basis"] == "pine_r34_projected_completion_zone"
+    assert item["projection_label"] == "D"
+    assert item["source_prz_low"] == 86.18
+    assert item["source_prz_high"] == 87.02
+    assert "R3.4 ABCD" in item["current_position"]
+    assert "投影D完成区" in item["first_watch"]
+    assert item["next_key_price"] is None
+    assert item["predictive_score_used"] is False
+
+
+def test_operator_queue_selects_practical_discovery_before_remote_or_research() -> None:
+    analysis = _analysis()
+    analysis["discovery"] = [
+        _pine_discovery_pattern(
+            pattern_id="abcd_127",
+            distance_atr=0.2,
+            research_only=True,
+            last_index=60,
+        ),
+        _pine_discovery_pattern(
+            pattern_id="abcd",
+            distance_atr=2.5,
+            research_only=False,
+            last_index=40,
+        ),
+        _pine_discovery_pattern(
+            pattern_id="abcd",
+            distance_atr=0.7,
+            research_only=False,
+            last_index=30,
+        ),
+        _pine_discovery_pattern(
+            pattern_id="abcd",
+            distance_atr=5.0,
+            research_only=False,
+            last_index=70,
+        ),
+    ]
+    service = FakeService({"SSE.1": analysis})
+
+    payload = build_operator_queue(service, ["SSE.1"])
+
+    assert payload["candidate_count"] == 3
+    selected = payload["items"]
+    assert all(item["pattern_id"] == "abcd" for item in selected)
+    assert all("research_only" not in item["context_cautions"] for item in selected)
+
+
 def test_operator_queue_includes_bounded_discovery_without_fabricating_lifecycle() -> None:
     analysis = _analysis()
     analysis["discovery"] = [_discovery_pattern()]
