@@ -1,5 +1,7 @@
 import pandas as pd
 
+from htcn.harmonic.models import PivotKind
+from htcn.harmonic.pivots import detect_multi_scale_pivots
 from htcn.harmonic.recognition_real_noise import (
     NODE_INDICES,
     holdout_symbols,
@@ -56,3 +58,26 @@ def test_real_noise_injection_keeps_truth_nodes_exact_and_deterministic() -> Non
         assert first.frame.loc[index, "open"] == first.frame.loc[index, "close"]
         assert first.frame.loc[index, "high"] == first.frame.loc[index, "close"]
         assert first.frame.loc[index, "low"] == first.frame.loc[index, "close"]
+
+
+def test_real_noise_truth_nodes_are_actual_turning_pivots() -> None:
+    for direction in ("bullish", "bearish"):
+        case = inject_pattern_into_real_background(
+            _background(),
+            instrument_id="SSE.600000",
+            pattern_id="gartley",
+            direction=direction,
+            seed=12345,
+            split="development",
+        )
+        pivots = detect_multi_scale_pivots(case.frame, scales=(3,))[3]
+        expected_kinds = (
+            (PivotKind.LOW, PivotKind.HIGH, PivotKind.LOW, PivotKind.HIGH, PivotKind.LOW)
+            if direction == "bullish"
+            else (PivotKind.HIGH, PivotKind.LOW, PivotKind.HIGH, PivotKind.LOW, PivotKind.HIGH)
+        )
+        observed = {(pivot.index, pivot.kind) for pivot in pivots}
+        assert all(
+            (index, kind) in observed
+            for index, kind in zip(NODE_INDICES, expected_kinds, strict=True)
+        )
