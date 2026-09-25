@@ -325,13 +325,18 @@ def test_r34_full_scan_gartley_locks_nodes_birth_and_projected_prz():
 
     assert [node.kind for node in candidate.source_nodes] == [-1, 1, -1, 1]
     assert [node.confirmed_at for node in candidate.source_nodes] == [7, 17, 27, 37]
+    # Pine pivots are built from low/high, not close. The synthetic fixture has
+    # a 0.25 wick, so lock the actual pivot prices used by R3.4.
+    assert [node.price for node in candidate.source_nodes] == pytest.approx(
+        [99.75, 200.25, 137.95, 183.45]
+    )
     assert candidate.born_bar == 37
-    assert candidate.m1 == pytest.approx(121.40)
-    assert candidate.m2 == pytest.approx(121.40)
-    assert candidate.m3 == pytest.approx(119.57)
-    assert candidate.prz_low == pytest.approx(119.57)
-    assert candidate.prz_high == pytest.approx(121.40)
-    assert candidate.structural_limit == pytest.approx(100.0)
+    assert candidate.m1 == pytest.approx(121.26)
+    assert candidate.m2 == pytest.approx(121.15)
+    assert candidate.m3 == pytest.approx(119.11)
+    assert candidate.prz_low == pytest.approx(119.11)
+    assert candidate.prz_high == pytest.approx(121.26)
+    assert candidate.structural_limit == pytest.approx(99.75)
     assert candidate.live
 
 
@@ -458,10 +463,13 @@ def test_r34_precise_abcd_full_scan_keeps_two_measurement_convergence():
     assert candidate.precise
     assert candidate.qualified
     assert not candidate.research_only
-    assert candidate.m1 == pytest.approx(70.0)
-    assert candidate.m2 == pytest.approx(69.1)
-    assert candidate.prz_low == pytest.approx(69.1)
-    assert candidate.prz_high == pytest.approx(70.0)
+    assert [node.price for node in candidate.source_nodes] == pytest.approx(
+        [180.25, 99.75, 150.25]
+    )
+    assert candidate.m1 == pytest.approx(69.75)
+    assert candidate.m2 == pytest.approx(68.54)
+    assert candidate.prz_low == pytest.approx(68.54)
+    assert candidate.prz_high == pytest.approx(69.75)
 
 
 
