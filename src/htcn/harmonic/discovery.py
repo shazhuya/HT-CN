@@ -8,7 +8,7 @@ import pandas as pd
 from .candidates import SwingWindow
 from .models import HarmonicPoint, PatternDirection, Pivot
 from .pivots import build_pivot_consensus, detect_multi_scale_pivots
-from .prz import PotentialReversalZone, build_xabcd_prz
+from .prz import build_xabcd_prz, PotentialReversalZone
 from .ratios import leg_length
 from .rules import CARNEY_RULES, PatternRule
 
