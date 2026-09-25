@@ -109,12 +109,24 @@ def _primary_patterns(analysis: dict[str, Any]) -> list[dict[str, Any]]:
         *(analysis.get("completed") or []),
         *(analysis.get("forming") or []),
     ]
-    discovery = sorted(
-        (analysis.get("discovery") or []),
-        key=lambda pattern: (
+    def discovery_order(pattern: dict[str, Any]) -> tuple[object, ...]:
+        metadata = pattern.get("discovery") or {}
+        metrics = pattern.get("metrics") or {}
+        distance = metrics.get("distance_to_prz_atr")
+        if not isinstance(distance, (int, float)):
+            distance = float("inf")
+        return (
+            bool(metadata.get("research_only")),
+            metadata.get("qualified") is False,
+            str(metadata.get("prz_status") or "projected") != "tested",
+            float(distance),
             -int(((pattern.get("points") or [{}])[-1]).get("index") or -1),
             str(pattern.get("pattern_id") or ""),
-        ),
+        )
+
+    discovery = sorted(
+        (analysis.get("discovery") or []),
+        key=discovery_order,
     )[:3]
     patterns = [*authoritative, *discovery]
     return [
@@ -136,8 +148,23 @@ def _queue_item(
         source_prz = prz.get("source_prz") or {}
         status = str(discovery.get("prz_status") or "projected")
         path_kind = str(discovery.get("path_kind") or "consecutive")
-        source_low = source_prz.get("price_low", prz.get("source_prz_low"))
-        source_high = source_prz.get("price_high", prz.get("source_prz_high"))
+        discovery_source = str(discovery.get("source") or "extended_graph")
+        projected_label = str(discovery.get("projected_label") or "D")
+        if discovery_source == "pine_r34":
+            source_low = prz.get("price_low")
+            source_high = prz.get("price_high")
+            projection_basis = "pine_r34_projected_completion_zone"
+        else:
+            source_low = source_prz.get(
+                "price_low",
+                prz.get("source_prz_low", prz.get("price_low")),
+            )
+            source_high = source_prz.get(
+                "price_high",
+                prz.get("source_prz_high", prz.get("price_high")),
+            )
+            projection_basis = "source_prz_projection"
+        schema = str(pattern.get("schema") or "XABCD")
         return {
             "display_key": _display_key(instrument_id, pattern),
             "instrument_id": instrument_id,
@@ -154,22 +181,46 @@ def _queue_item(
             "workflow_bucket_order": WORKFLOW_BUCKET_ORDER["evidence_insufficient"],
             "lifecycle_state": "discovery_candidate",
             "state_reason": (
-                "XABC discovery candidate; Source lifecycle has not started."
+                f"{schema} discovery candidate; Source lifecycle has not started."
             ),
             "current_position": (
-                "发现候选已在 C 确认后测试 Source PRZ。"
-                if status == "tested"
-                else "发现候选已投影 Source PRZ，尚未在可观察时钟内测试。"
+                (
+                    f"R3.4 {schema} 候选已测试投影{projected_label}完成区。"
+                    if status == "tested"
+                    else f"R3.4 {schema} 候选正在观察投影{projected_label}完成区。"
+                )
+                if discovery_source == "pine_r34"
+                else (
+                    "扩展发现候选已在可观察时钟内测试 Source PRZ。"
+                    if status == "tested"
+                    else "扩展发现候选已投影 Source PRZ，尚未测试。"
+                )
             ),
-            "first_watch": "先观察投影 Source PRZ；不得虚构 D 或 Source Terminal。",
+            "first_watch": (
+                f"先观察投影{projected_label}完成区；不得把投影节点当成已完成节点。"
+                if discovery_source == "pine_r34"
+                else "先观察投影 Source PRZ；不得虚构 D 或 Source Terminal。"
+            ),
             "next_watch": "只有权威 identity / Source Clock 成立后才进入正式生命周期。",
             "upgrade_blocker": "Discovery 不是 canonical identity，不能用排名或评分升级。",
             "next_key_price": None,
             "next_key_price_role": None,
             "execution_context_gate": "discovery_only",
             "context_cautions": [
-                "minor_swing_skip" if path_kind == "minor_swing_skip" else "consecutive_path"
+                discovery_source,
+                (
+                    "research_only"
+                    if discovery.get("research_only")
+                    else (
+                        "minor_swing_skip"
+                        if path_kind == "minor_swing_skip"
+                        else "consecutive_path"
+                    )
+                ),
             ],
+            "discovery_source": discovery_source,
+            "projection_basis": projection_basis,
+            "projection_label": projected_label,
             "source_prz_low": source_low,
             "source_prz_high": source_high,
             "bars_since_terminal": None,
