@@ -37,7 +37,7 @@ from htcn.app.operator_snapshot import (
 )
 from htcn.app.product_supervisor import read_product_supervisor_status
 from htcn.app.recognition_discovery_service import RecognitionDiscoveryService
-from htcn.data.intraday import IntradayProviderError, SUPPORTED_INTRADAY_TIMEFRAMES
+from htcn.data.intraday import SUPPORTED_INTRADAY_TIMEFRAMES, IntradayProviderError
 from htcn.app.review_followup_journal import (
     REVIEW_STATES,
     append_review_event,
