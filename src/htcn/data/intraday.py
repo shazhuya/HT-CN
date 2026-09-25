@@ -7,7 +7,6 @@ from typing import Any, Protocol
 
 import pandas as pd
 
-
 SUPPORTED_INTRADAY_TIMEFRAMES: dict[str, str] = {
     "15m": "15",
     "60m": "60",
