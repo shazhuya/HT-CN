@@ -291,12 +291,24 @@ def _strict_pivot(
     center = confirmation_bar - strength
     if center - strength < 0 or center + strength >= len(highs):
         return None
-    high_window = highs[center - strength : center + strength + 1]
-    low_window = lows[center - strength : center + strength + 1]
     center_high = highs[center]
     center_low = lows[center]
-    is_high = center_high == max(high_window) and high_window.count(center_high) == 1
-    is_low = center_low == min(low_window) and low_window.count(center_low) == 1
+    left_highs = highs[center - strength : center]
+    right_highs = highs[center + 1 : center + strength + 1]
+    left_lows = lows[center - strength : center]
+    right_lows = lows[center + 1 : center + strength + 1]
+    # TradingView ta.pivothigh/low resolves equal-extreme plateaus asymmetrically:
+    # equal values on the older/left side are allowed, while an equal value on
+    # the newer/right side invalidates the earlier candidate. This mirrors the
+    # last-occurrence tie-break used by Pine's built-in pivot behavior.
+    is_high = (
+        all(center_high >= value for value in left_highs)
+        and all(center_high > value for value in right_highs)
+    )
+    is_low = (
+        all(center_low <= value for value in left_lows)
+        and all(center_low < value for value in right_lows)
+    )
     # Pine source deliberately refuses an ambiguous same-confirmation high+low.
     if is_high == is_low:
         return None
