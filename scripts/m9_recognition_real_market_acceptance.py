@@ -16,6 +16,7 @@ from htcn.data.intraday import AkShareIntradayProvider, IntradayProviderError
 from htcn.data.providers.akshare_provider import AkShareProvider
 from htcn.data.providers.baostock_provider import BaoStockProvider
 from htcn.harmonic.pine_r34 import PINE_R34_SOURCE_SHA256, scan_pine_r34
+from htcn.harmonic.pine_r35 import PINE_R35_SOURCE_SHA256
 
 CORPUS: tuple[tuple[str, str, str], ...] = (
     ("SSE.688256", "寒武纪", "STAR_AI"),
@@ -104,6 +105,23 @@ def _scan_record(
     monitoring_standard = sum(not item.research_only for item in monitoring)
     monitoring_research = sum(item.research_only for item in monitoring)
     monitoring_observable = sum(item.observable for item in monitoring)
+    neighborhood_seen = sum(
+        item.neighborhood is not None and item.neighborhood.state > 0
+        for item in candidates
+    )
+    neighborhood_active = sum(
+        item.neighborhood is not None and item.neighborhood.state in {1, 2, 3, 4}
+        for item in candidates
+    )
+    neighborhood_reactions = sum(
+        item.neighborhood is not None and item.neighborhood.state in {2, 3, 4, 5, 6}
+        and item.neighborhood.response_bar is not None
+        for item in candidates
+    )
+    neighborhood_strict_takeovers = sum(
+        item.neighborhood is not None and item.neighborhood.state == 6
+        for item in candidates
+    )
     last_bar_stamp = pd.Timestamp(selected[time_column].iloc[-1])
     last_bar_trade_date = last_bar_stamp.date()
     return {
@@ -140,6 +158,10 @@ def _scan_record(
         "hidden_remote_count": int(
             scan.diagnostics.get("hidden_remote_count") or 0
         ),
+        "r35_neighborhood_seen_count": neighborhood_seen,
+        "r35_neighborhood_active_count": neighborhood_active,
+        "r35_neighborhood_reaction_count": neighborhood_reactions,
+        "r35_neighborhood_strict_takeover_count": neighborhood_strict_takeovers,
         "candidate_sample": _candidate_sample(scan),
     }
 
@@ -367,6 +389,12 @@ def build_report() -> dict[str, Any]:
             int(row["monitoring_standard_candidate_count"]) for row in ok
         )
         hidden_remote = sum(int(row["hidden_remote_count"]) for row in ok)
+        r35_seen = sum(int(row["r35_neighborhood_seen_count"]) for row in ok)
+        r35_active = sum(int(row["r35_neighborhood_active_count"]) for row in ok)
+        r35_reactions = sum(int(row["r35_neighborhood_reaction_count"]) for row in ok)
+        r35_takeovers = sum(
+            int(row["r35_neighborhood_strict_takeover_count"]) for row in ok
+        )
         max_monitoring = max(
             (int(row["monitoring_candidate_count"]) for row in ok),
             default=0,
@@ -385,6 +413,10 @@ def build_report() -> dict[str, Any]:
             "monitoring_candidate_count": monitoring,
             "monitoring_standard_candidate_count": monitoring_standard,
             "hidden_remote_count": hidden_remote,
+            "r35_neighborhood_seen_count": r35_seen,
+            "r35_neighborhood_active_count": r35_active,
+            "r35_neighborhood_reaction_count": r35_reactions,
+            "r35_neighborhood_strict_takeover_count": r35_takeovers,
             "max_monitoring_per_symbol": max_monitoring,
             "families": dict(sorted(families.items())),
         }
@@ -404,6 +436,18 @@ def build_report() -> dict[str, Any]:
     )
     total_hidden_remote = sum(
         int(row["hidden_remote_count"]) for row in successful
+    )
+    total_r35_seen = sum(
+        int(row["r35_neighborhood_seen_count"]) for row in successful
+    )
+    total_r35_active = sum(
+        int(row["r35_neighborhood_active_count"]) for row in successful
+    )
+    total_r35_reactions = sum(
+        int(row["r35_neighborhood_reaction_count"]) for row in successful
+    )
+    total_r35_takeovers = sum(
+        int(row["r35_neighborhood_strict_takeover_count"]) for row in successful
     )
     family_set = {
         family
@@ -436,6 +480,8 @@ def build_report() -> dict[str, Any]:
             for row in successful
         ),
         "remote_noise_is_actually_filtered": total_hidden_remote >= 1,
+        "r35_neighborhood_observed_on_real_market": total_r35_seen >= 1,
+        "r35_neighborhood_reaction_observed": total_r35_reactions >= 1,
     }
     status = "pass" if all(gates.values()) else "fail"
     return {
@@ -446,6 +492,7 @@ def build_report() -> dict[str, Any]:
         "expected_completed_trade_date": expected_completed_trade_date.isoformat(),
         "stale_series": len(stale),
         "pine_r34_source_sha256": PINE_R34_SOURCE_SHA256,
+        "pine_r35_source_sha256": PINE_R35_SOURCE_SHA256,
         "corpus_size": len(CORPUS),
         "requested_series": len(series),
         "successful_series": len(successful),
@@ -458,13 +505,18 @@ def build_report() -> dict[str, Any]:
             "monitoring_candidate_count": total_monitoring,
             "monitoring_standard_candidate_count": total_monitoring_standard,
             "hidden_remote_count": total_hidden_remote,
+            "r35_neighborhood_seen_count": total_r35_seen,
+            "r35_neighborhood_active_count": total_r35_active,
+            "r35_neighborhood_reaction_count": total_r35_reactions,
+            "r35_neighborhood_strict_takeover_count": total_r35_takeovers,
             "distinct_families": sorted(family_set),
         },
         "gates": gates,
         "series": series,
         "claims_boundary": (
-            "This validates recognition/data operability only. It is not a win-rate, alpha, "
-            "profitability or statistical-significance claim."
+            "This validates recognition/data operability only. R3.5 neighborhood events remain "
+            "non-strict observations and never become T-Bar/Type-I/Type-II by themselves. "
+            "It is not a win-rate, alpha, profitability or statistical-significance claim."
         ),
         "user_computer_used": False,
     }
