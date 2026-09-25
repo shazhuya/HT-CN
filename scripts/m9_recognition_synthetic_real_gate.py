@@ -47,7 +47,7 @@ def _manifest(path: Path) -> dict[str, Any]:
 
 def _case_seed(instrument_id: str, case_number: int) -> int:
     digest = hashlib.sha256(
-        f"gate3:{instrument_id}:{case_number}".encode("utf-8")
+        f"gate3:{instrument_id}:{case_number}".encode()
     ).hexdigest()
     return int(digest[:8], 16)
 
