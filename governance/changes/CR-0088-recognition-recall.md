@@ -1,6 +1,6 @@
 # CR-0088 — Harmonic recognition recall and persistent discovery layer
 
-status: validation_green
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: b412ffd8eb5e82416b46a8235fc9d6d68702a858
