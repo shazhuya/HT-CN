@@ -77,7 +77,6 @@ def test_real_noise_truth_nodes_are_actual_turning_pivots() -> None:
             else (PivotKind.HIGH, PivotKind.LOW, PivotKind.HIGH, PivotKind.LOW, PivotKind.HIGH)
         )
         observed = {(pivot.index, pivot.kind) for pivot in pivots}
-        assert all(
-            (index, kind) in observed
-            for index, kind in zip(NODE_INDICES, expected_kinds, strict=True)
-        )
+        expected = set(zip(NODE_INDICES, expected_kinds, strict=True))
+        missing = expected.difference(observed)
+        assert missing == set()
