@@ -27,14 +27,14 @@
     "status": "ready_to_merge",
     "active_change": "CR-0088",
     "active_spec": "specs/m9-post-release-recognition-recall-v1.md",
-    "latest_attempt_id": "A-20260925-0088-012",
-    "latest_hosted_validation_attempt_id": "A-20260925-0088-010",
+    "latest_attempt_id": "A-20260925-0088-013",
+    "latest_hosted_validation_attempt_id": "A-20260925-0088-013",
     "work_branch": "m9/post-release-recognition-recall-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36085399695,
-      "head": "d6e3dd0a909b00f387f87042709faa29e81fb9ae",
-      "scope": "Most recent successful hosted validation remains the validation_green governance head; the first ready_to_merge head failed only Project OS metadata synchronization before functional gates."
+      "workflow_run": 36087132540,
+      "head": "63491a5330e2a7c207a8bde66b65aa85a1397ce7",
+      "scope": "Exact CR-0088 ready-to-merge head fully green across Project OS, Source Coverage, Ruff, 993 Python/API tests, Web/browser release gates, M4 37/37, Outcome 4/4 and Stable acceptance."
     }
   },
   "private_m1": {
@@ -65,7 +65,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate the exact ready_to_merge head after milestone status synchronization, record a successful hosted attempt, merge PR #79 with ancestry preserved, then validate canonical main. Exact matched 1-hour Pine parity remains a separate unresolved evidence boundary."
+    "objective": "Validate the final ledger-bearing ready_to_merge head, then merge PR #79 with ancestry preserved and validate canonical main. Exact matched 1-hour Pine parity remains a separate unresolved evidence boundary."
   },
   "freezes": {
     "m4_capture_methodology": {
