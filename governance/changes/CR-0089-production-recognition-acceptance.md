@@ -1,6 +1,6 @@
 # CR-0089 — Production recognition acceptance and Pine R3.4 parity
 
-status: validation_green
+status: ready_to_merge
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: d795773f20956021878f812cdbf6c49e491edb86
@@ -65,3 +65,17 @@ Routine development, data acquisition, parity testing and CI must run in hosted/
 - result: success
 - covered: Project OS, Source Coverage, zero-debt Ruff, full Python suite including new Pine R3.4 and intraday provider tests, continuation bundle build, Node/Web production build.
 - interpretation: sufficient to activate this Change; **not** sufficient to close it. Real A-share acceptance, targeted browser acceptance and final frozen release gates remain required.
+
+
+### A-20260925-0089-002 — production recognition acceptance
+
+- head: `f6ec535039b7ff86275a1a305531aabbc6427efa`
+- workflow: `36114380454 / #2982`
+- result: success
+- deterministic: Ruff 0; Python 1046/1046; Web production build; targeted browser 5/5.
+- hosted real market: 30/30 successful series across 10 diversified A-shares × 1D/60m/15m; stale series 0.
+- recognition: 4482 historical births; 803 stored standard candidates; 230 practical monitoring candidates; 53 practical standard candidates; all three timeframes contain standard monitoring output.
+- noise control: per-series monitoring bounded to <=12; 199 remote candidates filtered.
+- R3.5 practical overlay: 268 real-market neighborhood observations; 92 neighborhood reactions; 195 later strict-test takeovers. Neighborhood never expands strict PRZ or fabricates T-Bar/Type-I/Type-II.
+- user computer: not used.
+- decision: recognition hard acceptance is satisfied; advance to `ready_to_merge` and require formal PR release/frozen-boundary validation before merge.
