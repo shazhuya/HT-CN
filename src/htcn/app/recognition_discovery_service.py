@@ -441,16 +441,20 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
         payload_bars: list[dict[str, Any]] = []
         for index, row in selected.iterrows():
             stamp = pd.Timestamp(row["trade_time"])
-            localized = (
-                stamp.tz_localize("Asia/Shanghai")
+            shanghai_wall_clock = (
+                stamp
                 if stamp.tzinfo is None
-                else stamp.tz_convert("Asia/Shanghai")
+                else stamp.tz_convert("Asia/Shanghai").tz_localize(None)
             )
+            # lightweight-charts renders numeric timestamps in UTC. Encode the Shanghai
+            # wall clock as UTC so its visible 14:00 label remains 14:00, while provenance
+            # continues to state Asia/Shanghai explicitly.
+            chart_time = shanghai_wall_clock.tz_localize("UTC")
             payload_bars.append(
                 {
                     "index": int(index),
-                    "trade_date": stamp.strftime("%Y-%m-%d %H:%M"),
-                    "time": int(localized.timestamp()),
+                    "trade_date": shanghai_wall_clock.strftime("%Y-%m-%d %H:%M"),
+                    "time": int(chart_time.timestamp()),
                     "open": float(row["open"]),
                     "high": float(row["high"]),
                     "low": float(row["low"]),
