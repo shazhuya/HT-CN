@@ -28,7 +28,7 @@ function destinationFromHash(): AppDestination {
 }
 
 function patternKey(pattern: Pattern) {
-  return `${pattern.state}:${pattern.pattern_id}:${pattern.scale}:${pattern.points.map((point) => point.index).join('-')}`
+  return `${pattern.channel ?? 'authoritative'}:${pattern.state}:${pattern.pattern_id}:${pattern.scale}:${pattern.points.map((point) => point.index).join('-')}`
 }
 
 function readRecentSymbols() {
@@ -193,7 +193,7 @@ export default function App() {
 
   const rawPatterns = useMemo(() => {
     if (!analysis) return []
-    return [...analysis.completed, ...analysis.forming]
+    return [...analysis.completed, ...analysis.forming, ...(analysis.discovery ?? [])]
   }, [analysis])
 
   const patterns = useMemo(() => {

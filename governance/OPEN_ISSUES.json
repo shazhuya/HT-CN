@@ -145,6 +145,19 @@
       "current_fact": "M9 is now the machine-enforced development mainline; M7 is background evidence; M8/ISSUE-0066 gate statistical claims only. AGENTS, CHAT_CONTINUATION, Resume Pack and continuation bundle all carry the same policy. Routine daily user-computer/Private-M1/ZIP operation is prohibited as project infrastructure.",
       "resolution": "Closed by A-20260921-0078-005 after final PR #66 run #2477 and canonical main #2478 passed all release gates with 931 Python tests / 0 warnings, 25 browser tests, Phase18/21, methodology 37/37 and Outcome 4/4.",
       "closed_in": "CR-0078"
+    },
+    {
+      "id": "ISSUE-0073",
+      "severity": "high",
+      "type": "product_recognition_recall",
+      "status": "open",
+      "title": "Shipped harmonic recognition has near-zero usable XABCD candidates on observed real daily bars",
+      "blocks": [
+        "practical chart recognition acceptance",
+        "claiming Pine-equivalent CD-leg projection"
+      ],
+      "next_action": "Validate the activated CR-0088 validation_green governance head, then advance to ready_to_merge and canonical-main validation. Keep exact 1-hour Pine parity as a separately unresolved acceptance boundary until matched hourly OHLC, price basis, pivot settings and time-of-knowledge are replayed.",
+      "current_fact": "PR #79 planned candidate ede373cf... passed full hosted run #2866: product discovery/API/UI, existing Stable browser suite, Phase18/21, M4 37/37, Outcome 4/4 and Stable acceptance. The discovery/existence-gate repair is product-functional without modifying frozen canonical identity. Exact same-timeframe 1-hour Pine parity remains unverified."
     }
   ]
 }

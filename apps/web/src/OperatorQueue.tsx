@@ -28,6 +28,7 @@ type OperatorQueueItem = {
   direction: string
   scale: number
   pattern_state: string
+  discovery_only?: boolean
   action_state: string
   workflow_bucket_order: number
   lifecycle_state: string
@@ -111,6 +112,7 @@ const LIFECYCLE_LABELS: Record<string, string> = {
   type_ii_terminal: 'Type-II Terminal',
   reversal_evidence: 'Reversal evidence',
   invalidated: '失效/不可升级',
+  discovery_candidate: '发现候选 · 非权威身份',
 }
 
 const PATTERN_LABELS: Record<string, string> = {
@@ -537,6 +539,7 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
             <strong>排序含义：</strong>
             execution evaluation → reaction observation → waiting → evidence insufficient。
             这是观察工作流顺序，不是收益率排名。
+            发现候选归入 evidence insufficient，仅表示“尚未进入权威 Source 生命周期”，不是低质量或收益率排名。
           </div>
 
           {orderedStates.map((state) => {
@@ -572,8 +575,12 @@ export default function OperatorQueue({ apiBase, onSelectInstrument }: Props) {
                             </button>
                             <div className="operator-queue__meta">
                               {patternLabel(item.pattern_id)} · S{item.scale} ·
+                              {item.discovery_only ? ' 发现候选 ·' : ''}
                               {item.direction === 'bullish' ? ' 看涨' : ' 看跌'}
                             </div>
+                            {item.discovery_only && (
+                              <span className="operator-queue__discovery-badge">发现候选</span>
+                            )}
                           </td>
                           <td>
                             <strong>{lifecycleLabel(item.lifecycle_state)}</strong>

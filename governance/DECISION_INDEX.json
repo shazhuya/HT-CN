@@ -172,6 +172,12 @@
       "title": "Stable product uses destination-based application navigation, not a long-page document",
       "status": "active",
       "source": "governance/decisions/D-089-destination-based-application-navigation.md"
+    },
+    {
+      "id": "D-090",
+      "title": "Product harmonic discovery is high-recall and non-authoritative",
+      "status": "active",
+      "source": "governance/decisions/D-090-recognition-discovery-boundary.md"
     }
   ],
   "rules": {
