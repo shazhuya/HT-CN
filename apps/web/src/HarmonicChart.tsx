@@ -161,6 +161,9 @@ export type DiscoveryMetadata = {
   research_only?: boolean
   qualified?: boolean
   precise?: boolean
+  observable?: boolean
+  monitoring_rank?: number | null
+  recently_tested?: boolean
   projected_label?: string
   structural_limit?: number
   pine_source_sha256?: string
@@ -208,7 +211,7 @@ export type Pattern = {
     source_prz?: SourcePrzLayer
     components: PrzComponent[]
   }
-  metrics: Record<string, number>
+  metrics: Record<string, number | null>
 }
 
 type Props = {
