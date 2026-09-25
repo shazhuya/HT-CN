@@ -36,6 +36,7 @@ from htcn.app.operator_snapshot import (
     latest_local_trade_date,
 )
 from htcn.app.product_supervisor import read_product_supervisor_status
+from htcn.app.recognition_discovery_service import RecognitionDiscoveryService
 from htcn.app.review_followup_journal import (
     REVIEW_STATES,
     append_review_event,
@@ -43,7 +44,6 @@ from htcn.app.review_followup_journal import (
     filter_review_session,
     query_review_journal,
 )
-from htcn.app.recognition_discovery_service import RecognitionDiscoveryService
 from htcn.harmonic.rules import CARNEY_RULES
 from htcn.research.type_i_live_evidence import build_type_i_t5_events
 from htcn.version import HTCN_VERSION
