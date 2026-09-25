@@ -32,6 +32,35 @@ function patternKey(pattern: Pattern) {
   return `${pattern.channel ?? 'authoritative'}:${pattern.state}:${pattern.pattern_id}:${pattern.scale}:${pattern.points.map((point) => point.index).join('-')}`
 }
 
+function discoveryDistance(pattern: Pattern) {
+  const metricDistance = pattern.metrics?.distance_to_prz_atr
+  if (typeof metricDistance === 'number' && Number.isFinite(metricDistance)) return metricDistance
+  const projectedDistance = pattern.discovery?.distance_to_source_prz_xa
+  if (typeof projectedDistance === 'number' && Number.isFinite(projectedDistance)) return projectedDistance
+  return Number.POSITIVE_INFINITY
+}
+
+function sortDiscoveryForMonitoring(items: Pattern[]) {
+  return [...items].sort((left, right) => {
+    const leftResearch = left.discovery?.research_only ? 1 : 0
+    const rightResearch = right.discovery?.research_only ? 1 : 0
+    if (leftResearch !== rightResearch) return leftResearch - rightResearch
+
+    const leftQualified = left.discovery?.qualified === false ? 1 : 0
+    const rightQualified = right.discovery?.qualified === false ? 1 : 0
+    if (leftQualified !== rightQualified) return leftQualified - rightQualified
+
+    const distanceGap = discoveryDistance(left) - discoveryDistance(right)
+    if (Number.isFinite(distanceGap) && Math.abs(distanceGap) > 1e-9) return distanceGap
+
+    const leftKnown = left.discovery?.known_from_bar ?? -1
+    const rightKnown = right.discovery?.known_from_bar ?? -1
+    if (leftKnown !== rightKnown) return rightKnown - leftKnown
+
+    return right.scale - left.scale
+  })
+}
+
 function readRecentSymbols() {
   try {
     const value = JSON.parse(window.localStorage.getItem(RECENT_SYMBOLS_KEY) ?? '[]')
@@ -197,7 +226,9 @@ export default function App() {
 
   const rawPatterns = useMemo(() => {
     if (!analysis) return []
-    return [...analysis.completed, ...analysis.forming, ...(analysis.discovery ?? [])]
+    const authoritative = [...analysis.completed, ...analysis.forming]
+    const discovery = sortDiscoveryForMonitoring(analysis.discovery ?? [])
+    return [...authoritative, ...discovery]
   }, [analysis])
 
   const patterns = useMemo(() => {
