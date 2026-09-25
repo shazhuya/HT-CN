@@ -834,9 +834,9 @@ def scan_pine_r34(
                         candidate.test_last_bar = None
                         candidate.test_atr = None
 
-        if current_atr is None:
-            continue
-
+        # Pine computes confirmed pivots independently of ATR availability. Early pivots
+        # must enter the 5/10/20 streams even while ta.atr(14) is still na; only pattern
+        # geometry creation waits for a usable ATR.
         changed_scales: list[int] = []
         for scale in unique_scales:
             pivot = _strict_pivot(
@@ -848,6 +848,9 @@ def scan_pine_r34(
             )
             if _feed(streams[scale], pivot):
                 changed_scales.append(scale)
+
+        if current_atr is None:
+            continue
 
         for scale in changed_scales:
             stream = streams[scale]
