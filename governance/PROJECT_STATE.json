@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-STABLE-V1.0.0-RECOGNITION-RECALL-V1-CLOSED-SEALED",
+  "state_id": "HTCN-M9-POST-RELEASE-CR0089-VALIDATION-GREEN",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -24,17 +24,17 @@
     "milestone": "M9",
     "phase": "M9.post_release",
     "title": "Stable Product Operations & Maintenance",
-    "status": "ready",
-    "active_change": null,
-    "active_spec": null,
-    "latest_attempt_id": "A-20260925-0088-015",
-    "latest_hosted_validation_attempt_id": "A-20260925-0088-015",
-    "work_branch": null,
+    "status": "validation_green",
+    "active_change": "CR-0089",
+    "active_spec": "specs/m9-post-release-production-recognition-acceptance-v1.md",
+    "latest_attempt_id": "A-20260925-0089-001",
+    "latest_hosted_validation_attempt_id": "A-20260925-0089-001",
+    "work_branch": "m9/production-recognition-acceptance-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36087931185,
-      "head": "0cb50297c0c2ffee39ae1f1a1eec7dc608fe5254",
-      "scope": "Terminal CR-0088 closeout state on canonical main #2889 fully green after CR/spec closure, ISSUE-0073 closure, ISSUE-0074 parity split and return to M9.post_release maintenance ready."
+      "workflow_run": 36107602296,
+      "head": "bb45ff25a0c112cf0b092c102b22b29a34b4561e",
+      "scope": "Planned CR-0089 candidate passed Project OS, Source Coverage, zero-debt Ruff, full Python tests, continuation bundle and Web production build. Activation is allowed; real-market and browser acceptance remain open gates."
     }
   },
   "private_m1": {
@@ -57,15 +57,19 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "Stable v1.0.0 Operations & Maintenance",
-    "status": "ready",
-    "blocked_until": [],
+    "title": "CR-0089 Production Recognition Acceptance",
+    "status": "validation_green",
+    "blocked_until": [
+      "hosted real-A-share recognition acceptance",
+      "targeted 1D/60m/15m browser acceptance",
+      "exact ledger-bearing final release validation"
+    ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Use the integrated high-recall discovery layer in normal Stable research and collect direct acceptance evidence. Exact matched 1-hour Pine parity remains a separate research acceptance item (ISSUE-0074), not a blocker for the shipped daily-bar discovery repair."
+    "objective": "Close ISSUE-0074 by proving the retained Pine R3.4 behavioral channel on matched 1D/60m/15m OHLC, deliver practical multi-family recognition in Stable, and keep Source identity/frozen research boundaries unchanged."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -90,6 +94,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-post-release-production-recognition-acceptance-v1.md",
     "specs/m9-post-release-recognition-recall-v1.md",
     "specs/m9-post-release-chart-workspace-v3.md",
     "specs/m9-phase-6-stable-product-release-acceptance.md",
