@@ -47,7 +47,7 @@ def _frame_digest(frame: pd.DataFrame, *, time_column: str) -> str:
 
 def _candidate_sample(scan, limit: int = 8) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for item in scan.live_candidates[:limit]:
+    for item in scan.monitoring_candidates[:limit]:
         rows.append(
             {
                 "pattern_id": item.pattern_id,
@@ -120,6 +120,13 @@ def _scan_record(
         "live_candidate_count": len(scan.live_candidates),
         "live_standard_candidate_count": sum(
             not item.research_only for item in scan.live_candidates
+        ),
+        "monitoring_candidate_count": len(scan.monitoring_candidates),
+        "monitoring_standard_candidate_count": sum(
+            not item.research_only for item in scan.monitoring_candidates
+        ),
+        "hidden_remote_count": int(
+            scan.diagnostics.get("hidden_remote_count") or 0
         ),
         "candidate_sample": _candidate_sample(scan),
     }
@@ -308,6 +315,10 @@ def build_report() -> dict[str, Any]:
         ok = [row for row in scoped if row["status"] == "ok"]
         births = sum(int(row["historical_birth_count"]) for row in ok)
         live = sum(int(row["live_candidate_count"]) for row in ok)
+        monitoring = sum(int(row["monitoring_candidate_count"]) for row in ok)
+        monitoring_standard = sum(
+            int(row["monitoring_standard_candidate_count"]) for row in ok
+        )
         standard = sum(int(row["stored_standard_candidate_count"]) for row in ok)
         families: Counter[str] = Counter()
         for row in ok:
@@ -319,6 +330,8 @@ def build_report() -> dict[str, Any]:
             "historical_birth_count": births,
             "stored_standard_candidate_count": standard,
             "live_candidate_count": live,
+            "monitoring_candidate_count": monitoring,
+            "monitoring_standard_candidate_count": monitoring_standard,
             "families": dict(sorted(families.items())),
         }
 
@@ -329,6 +342,12 @@ def build_report() -> dict[str, Any]:
         int(row["stored_standard_candidate_count"]) for row in successful
     )
     total_live = sum(int(row["live_candidate_count"]) for row in successful)
+    total_monitoring = sum(
+        int(row["monitoring_candidate_count"]) for row in successful
+    )
+    total_monitoring_standard = sum(
+        int(row["monitoring_standard_candidate_count"]) for row in successful
+    )
     family_set = {
         family
         for row in successful
@@ -344,6 +363,12 @@ def build_report() -> dict[str, Any]:
         "standard_family_output_exists": total_standard >= max(5, len(successful) // 3),
         "family_diversity": len(family_set) >= 3,
         "current_live_monitoring_exists": total_live >= 1,
+        "practical_monitoring_exists": total_monitoring >= 1,
+        "practical_standard_monitoring_exists": total_monitoring_standard >= 1,
+        "per_series_monitoring_is_bounded": all(
+            int(row["monitoring_candidate_count"]) <= 12
+            for row in successful
+        ),
     }
     status = "pass" if all(gates.values()) else "fail"
     return {
@@ -361,6 +386,8 @@ def build_report() -> dict[str, Any]:
             "historical_birth_count": total_births,
             "stored_standard_candidate_count": total_standard,
             "live_candidate_count": total_live,
+            "monitoring_candidate_count": total_monitoring,
+            "monitoring_standard_candidate_count": total_monitoring_standard,
             "distinct_families": sorted(family_set),
         },
         "gates": gates,
