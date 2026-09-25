@@ -9,6 +9,15 @@ import pandas as pd
 
 PINE_R34_SOURCE_SHA256 = "84e1eb2267c9b80891e0ffb64a6d4abf5712fc5e756be81815e536f2fca4c3f5"
 PINE_R34_SCALES: tuple[int, ...] = (5, 10, 20)
+PINE_R34_NEAR_ATR = 1.5
+PINE_R34_JOURNEY_ATR = 3.0
+PINE_R34_NEAR_PCT = 12.0
+PINE_R34_JOURNEY_PCT = 25.0
+PINE_R34_VISIBLE_WIDTH_ATR = 2.0
+PINE_R34_DEVELOPING_AGE = 180
+PINE_R34_FRESH_BARS = 5
+PINE_R34_CANDIDATE_TABLE_LIMIT = 12
+PINE_R34_UNQUALIFIED_STORAGE_LIMIT = 30
 DISCRETE_PROJECTIONS: tuple[float, ...] = (
     1.0,
     1.13,
@@ -125,6 +134,12 @@ class PineR34Candidate:
     test_last_bar: int | None = None
     test_atr: float | None = None
     session_resets: int = 0
+    current_distance_atr: float | None = None
+    current_distance_pct: float | None = None
+    source_age: int | None = None
+    observable: bool = False
+    monitoring_rank: float | None = None
+    recently_tested: bool = False
 
     @property
     def conflict_key(self) -> tuple[int, ...]:
@@ -175,6 +190,12 @@ class PineR34Candidate:
             "quality_reason": self.quality_reason,
             "first_test_bar": self.first_test_bar,
             "test_count": self.test_count,
+            "current_distance_atr": self.current_distance_atr,
+            "current_distance_pct": self.current_distance_pct,
+            "source_age": self.source_age,
+            "observable": self.observable,
+            "monitoring_rank": self.monitoring_rank,
+            "recently_tested": self.recently_tested,
             "source": "pine_r34",
             "pine_source_sha256": PINE_R34_SOURCE_SHA256,
         }
@@ -184,6 +205,7 @@ class PineR34Candidate:
 class PineR34Scan:
     candidates: tuple[PineR34Candidate, ...]
     live_candidates: tuple[PineR34Candidate, ...]
+    monitoring_candidates: tuple[PineR34Candidate, ...]
     pivots_by_scale: dict[int, tuple[PineR34Pivot, ...]]
     diagnostics: dict[str, object]
 
@@ -586,6 +608,75 @@ def _distance(price: float, low: float, high: float) -> float:
     return 0.0
 
 
+def _tier(
+    price: float,
+    low: float,
+    high: float,
+    atr: float,
+    *,
+    near_atr: float = PINE_R34_NEAR_ATR,
+    journey_atr: float = PINE_R34_JOURNEY_ATR,
+    near_pct: float = PINE_R34_NEAR_PCT,
+    journey_pct: float = PINE_R34_JOURNEY_PCT,
+) -> int:
+    if atr <= 0 or price <= 0:
+        return 2
+    distance = _distance(price, low, high)
+    distance_atr = distance / atr
+    distance_pct = distance / price * 100.0
+    if distance_atr <= near_atr and distance_pct <= near_pct:
+        return 0
+    if distance_atr <= journey_atr and distance_pct <= journey_pct:
+        return 1
+    return 2
+
+
+def _observable(
+    price: float,
+    low: float,
+    high: float,
+    atr: float,
+    *,
+    visible_width_atr: float = PINE_R34_VISIBLE_WIDTH_ATR,
+) -> bool:
+    return (
+        _tier(price, low, high, atr) <= 1
+        and low > 0
+        and high >= low
+        and atr > 0
+        and high - low <= atr * visible_width_atr
+    )
+
+
+def _candidate_rank(
+    *,
+    near_enough: bool,
+    active_event: bool,
+    rule: int,
+    source_age: int,
+    distance_atr: float,
+) -> float:
+    return (
+        (100000.0 if active_event else 0.0)
+        + (20000.0 if near_enough else 0.0)
+        + (0.0 if 8 <= rule <= 10 else 20.0)
+        - min(source_age, 2000) * 2.0
+        - min(distance_atr, 500.0) * 40.0
+    )
+
+
+def _candidate_visible(
+    *,
+    live: bool,
+    near_enough: bool,
+    developing: bool,
+    age: int,
+    max_age: int,
+    research: bool,
+) -> bool:
+    return live and (near_enough or (developing and age <= max_age) or research)
+
+
 def _research_only(rule: int, qualified: bool, precise: bool) -> bool:
     # R3.4 may qualify these behaviorally; HT-CN keeps unresolved Source families non-authoritative.
     if rule in (2, 7, 9, 10, 11):
@@ -618,6 +709,12 @@ def scan_pine_r34(
     test_session_bars: int = 12,
     test_reset_atr: float = 0.75,
     capacity: int = 180,
+    unqualified_storage_limit: int = PINE_R34_UNQUALIFIED_STORAGE_LIMIT,
+    candidate_table_limit: int = PINE_R34_CANDIDATE_TABLE_LIMIT,
+    show_developing: bool = True,
+    developing_age: int = PINE_R34_DEVELOPING_AGE,
+    visible_width_atr: float = PINE_R34_VISIBLE_WIDTH_ATR,
+    fresh_bars: int = PINE_R34_FRESH_BARS,
 ) -> PineR34Scan:
     """Sequentially reproduce the recognition portion of standalone Pine R3.4.
 
@@ -628,7 +725,13 @@ def scan_pine_r34(
 
     source = _validate_frame(frame)
     if source.empty:
-        return PineR34Scan(candidates=(), live_candidates=(), pivots_by_scale={}, diagnostics={})
+        return PineR34Scan(
+            candidates=(),
+            live_candidates=(),
+            monitoring_candidates=(),
+            pivots_by_scale={},
+            diagnostics={},
+        )
 
     unique_scales = tuple(sorted({int(scale) for scale in scales}))
     if any(scale < 1 for scale in unique_scales):
@@ -761,20 +864,39 @@ def scan_pine_r34(
                 assert geometry.low is not None and geometry.high is not None
                 assert geometry.limit is not None and geometry.reference_scale is not None
 
-                # Match R3.4's bounded storage preference: research-only records may not crowd out live standard structures.
-                if len(candidates) >= capacity:
+                # Mirror R3.4 storage semantics exactly here: storage pressure is based on
+                # Pine's qualified flag, not HT-CN's separate Source/research policy label.
+                unqualified_count = sum(not existing.qualified for existing in candidates)
+                storage_pressure = (
+                    len(candidates) >= capacity
+                    or (
+                        not geometry.qualified
+                        and unqualified_count >= unqualified_storage_limit
+                    )
+                )
+                if storage_pressure:
                     victim = next(
                         (
                             index
                             for index, existing in enumerate(candidates)
-                            if (not existing.live) or existing.research_only
+                            if (
+                                (not existing.qualified)
+                                if not geometry.qualified
+                                else ((not existing.live) or (not existing.qualified))
+                            )
                         ),
                         None,
                     )
                     if victim is not None:
                         candidates.pop(victim)
-                    else:
-                        continue
+                if len(candidates) >= capacity:
+                    continue
+                if (
+                    not geometry.qualified
+                    and sum(not existing.qualified for existing in candidates)
+                    >= unqualified_storage_limit
+                ):
+                    continue
 
                 rounded_m1 = _tick_price(float(geometry.m1), tick_size)
                 rounded_m2 = _tick_price(float(geometry.m2), tick_size)
@@ -849,32 +971,105 @@ def scan_pine_r34(
                 candidates.append(candidate)
                 born_counts[candidate.pattern_id] = born_counts.get(candidate.pattern_id, 0) + 1
 
+    latest_bar = len(source) - 1
+    latest_close = closes[-1]
+    latest_atr = atr_values[-1]
+    live_items = [candidate for candidate in candidates if candidate.live]
+    if latest_atr is not None and latest_atr > 0:
+        for candidate in live_items:
+            distance = _distance(
+                latest_close,
+                candidate.prz_low,
+                candidate.prz_high,
+            )
+            candidate.current_distance_atr = distance / latest_atr
+            candidate.current_distance_pct = (
+                distance / latest_close * 100.0
+                if latest_close > 0
+                else None
+            )
+            candidate.source_age = max(
+                0,
+                latest_bar - candidate.source_nodes[-1].index,
+            )
+            candidate.observable = _observable(
+                latest_close,
+                candidate.prz_low,
+                candidate.prz_high,
+                latest_atr,
+                visible_width_atr=visible_width_atr,
+            )
+            candidate.recently_tested = (
+                candidate.first_test_bar is not None
+                and latest_bar - candidate.first_test_bar <= fresh_bars
+            )
+            candidate.monitoring_rank = _candidate_rank(
+                near_enough=candidate.observable,
+                active_event=candidate.recently_tested,
+                rule=candidate.rule,
+                source_age=candidate.source_age,
+                distance_atr=candidate.current_distance_atr,
+            ) - (0.0 if candidate.qualified else 1000000.0)
+
     live = tuple(
         sorted(
-            (candidate for candidate in candidates if candidate.live),
+            live_items,
             key=lambda item: (
+                -(
+                    item.monitoring_rank
+                    if item.monitoring_rank is not None
+                    else -1e20
+                ),
                 item.research_only,
-                abs(closes[-1] - min(max(closes[-1], item.prz_low), item.prz_high)) / max(item.atr_at_birth, 1e-12),
                 -(item.born_bar),
                 -item.scale,
                 item.pattern_id,
             ),
         )
     )
+    monitoring = tuple(
+        item
+        for item in live
+        if _candidate_visible(
+            live=item.live,
+            near_enough=item.observable,
+            developing=show_developing,
+            age=item.source_age if item.source_age is not None else 10**9,
+            max_age=developing_age,
+            research=False,
+        )
+    )[:candidate_table_limit]
     return PineR34Scan(
         candidates=tuple(candidates),
         live_candidates=live,
+        monitoring_candidates=monitoring,
         pivots_by_scale={scale: tuple(stream) for scale, stream in streams.items()},
         diagnostics={
             "pine_source_sha256": PINE_R34_SOURCE_SHA256,
             "bars": len(source),
             "candidate_count": len(candidates),
             "live_candidate_count": len(live),
+            "monitoring_candidate_count": len(monitoring),
+            "hidden_remote_count": sum(
+                item.live and not item.observable
+                for item in candidates
+            ),
+            "pine_unqualified_live_count": sum(
+                item.live and not item.qualified
+                for item in candidates
+            ),
+            "htcn_research_live_count": sum(
+                item.live and item.research_only
+                for item in candidates
+            ),
             "born_counts": born_counts,
             "scales": list(unique_scales),
             "atr_length": atr_length,
             "min_leg_atr": min_leg_atr,
             "cluster_width": cluster_width,
             "structure_life": structure_life,
+            "candidate_table_limit": candidate_table_limit,
+            "developing_age": developing_age,
+            "visible_width_atr": visible_width_atr,
         },
     )
