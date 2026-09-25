@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-CR0089-VALIDATION-GREEN",
+  "state_id": "HTCN-M9-POST-RELEASE-CR0089-READY-TO-MERGE",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -24,17 +24,17 @@
     "milestone": "M9",
     "phase": "M9.post_release",
     "title": "Stable Product Operations & Maintenance",
-    "status": "validation_green",
+    "status": "ready_to_merge",
     "active_change": "CR-0089",
     "active_spec": "specs/m9-post-release-production-recognition-acceptance-v1.md",
-    "latest_attempt_id": "A-20260925-0089-001",
-    "latest_hosted_validation_attempt_id": "A-20260925-0089-001",
+    "latest_attempt_id": "A-20260925-0089-002",
+    "latest_hosted_validation_attempt_id": "A-20260925-0089-002",
     "work_branch": "m9/production-recognition-acceptance-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36107602296,
-      "head": "bb45ff25a0c112cf0b092c102b22b29a34b4561e",
-      "scope": "Planned CR-0089 candidate passed Project OS, Source Coverage, zero-debt Ruff, full Python tests, continuation bundle and Web production build. Activation is allowed; real-market and browser acceptance remain open gates."
+      "workflow_run": 36114380454,
+      "head": "f6ec535039b7ff86275a1a305531aabbc6427efa",
+      "scope": "CR-0089 production recognition candidate passed zero-debt Ruff, 1046 Python tests, Web build, 5/5 targeted browser acceptance and hosted real-A-share recognition on 30/30 1D/60m/15m series. Real-market totals: 4482 historical births, 803 stored standard candidates, 230 bounded monitoring candidates, 53 monitoring standard candidates, 199 remote-noise candidates filtered, 268 R3.5 neighborhood observations and 92 real neighborhood reactions."
     }
   },
   "private_m1": {
@@ -58,11 +58,10 @@
   "next_major_task": {
     "phase": "M9.post_release",
     "title": "CR-0089 Production Recognition Acceptance",
-    "status": "validation_green",
+    "status": "ready_to_merge",
     "blocked_until": [
-      "hosted real-A-share recognition acceptance",
-      "targeted 1D/60m/15m browser acceptance",
-      "exact ledger-bearing final release validation"
+      "formal pull-request release/frozen-methodology validation",
+      "canonical main merge validation"
     ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
