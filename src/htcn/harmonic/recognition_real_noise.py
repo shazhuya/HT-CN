@@ -37,9 +37,9 @@ def holdout_symbols(
     if count < 1 or count >= len(instrument_ids):
         raise ValueError("holdout count must be between 1 and len(symbols)-1")
     ranked = sorted(
-        set(str(value) for value in instrument_ids),
+        {str(value) for value in instrument_ids},
         key=lambda value: hashlib.sha256(
-            f"{HOLDOUT_SALT}:{value}".encode("utf-8")
+            f"{HOLDOUT_SALT}:{value}".encode()
         ).hexdigest(),
     )
     return tuple(ranked[:count])
