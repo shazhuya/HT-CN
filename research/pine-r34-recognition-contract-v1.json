@@ -1,0 +1,204 @@
+{
+  "schema": 1,
+  "contract_id": "pine-r34-recognition-behavior-v1",
+  "source_name": "Ashare_Harmonic_Radar_R3_4.pine",
+  "source_sha256": "84e1eb2267c9b80891e0ffb64a6d4abf5712fc5e756be81815e536f2fca4c3f5",
+  "scope": {
+    "included": [
+      "price pivot confirmation",
+      "pivot stream feed/replacement",
+      "pattern geometry rules 0-11",
+      "projected completion measurements",
+      "structure birth/expiry/invalidation",
+      "first continuous completion-zone test clock",
+      "bounded pattern storage",
+      "candidate visibility/ranking inputs"
+    ],
+    "excluded": [
+      "trade execution",
+      "position sizing",
+      "environment/sector gate",
+      "RSI/BAMM participation logic",
+      "Episode trade-plan state machine",
+      "win-rate or profitability claims"
+    ]
+  },
+  "parameters": {
+    "scales": [
+      5,
+      10,
+      20
+    ],
+    "atr_length": 14,
+    "min_leg_atr": 0.35,
+    "max_source_span_bars": 500,
+    "cluster_width_reference_leg": 0.12,
+    "structure_life_bars": 180,
+    "abcd_tolerance_pct": 3,
+    "abcd_convergence_pct": 3,
+    "test_gap_bars": 3,
+    "test_session_bars": 12,
+    "test_reset_atr": 0.75,
+    "candidate_capacity": 180,
+    "unqualified_storage_limit": 30,
+    "near_atr": 1.5,
+    "journey_atr": 3,
+    "near_pct": 12,
+    "journey_pct": 25,
+    "visible_width_atr": 2,
+    "developing_age_bars": 180,
+    "candidate_table_limit": 12
+  },
+  "rules": [
+    {
+      "rule": 0,
+      "id": "gartley",
+      "schema": "XABCD",
+      "source_nodes": [
+        "X",
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": false
+    },
+    {
+      "rule": 1,
+      "id": "bat",
+      "schema": "XABCD",
+      "source_nodes": [
+        "X",
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": false
+    },
+    {
+      "rule": 2,
+      "id": "alternate_bat",
+      "schema": "XABCD",
+      "source_nodes": [
+        "X",
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": true
+    },
+    {
+      "rule": 3,
+      "id": "butterfly",
+      "schema": "XABCD",
+      "source_nodes": [
+        "X",
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": false
+    },
+    {
+      "rule": 4,
+      "id": "crab",
+      "schema": "XABCD",
+      "source_nodes": [
+        "X",
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": false
+    },
+    {
+      "rule": 5,
+      "id": "deep_crab",
+      "schema": "XABCD",
+      "source_nodes": [
+        "X",
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": false
+    },
+    {
+      "rule": 6,
+      "id": "shark",
+      "schema": "0XABC",
+      "source_nodes": [
+        "0",
+        "X",
+        "A",
+        "B"
+      ],
+      "research_only": false
+    },
+    {
+      "rule": 7,
+      "id": "five_zero",
+      "schema": "0XABCD",
+      "source_nodes": [
+        "0",
+        "X",
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": true
+    },
+    {
+      "rule": 8,
+      "id": "abcd",
+      "schema": "ABCD",
+      "source_nodes": [
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": "conditional_precise"
+    },
+    {
+      "rule": 9,
+      "id": "abcd_127",
+      "schema": "ABCD",
+      "source_nodes": [
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": true
+    },
+    {
+      "rule": 10,
+      "id": "abcd_1618",
+      "schema": "ABCD",
+      "source_nodes": [
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": true
+    },
+    {
+      "rule": 11,
+      "id": "deep_gartley",
+      "schema": "XABCD",
+      "source_nodes": [
+        "X",
+        "A",
+        "B",
+        "C"
+      ],
+      "research_only": true
+    }
+  ],
+  "boundaries": {
+    "behavioral_parity_is_not_source_identity": true,
+    "five_zero_remains_quarantined": true,
+    "alternate_bat_remains_fail_closed_for_canonical_identity": true,
+    "discovery_does_not_own_source_lifecycle": true,
+    "no_historical_prz_test_backfill": true,
+    "no_automatic_trading": true
+  }
+}
