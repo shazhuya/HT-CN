@@ -131,9 +131,11 @@ def inject_pattern_into_real_background(
 
     closes = [0.0] * ROWS
     source_close = source["close"].astype(float)
-    anchors = [(0, prices[0] + (prices[0] - prices[1]) * 0.15)]
+    # Approach X from the opposite side and leave D in the reversal direction so
+    # both endpoints are genuine local turning pivots.
+    anchors = [(0, prices[0] + (prices[1] - prices[0]) * 0.15)]
     anchors.extend(zip(NODE_INDICES, prices, strict=True))
-    anchors.append((ROWS - 1, prices[-1] + (prices[-1] - prices[-2]) * 0.15))
+    anchors.append((ROWS - 1, prices[-1] - (prices[-1] - prices[-2]) * 0.15))
 
     for (left_i, left_p), (right_i, right_p) in pairwise(anchors):
         residual = _leg_residual(source_close, left=left_i, right=right_i)
