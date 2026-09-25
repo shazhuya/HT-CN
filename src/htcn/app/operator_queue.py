@@ -165,11 +165,25 @@ def _queue_item(
             )
             projection_basis = "source_prz_projection"
         schema = str(pattern.get("schema") or "XABCD")
+        direction = str(pattern.get("direction") or "")
+        if isinstance(source_low, (int, float)) and isinstance(source_high, (int, float)):
+            # First-contact edge of the projected completion zone. This is a
+            # monitoring level, never an entry/stop instruction.
+            next_key_price = (
+                float(source_high)
+                if direction == "bullish"
+                else float(source_low)
+                if direction == "bearish"
+                else (float(source_low) + float(source_high)) / 2.0
+            )
+        else:
+            next_key_price = None
         return {
             "display_key": _display_key(instrument_id, pattern),
             "instrument_id": instrument_id,
             "last_trade_date": analysis.get("last_trade_date"),
             "price_mode": analysis.get("price_mode"),
+            "timeframe": analysis.get("timeframe") or "1d",
             "warning": analysis.get("warning"),
             "pattern_id": pattern.get("pattern_id"),
             "schema": pattern.get("schema"),
@@ -203,8 +217,12 @@ def _queue_item(
             ),
             "next_watch": "只有权威 identity / Source Clock 成立后才进入正式生命周期。",
             "upgrade_blocker": "Discovery 不是 canonical identity，不能用排名或评分升级。",
-            "next_key_price": None,
-            "next_key_price_role": None,
+            "next_key_price": next_key_price,
+            "next_key_price_role": (
+                f"投影{projected_label}完成区首触边界"
+                if discovery_source == "pine_r34"
+                else "Source PRZ首触边界"
+            ) if next_key_price is not None else None,
             "execution_context_gate": "discovery_only",
             "context_cautions": [
                 discovery_source,
