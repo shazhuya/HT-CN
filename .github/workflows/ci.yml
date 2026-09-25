@@ -76,6 +76,19 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Run recognition independent rule Oracle Gate 2
+        if: startsWith(github.ref, 'refs/heads/m9/recognition-trustworthiness') || startsWith(github.head_ref, 'm9/recognition-trustworthiness')
+        run: python scripts/m9_recognition_oracle_gate.py
+
+      - name: Upload recognition Oracle Gate 2 report
+        if: always() && (startsWith(github.ref, 'refs/heads/m9/recognition-trustworthiness') || startsWith(github.head_ref, 'm9/recognition-trustworthiness'))
+        uses: actions/upload-artifact@v4
+        with:
+          name: htcn-recognition-oracle-${{ github.sha }}
+          path: artifacts/reports/m9-recognition-oracle-gate.json
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Build and verify portable chat continuation bundle
         run: python scripts/build_chat_continuation_bundle.py
 
