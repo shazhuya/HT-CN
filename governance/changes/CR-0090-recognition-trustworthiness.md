@@ -107,3 +107,40 @@ Do not integrate the experimental graph into production yet. Expand adversarial 
 - batch future-tail invariance;
 - synthetic-in-real A-share noise;
 - blind holdout.
+
+
+## A-20260925-0090-002 — Gate 1 adversarial graph + streaming validation
+
+- validated head: `07d2e46f38f034a9780497d72614a804e5fcb823`
+- workflow: `36166500765 / #3035`
+- result: success
+- artifact: `10878190860`
+- corpus: `recognition-adversarial-gate1-v1`
+- corpus SHA-256: `d1ca728306758a2ee2daf9bb1e4ec2e43cdf243ea034ce58ad7e56cd91cb8490`
+- randomized positives: 120 controlled XABCD cases across five standard families, bullish/bearish,
+  randomized minor-swing amplitude/time placement and 1/2/3 contaminated legs.
+- skip budget 4: depth-1 = 40/40 exact, depth-2 = 40/40 exact, depth-3 = 0/40.
+- skip budget 6: 120/120 primary structures recovered exactly, node MAE 0 bars.
+- multi-scale S3/S5/S8 produced the same primary recovery and no additional candidate explosion on
+  this corpus.
+- independent clean near-miss negatives: invalid-B 10/10 rejected, invalid-C 10/10 rejected,
+  invalid-D 10/10 rejected under both skip budgets and both scale configurations.
+- one additional Bat candidate appeared in one contaminated positive frame. Inspection shows that
+  the inserted minor pivot itself creates a second canonical-valid nested Bat
+  (X/A/B/C/D = 30/110/190/324/350); therefore positive-frame extra predictions are not automatically
+  valid false-positive labels. Gate 2 must use independent/full labels for precision.
+- future-tail stress: final-history collapse erased the original confirmed pattern in 24/24 cases;
+  event-sourced streaming preserved 24/24 first-knowable patterns with confirmed-history mutation 0.
+- interpretation: Candidate Graph + Event-Sourced Recognition are now required V2 architecture
+  elements. `max_total_skips=4` is empirically too shallow; skip=6 is the current experimental
+  baseline, not a production default.
+- limitation: controlled ground truth only; no real-A-share semantic accuracy or profitability claim.
+
+### Gate 2
+
+Before production promotion:
+- build an independent rule oracle/full-label path so nested valid structures are not mislabeled FP;
+- inject known structures into real A-share noise/background (synthetic-in-real);
+- measure graph candidate pressure and primary-node recovery under gaps/wicks/volatility changes;
+- add blind holdout seeds/time blocks;
+- keep streaming history mutation at zero.
