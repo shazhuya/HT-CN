@@ -125,10 +125,10 @@ def _scan_record(
         "live_standard_candidate_count": sum(
             not item.research_only for item in scan.live_candidates
         ),
-        "monitoring_candidate_count": len(scan.monitoring_candidates),
-        "monitoring_standard_candidate_count": sum(
-            not item.research_only for item in scan.monitoring_candidates
-        ),
+        "monitoring_candidate_count": len(monitoring),
+        "monitoring_standard_candidate_count": monitoring_standard,
+        "monitoring_research_candidate_count": monitoring_research,
+        "monitoring_observable_candidate_count": monitoring_observable,
         "hidden_remote_count": int(
             scan.diagnostics.get("hidden_remote_count") or 0
         ),
