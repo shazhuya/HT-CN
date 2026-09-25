@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from htcn.harmonic.recognition_benchmark import (
+    diagnose_truth_pivot_path,
     graph_completed_predictions,
     score_predictions,
     streaming_graph_completed_predictions,
@@ -159,6 +160,77 @@ def _evaluate(cases: list[SyntheticRealCase], *, reveal_cases: bool) -> dict[str
     }
 
 
+def _pivot_path_diagnostics(
+    cases: list[SyntheticRealCase],
+    *,
+    reveal_cases: bool,
+) -> dict[str, Any]:
+    rows = []
+    any_present = 0
+    any_recent = 0
+    any_step13 = 0
+    min_skip_values: list[int] = []
+    min_max_step_values: list[int] = []
+
+    for case in cases:
+        diagnostic = diagnose_truth_pivot_path(
+            case.frame,
+            case.truth,
+            scales=SCALES,
+            recent_pivots=20,
+        )
+        scale_rows = diagnostic["scales"]
+        present = [
+            payload
+            for payload in scale_rows.values()
+            if payload["all_truth_nodes_present"]
+        ]
+        any_present += int(bool(present))
+        any_recent += int(
+            any(payload.get("all_truth_nodes_within_recent_frontier") for payload in present)
+        )
+        any_step13 += int(
+            any(payload.get("current_step13_compatible") for payload in present)
+        )
+        if present:
+            min_skip_values.append(
+                min(int(payload["total_skipped_pivots"]) for payload in present)
+            )
+            min_max_step_values.append(
+                min(int(payload["max_leg_step"]) for payload in present)
+            )
+        if reveal_cases:
+            rows.append(
+                {
+                    "case_id": case.truth.case_id,
+                    "scales": scale_rows,
+                }
+            )
+
+    count = len(cases)
+    return {
+        "case_count": count,
+        "truth_nodes_present_any_scale_rate": any_present / count if count else 1.0,
+        "truth_within_recent20_any_scale_rate": any_recent / count if count else 1.0,
+        "step13_compatible_any_scale_rate": any_step13 / count if count else 1.0,
+        "minimum_total_skips": {
+            "min": min(min_skip_values) if min_skip_values else None,
+            "median": sorted(min_skip_values)[len(min_skip_values) // 2]
+            if min_skip_values
+            else None,
+            "max": max(min_skip_values) if min_skip_values else None,
+        },
+        "minimum_max_leg_step": {
+            "min": min(min_max_step_values) if min_max_step_values else None,
+            "median": sorted(min_max_step_values)[len(min_max_step_values) // 2]
+            if min_max_step_values
+            else None,
+            "max": max(min_max_step_values) if min_max_step_values else None,
+        },
+        "cases": rows if reveal_cases else "sealed_holdout_case_details",
+    }
+
+
 def _streaming(cases: list[SyntheticRealCase]) -> dict[str, Any]:
     selected = cases[: min(12, len(cases))]
     preserved = 0
@@ -217,6 +289,14 @@ def main() -> int:
         },
         "development": _evaluate(development, reveal_cases=True),
         "holdout": _evaluate(holdout, reveal_cases=False),
+        "development_pivot_path_diagnostics": _pivot_path_diagnostics(
+            development,
+            reveal_cases=True,
+        ),
+        "holdout_pivot_path_diagnostics": _pivot_path_diagnostics(
+            holdout,
+            reveal_cases=False,
+        ),
         "development_streaming": _streaming(development),
         "holdout_streaming": _streaming(holdout),
         "claims_boundary": (
