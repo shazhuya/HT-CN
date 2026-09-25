@@ -42,6 +42,27 @@ function discoveryDistance(pattern: Pattern) {
 
 function sortDiscoveryForMonitoring(items: Pattern[]) {
   return [...items].sort((left, right) => {
+    const leftPine = left.discovery?.source === 'pine_r34'
+    const rightPine = right.discovery?.source === 'pine_r34'
+
+    // The backend already reproduces R3.4 candidate-table ranking. Do not
+    // silently re-rank two Pine candidates in the UI.
+    if (leftPine && rightPine) {
+      const leftRank = left.discovery?.monitoring_rank
+      const rightRank = right.discovery?.monitoring_rank
+      if (
+        typeof leftRank === 'number'
+        && Number.isFinite(leftRank)
+        && typeof rightRank === 'number'
+        && Number.isFinite(rightRank)
+        && Math.abs(leftRank - rightRank) > 1e-9
+      ) return rightRank - leftRank
+    }
+
+    // Behavioral R3.4 candidates are the primary discovery baseline; the
+    // extended graph remains a supplementary recall channel.
+    if (leftPine !== rightPine) return leftPine ? -1 : 1
+
     const leftResearch = left.discovery?.research_only ? 1 : 0
     const rightResearch = right.discovery?.research_only ? 1 : 0
     if (leftResearch !== rightResearch) return leftResearch - rightResearch
