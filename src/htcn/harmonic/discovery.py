@@ -80,31 +80,26 @@ def _validate_pivots(pivots: tuple[Pivot, ...]) -> None:
         raise ValueError("discovery path must remain on one pivot scale")
 
 
-def iter_discovery_xabc_windows(
+def _iter_bounded_graph_windows(
     pivots: tuple[Pivot, ...] | list[Pivot],
     *,
-    recent_pivots: int = 18,
-    max_total_skips: int = 4,
+    size: int,
+    recent_pivots: int,
+    max_total_skips: int,
 ) -> tuple[_DiscoveryWindow, ...]:
-    """Enumerate bounded recent XABC graph paths instead of only the latest four pivots.
-
-    A leg may use the adjacent confirmed swing (step=1) or skip exactly one complete minor
-    swing pair (step=3). A step of two would connect same-direction pivots in an alternating
-    sequence and is therefore invalid. This gives the candidate builder limited noise
-    tolerance without allowing arbitrary historical node stitching.
-    """
-
+    if size not in (4, 5):
+        raise ValueError("bounded graph windows support only XABC/XABCD")
     source = tuple(pivots)
     _validate_pivots(source)
-    if len(source) < 4:
+    if len(source) < size:
         return ()
 
-    offset = max(0, len(source) - max(4, int(recent_pivots)))
+    offset = max(0, len(source) - max(size, int(recent_pivots)))
     recent = source[offset:]
     scale = int(recent[0].scale)
     out: list[_DiscoveryWindow] = []
 
-    for positions in combinations(range(len(recent)), 4):
+    for positions in combinations(range(len(recent)), size):
         steps = tuple(right - left for left, right in pairwise(positions))
         if any(step not in (1, 3) for step in steps):
             continue
@@ -124,8 +119,49 @@ def iter_discovery_xabc_windows(
                 path_kind=path_kind,
             )
         )
-
     return tuple(out)
+
+
+def iter_discovery_xabc_windows(
+    pivots: tuple[Pivot, ...] | list[Pivot],
+    *,
+    recent_pivots: int = 18,
+    max_total_skips: int = 4,
+) -> tuple[_DiscoveryWindow, ...]:
+    """Enumerate bounded recent XABC graph paths instead of only the latest four pivots.
+
+    A leg may use the adjacent confirmed swing (step=1) or skip exactly one complete minor
+    swing pair (step=3). A step of two would connect same-direction pivots in an alternating
+    sequence and is therefore invalid. This gives the candidate builder limited noise
+    tolerance without allowing arbitrary historical node stitching.
+    """
+
+    return _iter_bounded_graph_windows(
+        pivots,
+        size=4,
+        recent_pivots=recent_pivots,
+        max_total_skips=max_total_skips,
+    )
+
+
+def iter_discovery_xabcd_windows(
+    pivots: tuple[Pivot, ...] | list[Pivot],
+    *,
+    recent_pivots: int = 20,
+    max_total_skips: int = 4,
+) -> tuple[_DiscoveryWindow, ...]:
+    """Experimental completed-XABCD graph paths for recognition correctness work.
+
+    This changes candidate generation only. The resulting five-node window still has to pass
+    the frozen canonical classifier; skipped minor pivots never relax Carney identity.
+    """
+
+    return _iter_bounded_graph_windows(
+        pivots,
+        size=5,
+        recent_pivots=recent_pivots,
+        max_total_skips=max_total_skips,
+    )
 
 
 def _source_cleared_xabcd_rules() -> tuple[PatternRule, ...]:
