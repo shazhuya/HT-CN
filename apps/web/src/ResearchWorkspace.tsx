@@ -34,6 +34,22 @@ function patternStateLabel(pattern: Pattern) {
   return pattern.state === 'completed' ? '已完成' : '形成中'
 }
 
+function candidateDistanceLabel(pattern: Pattern) {
+  if (!pattern.discovery_only) return null
+  if (pattern.discovery?.prz_status === 'tested') return '已测试投影区'
+  const distanceAtr = pattern.metrics?.distance_to_prz_atr
+  if (typeof distanceAtr === 'number' && Number.isFinite(distanceAtr)) {
+    if (distanceAtr <= 1.5) return `距PRZ ${distanceAtr.toFixed(2)} ATR · 接近`
+    if (distanceAtr <= 3) return `距PRZ ${distanceAtr.toFixed(2)} ATR · 途中`
+    return `距PRZ ${distanceAtr.toFixed(2)} ATR · 远端`
+  }
+  const distanceXa = pattern.discovery?.distance_to_source_prz_xa
+  if (typeof distanceXa === 'number' && Number.isFinite(distanceXa)) {
+    return `距投影区 ${(distanceXa * 100).toFixed(1)}% 参考腿`
+  }
+  return null
+}
+
 export default function ResearchWorkspace({
   analysis, loading, error, bars, onBarsChange, timeframe, onTimeframeChange, onRefresh, patterns, rawPatternCount,
   selectedPattern, onSelectPattern, showAllIdentities, onShowAllIdentities,
@@ -179,6 +195,8 @@ export default function ResearchWorkspace({
                       <dl><div><dt>完成结构</dt><dd>{analysis.completed.length}</dd></div>
                         <div><dt>权威形成中</dt><dd>{analysis.forming.length}</dd></div>
                         <div><dt>发现候选</dt><dd>{analysis.discovery?.length ?? 0}</dd></div>
+                        <div><dt>R3.4 实战 / 存活</dt><dd>{String(analysis.recognition_diagnostics?.pine_r34_monitoring ?? '—')} / {String(analysis.recognition_diagnostics?.pine_r34_live ?? '—')}</dd></div>
+                        <div><dt>R3.4 隐藏远端</dt><dd>{String(analysis.recognition_diagnostics?.pine_r34_hidden_remote ?? '—')}</dd></div>
                         <div><dt>权威 Pivot</dt><dd>{analysis.scales.join(' / ')}</dd></div>
                         <div><dt>发现 Pivot</dt><dd>{analysis.discovery_scales?.join(' / ') ?? '5 / 10 / 20'}</dd></div></dl>
                     </section>
@@ -240,6 +258,7 @@ export default function ResearchWorkspace({
                                 {pattern.discovery?.source === 'pine_r34' ? ' · R3.4' : pattern.discovery?.source === 'extended_graph' ? ' · 扩展' : ''}
                                 {pattern.discovery?.research_only ? ' · 研究' : ''}
                               </small>
+                              {candidateDistanceLabel(pattern) && <small className="pattern-item__distance">{candidateDistanceLabel(pattern)}</small>}
                             </span>
                             <b>{pattern.direction === 'bullish' ? '↗' : '↘'}</b>
                           </button>
