@@ -130,7 +130,7 @@ def _render_contaminated_xabcd(
 
     for leg_name, left_label, right_label in zip(
         leg_names,
-        labels,
+        labels[:-1],
         labels[1:],
         strict=True,
     ):
