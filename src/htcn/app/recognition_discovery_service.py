@@ -187,7 +187,15 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
                 "m3": item.m3,
                 "structural_limit": item.structural_limit,
                 "distance_to_prz": distance,
-                "distance_to_prz_atr": distance / max(item.atr_at_birth, 1e-12),
+                "distance_to_prz_atr": (
+                    item.current_distance_atr
+                    if item.current_distance_atr is not None
+                    else distance / max(item.atr_at_birth, 1e-12)
+                ),
+                "distance_to_prz_pct": item.current_distance_pct,
+                "source_age": item.source_age,
+                "observable": item.observable,
+                "monitoring_rank": item.monitoring_rank,
             },
             "source_tolerance_used": False,
             "bars_since_c": max(0, len(dates) - 1 - item.source_nodes[-1].index),
@@ -208,6 +216,9 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
                 "research_only": item.research_only,
                 "qualified": item.qualified,
                 "precise": item.precise,
+                "observable": item.observable,
+                "monitoring_rank": item.monitoring_rank,
+                "recently_tested": item.recently_tested,
                 "projected_label": item.projected_label,
                 "structural_limit": item.structural_limit,
                 "pine_source_sha256": (
@@ -246,7 +257,7 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
         pine_scan = scan_pine_r34(frame)
         pine_items = [
             self._pine_payload(item, dates, latest_close=latest_close)
-            for item in pine_scan.live_candidates
+            for item in pine_scan.monitoring_candidates
         ]
 
         authoritative_keys: set[tuple[str, tuple[int, ...]]] = set()
@@ -319,7 +330,9 @@ class RecognitionDiscoveryService(M3SourceClockHarmonicService):
         analysis["recognition_diagnostics"] = {
             "authoritative_completed": len(analysis.get("completed") or []),
             "authoritative_forming": len(analysis.get("forming") or []),
-            "pine_r34_live": len(pine_items),
+            "pine_r34_live": int(pine_scan.diagnostics.get("live_candidate_count") or 0),
+            "pine_r34_monitoring": len(pine_items),
+            "pine_r34_hidden_remote": int(pine_scan.diagnostics.get("hidden_remote_count") or 0),
             "extended_graph_candidates": len(graph_items),
             "discovery_candidates": len(discovery),
             **{f"graph_{key}": value for key, value in graph_diagnostics.items()},
