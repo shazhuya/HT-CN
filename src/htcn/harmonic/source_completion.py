@@ -36,6 +36,25 @@ class SourceProjection:
         return self.pattern_id, self.direction.value, self.node_indices
 
 
+    @property
+    def xa_length(self) -> float:
+        return abs(float(self.points[1].price) - float(self.points[0].price))
+
+    @property
+    def source_prz_width_xa(self) -> float:
+        """Frozen Source Raw PRZ width normalized by XA; quality/audit only."""
+
+        if not self.prz.has_source_prz:
+            raise ValueError("Source Raw PRZ is unavailable")
+        if self.xa_length <= 0:
+            raise ValueError("XA length must be positive")
+        assert self.prz.source_prz_low is not None
+        assert self.prz.source_prz_high is not None
+        return (
+            float(self.prz.source_prz_high) - float(self.prz.source_prz_low)
+        ) / self.xa_length
+
+
 @dataclass(frozen=True, slots=True)
 class SourceCompletionEvent:
     """Observable Source Terminal completion independent from a right-confirmed D pivot."""
