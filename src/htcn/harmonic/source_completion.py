@@ -1,0 +1,239 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+import pandas as pd
+
+from .discovery import iter_hierarchical_xabc_frontier_windows
+from .execution import SourceExecutionAudit, observe_source_execution
+from .models import HarmonicPoint, PatternDirection
+from .pivots import detect_pivot_events, visible_confirmed_pivots
+from .prz import PotentialReversalZone
+from .scanner import project_forming_xabcd
+
+
+@dataclass(frozen=True, slots=True)
+class SourceProjection:
+    """First-knowable standard XABCD projection born from a confirmed XABC source."""
+
+    pattern_id: str
+    direction: PatternDirection
+    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint]
+    known_at: int
+    prz: PotentialReversalZone
+    scales: tuple[int, ...]
+    min_skipped_pivots: int
+
+    @property
+    def node_indices(self) -> tuple[int, ...]:
+        return tuple(point.index for point in self.points)
+
+    @property
+    def key(self) -> tuple[str, str, tuple[int, ...]]:
+        return self.pattern_id, self.direction.value, self.node_indices
+
+
+@dataclass(frozen=True, slots=True)
+class SourceCompletionEvent:
+    """Observable Source Terminal completion independent from a right-confirmed D pivot."""
+
+    projection: SourceProjection
+    audit: SourceExecutionAudit
+
+    def __post_init__(self) -> None:
+        if self.audit.state != "terminal_observed":
+            raise ValueError("SourceCompletionEvent requires a terminal_observed audit")
+        if self.audit.terminal_bar is None or self.audit.terminal_price is None:
+            raise ValueError("terminal_observed audit must expose terminal bar/price")
+        if self.audit.terminal_bar <= self.projection.known_at:
+            raise ValueError("Source Terminal must occur after the projection is knowable")
+
+    @property
+    def pattern_id(self) -> str:
+        return self.projection.pattern_id
+
+    @property
+    def direction(self) -> PatternDirection:
+        return self.projection.direction
+
+    @property
+    def source_nodes(self) -> tuple[int, ...]:
+        return self.projection.node_indices
+
+    @property
+    def known_at(self) -> int:
+        return self.projection.known_at
+
+    @property
+    def terminal_bar(self) -> int:
+        assert self.audit.terminal_bar is not None
+        return int(self.audit.terminal_bar)
+
+    @property
+    def terminal_price(self) -> float:
+        assert self.audit.terminal_price is not None
+        return float(self.audit.terminal_price)
+
+
+@dataclass(frozen=True, slots=True)
+class SourceCompletionScan:
+    projections: tuple[SourceProjection, ...]
+    completions: tuple[SourceCompletionEvent, ...]
+    expired_without_terminal: int
+    policy: str = "source_clock_no_additional_invalidation_v1"
+
+
+def _merge_projection(
+    store: dict[tuple[str, str, tuple[int, ...]], SourceProjection],
+    item: SourceProjection,
+) -> None:
+    prior = store.get(item.key)
+    if prior is None:
+        store[item.key] = item
+        return
+    store[item.key] = SourceProjection(
+        pattern_id=item.pattern_id,
+        direction=item.direction,
+        points=item.points,
+        known_at=min(prior.known_at, item.known_at),
+        prz=prior.prz,
+        scales=tuple(sorted(set(prior.scales) | set(item.scales))),
+        min_skipped_pivots=min(
+            prior.min_skipped_pivots,
+            item.min_skipped_pivots,
+        ),
+    )
+
+
+def event_sourced_hierarchical_xabc_projections(
+    frame: pd.DataFrame,
+    *,
+    scales: tuple[int, ...] = (3, 5, 8),
+    recent_pivots: int = 20,
+    max_leg_step: int = 7,
+    max_total_skips: int = 12,
+) -> tuple[SourceProjection, ...]:
+    """Return XABC projections at their first live-knowable confirmation bar.
+
+    Only frontier paths ending at the latest visible pivot are evaluated at each confirmation
+    event. This prevents final-history pivot replacement from inventing or erasing projection
+    birth times.
+    """
+
+    born: dict[tuple[str, str, tuple[int, ...]], SourceProjection] = {}
+    for scale in sorted({int(value) for value in scales}):
+        events = detect_pivot_events(
+            frame,
+            left=scale,
+            right=scale,
+            scale=scale,
+        )
+        for cutoff in sorted({int(event.confirmed_at) for event in events}):
+            pivots = visible_confirmed_pivots(events, cutoff=cutoff)
+            for candidate in iter_hierarchical_xabc_frontier_windows(
+                pivots,
+                recent_pivots=recent_pivots,
+                max_leg_step=max_leg_step,
+                max_total_skips=max_total_skips,
+            ):
+                window = candidate.window
+                points = window.harmonic_points()
+                for projection in project_forming_xabcd(
+                    window,
+                    include_source_conflict_patterns=False,
+                ):
+                    if not projection.prz.has_source_prz:
+                        continue
+                    item = SourceProjection(
+                        pattern_id=projection.pattern_id,
+                        direction=projection.direction,
+                        points=(
+                            points[0],
+                            points[1],
+                            points[2],
+                            points[3],
+                        ),
+                        known_at=cutoff,
+                        prz=projection.prz,
+                        scales=(scale,),
+                        min_skipped_pivots=int(candidate.skipped_pivots),
+                    )
+                    _merge_projection(born, item)
+
+    return tuple(
+        sorted(
+            born.values(),
+            key=lambda item: (
+                item.known_at,
+                item.points[-1].index,
+                item.pattern_id,
+                item.direction.value,
+                item.node_indices,
+            ),
+        )
+    )
+
+
+def scan_source_completion_events(
+    frame: pd.DataFrame,
+    *,
+    scales: tuple[int, ...] = (3, 5, 8),
+    recent_pivots: int = 20,
+    max_leg_step: int = 7,
+    max_total_skips: int = 12,
+    lifetime_bars: int = 180,
+) -> SourceCompletionScan:
+    """Observe Source Terminal completions for first-knowable hierarchical XABC projections.
+
+    This research channel deliberately does not impose an additional invalidation policy yet.
+    It isolates the frozen Source Raw PRZ + Source Terminal clock from retrospective exact-D
+    geometry. Production promotion requires a separately validated invalidation/expiry policy.
+    """
+
+    if lifetime_bars < 1:
+        raise ValueError("lifetime_bars must be positive")
+
+    projections = event_sourced_hierarchical_xabc_projections(
+        frame,
+        scales=scales,
+        recent_pivots=recent_pivots,
+        max_leg_step=max_leg_step,
+        max_total_skips=max_total_skips,
+    )
+    completions: list[SourceCompletionEvent] = []
+    expired = 0
+
+    for projection in projections:
+        end_bar = min(
+            len(frame) - 1,
+            projection.known_at + int(lifetime_bars),
+        )
+        reaction_anchor_price = float(projection.points[1].price)
+        try:
+            audit = observe_source_execution(
+                frame,
+                signal_bar=projection.known_at,
+                direction=projection.direction,
+                prz=projection.prz,
+                reaction_anchor_price=reaction_anchor_price,
+                observation_end_bar=end_bar,
+            )
+        except ValueError:
+            expired += 1
+            continue
+
+        if audit.state != "terminal_observed":
+            expired += 1
+            continue
+        completions.append(
+            SourceCompletionEvent(
+                projection=projection,
+                audit=audit,
+            )
+        )
+
+    return SourceCompletionScan(
+        projections=projections,
+        completions=tuple(completions),
+        expired_without_terminal=expired,
+    )
