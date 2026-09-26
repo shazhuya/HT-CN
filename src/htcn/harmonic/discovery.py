@@ -216,6 +216,70 @@ def _iter_hierarchical_graph_windows(
     return tuple(out)
 
 
+def iter_hierarchical_xabc_frontier_windows(
+    pivots: tuple[Pivot, ...] | list[Pivot],
+    *,
+    recent_pivots: int = 20,
+    max_leg_step: int = 7,
+    max_total_skips: int = 12,
+) -> tuple[_DiscoveryWindow, ...]:
+    """Enumerate only newly knowable XABC paths ending at the current frontier C.
+
+    In a live alternating pivot stream, a new XABC can only be born when the latest visible
+    pivot becomes/replaces C. Fixing C at the frontier avoids repeatedly enumerating historical
+    combinations while preserving the same hierarchical leg-admissibility rules.
+    """
+
+    if max_leg_step < 1 or max_leg_step % 2 == 0:
+        raise ValueError("max_leg_step must be a positive odd integer")
+    source = tuple(pivots)
+    _validate_pivots(source)
+    if len(source) < 4:
+        return ()
+
+    recent = source[max(0, len(source) - max(4, int(recent_pivots))) :]
+    c_position = len(recent) - 1
+    scale = int(recent[0].scale)
+    out: list[_DiscoveryWindow] = []
+
+    def prior_positions(right: int):
+        for step in range(1, max_leg_step + 1, 2):
+            left = right - step
+            if left < 0:
+                break
+            if _hierarchical_leg_ok(
+                recent,
+                left_position=left,
+                right_position=right,
+                max_leg_step=max_leg_step,
+            ):
+                yield left, step
+
+    for b_position, cb_step in prior_positions(c_position):
+        for a_position, ab_step in prior_positions(b_position):
+            for x_position, xa_step in prior_positions(a_position):
+                skipped = (cb_step - 1) + (ab_step - 1) + (xa_step - 1)
+                if skipped > max_total_skips:
+                    continue
+                positions = (x_position, a_position, b_position, c_position)
+                chunk = tuple(recent[position] for position in positions)
+                if any(left.kind is right.kind for left, right in pairwise(chunk)):
+                    continue
+                out.append(
+                    _DiscoveryWindow(
+                        window=SwingWindow(scale=scale, pivots=chunk),
+                        skipped_pivots=skipped,
+                        path_kind=(
+                            "consecutive"
+                            if skipped == 0
+                            else "hierarchical_frontier_skip"
+                        ),
+                    )
+                )
+
+    return tuple(out)
+
+
 def iter_hierarchical_xabc_windows(
     pivots: tuple[Pivot, ...] | list[Pivot],
     *,
