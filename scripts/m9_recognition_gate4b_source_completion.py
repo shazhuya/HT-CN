@@ -45,10 +45,15 @@ def main() -> int:
     total_projections = 0
     state_counts: Counter[str] = Counter()
     pattern_states: dict[str, Counter[str]] = defaultdict(Counter)
+    state_by_skip: dict[int, Counter[str]] = defaultdict(Counter)
+    state_by_scale_support: dict[int, Counter[str]] = defaultdict(Counter)
     exact_completion_keys: set[tuple[object, ...]] = set()
     exact_duplicate_count = 0
     collision_groups: dict[tuple[object, ...], list[dict[str, Any]]] = defaultdict(list)
+    terminal_market_groups: dict[tuple[object, ...], list[dict[str, Any]]] = defaultdict(list)
+    same_abc_terminal_groups: dict[tuple[object, ...], list[dict[str, Any]]] = defaultdict(list)
     all_completions: list[dict[str, Any]] = []
+    completion_ages: list[int] = []
     loaded_symbols = 0
 
     for instrument in manifest["instruments"]:
@@ -78,6 +83,8 @@ def main() -> int:
         for item in scan.states:
             state_counts[item.state] += 1
             pattern_states[item.projection.pattern_id][item.state] += 1
+            state_by_skip[int(item.projection.min_skipped_pivots)][item.state] += 1
+            state_by_scale_support[len(item.projection.scales)][item.state] += 1
 
         for event in scan.completions:
             key = (
@@ -105,14 +112,34 @@ def main() -> int:
                 "terminal_date": _date(frame, event.terminal_bar),
                 "terminal_price": event.terminal_price,
                 "scale_support": list(event.projection.scales),
+                "scale_support_count": len(event.projection.scales),
                 "min_skipped_pivots": event.projection.min_skipped_pivots,
+                "source_span_bars": event.source_nodes[-1] - event.source_nodes[0],
+                "age_to_terminal": event.terminal_bar - event.known_at,
             }
             all_completions.append(row)
+            completion_ages.append(int(row["age_to_terminal"]))
             collision_groups[
                 (
                     instrument_id,
                     event.pattern_id,
                     event.direction.value,
+                    event.terminal_bar,
+                )
+            ].append(row)
+            terminal_market_groups[
+                (
+                    instrument_id,
+                    event.direction.value,
+                    event.terminal_bar,
+                )
+            ].append(row)
+            same_abc_terminal_groups[
+                (
+                    instrument_id,
+                    event.pattern_id,
+                    event.direction.value,
+                    event.source_nodes[1:],
                     event.terminal_bar,
                 )
             ].append(row)
@@ -135,6 +162,51 @@ def main() -> int:
         if len(rows) > 1
     ]
     collision_rows.sort(key=lambda row: (-int(row["count"]), str(row["instrument_id"])))
+
+    market_collision_rows = [
+        {
+            "instrument_id": key[0],
+            "direction": key[1],
+            "terminal_bar": key[2],
+            "count": len(rows),
+            "pattern_ids": sorted({str(row["pattern_id"]) for row in rows}),
+            "events": rows,
+        }
+        for key, rows in terminal_market_groups.items()
+        if len(rows) > 1
+    ]
+    market_collision_rows.sort(
+        key=lambda row: (-int(row["count"]), str(row["instrument_id"]))
+    )
+    abc_collision_rows = [
+        {
+            "instrument_id": key[0],
+            "pattern_id": key[1],
+            "direction": key[2],
+            "abc_nodes": list(key[3]),
+            "terminal_bar": key[4],
+            "count": len(rows),
+            "x_nodes": sorted({int(row["source_nodes"][0]) for row in rows}),
+            "events": rows,
+        }
+        for key, rows in same_abc_terminal_groups.items()
+        if len(rows) > 1
+    ]
+    abc_collision_rows.sort(
+        key=lambda row: (-int(row["count"]), str(row["instrument_id"]))
+    )
+
+    sorted_ages = sorted(completion_ages)
+    age_median = (
+        sorted_ages[len(sorted_ages) // 2]
+        if sorted_ages
+        else None
+    )
+    age_p90 = (
+        sorted_ages[min(len(sorted_ages) - 1, int(len(sorted_ages) * 0.9))]
+        if sorted_ages
+        else None
+    )
 
     completed = int(state_counts["completed"])
     invalidated = int(state_counts["invalidated"])
@@ -180,6 +252,38 @@ def main() -> int:
             "same_pattern_terminal_collision_event_count": sum(
                 int(row["count"]) for row in collision_rows
             ),
+            "market_terminal_collision_group_count": len(market_collision_rows),
+            "market_terminal_collision_event_count": sum(
+                int(row["count"]) for row in market_collision_rows
+            ),
+            "deduped_market_terminal_event_count": len(terminal_market_groups),
+            "deduped_market_terminal_density_per_1000_bars": (
+                len(terminal_market_groups) / total_bars * 1000.0
+                if total_bars
+                else 0.0
+            ),
+            "same_abc_different_x_collision_group_count": len(abc_collision_rows),
+            "completion_age_median_bars": age_median,
+            "completion_age_p90_bars": age_p90,
+            "completion_age_max_bars": max(completion_ages) if completion_ages else None,
+        },
+        "state_by_min_skipped_pivots": {
+            str(skip): {
+                "completed": int(counts["completed"]),
+                "invalidated": int(counts["invalidated"]),
+                "expired": int(counts["expired"]),
+                "active": int(counts["active"]),
+            }
+            for skip, counts in sorted(state_by_skip.items())
+        },
+        "state_by_scale_support_count": {
+            str(support): {
+                "completed": int(counts["completed"]),
+                "invalidated": int(counts["invalidated"]),
+                "expired": int(counts["expired"]),
+                "active": int(counts["active"]),
+            }
+            for support, counts in sorted(state_by_scale_support.items())
         },
         "by_pattern": {
             pattern: {
@@ -191,6 +295,8 @@ def main() -> int:
             for pattern, counts in sorted(pattern_states.items())
         },
         "collision_groups_top50": collision_rows[:50],
+        "market_terminal_collision_groups_top50": market_collision_rows[:50],
+        "same_abc_different_x_groups_top50": abc_collision_rows[:50],
         "completion_examples_first100": all_completions[:100],
         "interpretation_boundary": (
             "This Gate 4B report measures event density, retirement and duplicate pressure on "
