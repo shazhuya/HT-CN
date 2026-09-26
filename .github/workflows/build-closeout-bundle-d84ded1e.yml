@@ -1,9 +1,9 @@
-name: Build HT-CN Closeout Bundle d84ded1e
+name: Build HT-CN Closeout Bundle a63f49b7
 
 on:
   push:
     branches:
-      - ops/chat-continuation-d84ded1e
+      - ops/chat-continuation-a63f49b7
 
 jobs:
   bundle:
@@ -13,11 +13,11 @@ jobs:
       - name: Checkout exact closeout head
         uses: actions/checkout@v4
         with:
-          ref: d84ded1e191d72db7e3340f190e6474eb93631dc
+          ref: a63f49b7a7079929f4bc92b20950598a17d14bc1
           fetch-depth: 0
 
       - name: Restore handoff branch identity
-        run: git checkout -B m9/recognition-trustworthiness-v1 d84ded1e191d72db7e3340f190e6474eb93631dc
+        run: git checkout -B m9/recognition-trustworthiness-v1 a63f49b7a7079929f4bc92b20950598a17d14bc1
 
       - name: Build and verify continuation bundle
         run: |
@@ -27,7 +27,7 @@ jobs:
       - name: Upload continuation bundle
         uses: actions/upload-artifact@v4
         with:
-          name: htcn-chat-continuation-d84ded1e
+          name: htcn-chat-continuation-a63f49b7
           path: |
             artifacts/reports/htcn-chat-continuation-bundle.zip
             logs/context/HTCN_CHAT_HANDOFF.md
