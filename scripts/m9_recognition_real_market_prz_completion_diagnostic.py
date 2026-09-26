@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import statistics
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -11,7 +11,10 @@ from typing import Any
 import pandas as pd
 
 from htcn.harmonic.discovery import iter_hierarchical_xabc_windows
+from htcn.harmonic.execution import observe_source_execution
+from htcn.harmonic.models import PatternDirection
 from htcn.harmonic.pivots import detect_multi_scale_pivots
+from htcn.harmonic.prz import PotentialReversalZone
 from htcn.harmonic.scanner import project_forming_xabcd
 from htcn.research.snapshot_cache import load_research_snapshot
 
@@ -44,6 +47,7 @@ class Projection:
     source_prz_high: float
     xa_completion_price: float
     xa_completion_ratio: float
+    prz: PotentialReversalZone
     scales: tuple[int, ...]
 
     @property
@@ -99,6 +103,7 @@ def _merge(store: dict, item: Projection) -> None:
         source_prz_high=item.source_prz_high,
         xa_completion_price=item.xa_completion_price,
         xa_completion_ratio=item.xa_completion_ratio,
+        prz=item.prz,
         scales=tuple(sorted(set(prior.scales) | set(item.scales))),
     )
 
@@ -146,6 +151,7 @@ def _collect_window(
                     source_prz_high=float(projected.prz.source_prz_high),
                     xa_completion_price=xa_price,
                     xa_completion_ratio=xa_ratio,
+                    prz=projected.prz,
                     scales=(int(scale),),
                 )
                 _merge(out, item)
@@ -190,6 +196,26 @@ def _evaluate_projection(item: Projection, frame: pd.DataFrame) -> dict[str, Any
             )
         break
 
+    observation_end = min(
+        len(frame) - 1,
+        item.known_at + LIFETIME_BARS,
+    )
+    audit = observe_source_execution(
+        frame,
+        signal_bar=item.known_at,
+        direction=PatternDirection(item.direction),
+        prz=item.prz,
+        reaction_anchor_price=a_price,
+        observation_end_bar=observation_end,
+    )
+    terminal_error: float | None = None
+    terminal_d_xa: float | None = None
+    if audit.terminal_price is not None and xa_span > 0:
+        terminal_d_xa = abs(a_price - float(audit.terminal_price)) / xa_span
+        terminal_error = abs(
+            terminal_d_xa / item.xa_completion_ratio - 1.0
+        )
+
     return {
         "available_future_bars": available,
         "full_horizon": available >= MIN_FULL_HORIZON,
@@ -199,8 +225,20 @@ def _evaluate_projection(item: Projection, frame: pd.DataFrame) -> dict[str, Any
             first_touch - start if first_touch is not None else None
         ),
         "xa_completion_level_tested_on_touch_bar": xa_tested,
-        "terminal_extreme_d_xa": touch_extreme_ratio,
-        "terminal_extreme_relative_error_to_xa_completion": touch_extreme_error,
+        "touch_extreme_d_xa": touch_extreme_ratio,
+        "touch_extreme_relative_error_to_xa_completion": touch_extreme_error,
+        "source_execution_state": audit.state,
+        "source_prz_entry_bar": audit.first_prz_entry_bar,
+        "source_terminal_observed": audit.state == "terminal_observed",
+        "source_terminal_bar": audit.terminal_bar,
+        "source_terminal_price": audit.terminal_price,
+        "bars_to_source_terminal": (
+            int(audit.terminal_bar) - item.known_at
+            if audit.terminal_bar is not None
+            else None
+        ),
+        "source_terminal_d_xa": terminal_d_xa,
+        "source_terminal_relative_error_to_xa_completion": terminal_error,
     }
 
 
@@ -214,10 +252,25 @@ def _summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
         if row["bars_to_touch"] is not None
     ]
     d_errors = [
-        float(row["terminal_extreme_relative_error_to_xa_completion"])
+        float(row["touch_extreme_relative_error_to_xa_completion"])
         for row in touched
-        if row["terminal_extreme_relative_error_to_xa_completion"] is not None
+        if row["touch_extreme_relative_error_to_xa_completion"] is not None
     ]
+    terminal_rows = [row for row in rows if row["source_terminal_observed"]]
+    full_terminal_rows = [
+        row for row in full if row["source_terminal_observed"]
+    ]
+    terminal_bars = [
+        int(row["bars_to_source_terminal"])
+        for row in terminal_rows
+        if row["bars_to_source_terminal"] is not None
+    ]
+    terminal_errors = [
+        float(row["source_terminal_relative_error_to_xa_completion"])
+        for row in terminal_rows
+        if row["source_terminal_relative_error_to_xa_completion"] is not None
+    ]
+    execution_states = Counter(row["source_execution_state"] for row in rows)
     return {
         "projection_count": len(rows),
         "touched_count": len(touched),
@@ -257,6 +310,26 @@ def _summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
             ]
             if bars_to_touch
             else None
+        ),
+        "source_execution_state_counts": dict(execution_states),
+        "source_terminal_observed_count": len(terminal_rows),
+        "source_terminal_observed_rate": (
+            len(terminal_rows) / len(rows) if rows else 0.0
+        ),
+        "full_horizon_source_terminal_count": len(full_terminal_rows),
+        "full_horizon_source_terminal_rate": (
+            len(full_terminal_rows) / len(full) if full else None
+        ),
+        "source_terminal_within_3pct_of_xa_ratio_count": sum(
+            error <= 0.03 for error in terminal_errors
+        ),
+        "source_terminal_within_3pct_of_xa_ratio_rate": (
+            sum(error <= 0.03 for error in terminal_errors) / len(terminal_errors)
+            if terminal_errors
+            else None
+        ),
+        "bars_to_source_terminal_median": (
+            statistics.median(terminal_bars) if terminal_bars else None
         ),
     }
 
@@ -342,6 +415,10 @@ def main() -> int:
             "starts_at": "max(C pivot confirmation, C+1)",
             "lifetime_bars": LIFETIME_BARS,
             "touch_definition": "bar high/low overlaps Source Raw PRZ",
+            "canonical_terminal_definition": (
+                "observe_source_execution: first post-signal terminal-side test "
+                "of frozen Source Raw PRZ"
+            ),
             "three_percent_metric": (
                 "diagnostic comparison only; matches existing Pine/HT-CN operational "
                 "3% family convention and does not mutate Source identity"
