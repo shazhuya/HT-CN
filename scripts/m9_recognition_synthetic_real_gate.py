@@ -173,7 +173,6 @@ def _pivot_path_diagnostics(
     any_step13 = 0
     min_skip_values: list[int] = []
     min_max_step_values: list[int] = []
-    best_min_efficiency_values: list[float] = []
 
     for case in cases:
         diagnostic = diagnose_truth_pivot_path(
@@ -202,15 +201,6 @@ def _pivot_path_diagnostics(
             min_max_step_values.append(
                 min(int(payload["max_leg_step"]) for payload in present)
             )
-            eligible_efficiencies = [
-                float(payload["min_leg_efficiency"])
-                for payload in present
-                if payload.get("all_truth_nodes_within_recent_frontier")
-                and int(payload["max_leg_step"]) <= MAX_LEG_STEP
-                and int(payload["total_skipped_pivots"]) <= MAX_TOTAL_SKIPS
-            ]
-            if eligible_efficiencies:
-                best_min_efficiency_values.append(max(eligible_efficiencies))
         if reveal_cases:
             rows.append(
                 {
@@ -238,26 +228,6 @@ def _pivot_path_diagnostics(
             if min_max_step_values
             else None,
             "max": max(min_max_step_values) if min_max_step_values else None,
-        },
-
-        "best_min_leg_efficiency": {
-            "min": min(best_min_efficiency_values) if best_min_efficiency_values else None,
-            "median": (
-                sorted(best_min_efficiency_values)[len(best_min_efficiency_values) // 2]
-                if best_min_efficiency_values
-                else None
-            ),
-            "p10": (
-                sorted(best_min_efficiency_values)[
-                    min(
-                        len(best_min_efficiency_values) - 1,
-                        int(len(best_min_efficiency_values) * 0.10),
-                    )
-                ]
-                if best_min_efficiency_values
-                else None
-            ),
-            "max": max(best_min_efficiency_values) if best_min_efficiency_values else None,
         },
         "cases": rows if reveal_cases else "sealed_holdout_case_details",
     }

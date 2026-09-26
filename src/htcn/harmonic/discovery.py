@@ -71,17 +71,6 @@ class _DiscoveryWindow:
     window: SwingWindow
     skipped_pivots: int
     path_kind: str
-    leg_efficiencies: tuple[float, ...] = ()
-
-    @property
-    def min_leg_efficiency(self) -> float:
-        return min(self.leg_efficiencies) if self.leg_efficiencies else 1.0
-
-    @property
-    def mean_leg_efficiency(self) -> float:
-        if not self.leg_efficiencies:
-            return 1.0
-        return sum(self.leg_efficiencies) / len(self.leg_efficiencies)
 
 
 def _validate_pivots(pivots: tuple[Pivot, ...]) -> None:
@@ -128,43 +117,9 @@ def _iter_bounded_graph_windows(
                 window=SwingWindow(scale=scale, pivots=chunk),
                 skipped_pivots=skipped,
                 path_kind=path_kind,
-                leg_efficiencies=tuple(
-                    hierarchical_leg_efficiency(
-                        recent,
-                        left_position=left,
-                        right_position=right,
-                    )
-                    for left, right in pairwise(positions)
-                ),
             )
         )
     return tuple(out)
-
-
-def hierarchical_leg_efficiency(
-    pivots: tuple[Pivot, ...] | list[Pivot],
-    *,
-    left_position: int,
-    right_position: int,
-) -> float:
-    """Net/gross path efficiency for one selected swing leg.
-
-    A value of 1.0 means no internal back-and-forth path inflation. Lower values mean the
-    selected endpoints span increasingly choppy intermediate swings. This is structural
-    evidence only; it does not alter Carney identity or Source Raw PRZ.
-    """
-
-    source = tuple(pivots)
-    if left_position < 0 or right_position >= len(source) or left_position >= right_position:
-        raise ValueError("invalid leg positions")
-    net = abs(source[right_position].price - source[left_position].price)
-    gross = sum(
-        abs(source[index + 1].price - source[index].price)
-        for index in range(left_position, right_position)
-    )
-    if gross <= 0:
-        return 0.0
-    return net / gross
 
 
 def _pivot_is_at_least_as_extreme(candidate: Pivot, other: Pivot) -> bool:
@@ -256,14 +211,6 @@ def _iter_hierarchical_graph_windows(
                 window=SwingWindow(scale=scale, pivots=chunk),
                 skipped_pivots=skipped,
                 path_kind="consecutive" if skipped == 0 else "hierarchical_swing_skip",
-                leg_efficiencies=tuple(
-                    hierarchical_leg_efficiency(
-                        recent,
-                        left_position=left,
-                        right_position=right,
-                    )
-                    for left, right in pairwise(positions)
-                ),
             )
         )
     return tuple(out)
@@ -326,14 +273,6 @@ def iter_hierarchical_xabc_frontier_windows(
                             "consecutive"
                             if skipped == 0
                             else "hierarchical_frontier_skip"
-                        ),
-                        leg_efficiencies=tuple(
-                            hierarchical_leg_efficiency(
-                                recent,
-                                left_position=left,
-                                right_position=right,
-                            )
-                            for left, right in pairwise(positions)
                         ),
                     )
                 )

@@ -23,8 +23,6 @@ class SourceProjection:
     prz: PotentialReversalZone
     scales: tuple[int, ...]
     min_skipped_pivots: int
-    best_min_leg_efficiency: float
-    best_mean_leg_efficiency: float
 
     @property
     def node_indices(self) -> tuple[int, ...]:
@@ -131,14 +129,6 @@ def _merge_projection(
             prior.min_skipped_pivots,
             item.min_skipped_pivots,
         ),
-        best_min_leg_efficiency=max(
-            prior.best_min_leg_efficiency,
-            item.best_min_leg_efficiency,
-        ),
-        best_mean_leg_efficiency=max(
-            prior.best_mean_leg_efficiency,
-            item.best_mean_leg_efficiency,
-        ),
     )
 
 
@@ -189,8 +179,6 @@ def event_sourced_hierarchical_xabc_projections(
                         prz=projection.prz,
                         scales=(scale,),
                         min_skipped_pivots=int(candidate.skipped_pivots),
-                        best_min_leg_efficiency=float(candidate.min_leg_efficiency),
-                        best_mean_leg_efficiency=float(candidate.mean_leg_efficiency),
                     )
                     _merge_projection(born, item)
 
