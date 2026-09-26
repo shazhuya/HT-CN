@@ -6,7 +6,7 @@ from itertools import combinations, pairwise
 import pandas as pd
 
 from .candidates import SwingWindow
-from .models import HarmonicPoint, PatternDirection, Pivot
+from .models import HarmonicPoint, PatternDirection, Pivot, PivotKind
 from .pivots import build_pivot_consensus, detect_multi_scale_pivots
 from .prz import PotentialReversalZone, build_xabcd_prz
 from .ratios import leg_length
@@ -120,6 +120,118 @@ def _iter_bounded_graph_windows(
             )
         )
     return tuple(out)
+
+
+def _pivot_is_at_least_as_extreme(candidate: Pivot, other: Pivot) -> bool:
+    if candidate.kind is not other.kind:
+        raise ValueError("pivot extremity comparison requires the same kind")
+    if candidate.kind is PivotKind.HIGH:
+        return candidate.price >= other.price
+    return candidate.price <= other.price
+
+
+def _hierarchical_leg_ok(
+    pivots: tuple[Pivot, ...],
+    *,
+    left_position: int,
+    right_position: int,
+    max_leg_step: int,
+) -> bool:
+    step = right_position - left_position
+    if step < 1 or step > max_leg_step or step % 2 == 0:
+        return False
+
+    left = pivots[left_position]
+    right = pivots[right_position]
+    if left.kind is right.kind:
+        return False
+
+    interior = pivots[left_position + 1 : right_position]
+    for pivot in interior:
+        if pivot.kind is left.kind and not _pivot_is_at_least_as_extreme(left, pivot):
+            return False
+        if pivot.kind is right.kind and not _pivot_is_at_least_as_extreme(right, pivot):
+            return False
+    return True
+
+
+def _iter_hierarchical_graph_windows(
+    pivots: tuple[Pivot, ...] | list[Pivot],
+    *,
+    size: int,
+    recent_pivots: int,
+    max_leg_step: int,
+    max_total_skips: int,
+) -> tuple[_DiscoveryWindow, ...]:
+    """Enumerate bounded major-swing paths while suppressing arbitrary node stitching.
+
+    A selected leg may span multiple minor swing pairs, but both selected endpoints must
+    dominate every skipped pivot of the same kind inside that leg. This models a higher-level
+    swing envelope rather than simply allowing any five historical pivots to connect.
+    """
+
+    if size not in (4, 5):
+        raise ValueError("hierarchical graph windows support only XABC/XABCD")
+    if max_leg_step < 1 or max_leg_step % 2 == 0:
+        raise ValueError("max_leg_step must be a positive odd integer")
+    source = tuple(pivots)
+    _validate_pivots(source)
+    if len(source) < size:
+        return ()
+
+    offset = max(0, len(source) - max(size, int(recent_pivots)))
+    recent = source[offset:]
+    scale = int(recent[0].scale)
+    out: list[_DiscoveryWindow] = []
+
+    for positions in combinations(range(len(recent)), size):
+        steps = tuple(right - left for left, right in pairwise(positions))
+        if any(step % 2 == 0 or step > max_leg_step for step in steps):
+            continue
+        skipped = sum(step - 1 for step in steps)
+        if skipped > max_total_skips:
+            continue
+        if any(
+            not _hierarchical_leg_ok(
+                recent,
+                left_position=left,
+                right_position=right,
+                max_leg_step=max_leg_step,
+            )
+            for left, right in pairwise(positions)
+        ):
+            continue
+
+        chunk = tuple(recent[position] for position in positions)
+        if any(left.kind is right.kind for left, right in pairwise(chunk)):
+            continue
+
+        out.append(
+            _DiscoveryWindow(
+                window=SwingWindow(scale=scale, pivots=chunk),
+                skipped_pivots=skipped,
+                path_kind="consecutive" if skipped == 0 else "hierarchical_swing_skip",
+            )
+        )
+    return tuple(out)
+
+
+def iter_hierarchical_xabcd_windows(
+    pivots: tuple[Pivot, ...] | list[Pivot],
+    *,
+    recent_pivots: int = 20,
+    max_leg_step: int = 7,
+    max_total_skips: int = 12,
+) -> tuple[_DiscoveryWindow, ...]:
+    """Experimental Detector-V2 completed graph using structural swing dominance."""
+
+    return _iter_hierarchical_graph_windows(
+        pivots,
+        size=5,
+        recent_pivots=recent_pivots,
+        max_leg_step=max_leg_step,
+        max_total_skips=max_total_skips,
+    )
 
 
 def iter_discovery_xabc_windows(
