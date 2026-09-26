@@ -120,3 +120,32 @@ fast run `36209803059` / artifact `10895162161`:
 
 This does **not** establish real-market semantic precision or profitability. Gate 4 is a disagreement
 audit on unmodified real A-share history before any production integration.
+
+
+## Gate 4 pivot — completion semantics reset
+
+Unmodified real-market audit changed the implementation plan without changing Carney/source rules.
+
+Facts:
+- after fail-closing Alternate Bat, strict retrospective five-pivot completed XABCD produced 0 standard Gartley/Bat/Butterfly/Crab/Deep-Crab matches on the frozen 45-symbol A-share audit;
+- structural candidate supply was not zero: the audit observed 13,951 legacy five-point candidates and 58,337 hierarchical-V2 candidates;
+- D/XA was the dominant final identity rejection and 135 V2 candidates were one-reason near misses;
+- hierarchical XABC projected 1,745 source-cleared standard structures; 976 later overlapped Source Raw PRZ;
+- with a full 180-bar observation horizon, 887/1515 (58.55%) reached Source Raw PRZ;
+- canonical `observe_source_execution()` recorded 739 Source Terminal Price Bars overall and 682/1515 (45.02%) on full-horizon cases;
+- only 157/739 (21.24%) canonical Source Terminals were within ±3% of the nominal D/XA ratio, so simply widening exact-D tolerance to 3% is rejected.
+
+Decision:
+1. **Structure identity** = first-knowable Hierarchical XABC using source-cleared family constraints.
+2. **Projected completion zone** = frozen Source Raw PRZ; no new PRZ math.
+3. **Completed event** = event-sourced Source Terminal-side test after the projection is knowable.
+4. **Retrospective D pivot / exact D-XA** = geometry audit only, not the sole production completion gate.
+5. **Invalidation/expiry is mandatory** before production: a broken/expired XABC may not later resurrect merely because price revisits PRZ.
+6. Alternate Bat and Five-Zero remain fail-closed/quarantined.
+
+### Single-mainline contract
+
+Until Gate 4B is green, the only allowed product-development work is:
+`raw OHLC -> pivots -> Hierarchical XABC -> Source Raw PRZ -> invalidation/expiry -> Source Terminal -> dedupe/audit`.
+
+Do not work on UI, AI explanation, win-rate/alpha, Outcome Engine, Daily Review, installers, new indicators or broad product features. A change that does not improve recognition correctness, time-of-knowledge or false-positive control is out of scope.

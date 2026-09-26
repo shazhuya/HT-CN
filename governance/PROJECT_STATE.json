@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-CR0090-RECOGNITION-TRUST-GATE3-GREEN",
+  "state_id": "HTCN-M9-POST-RELEASE-CR0090-GATE4B-SOURCE-COMPLETION-IMPLEMENTING",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -24,17 +24,17 @@
     "milestone": "M9",
     "phase": "M9.post_release",
     "title": "Stable Product Operations & Maintenance",
-    "status": "validation_green",
+    "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260926-0090-006",
+    "latest_attempt_id": "A-20260926-0090-007",
     "latest_hosted_validation_attempt_id": "A-20260926-0090-006",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
       "workflow_run": 36209803011,
       "head": "9d291dda3ebe7b526294d83da5eb319363fe3ccb",
-      "scope": "Gate 3 green: hierarchical V2 recovered 72/72 development and 18/18 blind holdout exactly; streaming 24/24; full CI green."
+      "scope": "Last fully green detector validation remains Gate 3. Gate 4 diagnostics changed the completion architecture; the new event-sourced Source Completion channel is not yet green."
     }
   },
   "private_m1": {
@@ -57,20 +57,21 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "CR-0090 Recognition Trustworthiness — Gate 4",
-    "status": "validation_green",
+    "title": "CR-0090 Gate 4B — Event-Sourced Source Completion",
+    "status": "implementing",
     "blocked_until": [
-      "real-market disagreement audit",
-      "high-information disagreement adjudication",
-      "real-market false-positive investigation",
-      "production integration decision"
+      "event-sourced XABC birth and Source Terminal tests green",
+      "explicit invalidation/expiry prevents dead-pattern resurrection",
+      "real-market completion density and duplicate audit",
+      "blind/future-tail no-lookahead validation",
+      "production promotion decision"
     ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Gate 4: audit Hierarchical V2 on unmodified A-share history before production integration."
+    "objective": "Make standard harmonic recognition useful on raw A-share bars: accurate Hierarchical XABC structure, frozen Source Raw PRZ, event-sourced Source Terminal completion, explicit invalidation/expiry, then real-market false-positive audit. UI, outcome, win-rate and unrelated product work remain frozen."
   },
   "freezes": {
     "m4_capture_methodology": {

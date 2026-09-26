@@ -190,3 +190,40 @@ recognition experiments no longer wait behind the entire product CI pipeline.
 Boundary: this is controlled known-truth recovery under frozen real-market texture, not a claim of
 real-market semantic precision, win rate, alpha or profitability. Production promotion requires a
 Gate 4 disagreement audit on unmodified real A-share history.
+
+
+## Gate 4 evidence and adjusted recognition architecture
+
+Gate 4 on unmodified frozen A-share history showed that the remaining blocker is not merely candidate recall.
+The retrospective five-pivot classifier can generate many structural candidates but effectively no
+source-cleared standard completed XABCD because completion is gated by an exact D/XA point.
+
+Independent real-market diagnostics found 1,745 source-cleared Hierarchical-XABC projections.
+Canonical Source Execution later observed 739 Terminal Price Bars; among cases with a full 180-bar
+horizon, 682/1515 (45.02%) reached Source Terminal. Only 21.24% of those terminals lay within ±3%
+of the nominal D/XA ratio. Therefore ±3% exact-D tolerance is not the solution.
+
+### Detector V2 architecture — revised
+
+`Raw OHLC -> confirmed pivot events -> Hierarchical XABC -> frozen Source Raw PRZ -> active validity clock -> Source Terminal completion`
+
+Required properties:
+- XABC birth is first-knowable/event-sourced; no future pivot may create an earlier birth;
+- only source-cleared standard families are production-eligible;
+- Source Raw PRZ remains frozen;
+- completion is the canonical Source Terminal-side event, not retrospective exact-D equality;
+- explicit invalidation/expiry must stop dead patterns from resurrecting;
+- exact/right-confirmed D geometry is retained as a retrospective quality/audit field;
+- duplicate/nested completion events must be controlled before production promotion.
+
+### Gate 4B release gate
+
+Production integration is forbidden until all pass:
+- event-sourced XABC/Source-Terminal unit and streaming tests;
+- no-lookahead / future-tail invariance;
+- invalidation and expiry tests with zero resurrection;
+- unmodified real-market density/duplicate/false-positive audit;
+- blind holdout;
+- full Gate 0/1/2/3 regression with source-conflict families fail-closed.
+
+No UI, outcome, win-rate or auxiliary-indicator work belongs in Gate 4B.
