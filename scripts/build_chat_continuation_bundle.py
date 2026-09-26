@@ -115,7 +115,7 @@ def _new_chat_prompt(state: dict[str, Any], head: str) -> str:
 6. Receipt 合格后再执行我写在最后的任务；
 7. 工作结束前，把成功、失败、用户修改、blocker、Gate 和 next action 写回仓库，不得只留在聊天里；
 8. 不需要通读全部旧聊天。仅当本次任务引用了续接包中缺失的具体用户选择时，才定向检索对应旧对话，并把恢复出的重要事实落库；
-9. 产品开发默认沿 M9 主线推进；M7 为后台 evidence track，M8/ISSUE-0066 只控制统计/校准声明。不得把每天人工运行用户电脑当作项目主线。
+9. 产品开发默认沿 M9 主线推进；M7 为后台 evidence track，M8/ISSUE-0066 只控制统计/校准声明。不得把每天人工运行用户电脑当作项目主线；\n10. **D-091：识别引擎是 HT-CN 最高级产品有效性门。Bootstrap Receipt 必须说明当前 Recognition Gate/blocker；识别未可信时不得转去 UI、胜率、Outcome、AI 或其他外围工作。**
 
 本续接点应为：
 
@@ -161,14 +161,13 @@ def _start_here(state: dict[str, Any], git_info: dict[str, Any]) -> str:
 
 - next major task: `{state["next_major_task"]["phase"]} — {state["next_major_task"]["title"]}`
 - development mainline: `{productization.get("development_mainline") or "(see policy)"}`
+- recognition engine priority: `{productization.get("recognition_engine_priority") or "highest"}` / product-validity gate: `{productization.get("recognition_engine_product_validity_gate")}`
 - background evidence track: `{productization.get("background_evidence_track") or "(see policy)"}`
 - next human action: `{next_human_action}`
 - background evidence entry (non-blocking): `{private_m1.get("one_action_entry") or "(see PROJECT_STATE)"}`
 - expected evidence (when evidence track runs): `{private_m1.get("expected_evidence") or "(see PROJECT_STATE)"}`
 
-## 强制读取顺序
-
-1. `MANIFEST.json`
+## 最高优先级\n\n**D-091：如果谐波识别不出来、识别错误或误报失控，HT-CN 整个项目在实战层面没有意义。识别可信度未 green 时，默认继续 Recognition Gate，不得被外围工作替代。**\n\n## 强制读取顺序\n\n1. `MANIFEST.json`
 2. `HTCN_RESUME_PACK.md`
 3. `canonical/AGENTS.md`
 4. `canonical/governance/PROJECT_STATE.json`
