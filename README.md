@@ -4,11 +4,20 @@ HT-CN 是面向中国 A 股的本地优先谐波研究与人工辅助决策系�
 
 本项目不执行证券交易，不用评分救回非法谐波身份，也不在前瞻证据不足时宣称胜率、Alpha 或盈利能力。
 
+## 最高优先级：识别引擎
+
+**谐波识别引擎是 HT-CN 的产品有效性核心。**
+
+如果系统不能从原始 K 线中正确识别谐波主结构、节点和完成时点，或产生不可控误报，则后续 PRZ、生命周期、Outcome、胜率、AI 解读和 UI 都没有可靠输入，项目在实战层面没有意义。D-091 因此规定：当 Recognition Trustworthiness 尚未通过 production gate 时，识别正确性高于所有外围产品工作。
+
+当前 CR-0090 主线只允许围绕：
+`OHLC -> Pivot Events -> Hierarchical XABC -> Source Raw PRZ -> validity/invalidation -> Source Terminal -> dedupe/false-positive audit`
+推进；不得用 UI、候选数量或放宽 Source 规则替代识别正确性。
 ## 当前状态
 
 - 稳定发布：**HT-CN Stable v1.0.0 已发布，M9 产品化主线完成**；
 - 已关闭：M9.1 自动行情、M9.2 自动谐波运行时、M9.3 端到端工作台、M9.4 后台证据与可观测性、M9.5 可靠性/打包/零 CLI、M9.6 Stable Release Acceptance；
-- 当前阶段：**M9 post-release operations & maintenance**；
+- 当前阶段：**M9 post-release / CR-0090 Recognition Trustworthiness**；Stable runtime 已发布，但识别引擎可信度修复是当前最高优先级；
 - 稳定版：**HT-CN Stable v1.0.0**，统一 supervisor + built Web + verified release identity + backup/restore/update；
 - M7 继续后台积累，M8/ISSUE-0066 只限制胜率、Alpha、盈利能力和统计校准，不阻塞产品运行；
 - 5-0 保持生产隔离，Alternate Bat 保持失败关闭，HSI 未支持。
