@@ -726,7 +726,17 @@ def build_resume_pack(state: dict[str, Any]) -> str:
         f"- next_major_task: **{state['next_major_task']['phase']} — {state['next_major_task']['title']}**\n",
         "## 恢复硬规则\n",
         "1. 先验证 PROJECT_STATE，不从聊天猜项目阶段。\n2. 只读取 state 引用的 active Change / required specs / active decisions / open blockers。\n3. state drift 必须先修复，禁止带着不一致继续核心开发。\n",
-        _markdown_json("Machine Current State", state),
+        _markdown_json(
+            "Machine Current State",
+            {
+                "state_id": state.get("state_id"),
+                "current": state.get("current"),
+                "next_major_task": state.get("next_major_task"),
+                "productization": state.get("productization"),
+                "freezes": state.get("freezes"),
+                "last_integrated_release": state.get("last_integrated_release"),
+            },
+        ),
         "## Product Completion Policy\n\n" + _product_completion_policy_index(product_policy) + "\n",
         "## Active Decision Index\n\n" + _decision_index(decisions) + "\n",
         "## Open Issue Index\n\n" + _open_issue_index(issues) + "\n",
