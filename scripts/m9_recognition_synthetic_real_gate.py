@@ -22,7 +22,7 @@ from htcn.harmonic.recognition_real_noise import (
 from htcn.harmonic.candidates import SwingWindow
 from htcn.harmonic.pivots import detect_multi_scale_pivots
 from htcn.harmonic.recognition_stress import STANDARD_XABCD
-from htcn.harmonic.scanner import classify_completed_xabcd
+from htcn.harmonic.scanner import classify_completed_xabcd, project_forming_xabcd
 from htcn.research.snapshot_cache import load_research_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -220,6 +220,7 @@ def _truth_graph_requirements(
     rows: list[dict[str, Any]] = []
     for case in cases:
         exact_requirements: set[tuple[int, int]] = set()
+        source_prz_width_xa_values: set[float] = set()
         pivots_by_scale = detect_multi_scale_pivots(case.frame, scales=SCALES)
 
         for scale, pivots in pivots_by_scale.items():
@@ -282,14 +283,74 @@ def _truth_graph_requirements(
                 )
             )
 
+            forming_window = SwingWindow(
+                scale=int(scale),
+                pivots=selected[:4],
+            )
+            projections = project_forming_xabcd(
+                forming_window,
+                include_source_conflict_patterns=False,
+            )
+            matching_projection = next(
+                (
+                    item
+                    for item in projections
+                    if item.pattern_id == case.truth.pattern_id
+                    and item.direction.value == case.truth.direction
+                    and item.prz.has_source_prz
+                ),
+                None,
+            )
+            if matching_projection is not None:
+                xa_length = abs(
+                    float(selected[1].price) - float(selected[0].price)
+                )
+                assert matching_projection.prz.source_prz_low is not None
+                assert matching_projection.prz.source_prz_high is not None
+                if xa_length > 0:
+                    source_prz_width_xa_values.add(
+                        (
+                            float(matching_projection.prz.source_prz_high)
+                            - float(matching_projection.prz.source_prz_low)
+                        )
+                        / xa_length
+                    )
+
         rows.append(
             {
                 "case_id": case.truth.case_id,
                 "pattern_id": case.pattern_id,
                 "requirements": sorted(exact_requirements),
+                "source_prz_width_xa_values": sorted(source_prz_width_xa_values),
             }
         )
     return rows
+
+
+def _summarize_prz_width_xa(
+    requirements: list[dict[str, Any]],
+) -> dict[str, Any]:
+    values = sorted(
+        float(value)
+        for row in requirements
+        for value in row["source_prz_width_xa_values"]
+    )
+    if not values:
+        return {"count": 0}
+    def q(frac: float) -> float:
+        return values[min(len(values) - 1, int((len(values) - 1) * frac))]
+    return {
+        "count": len(values),
+        "min": values[0],
+        "median": q(0.5),
+        "p90": q(0.9),
+        "p95": q(0.95),
+        "max": values[-1],
+        "le_0_01": sum(value <= 0.01 for value in values),
+        "le_0_02": sum(value <= 0.02 for value in values),
+        "le_0_03": sum(value <= 0.03 for value in values),
+        "le_0_05": sum(value <= 0.05 for value in values),
+    }
 
 
 def _capacity_recall(
@@ -395,6 +456,10 @@ def _skip_ablation(
         },
         "by_total_skip_budget": by_total_skip,
         "by_max_leg_step": by_leg_step,
+        "source_prz_width_xa_known_truth": {
+            "development": _summarize_prz_width_xa(development_requirements),
+            "holdout": _summarize_prz_width_xa(holdout_requirements),
+        },
         "interpretation": (
             "Prefer the smallest graph capacity that preserves blind known-truth recall. "
             "Higher capacity without material recall gain is a precision-risk signal, not a benefit."
