@@ -19,7 +19,7 @@ from htcn.harmonic.recognition_real_noise import (
     holdout_symbols,
     inject_pattern_into_real_background,
 )
-from htcn.harmonic.discovery import iter_hierarchical_xabcd_windows
+from htcn.harmonic.candidates import SwingWindow
 from htcn.harmonic.pivots import detect_multi_scale_pivots
 from htcn.harmonic.recognition_stress import STANDARD_XABCD
 from htcn.harmonic.scanner import classify_completed_xabcd
@@ -176,57 +176,111 @@ def _evaluate(
     }
 
 
+def _pivot_at_least_as_extreme(candidate, other) -> bool:
+    if candidate.kind is not other.kind:
+        raise ValueError("pivot extremity comparison requires the same kind")
+    if candidate.kind.value == "high":
+        return candidate.price >= other.price
+    return candidate.price <= other.price
+
+
+def _truth_leg_dominance_ok(
+    pivots,
+    *,
+    left_position: int,
+    right_position: int,
+) -> bool:
+    left = pivots[left_position]
+    right = pivots[right_position]
+    if left.kind is right.kind:
+        return False
+    for pivot in pivots[left_position + 1 : right_position]:
+        if (
+            pivot.kind is left.kind
+            and not _pivot_at_least_as_extreme(left, pivot)
+        ):
+            return False
+        if (
+            pivot.kind is right.kind
+            and not _pivot_at_least_as_extreme(right, pivot)
+        ):
+            return False
+    return True
+
+
 def _truth_graph_requirements(
     cases: list[SyntheticRealCase],
 ) -> list[dict[str, Any]]:
-    """Enumerate each case once and record exact-truth graph capacity requirements."""
+    """Check only the pre-registered truth path on each scale.
+
+    This is equivalent to asking whether the exact truth window would be admitted by the
+    hierarchical graph, without enumerating unrelated graph combinations.
+    """
 
     rows: list[dict[str, Any]] = []
     for case in cases:
         exact_requirements: set[tuple[int, int]] = set()
         pivots_by_scale = detect_multi_scale_pivots(case.frame, scales=SCALES)
-        for pivots in pivots_by_scale.values():
-            positions_by_node = {
-                (int(pivot.index), pivot.kind): position
+
+        for scale, pivots in pivots_by_scale.items():
+            index_to_position = {
+                int(pivot.index): position
                 for position, pivot in enumerate(pivots)
             }
-            for candidate in iter_hierarchical_xabcd_windows(
-                pivots,
-                recent_pivots=20,
-                max_leg_step=MAX_LEG_STEP,
-                max_total_skips=MAX_TOTAL_SKIPS,
-            ):
-                window = candidate.window
-                points = window.harmonic_points()
-                nodes = tuple(int(point.index) for point in points)
-                if nodes != case.truth.node_indices:
-                    continue
-                matches = classify_completed_xabcd(window)
-                if not any(
-                    item.pattern_id == case.truth.pattern_id
-                    and item.direction.value == case.truth.direction
-                    for item in matches
-                ):
-                    continue
+            positions = tuple(
+                index_to_position.get(int(node))
+                for node in case.truth.node_indices
+            )
+            if any(position is None for position in positions):
+                continue
+            concrete = tuple(
+                int(position)
+                for position in positions
+                if position is not None
+            )
+            recent_offset = max(0, len(pivots) - max(5, 20))
+            if min(concrete) < recent_offset:
+                continue
 
-                keyed_nodes = tuple(
-                    (int(pivot.index), pivot.kind)
-                    for pivot in window.pivots
+            steps = tuple(
+                right - left
+                for left, right in pairwise(concrete)
+            )
+            if any(
+                step < 1
+                or step % 2 == 0
+                or step > MAX_LEG_STEP
+                for step in steps
+            ):
+                continue
+            total_skips = sum(step - 1 for step in steps)
+            if total_skips > MAX_TOTAL_SKIPS:
+                continue
+            if any(
+                not _truth_leg_dominance_ok(
+                    pivots,
+                    left_position=left,
+                    right_position=right,
                 )
-                concrete_positions = tuple(
-                    positions_by_node[node]
-                    for node in keyed_nodes
+                for left, right in pairwise(concrete)
+            ):
+                continue
+
+            selected = tuple(pivots[position] for position in concrete)
+            window = SwingWindow(scale=int(scale), pivots=selected)
+            matches = classify_completed_xabcd(window)
+            if not any(
+                item.pattern_id == case.truth.pattern_id
+                and item.direction.value == case.truth.direction
+                for item in matches
+            ):
+                continue
+            exact_requirements.add(
+                (
+                    int(total_skips),
+                    max(steps),
                 )
-                steps = tuple(
-                    right - left
-                    for left, right in pairwise(concrete_positions)
-                )
-                exact_requirements.add(
-                    (
-                        int(candidate.skipped_pivots),
-                        max(steps),
-                    )
-                )
+            )
 
         rows.append(
             {
