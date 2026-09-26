@@ -10,6 +10,7 @@ on:
       - "scripts/m9_recognition_real_market_identity_diagnostic.py"
       - "scripts/m9_recognition_real_market_prz_completion_diagnostic.py"
       - "scripts/m9_recognition_gate4b_source_completion.py"
+      - "scripts/m9_recognition_gate4b_pine_differential.py"
       - "research/a-share-research-universe-v1.json"
       - ".github/workflows/recognition-gate4-fast.yml"
   workflow_dispatch:
@@ -105,5 +106,18 @@ jobs:
         with:
           name: htcn-recognition-gate4b-source-completion-${{ github.sha }}
           path: artifacts/reports/m9-recognition-gate4b-source-completion.json
+          if-no-files-found: error
+          retention-days: 30
+
+
+      - name: Run Gate 4B Pine R3.4 differential
+        run: python -u scripts/m9_recognition_gate4b_pine_differential.py
+
+      - name: Upload Gate 4B Pine R3.4 differential
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: htcn-recognition-gate4b-pine-differential-${{ github.sha }}
+          path: artifacts/reports/m9-recognition-gate4b-pine-differential.json
           if-no-files-found: error
           retention-days: 30
