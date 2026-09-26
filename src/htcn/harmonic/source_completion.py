@@ -12,6 +12,9 @@ from .prz import PotentialReversalZone
 from .scanner import project_forming_xabcd
 
 
+PRODUCTION_MAX_TOTAL_SKIPS = 8
+
+
 @dataclass(frozen=True, slots=True)
 class SourceProjection:
     """First-knowable standard XABCD projection born from a confirmed XABC source."""
@@ -138,9 +141,14 @@ def event_sourced_hierarchical_xabc_projections(
     scales: tuple[int, ...] = (3, 5, 8),
     recent_pivots: int = 20,
     max_leg_step: int = 7,
-    max_total_skips: int = 12,
+    max_total_skips: int = PRODUCTION_MAX_TOTAL_SKIPS,
 ) -> tuple[SourceProjection, ...]:
-    """Return XABC projections at their first live-knowable confirmation bar."""
+    """Return XABC projections at their first live-knowable confirmation bar.
+
+    Production eligibility defaults to total skip budget 8. The broader hierarchical graph
+    still supports 12 for research/diagnostics, but Gate 3 blind ablation showed no holdout
+    recall gain above 8 while real-market candidate pressure increased.
+    """
 
     born: dict[tuple[str, str, tuple[int, ...]], SourceProjection] = {}
     for scale in sorted({int(value) for value in scales}):
@@ -404,7 +412,7 @@ def scan_source_completion_events(
     scales: tuple[int, ...] = (3, 5, 8),
     recent_pivots: int = 20,
     max_leg_step: int = 7,
-    max_total_skips: int = 12,
+    max_total_skips: int = PRODUCTION_MAX_TOTAL_SKIPS,
     lifetime_bars: int = 180,
 ) -> SourceCompletionScan:
     """Observe Source Terminal completions under an explicit live-validity clock.
