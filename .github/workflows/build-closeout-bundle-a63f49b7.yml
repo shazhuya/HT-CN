@@ -1,0 +1,37 @@
+name: Build HT-CN Closeout Bundle a63f49b7
+
+on:
+  push:
+    branches:
+      - ops/chat-continuation-a63f49b7
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact closeout head
+        uses: actions/checkout@v4
+        with:
+          ref: a63f49b7a7079929f4bc92b20950598a17d14bc1
+          fetch-depth: 0
+
+      - name: Restore handoff branch identity
+        run: git checkout -B m9/recognition-trustworthiness-v1 a63f49b7a7079929f4bc92b20950598a17d14bc1
+
+      - name: Build and verify continuation bundle
+        run: |
+          python scripts/build_chat_continuation_bundle.py
+          python scripts/verify_chat_continuation_bundle.py artifacts/reports/htcn-chat-continuation-bundle.zip --require-current-head
+
+      - name: Upload continuation bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: htcn-chat-continuation-a63f49b7
+          path: |
+            artifacts/reports/htcn-chat-continuation-bundle.zip
+            logs/context/HTCN_CHAT_HANDOFF.md
+            logs/context/HTCN_CHAT_HANDOFF.sha256
+            logs/context/HTCN_NEW_CHAT_PROMPT.md
+          if-no-files-found: error
+          retention-days: 30
