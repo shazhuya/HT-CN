@@ -97,7 +97,13 @@ def _build_cases(manifest: dict[str, Any], data_dir: Path) -> tuple[list[Synthet
     return cases, failures
 
 
-def _evaluate(cases: list[SyntheticRealCase], *, reveal_cases: bool) -> dict[str, Any]:
+def _evaluate(
+    cases: list[SyntheticRealCase],
+    *,
+    reveal_cases: bool,
+    max_leg_step: int = MAX_LEG_STEP,
+    max_total_skips: int = MAX_TOTAL_SKIPS,
+) -> dict[str, Any]:
     totals = {"tp": 0, "fp": 0, "fn": 0, "exact": 0, "predictions": 0}
     by_pattern: dict[str, dict[str, int]] = defaultdict(
         lambda: {"cases": 0, "tp": 0, "fn": 0, "predictions": 0}
@@ -108,8 +114,8 @@ def _evaluate(cases: list[SyntheticRealCase], *, reveal_cases: bool) -> dict[str
             case.frame,
             scales=SCALES,
             recent_pivots=20,
-            max_leg_step=MAX_LEG_STEP,
-            max_total_skips=MAX_TOTAL_SKIPS,
+            max_leg_step=max_leg_step,
+            max_total_skips=max_total_skips,
         )
         metrics = score_predictions([case.truth], predictions, tolerance_bars=1)
         totals["tp"] += metrics.true_positive
@@ -147,6 +153,10 @@ def _evaluate(cases: list[SyntheticRealCase], *, reveal_cases: bool) -> dict[str
         "injected_truth_recall": recall,
         "exact_node_rate": totals["exact"] / denominator if denominator else 1.0,
         "predictions_per_case": totals["predictions"] / denominator if denominator else 0.0,
+        "graph_config": {
+            "max_leg_step": max_leg_step,
+            "max_total_skips": max_total_skips,
+        },
         "raw_unmatched_predictions_are_not_precision_claim": True,
         "by_pattern": {
             pattern: {
@@ -159,6 +169,85 @@ def _evaluate(cases: list[SyntheticRealCase], *, reveal_cases: bool) -> dict[str
             for pattern, bucket in sorted(by_pattern.items())
         },
         "cases": rows if reveal_cases else "sealed_holdout_case_details",
+    }
+
+
+def _skip_ablation(
+    development: list[SyntheticRealCase],
+    holdout: list[SyntheticRealCase],
+) -> dict[str, Any]:
+    """Measure marginal known-truth recall from hierarchical skip capacity.
+
+    This is a detector-reliability diagnostic only. Holdout case details remain sealed and
+    the ablation does not change production defaults.
+    """
+
+    skip_budgets = (0, 2, 4, 6, 8, 10, 12)
+    leg_caps = (1, 3, 5, 7)
+
+    by_total_skip = []
+    for budget in skip_budgets:
+        dev = _evaluate(
+            development,
+            reveal_cases=False,
+            max_leg_step=MAX_LEG_STEP,
+            max_total_skips=budget,
+        )
+        held = _evaluate(
+            holdout,
+            reveal_cases=False,
+            max_leg_step=MAX_LEG_STEP,
+            max_total_skips=budget,
+        )
+        by_total_skip.append(
+            {
+                "max_total_skips": budget,
+                "development_recall": dev["injected_truth_recall"],
+                "holdout_recall": held["injected_truth_recall"],
+                "development_exact_node_rate": dev["exact_node_rate"],
+                "holdout_exact_node_rate": held["exact_node_rate"],
+                "development_predictions_per_case": dev["predictions_per_case"],
+                "holdout_predictions_per_case": held["predictions_per_case"],
+                "development_tp": dev["true_positive"],
+                "holdout_tp": held["true_positive"],
+            }
+        )
+
+    by_leg_step = []
+    for step in leg_caps:
+        dev = _evaluate(
+            development,
+            reveal_cases=False,
+            max_leg_step=step,
+            max_total_skips=MAX_TOTAL_SKIPS,
+        )
+        held = _evaluate(
+            holdout,
+            reveal_cases=False,
+            max_leg_step=step,
+            max_total_skips=MAX_TOTAL_SKIPS,
+        )
+        by_leg_step.append(
+            {
+                "max_leg_step": step,
+                "development_recall": dev["injected_truth_recall"],
+                "holdout_recall": held["injected_truth_recall"],
+                "development_exact_node_rate": dev["exact_node_rate"],
+                "holdout_exact_node_rate": held["exact_node_rate"],
+                "development_predictions_per_case": dev["predictions_per_case"],
+                "holdout_predictions_per_case": held["predictions_per_case"],
+                "development_tp": dev["true_positive"],
+                "holdout_tp": held["true_positive"],
+            }
+        )
+
+    return {
+        "by_total_skip_budget": by_total_skip,
+        "by_max_leg_step": by_leg_step,
+        "interpretation": (
+            "Prefer the smallest graph capacity that preserves blind known-truth recall. "
+            "Higher capacity without material recall gain is a precision-risk signal, not a benefit."
+        ),
     }
 
 
@@ -295,6 +384,7 @@ def main() -> int:
         },
         "development": _evaluate(development, reveal_cases=True),
         "holdout": _evaluate(holdout, reveal_cases=False),
+        "skip_ablation": _skip_ablation(development, holdout),
         "development_pivot_path_diagnostics": _pivot_path_diagnostics(
             development,
             reveal_cases=True,
