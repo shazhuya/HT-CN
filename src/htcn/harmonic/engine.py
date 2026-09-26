@@ -117,10 +117,10 @@ def scan_pivots(
 ) -> HarmonicScan:
     """Scan one pivot set using only source-cleared patterns by default.
 
-    ``include_source_conflict_patterns`` is intentionally opt-in. At present it controls
-    the 5-0 research implementation, whose Volume Two structural definition and Volume
-    Three execution refinement still require figure-level reconciliation. Source-conflict
-    patterns must not silently enter the production Scanner or workbench.
+    ``include_source_conflict_patterns`` is intentionally opt-in. It controls both
+    source-conflict standard XABCD identities (currently Alternate Bat) and the quarantined
+    5-0 research implementation. Source-conflict patterns must not silently enter the
+    production Scanner or workbench.
     """
     completed: list[CompletedMatch] = []
     forming: list[FormingMatch] = []
@@ -135,6 +135,7 @@ def scan_pivots(
                 window,
                 include_source_tolerance=include_source_tolerance,
                 abcd_relative_tolerance=abcd_relative_tolerance,
+                include_source_conflict_patterns=include_source_conflict_patterns,
             ):
                 completed.append(
                     CompletedMatch(
@@ -152,7 +153,9 @@ def scan_pivots(
         for window in iter_forming_xabc_windows(pivots):
             points = window.harmonic_points()
             for projection in project_forming_xabcd(
-                window, include_source_tolerance=include_source_tolerance
+                window,
+                include_source_tolerance=include_source_tolerance,
+                include_source_conflict_patterns=include_source_conflict_patterns,
             ):
                 forming.append(
                     FormingMatch(
