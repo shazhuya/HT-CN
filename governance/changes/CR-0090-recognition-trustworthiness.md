@@ -1,6 +1,6 @@
 # CR-0090 — Recognition trustworthiness and detector correctness
 
-status: validation_green
+status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658
 implementation_baseline_head: 04aa35737f7d58c2ab12bca62ba536c3970ce9ef
