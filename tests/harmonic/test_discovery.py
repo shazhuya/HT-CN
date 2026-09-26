@@ -1,6 +1,10 @@
 import pandas as pd
 
-from htcn.harmonic.discovery import discover_pivots, iter_discovery_xabc_windows
+from htcn.harmonic.discovery import (
+    discover_pivots,
+    iter_discovery_xabc_windows,
+    iter_hierarchical_xabcd_windows,
+)
 from htcn.harmonic.models import Pivot, PivotKind
 
 
@@ -158,3 +162,61 @@ def test_discovery_dedupes_identical_geometry_across_scales() -> None:
         and candidate.conflict_key == (0, 10, 20, 30)
     ]
     assert len(gartleys) == 1
+
+
+def test_hierarchical_graph_can_span_two_minor_swing_pairs_when_endpoints_dominate() -> None:
+    pivots = [
+        _pivot(0, 100.0, PivotKind.LOW),
+        _pivot(2, 108.0, PivotKind.HIGH),
+        _pivot(4, 103.0, PivotKind.LOW),
+        _pivot(6, 112.0, PivotKind.HIGH),
+        _pivot(8, 106.0, PivotKind.LOW),
+        _pivot(10, 120.0, PivotKind.HIGH),
+        _pivot(12, 114.0, PivotKind.LOW),
+        _pivot(14, 118.0, PivotKind.HIGH),
+        _pivot(16, 111.0, PivotKind.LOW),
+        _pivot(18, 116.0, PivotKind.HIGH),
+        _pivot(20, 107.64, PivotKind.LOW),
+        _pivot(30, 116.64, PivotKind.HIGH),
+        _pivot(40, 104.28, PivotKind.LOW),
+    ]
+
+    windows = iter_hierarchical_xabcd_windows(
+        pivots,
+        recent_pivots=20,
+        max_leg_step=7,
+        max_total_skips=12,
+    )
+    nodes = {
+        tuple(pivot.index for pivot in item.window.pivots)
+        for item in windows
+    }
+
+    assert (0, 10, 20, 30, 40) in nodes
+
+
+def test_hierarchical_graph_rejects_skip_when_interior_same_kind_breaks_dominance() -> None:
+    pivots = [
+        _pivot(0, 100.0, PivotKind.LOW),
+        _pivot(2, 108.0, PivotKind.HIGH),
+        _pivot(4, 99.0, PivotKind.LOW),
+        _pivot(6, 112.0, PivotKind.HIGH),
+        _pivot(8, 106.0, PivotKind.LOW),
+        _pivot(10, 120.0, PivotKind.HIGH),
+        _pivot(20, 107.64, PivotKind.LOW),
+        _pivot(30, 116.64, PivotKind.HIGH),
+        _pivot(40, 104.28, PivotKind.LOW),
+    ]
+
+    windows = iter_hierarchical_xabcd_windows(
+        pivots,
+        recent_pivots=20,
+        max_leg_step=7,
+        max_total_skips=12,
+    )
+    nodes = {
+        tuple(pivot.index for pivot in item.window.pivots)
+        for item in windows
+    }
+
+    assert (0, 10, 20, 30, 40) not in nodes
