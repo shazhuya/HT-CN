@@ -216,6 +216,24 @@ def _iter_hierarchical_graph_windows(
     return tuple(out)
 
 
+def iter_hierarchical_xabc_windows(
+    pivots: tuple[Pivot, ...] | list[Pivot],
+    *,
+    recent_pivots: int = 20,
+    max_leg_step: int = 7,
+    max_total_skips: int = 12,
+) -> tuple[_DiscoveryWindow, ...]:
+    """Detector-V2 forming XABC paths using the same major-swing hierarchy as XABCD."""
+
+    return _iter_hierarchical_graph_windows(
+        pivots,
+        size=4,
+        recent_pivots=recent_pivots,
+        max_leg_step=max_leg_step,
+        max_total_skips=max_total_skips,
+    )
+
+
 def iter_hierarchical_xabcd_windows(
     pivots: tuple[Pivot, ...] | list[Pivot],
     *,
