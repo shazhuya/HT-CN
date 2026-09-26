@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 from collections import defaultdict
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +19,10 @@ from htcn.harmonic.recognition_real_noise import (
     holdout_symbols,
     inject_pattern_into_real_background,
 )
+from htcn.harmonic.discovery import iter_hierarchical_xabcd_windows
+from htcn.harmonic.pivots import detect_multi_scale_pivots
 from htcn.harmonic.recognition_stress import STANDARD_XABCD
+from htcn.harmonic.scanner import classify_completed_xabcd
 from htcn.research.snapshot_cache import load_research_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -172,76 +176,169 @@ def _evaluate(
     }
 
 
+def _truth_graph_requirements(
+    cases: list[SyntheticRealCase],
+) -> list[dict[str, Any]]:
+    """Enumerate each case once and record exact-truth graph capacity requirements."""
+
+    rows: list[dict[str, Any]] = []
+    for case in cases:
+        exact_requirements: set[tuple[int, int]] = set()
+        pivots_by_scale = detect_multi_scale_pivots(case.frame, scales=SCALES)
+        for pivots in pivots_by_scale.values():
+            positions_by_node = {
+                (int(pivot.index), pivot.kind): position
+                for position, pivot in enumerate(pivots)
+            }
+            for candidate in iter_hierarchical_xabcd_windows(
+                pivots,
+                recent_pivots=20,
+                max_leg_step=MAX_LEG_STEP,
+                max_total_skips=MAX_TOTAL_SKIPS,
+            ):
+                window = candidate.window
+                points = window.harmonic_points()
+                nodes = tuple(int(point.index) for point in points)
+                if nodes != case.truth.node_indices:
+                    continue
+                matches = classify_completed_xabcd(window)
+                if not any(
+                    item.pattern_id == case.truth.pattern_id
+                    and item.direction.value == case.truth.direction
+                    for item in matches
+                ):
+                    continue
+
+                keyed_nodes = tuple(
+                    (int(pivot.index), pivot.kind)
+                    for pivot in window.pivots
+                )
+                concrete_positions = tuple(
+                    positions_by_node[node]
+                    for node in keyed_nodes
+                )
+                steps = tuple(
+                    right - left
+                    for left, right in pairwise(concrete_positions)
+                )
+                exact_requirements.add(
+                    (
+                        int(candidate.skipped_pivots),
+                        max(steps),
+                    )
+                )
+
+        rows.append(
+            {
+                "case_id": case.truth.case_id,
+                "pattern_id": case.pattern_id,
+                "requirements": sorted(exact_requirements),
+            }
+        )
+    return rows
+
+
+def _capacity_recall(
+    requirements: list[dict[str, Any]],
+    *,
+    max_leg_step: int,
+    max_total_skips: int,
+) -> dict[str, Any]:
+    recovered = 0
+    by_pattern: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"cases": 0, "recovered": 0}
+    )
+    for row in requirements:
+        bucket = by_pattern[str(row["pattern_id"])]
+        bucket["cases"] += 1
+        ok = any(
+            int(total_skips) <= max_total_skips
+            and int(leg_step) <= max_leg_step
+            for total_skips, leg_step in row["requirements"]
+        )
+        recovered += int(ok)
+        bucket["recovered"] += int(ok)
+
+    count = len(requirements)
+    return {
+        "case_count": count,
+        "recovered": recovered,
+        "recall": recovered / count if count else 1.0,
+        "by_pattern": {
+            pattern: {
+                **bucket,
+                "recall": bucket["recovered"] / bucket["cases"]
+                if bucket["cases"]
+                else 1.0,
+            }
+            for pattern, bucket in sorted(by_pattern.items())
+        },
+    }
+
+
 def _skip_ablation(
     development: list[SyntheticRealCase],
     holdout: list[SyntheticRealCase],
 ) -> dict[str, Any]:
-    """Measure marginal known-truth recall from hierarchical skip capacity.
+    """Measure the smallest graph capacity needed to retain known harmonic truth."""
 
-    This is a detector-reliability diagnostic only. Holdout case details remain sealed and
-    the ablation does not change production defaults.
-    """
-
+    development_requirements = _truth_graph_requirements(development)
+    holdout_requirements = _truth_graph_requirements(holdout)
     skip_budgets = (0, 2, 4, 6, 8, 10, 12)
     leg_caps = (1, 3, 5, 7)
 
     by_total_skip = []
     for budget in skip_budgets:
-        dev = _evaluate(
-            development,
-            reveal_cases=False,
+        dev = _capacity_recall(
+            development_requirements,
             max_leg_step=MAX_LEG_STEP,
             max_total_skips=budget,
         )
-        held = _evaluate(
-            holdout,
-            reveal_cases=False,
+        held = _capacity_recall(
+            holdout_requirements,
             max_leg_step=MAX_LEG_STEP,
             max_total_skips=budget,
         )
         by_total_skip.append(
             {
                 "max_total_skips": budget,
-                "development_recall": dev["injected_truth_recall"],
-                "holdout_recall": held["injected_truth_recall"],
-                "development_exact_node_rate": dev["exact_node_rate"],
-                "holdout_exact_node_rate": held["exact_node_rate"],
-                "development_predictions_per_case": dev["predictions_per_case"],
-                "holdout_predictions_per_case": held["predictions_per_case"],
-                "development_tp": dev["true_positive"],
-                "holdout_tp": held["true_positive"],
+                "development_recall": dev["recall"],
+                "holdout_recall": held["recall"],
+                "development_recovered": dev["recovered"],
+                "holdout_recovered": held["recovered"],
             }
         )
 
     by_leg_step = []
     for step in leg_caps:
-        dev = _evaluate(
-            development,
-            reveal_cases=False,
+        dev = _capacity_recall(
+            development_requirements,
             max_leg_step=step,
             max_total_skips=MAX_TOTAL_SKIPS,
         )
-        held = _evaluate(
-            holdout,
-            reveal_cases=False,
+        held = _capacity_recall(
+            holdout_requirements,
             max_leg_step=step,
             max_total_skips=MAX_TOTAL_SKIPS,
         )
         by_leg_step.append(
             {
                 "max_leg_step": step,
-                "development_recall": dev["injected_truth_recall"],
-                "holdout_recall": held["injected_truth_recall"],
-                "development_exact_node_rate": dev["exact_node_rate"],
-                "holdout_exact_node_rate": held["exact_node_rate"],
-                "development_predictions_per_case": dev["predictions_per_case"],
-                "holdout_predictions_per_case": held["predictions_per_case"],
-                "development_tp": dev["true_positive"],
-                "holdout_tp": held["true_positive"],
+                "development_recall": dev["recall"],
+                "holdout_recall": held["recall"],
+                "development_recovered": dev["recovered"],
+                "holdout_recovered": held["recovered"],
             }
         )
 
+    missing_dev = sum(not row["requirements"] for row in development_requirements)
+    missing_holdout = sum(not row["requirements"] for row in holdout_requirements)
     return {
+        "method": "single-pass exact-truth graph capacity audit",
+        "full_graph_exact_truth_missing": {
+            "development": missing_dev,
+            "holdout": missing_holdout,
+        },
         "by_total_skip_budget": by_total_skip,
         "by_max_leg_step": by_leg_step,
         "interpretation": (
