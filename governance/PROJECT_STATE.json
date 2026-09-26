@@ -34,7 +34,7 @@
       "result": "success",
       "workflow_run": 36209803011,
       "head": "9d291dda3ebe7b526294d83da5eb319363fe3ccb",
-      "scope": "CR-0090 Gate 3 green. Zero-debt Ruff, 1065 Python tests, Gate 0/1/2 regressions and Web build passed. Frozen 45-symbol A-share synthetic-in-real benchmark with pre-registered 9-symbol holdout passed using hierarchical swing dominance: development 72/72 exact, holdout 18/18 exact, candidate pressure ~1.03/~1.06 per case, and 12/12 + 12/12 event-sourced streaming preservation."
+      "scope": "CR-0090 Gate 3 green: hierarchical Swing Graph passed 72/72 development and 18/18 blind holdout exact recovery on frozen A-share texture; streaming preserved 24/24; full CI green."
     }
   },
   "private_m1": {
@@ -60,17 +60,17 @@
     "title": "CR-0090 Recognition Trustworthiness — Gate 4",
     "status": "validation_green",
     "blocked_until": [
-      "real-market disagreement audit between legacy/production detector and hierarchical Detector V2",
-      "sampled adjudication of high-confidence disagreements without using candidate count as correctness",
-      "false-positive investigation on real A-share bars",
-      "production integration decision only after Gate 4 evidence"
+      "real-market disagreement audit",
+      "high-information disagreement adjudication",
+      "real-market false-positive investigation",
+      "production integration decision"
     ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Audit hierarchical Candidate Graph + Event-Sourced Recognition on unmodified real A-share history. Do not promote to production solely from synthetic-in-real success."
+    "objective": "Gate 4: audit Hierarchical V2 against legacy recognition on unmodified real A-share history before any production integration."
   },
   "freezes": {
     "m4_capture_methodology": {
