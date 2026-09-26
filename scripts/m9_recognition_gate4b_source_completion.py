@@ -35,6 +35,26 @@ def _date(frame: pd.DataFrame, index: int) -> str:
     return pd.Timestamp(frame.iloc[index]["trade_date"]).date().isoformat()
 
 
+def _summarize_quality(values: list[float]) -> dict[str, Any]:
+    ordered = sorted(float(value) for value in values)
+    if not ordered:
+        return {"count": 0}
+    def q(frac: float) -> float:
+        return ordered[min(len(ordered) - 1, int((len(ordered) - 1) * frac))]
+    return {
+        "count": len(ordered),
+        "min": ordered[0],
+        "median": q(0.5),
+        "p90": q(0.9),
+        "p95": q(0.95),
+        "max": ordered[-1],
+        "le_0_01": sum(value <= 0.01 for value in ordered),
+        "le_0_02": sum(value <= 0.02 for value in ordered),
+        "le_0_03": sum(value <= 0.03 for value in ordered),
+        "le_0_05": sum(value <= 0.05 for value in ordered),
+    }
+
+
 def main() -> int:
     args = parse_args()
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
@@ -50,6 +70,8 @@ def main() -> int:
     pattern_states: dict[str, Counter[str]] = defaultdict(Counter)
     state_by_skip: dict[int, Counter[str]] = defaultdict(Counter)
     state_by_scale_support: dict[int, Counter[str]] = defaultdict(Counter)
+    prz_width_xa_by_state: dict[str, list[float]] = defaultdict(list)
+    prz_width_xa_by_pattern: dict[str, list[float]] = defaultdict(list)
     exact_completion_keys: set[tuple[object, ...]] = set()
     exact_duplicate_count = 0
     collision_groups: dict[tuple[object, ...], list[dict[str, Any]]] = defaultdict(list)
@@ -88,6 +110,9 @@ def main() -> int:
             pattern_states[item.projection.pattern_id][item.state] += 1
             state_by_skip[int(item.projection.min_skipped_pivots)][item.state] += 1
             state_by_scale_support[len(item.projection.scales)][item.state] += 1
+            width_xa = float(item.projection.source_prz_width_xa)
+            prz_width_xa_by_state[item.state].append(width_xa)
+            prz_width_xa_by_pattern[item.projection.pattern_id].append(width_xa)
 
         for event in scan.completions:
             key = (
@@ -119,6 +144,7 @@ def main() -> int:
                 "min_skipped_pivots": event.projection.min_skipped_pivots,
                 "source_span_bars": event.source_nodes[-1] - event.source_nodes[0],
                 "age_to_terminal": event.terminal_bar - event.known_at,
+                "source_prz_width_xa": event.projection.source_prz_width_xa,
             }
             all_completions.append(row)
             completion_ages.append(int(row["age_to_terminal"]))
@@ -289,8 +315,15 @@ def main() -> int:
             }
             for support, counts in sorted(state_by_scale_support.items())
         },
-        "by_pattern": {
-            pattern: {
+        "source_prz_width_xa_by_state": {
+            state: _summarize_quality(values)
+            for state, values in sorted(prz_width_xa_by_state.items())
+        },
+        "source_prz_width_xa_by_pattern": {
+            pattern: _summarize_quality(values)
+            for pattern, values in sorted(prz_width_xa_by_pattern.items())
+        },
+        "by_pattern": {            pattern: {
                 "completed": int(counts["completed"]),
                 "invalidated": int(counts["invalidated"]),
                 "expired": int(counts["expired"]),
