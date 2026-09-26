@@ -38,7 +38,7 @@ def _gartley_path(*, terminal: bool) -> pd.DataFrame:
         for index in range(left_i, right_i + 1):
             fraction = (index - left_i) / (right_i - left_i)
             closes[index] = left_p + (right_p - left_p) * fraction
-    return pd.DataFrame(
+    frame = pd.DataFrame(
         {
             "open": closes,
             "high": closes,
@@ -47,6 +47,10 @@ def _gartley_path(*, terminal: bool) -> pd.DataFrame:
             "volume": [1000.0] * rows,
         }
     )
+    if terminal:
+        # Source Terminal requires actual PRZ contact. A bar wholly below the zone is gap-through.
+        frame.loc[90, "high"] = 120.0
+    return frame
 
 
 def test_event_sourced_projection_birth_precedes_future_terminal() -> None:
@@ -178,6 +182,30 @@ def test_same_bar_c_breach_and_terminal_is_fail_closed() -> None:
     assert target_states
     assert target_states[0].state == "invalidated"
     assert target_states[0].closed_bar == 80
+    assert not any(
+        item.pattern_id == "gartley"
+        and item.source_nodes == (10, 30, 50, 70)
+        for item in scan.completions
+    )
+
+
+def test_gap_through_source_prz_is_not_terminal_completion() -> None:
+    frame = _gartley_path(terminal=True)
+    frame.loc[90, "high"] = 119.0
+    prefix = frame.iloc[:91].reset_index(drop=True)
+
+    scan = scan_source_completion_events(prefix, scales=(3,))
+    target_states = [
+        item
+        for item in scan.states
+        if item.projection.pattern_id == "gartley"
+        and item.projection.node_indices == (10, 30, 50, 70)
+    ]
+
+    assert target_states
+    assert target_states[0].state == "active"
+    assert target_states[0].audit.first_prz_entry_bar is None
+    assert target_states[0].audit.terminal_bar is None
     assert not any(
         item.pattern_id == "gartley"
         and item.source_nodes == (10, 30, 50, 70)
