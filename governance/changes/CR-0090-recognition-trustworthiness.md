@@ -76,8 +76,10 @@ or more UI do not count as recognition improvement by themselves.
 
 ## Current decision
 
-Detector V2 is **Candidate Graph + Event-Sourced Recognition**. Skip=6 remains experimental.
-Carney identity, Source Raw PRZ, M4 methodology and Outcome Engine remain frozen.
+Detector V2 is now **Hierarchical Swing Graph + Event-Sourced Recognition**. The original bounded
+step-{1,3} graph remains as a comparison baseline. The hierarchical graph may span odd pivot gaps
+up to 7 only when both selected endpoints dominate skipped pivots of the same kind, with total skip
+budget bounded at 12. Carney identity, Source Raw PRZ, M4 methodology and Outcome Engine remain frozen.
 
 ## Gate 2 — validated
 
@@ -87,6 +89,34 @@ Hosted run `36167742120` / artifact `10878004217`:
 - 30 invalid-B/C/D negatives remained 0/30 predictions;
 - one contaminated positive frame contains two oracle-valid nested geometries, confirming that one-primary-truth precision alone can mislabel a valid nested candidate.
 
-## Gate 3
+## Gate 3 — validated
 
-Use the pinned 45-symbol A-share QFQ research snapshots to build synthetic-in-real noise cases with a pre-registered holdout. Detector V2 remains experimental until real-noise recall, candidate pressure and streaming invariance pass.
+The first synthetic-in-real fixture version was invalid because its pre-X/post-D guards allowed X/D
+to fail as actual turning pivots; that result was retained as failed benchmark evidence and was not
+used to judge the detector.
+
+Corrected fixture v2 established that the old bounded step-{1,3} graph was still too narrow:
+- development: 32/72 exact (44.44% recall);
+- blind holdout: 5/18 exact (27.78% recall);
+- truth nodes existed on at least one configured scale in 100% of development/holdout cases;
+- recent-20 frontier coverage was 100%;
+- step-{1,3} compatibility existed in only 47.22% development / 44.44% holdout cases;
+- minimum viable max leg step had median 5, with development reaching 7.
+
+Detector V2 therefore added a hierarchical swing graph: odd leg steps 1/3/5/7 are permitted only
+when selected endpoints dominate every skipped same-kind pivot inside the leg, and total skipped
+pivots are bounded at 12.
+
+Hosted full CI run `36209803011` / Gate 3 artifact `10894024765`, independently replicated by
+fast run `36209803059` / artifact `10895162161`:
+- development: 72/72 exact, 100% injected-truth recall, 2 unmatched extra canonical predictions,
+  1.0278 predictions/case;
+- blind holdout: 18/18 exact, 100% injected-truth recall, 1 unmatched extra canonical prediction,
+  1.0556 predictions/case;
+- every Gartley/Bat/Butterfly/Crab/Deep Crab family in both splits reached 100% injected-truth recall;
+- event-sourced streaming preserved 12/12 development and 12/12 holdout truths;
+- all pre-registered Gate 3 checks passed;
+- Ruff debt remained zero, 1065 Python tests and Gate 0/1/2 regressions passed.
+
+This does **not** establish real-market semantic precision or profitability. Gate 4 is a disagreement
+audit on unmodified real A-share history before any production integration.

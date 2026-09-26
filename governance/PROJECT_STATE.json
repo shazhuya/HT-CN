@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-CR0090-RECOGNITION-TRUST-GATE2-GREEN",
+  "state_id": "HTCN-M9-POST-RELEASE-CR0090-RECOGNITION-TRUST-GATE3-GREEN",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -27,14 +27,14 @@
     "status": "validation_green",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260925-0090-003",
-    "latest_hosted_validation_attempt_id": "A-20260925-0090-003",
+    "latest_attempt_id": "A-20260926-0090-006",
+    "latest_hosted_validation_attempt_id": "A-20260926-0090-006",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36167742120,
-      "head": "f6b68da8743afb1d383f5063e91900b3edf53b3b",
-      "scope": "CR-0090 Gate 2 independent rule Oracle green: 121/121 production graph predictions agreed with an independently implemented standard-XABCD oracle; 30 invalid-B/C/D negatives produced zero production/oracle-valid predictions. Gate 1 remained green in the same hosted run."
+      "workflow_run": 36209803011,
+      "head": "9d291dda3ebe7b526294d83da5eb319363fe3ccb",
+      "scope": "CR-0090 Gate 3 green. Zero-debt Ruff, 1065 Python tests, Gate 0/1/2 regressions and Web build passed. Frozen 45-symbol A-share synthetic-in-real benchmark with pre-registered 9-symbol holdout passed using hierarchical swing dominance: development 72/72 exact, holdout 18/18 exact, candidate pressure ~1.03/~1.06 per case, and 12/12 + 12/12 event-sourced streaming preservation."
     }
   },
   "private_m1": {
@@ -57,20 +57,20 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "CR-0090 Recognition Trustworthiness — Gate 3",
+    "title": "CR-0090 Recognition Trustworthiness — Gate 4",
     "status": "validation_green",
     "blocked_until": [
-      "synthetic-in-real A-share noise benchmark",
-      "pre-registered blind holdout",
-      "expanded zero streaming history mutation under real-noise corpus",
-      "real-market disagreement audit before production integration"
+      "real-market disagreement audit between legacy/production detector and hierarchical Detector V2",
+      "sampled adjudication of high-confidence disagreements without using candidate count as correctness",
+      "false-positive investigation on real A-share bars",
+      "production integration decision only after Gate 4 evidence"
     ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Validate Detector V2 skip6 graph + event-sourced recognition on frozen real-A-share noise with a pre-registered holdout. Do not integrate production or relax canonical identity."
+    "objective": "Audit hierarchical Candidate Graph + Event-Sourced Recognition on unmodified real A-share history. Do not promote to production solely from synthetic-in-real success."
   },
   "freezes": {
     "m4_capture_methodology": {

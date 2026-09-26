@@ -145,3 +145,48 @@ Decision:
 - Candidate Graph and Event-Sourced Recognition are mandatory for Detector V2;
 - skip=6 remains experimental until synthetic-in-real + blind/full-label precision gates pass;
 - canonical Carney identity and Source Raw PRZ remain frozen.
+
+
+## Gate 2 evidence — independent rule oracle
+
+Hosted run `36167742120` validated an oracle that imports no production rule/evaluator/scanner/
+discovery/engine implementation. Production graph predictions agreed with the oracle 121/121 on
+positive predictions, while 30 invalid-B/C/D negative cases produced zero production/oracle-valid
+predictions. One contaminated positive frame contained more than one oracle-valid nested geometry,
+so single-primary-truth precision cannot automatically classify every extra canonical geometry as a
+false positive.
+
+## Gate 3 evidence — synthetic-in-real A-share noise + blind holdout
+
+The initial fixture was rejected because X/D were not guaranteed to be actual turning pivots. The
+corrected fixture freezes real A-share bar texture from the 45-symbol QFQ research snapshot set
+(cutoff 2026-09-15), uses a fixed SHA256-ranked 9-symbol holdout, and requires injected truth nodes
+to be real detected pivots before detector quality is interpreted.
+
+With the corrected fixture, the old step-{1,3} bounded graph recovered 32/72 development truths and
+5/18 holdout truths. Diagnostics showed:
+- truth-node presence on at least one scale: 100% / 100%;
+- recent-20 frontier coverage: 100% / 100%;
+- step-{1,3} compatibility: 47.22% / 44.44%;
+- minimum viable max leg step median: 5; development maximum: 7.
+
+The experimental hierarchical swing graph therefore uses:
+- odd leg step <= 7;
+- total skipped pivots <= 12;
+- selected endpoints must dominate every skipped same-kind pivot inside the leg;
+- unchanged canonical XABCD classifier;
+- event-sourced first-knowable streaming births.
+
+Hosted run `36209803011` / artifact `10894024765` passed:
+- development: 72/72 exact, recall 1.0, exact-node rate 1.0, 1.0278 predictions/case;
+- blind holdout: 18/18 exact, recall 1.0, exact-node rate 1.0, 1.0556 predictions/case;
+- development streaming: 12/12 preserved;
+- holdout streaming: 12/12 preserved;
+- all Gate 3 thresholds green.
+
+Fast workflow run `36209803059` / artifact `10895162161` independently reproduced Gate 3 so
+recognition experiments no longer wait behind the entire product CI pipeline.
+
+Boundary: this is controlled known-truth recovery under frozen real-market texture, not a claim of
+real-market semantic precision, win rate, alpha or profitability. Production promotion requires a
+Gate 4 disagreement audit on unmodified real A-share history.
