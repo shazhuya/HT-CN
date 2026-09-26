@@ -19,7 +19,7 @@ def _gartley_path(*, terminal: bool) -> pd.DataFrame:
     if terminal:
         anchors.extend(
             [
-                (90, 121.0),
+                (90, 119.0),
                 (110, 145.0),
             ]
         )
