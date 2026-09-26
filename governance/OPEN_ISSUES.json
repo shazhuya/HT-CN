@@ -169,6 +169,45 @@
       "current_fact": "CR-0089 is merged on canonical main 7a3af64d... . The retained Pine R3.4 recognition behavior is implemented deterministically from raw OHLC across 1D/60m/15m, with R3.5 neighborhood reaction kept separate and non-strict. PR #80 passed 30/30 hosted real-A-share series and canonical main #2990 passed final release/frozen-boundary validation.",
       "resolution": "Closed by CR-0089 after source-behavioral parity, no-lookahead, bounded-candidate, real-market, browser, formal release and canonical-main validation. This does not claim pixel/UI equivalence with TradingView; it closes the retained-source recognition-behavior gap.",
       "closed_in": "CR-0089"
+    },
+    {
+      "id": "ISSUE-0075",
+      "severity": "high",
+      "type": "recognition_trustworthiness",
+      "status": "open",
+      "title": "V2 recognition semantics and PRZ confluence remain unadjudicated",
+      "blocks": [
+        "CR-0090 production promotion",
+        "recognition product-validity gate"
+      ],
+      "current_fact": "Crab PRZ width/XA median is 0.6737 in actual Gate 4B; gap-return and later scale aggregation probes require explicit contracts. This is not proof all wide zones are invalid.",
+      "next_action": "Execute Gate 4C.1 and 4C.2 independent cases."
+    },
+    {
+      "id": "ISSUE-0076",
+      "severity": "high",
+      "type": "recognition_trustworthiness",
+      "status": "open",
+      "title": "No independent real-market semantic acceptance for V2",
+      "blocks": [
+        "CR-0090 production promotion",
+        "recognition product-validity gate"
+      ],
+      "current_fact": "Gate 4B counts are unlabelled; 18-case holdout participates in capacity selection.",
+      "next_action": "Preregister labelled validation and fresh sealed final acceptance under D-092."
+    },
+    {
+      "id": "ISSUE-0077",
+      "severity": "high",
+      "type": "recognition_trustworthiness",
+      "status": "open",
+      "title": "Recognition V2 has no application-layer integration",
+      "blocks": [
+        "CR-0090 production promotion",
+        "recognition product-validity gate"
+      ],
+      "current_fact": "source_completion is called by audit scripts; current app uses legacy/Pine/discovery paths.",
+      "next_action": "After correctness acceptance, use one versioned result interface and verify runner/API/chart equality."
     }
   ]
 }

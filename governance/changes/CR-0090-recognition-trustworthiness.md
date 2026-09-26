@@ -1,5 +1,8 @@
 # CR-0090 — Recognition trustworthiness and detector correctness
 
+
+> CURRENT EXECUTION OVERRIDE (2026-09-27, D-092): `specs/m9-recognition-gate4c-correctness-first.md` supersedes capacity-first next actions below. Recognition remains untrusted; start with event semantics and PRZ case adjudication. Historical gate results remain evidence only.
+
 status: implementing
 baseline_ref: main
 baseline_head: 9e228d204082fe19d169e099da16ade11adac658

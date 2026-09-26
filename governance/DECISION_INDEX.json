@@ -184,6 +184,12 @@
       "title": "Harmonic recognition trustworthiness is the highest HT-CN product-validity gate",
       "status": "active",
       "source": "governance/decisions/D-091-recognition-engine-product-validity-gate.md"
+    },
+    {
+      "id": "D-092",
+      "title": "Recognition semantics and independent acceptance precede capacity selection",
+      "status": "active",
+      "source": "governance/decisions/D-092-recognition-correctness-before-capacity.md"
     }
   ],
   "rules": {

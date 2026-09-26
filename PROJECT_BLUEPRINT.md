@@ -30,6 +30,22 @@ HT-CN 不是自动交易执行器；不以历史回看后的漂亮形态冒充�
 `Raw OHLC -> confirmed Pivot Events -> Hierarchical XABC -> frozen Source Raw PRZ -> validity/invalidation clock -> event-sourced Source Terminal completion -> dedupe/false-positive audit`
 
 右确认 D Pivot / 精确 D-XA 可作为 retrospective geometry audit，但不得再次取代 observable Source Terminal 作为唯一完成语义。
+## 1.2 当前执行顺序：正确性先于容量与产品接入（D-092）
+
+**当前识别总门未通过；Gate 4B 的工程通过不代表识别可靠。** 当前唯一核心任务为 CR-0090。
+
+按 `specs/m9-recognition-gate4c-correctness-first.md` 顺序推进：
+
+1. 明确投影出生、PRZ 接触、Terminal、反转确认和失效的独立语义，隔离出生时证据与后续证据。
+2. 优先逐例审查宽 PRZ、同 ABC 多 X、Pine 分歧和跳空返回；核对全部测量及 Source 依据。
+3. 建真实标签与全新封存验收集，调参前冻结指标和门槛；旧 holdout 已参与选参，只作验证/回归。
+4. 再比较搜索容量，依据正确率、漏检率、节点/时间误差及实际计算成本，而非候选数或参数乘积。
+5. 独立验收后，以单一版本化识别接口最小接入应用，并验证引擎、API、图表一致。
+
+此前容量优先的 next-action 文字属于历史检查点，由此顺序替代。ABCD、Shark、多周期须明确各自覆盖，不能继承标准 XABCD 日频成绩。PRZ 接触不等于反转确认；空结果允许，但要能诊断原因。
+
+保留数据、图表和冻结研究基础；停止外围扩展及全仓重写。冻结不证明实现永远正确：若独立证据确认 Source 错误，必须另立 Source Decision、版本化修订并保护旧 M4，禁止为出图私自放宽规则。
+
 ## 2. 永久架构边界
 
 1. Source Harmonic Truth 与 A-share Execution Context 永久分层。

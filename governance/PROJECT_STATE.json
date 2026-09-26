@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-CR0090-GATE4B-GREEN-GATE4C-READY",
+  "state_id": "HTCN-M9-CR0090-GATE4C-CORRECTNESS-FIRST",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,11 +23,11 @@
   "current": {
     "milestone": "M9",
     "phase": "M9.post_release",
-    "title": "Recognition Trustworthiness — Graph Capacity Selection",
+    "title": "Recognition Trustworthiness — Semantics and Independent Acceptance First",
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260926-0090-008",
+    "latest_attempt_id": "A-20260927-0090-010",
     "latest_hosted_validation_attempt_id": "A-20260926-0090-008",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
@@ -57,21 +57,21 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "CR-0090 Gate 4C — Production Graph Capacity & Precision Selection",
+    "title": "CR-0090 Gate 4C.1–4C.2 — Event Contract and PRZ Confluence Case Audit",
     "status": "ready",
     "blocked_until": [
-      "compare current 7/8 production-eligible graph against 5/10 and any necessary neighboring capacity on the same frozen 45-symbol Gate 4B corpus",
-      "measure candidate/completion density, collision pressure and high-information real-market disagreements without relaxing Carney identity or Source Raw PRZ",
-      "preserve Gate 3 blind known-truth recall and event-sourced no-lookahead/no-resurrection guarantees",
-      "select and freeze the smallest defensible production graph capacity and event-level dedupe policy",
-      "make production integration decision only after real-market precision evidence"
+      "version birth/contact/Terminal/confirmation/retirement semantics and explicitly resolve gap-return and birth-evidence boundaries",
+      "audit wide Crab PRZ and competing-node cases with independent measurements and source evidence",
+      "preregister representative labels, metrics and thresholds before capacity selection; use a fresh sealed final test",
+      "select capacity using actual correctness and computational cost, then pass untouched acceptance",
+      "verify one versioned recognition interface across runner/API/chart before production promotion"
     ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Establish recognition reliability by selecting the smallest graph capacity that preserves known-truth recall while reducing real-market candidate/collision pressure. Recognition remains the highest product-validity gate; UI, outcome, win-rate, AI and unrelated product work stay frozen."
+    "objective": "Establish trustworthy harmonic structures and observable events. Semantics and labelled market correctness precede capacity selection; no peripheral work until recognition acceptance. Start with event contract and concrete confluence cases."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -96,6 +96,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-recognition-gate4c-correctness-first.md",
     "specs/m9-post-release-recognition-trustworthiness-v1.md",
     "specs/m9-post-release-production-recognition-acceptance-v1.md",
     "specs/m9-post-release-recognition-recall-v1.md",
@@ -134,7 +135,8 @@
     "issues": "governance/OPEN_ISSUES.json",
     "quality": "governance/QUALITY_BASELINE.json",
     "attempts": "governance/attempts/2026-09.jsonl",
-    "releases": "governance/releases/c8322ebb9461c8febf182a68c803692c29339b80.json"
+    "releases": "governance/releases/c8322ebb9461c8febf182a68c803692c29339b80.json",
+    "recognition_architecture_audit": "governance/reviews/2026-09-27-recognition-architecture-audit.md"
   },
   "recovery_contract": {
     "chat_is_authoritative": false,
@@ -155,6 +157,8 @@
     "recognition_engine_priority": "highest",
     "recognition_engine_product_validity_gate": true,
     "peripheral_work_frozen_until_recognition_green": true,
-    "recognition_priority_decision": "D-091"
+    "recognition_priority_decision": "D-091",
+    "recognition_acceptance_decision": "D-092",
+    "recognition_gate_status": "untrusted_pending_semantic_and_independent_acceptance"
   }
 }

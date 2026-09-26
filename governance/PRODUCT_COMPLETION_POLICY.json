@@ -127,6 +127,17 @@
       "test_count",
       "code_volume",
       "relaxing_Carney_identity_or_Source_Raw_PRZ"
+    ],
+    "acceptance_decision": "D-092",
+    "execution_spec": "specs/m9-recognition-gate4c-correctness-first.md",
+    "current_trust_status": "not_yet_accepted",
+    "promotion_requires": [
+      "versioned_event_semantics",
+      "independently_audited_prz_confluence",
+      "representative_labelled_validation",
+      "preregistered_thresholds",
+      "fresh_sealed_final_test",
+      "single_interface_application_equivalence"
     ]
   }
 }

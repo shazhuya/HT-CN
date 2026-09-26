@@ -1,5 +1,8 @@
 # M9 post-release — Recognition trustworthiness v1
 
+
+> CURRENT EXECUTION OVERRIDE (2026-09-27, D-092): `specs/m9-recognition-gate4c-correctness-first.md` supersedes capacity-first next actions below. Recognition remains untrusted; start with event semantics and PRZ case adjudication. Historical gate results remain evidence only.
+
 status: implementing
 change: CR-0090
 
