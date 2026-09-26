@@ -8,7 +8,7 @@ from typing import Any
 
 import pandas as pd
 
-from htcn.harmonic.source_completion import scan_source_completion_events
+from htcn.harmonic.source_completion import (\n    PRODUCTION_MAX_TOTAL_SKIPS,\n    scan_source_completion_events,\n)
 from htcn.research.snapshot_cache import load_research_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -228,7 +228,7 @@ def main() -> int:
                 "C-extreme/expiry validity clock -> canonical Source Terminal"
             ),
             "scales": list(SCALES),
-            "lifetime_bars": LIFETIME_BARS,
+            "lifetime_bars": LIFETIME_BARS,\n            "max_total_skips": PRODUCTION_MAX_TOTAL_SKIPS,
             "source_conflict_patterns": False,
             "future_backfill": False,
         },
