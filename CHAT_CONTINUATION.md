@@ -38,12 +38,21 @@
 9. 最近成功与失败 Attempt；
 10. bundle、GitHub、state、ledger 是否存在矛盾；
 11. 本次任务允许修改与禁止修改的范围；
-12. 当前产品开发主线与后台 evidence/calibration 轨分别是什么、ISSUE-0066 阻塞什么/不阻塞什么、当前是否真的需要用户电脑。
+12. 当前产品开发主线与后台 evidence/calibration 轨分别是什么、ISSUE-0066 阻塞什么/不阻塞什么、当前是否真的需要用户电脑；
+13. **当前 Recognition Gate / blocker / 可信度状态是什么；若识别尚未 green，当前任务如何直接服务于识别正确性，为什么没有偏去外围。**
 
 任何一项无法回答，都不能宣称“已经无损续接”。
 
-## Product Completion 交接硬规则
+## Recognition Engine 最高优先级交接硬规则
 
+- D-091：**识别引擎是 HT-CN 最高级产品有效性门。**
+- 如果谐波结构识别不出来、节点错误、完成时点错误或误报失控，则 PRZ、Outcome、胜率、AI、UI 和自动化均失去可信输入，整个项目在实战层面没有意义。
+- 识别可信度未 green 时，默认 next task 必须继续 Recognition Gate；只有直接阻塞识别验证的基础设施故障可以临时优先。
+- 禁止用候选数量、界面有图、测试总数或工程完成度代替 Recall/Precision/节点/no-lookahead/false-positive 证据。
+- 禁止通过放宽 Carney Source Identity / Source Raw PRZ 来“解决”识别率。
+- 新 AI 必须在 Bootstrap Receipt 中单独确认这一最高优先级。
+
+## Product Completion 交接硬规则
 - 恢复项目时必须把 M9 视为产品开发主线，把 M7 视为后台长期 evidence track。
 - M8/ISSUE-0066 只控制统计/胜率/alpha/盈利能力/calibration 声明，不得被解释为 M9 产品发布的等待条件。
 - 默认“下一项用户动作”应为无；不得因为 M7 日常积累要求用户每天开电脑、跑 BAT 或上传 ZIP。
