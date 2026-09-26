@@ -151,6 +151,10 @@
     "issue_0066_scope": "claims_only",
     "manual_daily_private_m1_required": false,
     "stable_release_blocked_by_issue_0066": false,
-    "routine_user_computer_dependency": false
+    "routine_user_computer_dependency": false,
+    "recognition_engine_priority": "highest",
+    "recognition_engine_product_validity_gate": true,
+    "peripheral_work_frozen_until_recognition_green": true,
+    "recognition_priority_decision": "D-091"
   }
 }
