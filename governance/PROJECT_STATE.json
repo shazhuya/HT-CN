@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "state_id": "HTCN-M9-POST-RELEASE-CR0090-GATE4B-SOURCE-COMPLETION-IMPLEMENTING",
+  "state_id": "HTCN-M9-POST-RELEASE-CR0090-GATE4B-GREEN-GATE4C-READY",
   "repository": "shazhuya/HT-CN",
   "canonical_branch": "main",
   "blueprint": "PROJECT_BLUEPRINT.md",
@@ -23,18 +23,18 @@
   "current": {
     "milestone": "M9",
     "phase": "M9.post_release",
-    "title": "Stable Product Operations & Maintenance",
+    "title": "Recognition Trustworthiness — Graph Capacity Selection",
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260926-0090-007",
-    "latest_hosted_validation_attempt_id": "A-20260926-0090-006",
+    "latest_attempt_id": "A-20260926-0090-008",
+    "latest_hosted_validation_attempt_id": "A-20260926-0090-008",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36209803011,
-      "head": "9d291dda3ebe7b526294d83da5eb319363fe3ccb",
-      "scope": "Last fully green detector validation remains Gate 3. Gate 4 diagnostics changed the completion architecture; the new event-sourced Source Completion channel is not yet green."
+      "workflow_run": 36252453523,
+      "head": "110089e1d3e285b6687eca6769033e6da9efc649",
+      "scope": "Session closeout checkpoint: full HT-CN CI plus Recognition Gate 3 Fast and Gate 4B Fast all green. Event-sourced Source Completion is operational with PRZ-contact, C-extreme invalidation, expiry/no-resurrection, source-conflict fail-closed, and current production total-skip cap 8. Gate 3 known-truth capacity audit remains 100%/100% at 7/12 research capacity and identifies 5/10 as the smallest tested 90%+/90%+ capacity; production cap selection remains open."
     }
   },
   "private_m1": {
@@ -57,21 +57,21 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "CR-0090 Gate 4B — Event-Sourced Source Completion",
-    "status": "implementing",
+    "title": "CR-0090 Gate 4C — Production Graph Capacity & Precision Selection",
+    "status": "ready",
     "blocked_until": [
-      "event-sourced XABC birth and Source Terminal tests green",
-      "explicit invalidation/expiry prevents dead-pattern resurrection",
-      "real-market completion density and duplicate audit",
-      "blind/future-tail no-lookahead validation",
-      "production promotion decision"
+      "compare current 7/8 production-eligible graph against 5/10 and any necessary neighboring capacity on the same frozen 45-symbol Gate 4B corpus",
+      "measure candidate/completion density, collision pressure and high-information real-market disagreements without relaxing Carney identity or Source Raw PRZ",
+      "preserve Gate 3 blind known-truth recall and event-sourced no-lookahead/no-resurrection guarantees",
+      "select and freeze the smallest defensible production graph capacity and event-level dedupe policy",
+      "make production integration decision only after real-market precision evidence"
     ],
     "development_mainline": "M9",
     "background_evidence_track": "M7",
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Make standard harmonic recognition useful on raw A-share bars: accurate Hierarchical XABC structure, frozen Source Raw PRZ, event-sourced Source Terminal completion, explicit invalidation/expiry, then real-market false-positive audit. UI, outcome, win-rate and unrelated product work remain frozen."
+    "objective": "Establish recognition reliability by selecting the smallest graph capacity that preserves known-truth recall while reducing real-market candidate/collision pressure. Recognition remains the highest product-validity gate; UI, outcome, win-rate, AI and unrelated product work stay frozen."
   },
   "freezes": {
     "m4_capture_methodology": {

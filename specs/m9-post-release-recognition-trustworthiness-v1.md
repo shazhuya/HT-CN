@@ -227,3 +227,26 @@ Production integration is forbidden until all pass:
 - full Gate 0/1/2/3 regression with source-conflict families fail-closed.
 
 No UI, outcome, win-rate or auxiliary-indicator work belongs in Gate 4B.
+
+
+## Gate 4B closeout checkpoint — 2026-09-26
+
+Latest validated head before closeout: `110089e1d3e285b6687eca6769033e6da9efc649`.
+
+Hosted validation:
+- full HT-CN CI `36252453523`: success;
+- Recognition Gate 3 Fast `36252453534`, artifact `10909542800`: success;
+- Recognition Gate 4B Fast `36252453531`: success;
+- Source Completion artifact `10909996357`;
+- Pine differential artifact `10910090853`.
+
+Recognition facts now frozen for handoff:
+- D-091 remains the highest product-validity rule; peripheral work stays frozen.
+- Event-sourced completion is XABC birth -> frozen Source Raw PRZ -> actual PRZ-contact Terminal, with C-extreme invalidation, 180-bar expiry and no resurrection.
+- Current production-eligible Source Completion cap is `max_leg_step=7 / max_total_skips=8`; 12 skips remain research-only.
+- Latest 45-symbol real-market report: 4,424 projections, 991 completed, 3,222 invalidated, 165 expired, 46 active, zero exact duplicate completions and 828 deduped market Terminal events.
+- Gate 3 capacity audit: research 7/12 = 72/72 development + 18/18 blind; current 7/8 = 65/72 (90.28%) + 18/18; tested 5/10 = 68/72 (94.44%) + 18/18 and is the smallest tested 90%+/90%+ capacity.
+- Pine R3.4 remains a disagreement miner, not truth; matched-scale/consecutive ablations must not be used as a direct accuracy score.
+
+Next gate: **Gate 4C — Production Graph Capacity & Precision Selection**.
+Compare current 7/8 against 5/10 and only necessary neighboring capacities on the same frozen real-market corpus. Select the smallest defensible cap using known-truth recall plus real-market candidate/collision pressure and high-information adjudication. Do not relax Carney identity/Source Raw PRZ and do not resume peripheral product work.

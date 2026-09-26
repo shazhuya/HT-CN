@@ -1922,3 +1922,19 @@ Next:
   - formal release artifact ID 10582195249.
 - Hosted CI validates the mechanism only; no real private-M1 preflight/current-market full_closeout_ready is claimed.
 - Next: final governance HEAD CI, merge PR #36, then observe the merge-generated push-main release gate.
+
+## 2026-09-26 — CR-0090 recognition reliability session closeout
+
+- Re-centered HT-CN around D-091: harmonic recognition reliability is the highest product-validity gate; if recognition is wrong, downstream UI/Outcome/statistics/AI have no practical meaning.
+- Rebuilt recognition around first-knowable hierarchical XABC, frozen Source Raw PRZ and event-sourced Source Terminal completion instead of retrospective exact-D equality.
+- Added/validated C-extreme invalidation, 180-bar expiry, no-resurrection and fail-closed same-bar ambiguity.
+- Fixed recognition-only gap-through semantics so a bar wholly beyond PRZ is not a Terminal test; M4 frozen execution code remained untouched.
+- Fail-closed Alternate Bat source-conflict from standard production classification.
+- Gate 3 research graph 7/12 remains 100% exact on 72 development + 18 blind cases; capacity audit shows current 7/8 retains 90.28% development + 100% blind, while 5/10 retains 94.44% + 100% and is the smallest tested 90%+/90%+ configuration.
+- Current Source Completion production eligibility: max_leg_step=7, max_total_skips=8.
+- Latest frozen 45-symbol Gate 4B: 4,424 projections; 991 completed; 3,222 invalidated; 165 expired; 46 active; 0 exact duplicate completions; 828 deduped market Terminal events; 66 same-ABC/different-X collision groups.
+- Latest differential: native V2 991, Pine-scale V2 549, matched-scale consecutive ablation 249, Pine R3.4 358; Pine is retained only as a disagreement miner.
+- Reduced repeated heavy diagnostics from the fast path and converted Gate 3 capacity analysis to a single-pass truth-capacity audit to reduce apparent task stalls.
+- Latest validated pre-closeout head `110089e1d3e285b6687eca6769033e6da9efc649`: full CI `36252453523`, Gate 3 Fast `36252453534`, Gate 4B Fast `36252453531` all success.
+- No user-computer validation was required.
+- Next: Gate 4C production graph-capacity/precision selection. Compare current 7/8 against 5/10 (and only necessary neighbors) on identical real-market evidence, preserve blind recall/no-lookahead, adjudicate high-information collisions, then freeze a production cap before any production integration.
