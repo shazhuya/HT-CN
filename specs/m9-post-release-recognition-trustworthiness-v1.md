@@ -1,6 +1,6 @@
 # M9 post-release — Recognition trustworthiness v1
 
-status: validation_green
+status: implementing
 change: CR-0090
 
 ## Problem
