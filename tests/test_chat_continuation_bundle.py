@@ -117,5 +117,5 @@ def test_start_here_does_not_assign_daily_private_m1_as_default_human_action(
     assert "development mainline: `M9`" in start_here
     assert "background evidence track: `M7`" in start_here
     assert "user computer is not routine project infrastructure" in start_here
-    assert "12 个问题" in prompt
+    assert "13 个问题" in prompt
     assert "产品开发默认沿 M9 主线推进" in prompt
