@@ -231,7 +231,8 @@ def main() -> int:
                 "C-extreme/expiry validity clock -> canonical Source Terminal"
             ),
             "scales": list(SCALES),
-            "lifetime_bars": LIFETIME_BARS,\n            "max_total_skips": PRODUCTION_MAX_TOTAL_SKIPS,
+            "lifetime_bars": LIFETIME_BARS,
+            "max_total_skips": PRODUCTION_MAX_TOTAL_SKIPS,
             "source_conflict_patterns": False,
             "future_backfill": False,
         },
