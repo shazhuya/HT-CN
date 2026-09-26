@@ -9,7 +9,7 @@ from typing import Literal
 import pandas as pd
 
 from .candidates import iter_completed_xabcd_windows
-from .discovery import iter_discovery_xabcd_windows
+from .discovery import iter_discovery_xabcd_windows, iter_hierarchical_xabcd_windows
 from .engine import scan_frame
 from .models import PatternDirection, PivotKind
 from .pivots import (
@@ -301,6 +301,107 @@ def graph_completed_predictions(
                     )
                 )
     return tuple(predictions)
+
+
+def hierarchical_graph_completed_predictions(
+    frame: pd.DataFrame,
+    *,
+    scales: tuple[int, ...],
+    recent_pivots: int = 20,
+    max_leg_step: int = 7,
+    max_total_skips: int = 12,
+) -> tuple[RecognitionPrediction, ...]:
+    """Detector-V2 completed predictions using the hierarchical swing graph."""
+
+    pivots_by_scale = detect_multi_scale_pivots(frame, scales=scales)
+    predictions: list[RecognitionPrediction] = []
+    seen: set[tuple[str, str, tuple[int, ...]]] = set()
+    for scale, pivots in pivots_by_scale.items():
+        for candidate in iter_hierarchical_xabcd_windows(
+            pivots,
+            recent_pivots=recent_pivots,
+            max_leg_step=max_leg_step,
+            max_total_skips=max_total_skips,
+        ):
+            window = candidate.window
+            points = window.harmonic_points()
+            nodes = tuple(int(point.index) for point in points)
+            for evaluation in classify_completed_xabcd(window):
+                key = (evaluation.pattern_id, evaluation.direction.value, nodes)
+                if key in seen:
+                    continue
+                seen.add(key)
+                predictions.append(
+                    RecognitionPrediction(
+                        prediction_id=(
+                            f"hierarchical_graph:{evaluation.pattern_id}:"
+                            f"{evaluation.direction.value}:S{scale}:"
+                            + "-".join(str(value) for value in nodes)
+                        ),
+                        pattern_id=evaluation.pattern_id,
+                        direction=evaluation.direction.value,
+                        labels=tuple(point.label for point in points),
+                        node_indices=nodes,
+                    )
+                )
+    return tuple(predictions)
+
+
+def streaming_hierarchical_graph_completed_predictions(
+    frame: pd.DataFrame,
+    *,
+    scales: tuple[int, ...],
+    recent_pivots: int = 20,
+    max_leg_step: int = 7,
+    max_total_skips: int = 12,
+) -> tuple[RecognitionPrediction, ...]:
+    """Event-sourced Detector-V2 recognition with immutable first-knowable births."""
+
+    born: dict[tuple[str, str, tuple[int, ...]], RecognitionPrediction] = {}
+    for scale in sorted({int(value) for value in scales}):
+        events = detect_pivot_events(
+            frame,
+            left=scale,
+            right=scale,
+            scale=scale,
+        )
+        cutoffs = sorted({int(event.confirmed_at) for event in events})
+        for cutoff in cutoffs:
+            pivots = visible_confirmed_pivots(events, cutoff=cutoff)
+            for candidate in iter_hierarchical_xabcd_windows(
+                pivots,
+                recent_pivots=recent_pivots,
+                max_leg_step=max_leg_step,
+                max_total_skips=max_total_skips,
+            ):
+                window = candidate.window
+                points = window.harmonic_points()
+                nodes = tuple(int(point.index) for point in points)
+                for evaluation in classify_completed_xabcd(window):
+                    key = (evaluation.pattern_id, evaluation.direction.value, nodes)
+                    if key in born:
+                        continue
+                    born[key] = RecognitionPrediction(
+                        prediction_id=(
+                            f"streaming_hierarchical:{evaluation.pattern_id}:"
+                            f"{evaluation.direction.value}:S{scale}:"
+                            + "-".join(str(value) for value in nodes)
+                        ),
+                        pattern_id=evaluation.pattern_id,
+                        direction=evaluation.direction.value,
+                        labels=tuple(point.label for point in points),
+                        node_indices=nodes,
+                        known_at=cutoff,
+                    )
+    return tuple(
+        sorted(
+            born.values(),
+            key=lambda item: (
+                item.known_at if item.known_at is not None else -1,
+                item.prediction_id,
+            ),
+        )
+    )
 
 
 def streaming_graph_completed_predictions(
