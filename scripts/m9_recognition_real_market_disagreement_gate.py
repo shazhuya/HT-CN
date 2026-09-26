@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 import pandas as pd
 
