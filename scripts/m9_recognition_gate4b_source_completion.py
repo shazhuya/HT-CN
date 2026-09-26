@@ -47,6 +47,7 @@ def main() -> int:
     pattern_states: dict[str, Counter[str]] = defaultdict(Counter)
     state_by_skip: dict[int, Counter[str]] = defaultdict(Counter)
     state_by_scale_support: dict[int, Counter[str]] = defaultdict(Counter)
+    state_by_efficiency_bucket: dict[str, Counter[str]] = defaultdict(Counter)
     exact_completion_keys: set[tuple[object, ...]] = set()
     exact_duplicate_count = 0
     collision_groups: dict[tuple[object, ...], list[dict[str, Any]]] = defaultdict(list)
@@ -86,6 +87,19 @@ def main() -> int:
             state_by_skip[int(item.projection.min_skipped_pivots)][item.state] += 1
             state_by_scale_support[len(item.projection.scales)][item.state] += 1
 
+            efficiency = float(item.projection.best_min_leg_efficiency)
+            if efficiency < 0.35:
+                efficiency_bucket = "<0.35"
+            elif efficiency < 0.50:
+                efficiency_bucket = "0.35-0.50"
+            elif efficiency < 0.65:
+                efficiency_bucket = "0.50-0.65"
+            elif efficiency < 0.80:
+                efficiency_bucket = "0.65-0.80"
+            else:
+                efficiency_bucket = ">=0.80"
+            state_by_efficiency_bucket[efficiency_bucket][item.state] += 1
+
         for event in scan.completions:
             key = (
                 instrument_id,
@@ -114,6 +128,8 @@ def main() -> int:
                 "scale_support": list(event.projection.scales),
                 "scale_support_count": len(event.projection.scales),
                 "min_skipped_pivots": event.projection.min_skipped_pivots,
+                "best_min_leg_efficiency": event.projection.best_min_leg_efficiency,
+                "best_mean_leg_efficiency": event.projection.best_mean_leg_efficiency,
                 "source_span_bars": event.source_nodes[-1] - event.source_nodes[0],
                 "age_to_terminal": event.terminal_bar - event.known_at,
             }
@@ -284,6 +300,16 @@ def main() -> int:
                 "active": int(counts["active"]),
             }
             for support, counts in sorted(state_by_scale_support.items())
+        },
+
+        "state_by_min_leg_efficiency": {
+            bucket: {
+                "completed": int(state_by_efficiency_bucket[bucket]["completed"]),
+                "invalidated": int(state_by_efficiency_bucket[bucket]["invalidated"]),
+                "expired": int(state_by_efficiency_bucket[bucket]["expired"]),
+                "active": int(state_by_efficiency_bucket[bucket]["active"]),
+            }
+            for bucket in ("<0.35", "0.35-0.50", "0.50-0.65", "0.65-0.80", ">=0.80")
         },
         "by_pattern": {
             pattern: {
