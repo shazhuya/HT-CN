@@ -3,9 +3,9 @@ from itertools import pairwise
 import pandas as pd
 
 from htcn.harmonic.source_completion import (
+    _recognition_source_execution,
     event_sourced_hierarchical_xabc_projections,
     scan_source_completion_events,
-    _recognition_source_execution,
 )
 
 
