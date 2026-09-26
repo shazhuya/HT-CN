@@ -66,3 +66,16 @@ jobs:
           path: artifacts/reports/m9-recognition-real-market-disagreement.json
           if-no-files-found: error
           retention-days: 30
+
+      - name: Run Gate 4 identity rejection diagnostic
+        run: python -u scripts/m9_recognition_real_market_identity_diagnostic.py
+
+      - name: Upload Gate 4 identity diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: htcn-recognition-gate4-identity-${{ github.sha }}
+          path: artifacts/reports/m9-recognition-real-market-identity-diagnostic.json
+          if-no-files-found: error
+          retention-days: 30
+
