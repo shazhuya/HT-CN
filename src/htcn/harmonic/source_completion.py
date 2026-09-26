@@ -14,7 +14,6 @@ from .pivots import (
 from .prz import PotentialReversalZone
 from .scanner import project_forming_xabcd
 
-
 PRODUCTION_MAX_TOTAL_SKIPS = 8
 
 
