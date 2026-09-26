@@ -7,6 +7,7 @@ on:
     paths:
       - "src/htcn/harmonic/**"
       - "scripts/m9_recognition_real_market_disagreement_gate.py"
+      - "scripts/m9_recognition_real_market_identity_diagnostic.py"
       - "research/a-share-research-universe-v1.json"
       - ".github/workflows/recognition-gate4-fast.yml"
   workflow_dispatch:
