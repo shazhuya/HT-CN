@@ -8,7 +8,10 @@ from typing import Any
 
 import pandas as pd
 
-from htcn.harmonic.source_completion import (\n    PRODUCTION_MAX_TOTAL_SKIPS,\n    scan_source_completion_events,\n)
+from htcn.harmonic.source_completion import (
+    PRODUCTION_MAX_TOTAL_SKIPS,
+    scan_source_completion_events,
+)
 from htcn.research.snapshot_cache import load_research_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
