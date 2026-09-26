@@ -76,11 +76,38 @@ class SourceCompletionEvent:
 
 
 @dataclass(frozen=True, slots=True)
+class SourceProjectionState:
+    """Observable lifecycle state for one first-knowable XABC projection.
+
+    Validity is an HT-CN operational policy, not Carney Source identity. The frozen
+    Source Raw PRZ and Source Terminal clock are unchanged.
+    """
+
+    projection: SourceProjection
+    state: str
+    audit: SourceExecutionAudit
+    closed_bar: int | None = None
+    reason: str | None = None
+
+    def __post_init__(self) -> None:
+        allowed = {"completed", "invalidated", "expired", "active"}
+        if self.state not in allowed:
+            raise ValueError(f"unsupported SourceProjectionState: {self.state}")
+        if self.state == "completed" and self.audit.state != "terminal_observed":
+            raise ValueError("completed projection state requires terminal_observed audit")
+        if self.state != "completed" and self.audit.state == "terminal_observed":
+            raise ValueError("non-completed projection state cannot carry terminal_observed audit")
+
+
+@dataclass(frozen=True, slots=True)
 class SourceCompletionScan:
     projections: tuple[SourceProjection, ...]
+    states: tuple[SourceProjectionState, ...]
     completions: tuple[SourceCompletionEvent, ...]
+    invalidated_without_terminal: int
     expired_without_terminal: int
-    policy: str = "source_clock_no_additional_invalidation_v1"
+    active_without_terminal: int
+    policy: str = "confirmed_c_extreme_or_expiry_v1"
 
 
 def _merge_projection(
@@ -113,12 +140,7 @@ def event_sourced_hierarchical_xabc_projections(
     max_leg_step: int = 7,
     max_total_skips: int = 12,
 ) -> tuple[SourceProjection, ...]:
-    """Return XABC projections at their first live-knowable confirmation bar.
-
-    Only frontier paths ending at the latest visible pivot are evaluated at each confirmation
-    event. This prevents final-history pivot replacement from inventing or erasing projection
-    birth times.
-    """
+    """Return XABC projections at their first live-knowable confirmation bar."""
 
     born: dict[tuple[str, str, tuple[int, ...]], SourceProjection] = {}
     for scale in sorted({int(value) for value in scales}):
@@ -174,6 +196,93 @@ def event_sourced_hierarchical_xabc_projections(
     )
 
 
+def _first_c_extreme_breach(
+    frame: pd.DataFrame,
+    projection: SourceProjection,
+    *,
+    end_bar: int,
+) -> int | None:
+    """Return the first future bar that makes the frozen C extreme obsolete."""
+
+    c_price = float(projection.points[-1].price)
+    for bar in range(projection.known_at + 1, end_bar + 1):
+        row = frame.iloc[bar]
+        if projection.direction is PatternDirection.BULLISH:
+            if float(row["high"]) > c_price:
+                return bar
+        elif float(row["low"]) < c_price:
+            return bar
+    return None
+
+
+def _projection_state(
+    frame: pd.DataFrame,
+    projection: SourceProjection,
+    *,
+    lifetime_bars: int,
+) -> SourceProjectionState:
+    """Resolve one projection without invalidated/expired pattern resurrection."""
+
+    max_end = min(
+        len(frame) - 1,
+        projection.known_at + int(lifetime_bars),
+    )
+    invalidation_bar = _first_c_extreme_breach(
+        frame,
+        projection,
+        end_bar=max_end,
+    )
+    observation_end = (
+        min(max_end, invalidation_bar - 1)
+        if invalidation_bar is not None
+        else max_end
+    )
+    audit = observe_source_execution(
+        frame,
+        signal_bar=projection.known_at,
+        direction=projection.direction,
+        prz=projection.prz,
+        reaction_anchor_price=float(projection.points[1].price),
+        observation_end_bar=observation_end,
+    )
+
+    if audit.state == "terminal_observed":
+        return SourceProjectionState(
+            projection=projection,
+            state="completed",
+            audit=audit,
+            closed_bar=audit.terminal_bar,
+            reason="source_terminal_observed",
+        )
+
+    if invalidation_bar is not None:
+        return SourceProjectionState(
+            projection=projection,
+            state="invalidated",
+            audit=audit,
+            closed_bar=invalidation_bar,
+            reason="confirmed_c_extreme_breached_before_terminal",
+        )
+
+    expiry_bar = projection.known_at + int(lifetime_bars)
+    if len(frame) - 1 >= expiry_bar:
+        return SourceProjectionState(
+            projection=projection,
+            state="expired",
+            audit=audit,
+            closed_bar=expiry_bar,
+            reason="observation_lifetime_expired",
+        )
+
+    return SourceProjectionState(
+        projection=projection,
+        state="active",
+        audit=audit,
+        closed_bar=None,
+        reason=None,
+    )
+
+
 def scan_source_completion_events(
     frame: pd.DataFrame,
     *,
@@ -183,11 +292,11 @@ def scan_source_completion_events(
     max_total_skips: int = 12,
     lifetime_bars: int = 180,
 ) -> SourceCompletionScan:
-    """Observe Source Terminal completions for first-knowable hierarchical XABC projections.
+    """Observe Source Terminal completions under an explicit live-validity clock.
 
-    This research channel deliberately does not impose an additional invalidation policy yet.
-    It isolates the frozen Source Raw PRZ + Source Terminal clock from retrospective exact-D
-    geometry. Production promotion requires a separately validated invalidation/expiry policy.
+    A projection is invalidated if its confirmed C extreme is exceeded before Source
+    Terminal. It expires after lifetime_bars. Retired projections are never replayed
+    against later price action.
     """
 
     if lifetime_bars < 1:
@@ -200,40 +309,30 @@ def scan_source_completion_events(
         max_leg_step=max_leg_step,
         max_total_skips=max_total_skips,
     )
+    states: list[SourceProjectionState] = []
     completions: list[SourceCompletionEvent] = []
-    expired = 0
 
     for projection in projections:
-        end_bar = min(
-            len(frame) - 1,
-            projection.known_at + int(lifetime_bars),
+        state = _projection_state(
+            frame,
+            projection,
+            lifetime_bars=lifetime_bars,
         )
-        reaction_anchor_price = float(projection.points[1].price)
-        try:
-            audit = observe_source_execution(
-                frame,
-                signal_bar=projection.known_at,
-                direction=projection.direction,
-                prz=projection.prz,
-                reaction_anchor_price=reaction_anchor_price,
-                observation_end_bar=end_bar,
-            )
-        except ValueError:
-            expired += 1
-            continue
-
-        if audit.state != "terminal_observed":
-            expired += 1
+        states.append(state)
+        if state.state != "completed":
             continue
         completions.append(
             SourceCompletionEvent(
                 projection=projection,
-                audit=audit,
+                audit=state.audit,
             )
         )
 
     return SourceCompletionScan(
         projections=projections,
+        states=tuple(states),
         completions=tuple(completions),
-        expired_without_terminal=expired,
+        invalidated_without_terminal=sum(item.state == "invalidated" for item in states),
+        expired_without_terminal=sum(item.state == "expired" for item in states),
+        active_without_terminal=sum(item.state == "active" for item in states),
     )
