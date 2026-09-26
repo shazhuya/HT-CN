@@ -15,6 +15,18 @@
 
 低层信息不得覆盖高层事实。D-065 起，`PROJECT_CONTEXT.md` 是历史深层材料，不再拥有 current-state authority。
 
+## 1.1 Recognition Engine Product-Validity Gate（最高优先级）
+
+D-091 永久规定：**谐波识别引擎是 HT-CN 的最高级产品有效性门。**
+
+如果 raw OHLC -> harmonic structure 的识别不可靠，HT-CN 后续所有 PRZ/lifecycle/outcome/UI/AI/统计都建立在错误输入之上，项目在实战层面没有意义。因此：
+
+- 任何 Agent 开始工作前必须先确认当前 Recognition Gate / blocker；
+- 识别可信度未 green 时，默认开发资源只用于识别正确性、no-lookahead、completion semantics、invalidation、dedupe/FP audit，或直接阻塞这些工作的基础设施故障；
+- UI、胜率/alpha、Outcome、AI 解读、新指标、包装等不得抢占识别主线；
+- “更多候选/更多代码/更多测试/界面有图”不是识别正确性证据；
+- 不能通过放宽 Carney Source Identity 或 Source Raw PRZ 来伪造 Recall；
+- production promotion 必须有固定 Ground Truth、真实市场审计、false-positive 控制与时间一致性证据。
 ## 2. Blank-session Bootstrap（强制）
 
 收到“继续 HTCN”后，在任何实现前：
@@ -27,7 +39,8 @@
 6. 只读取 `required_specs` 中与当前 Gate 相关的规范；
 7. 查看 latest CI / PR / release；
 8. 能准确说明：current phase、active change、Gate、blocker、freeze、next task、最近成功/失败 attempt；
-9. 若 state/Git/ledger 任一不一致，先修 Project OS，禁止继续 Source/Product 核心开发。
+9. **能准确说明当前 Recognition Gate / blocker，以及当前工作是否直接服务于识别正确性；**
+10. 若 state/Git/ledger 任一不一致，先修 Project OS，禁止继续 Source/Product 核心开发。
 
 本地可运行：
 
@@ -92,7 +105,7 @@ Project State。详细格式、校验和隐私边界见 `CHAT_CONTINUATION.md`�
 
 ## 6. Product Completion / Evidence Boundary（强制）
 
-任何 Agent 恢复项目后，必须读取 `governance/PRODUCT_COMPLETION_POLICY.json` 并遵守 D-081：
+任何 Agent 恢复项目后，必须读取 `governance/PRODUCT_COMPLETION_POLICY.json` 并遵守 D-081 与 D-091：
 
 - **M9 是产品开发主线**；不得等待 M7 自然积累数月/数年后才继续产品化。
 - **M7 是后台长期 evidence track**；证据积累继续，但不代表产品尚未完成。
@@ -100,7 +113,7 @@ Project State。详细格式、校验和隐私边界见 `CHAT_CONTINUATION.md`�
 - 用户电脑不是日常基础设施。Hosted CI、repository fixtures、agent-controlled runtime 能完成的测试/迭代，不得要求用户电脑。
 - 不得把“每天运行 M7 BAT / 上传 ZIP / AI 人工验收”设计成产品运行方式。
 - 只有私有 M1 特有且不可复现的问题、一次性迁移、最终 UAT/用户主动本地预览或本地兼容性故障，才可请求用户电脑；请求前必须说明为什么自动化不能替代，以及执行次数上限。
-- Stable Product 的完成条件是自动数据、自动谐波 runtime、完整工作台、后台 evidence、可靠性/打包和零命令行日常操作，而不是 ISSUE-0066 关闭。
+- Stable Product 的完成条件不仅是自动数据、runtime、工作台、后台 evidence、可靠性/打包和零命令行，还必须满足 **D-091 的可信谐波识别有效性门**；runtime 能运行不等于识别可信。
 
 若下一项开发工作仍指向“继续人工积累 M7”，必须先证明它是产品自动化建设本身或真实 blocker；否则应按 PROJECT_STATE.next_major_task 推进 M9。
 
@@ -124,6 +137,7 @@ Project State。详细格式、校验和隐私边界见 `CHAT_CONTINUATION.md`�
 一个完全空白的新对话，不读取旧聊天全文，仅凭项目必须能回答：
 
 - canonical release/HEAD 是什么？
+- 当前 Recognition Gate / blocker 是什么，识别引擎是否已达到可信 production gate？
 - current Milestone/Phase 是什么？
 - active CR 及其状态是什么？
 - 当前 Gate / blocker / next task 是什么？
