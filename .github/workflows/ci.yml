@@ -93,7 +93,7 @@ jobs:
         run: python scripts/build_chat_continuation_bundle.py
 
       - name: Upload portable chat continuation bundle
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/m9/recognition-trustworthiness')
         uses: actions/upload-artifact@v4
         with:
           name: htcn-chat-continuation-${{ github.sha }}
