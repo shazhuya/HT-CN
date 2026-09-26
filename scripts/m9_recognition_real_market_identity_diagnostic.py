@@ -4,7 +4,6 @@ import argparse
 import json
 from collections import Counter
 from dataclasses import dataclass
-from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
