@@ -9,7 +9,11 @@ from typing import Literal
 import pandas as pd
 
 from .candidates import iter_completed_xabcd_windows
-from .discovery import iter_discovery_xabcd_windows, iter_hierarchical_xabcd_windows
+from .discovery import (
+    hierarchical_leg_efficiency,
+    iter_discovery_xabcd_windows,
+    iter_hierarchical_xabcd_windows,
+)
 from .engine import scan_frame
 from .models import PatternDirection, PivotKind
 from .pivots import (
@@ -502,12 +506,23 @@ def diagnose_truth_pivot_path(
             steps = tuple(right - left for left, right in pairwise(concrete))
             skipped = tuple(step - 1 for step in steps)
             recent_offset = int(payload["recent_offset"])
+            efficiencies = tuple(
+                hierarchical_leg_efficiency(
+                    pivots,
+                    left_position=left,
+                    right_position=right,
+                )
+                for left, right in pairwise(concrete)
+            )
             payload.update(
                 {
                     "leg_steps": list(steps),
                     "leg_skipped_pivots": list(skipped),
                     "total_skipped_pivots": sum(skipped),
                     "max_leg_step": max(steps),
+                    "leg_efficiencies": list(efficiencies),
+                    "min_leg_efficiency": min(efficiencies),
+                    "mean_leg_efficiency": sum(efficiencies) / len(efficiencies),
                     "all_truth_nodes_within_recent_frontier": min(concrete) >= recent_offset,
                     "current_step13_compatible": all(step in (1, 3) for step in steps),
                 }
