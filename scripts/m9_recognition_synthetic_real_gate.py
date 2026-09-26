@@ -8,6 +8,8 @@ from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
+from htcn.harmonic.candidates import SwingWindow
+from htcn.harmonic.pivots import detect_multi_scale_pivots
 from htcn.harmonic.recognition_benchmark import (
     diagnose_truth_pivot_path,
     hierarchical_graph_completed_predictions,
@@ -19,8 +21,6 @@ from htcn.harmonic.recognition_real_noise import (
     holdout_symbols,
     inject_pattern_into_real_background,
 )
-from htcn.harmonic.candidates import SwingWindow
-from htcn.harmonic.pivots import detect_multi_scale_pivots
 from htcn.harmonic.recognition_stress import STANDARD_XABCD
 from htcn.harmonic.scanner import classify_completed_xabcd, project_forming_xabcd
 from htcn.research.snapshot_cache import load_research_snapshot
@@ -499,6 +499,8 @@ def _skip_ablation(
         },
         "by_total_skip_budget": by_total_skip,
         "by_max_leg_step": by_leg_step,
+        "joint_capacity": joint_capacity,
+        "smallest_reliable_90_90": smallest_reliable,
         "source_prz_width_xa_known_truth": {
             "development": _summarize_prz_width_xa(development_requirements),
             "holdout": _summarize_prz_width_xa(holdout_requirements),
