@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass
 from itertools import pairwise
 from pathlib import Path
@@ -149,6 +149,7 @@ def _audit_candidates(candidates: list[Candidate], frames: dict[str, pd.DataFram
     failed_checks: Counter[str] = Counter()
     failed_count_hist: Counter[int] = Counter()
     passed = 0
+    near_miss_count = 0
     near_misses = []
 
     for candidate in candidates:
@@ -181,6 +182,8 @@ def _audit_candidates(candidates: list[Candidate], frames: dict[str, pd.DataFram
         for check in failed:
             failed_checks[check.name] += 1
 
+        if len(result.reasons) == 1:
+            near_miss_count += 1
         if len(result.reasons) == 1 and len(near_misses) < 120:
             frame = frames[candidate.instrument_id]
             dates = [
@@ -219,15 +222,7 @@ def _audit_candidates(candidates: list[Candidate], frames: dict[str, pd.DataFram
             str(key): value for key, value in sorted(failed_count_hist.items())
         },
         "top_failed_checks": failed_checks.most_common(20),
-        "near_miss_one_reason_count": sum(
-            1
-            for candidate in candidates
-            if min(
-                len(audit_xabcd_identity(rule, _points(candidate)).reasons)
-                for rule in rules
-            )
-            == 1
-        ),
+        "near_miss_one_reason_count": near_miss_count,
         "near_miss_examples": near_misses,
     }
 
