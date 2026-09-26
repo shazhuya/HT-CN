@@ -7,7 +7,10 @@ import pandas as pd
 from .discovery import iter_hierarchical_xabc_frontier_windows
 from .execution import SourceExecutionAudit
 from .models import HarmonicPoint, PatternDirection
-from .pivots import detect_pivot_events, visible_confirmed_pivots
+from .pivots import (
+    detect_pivot_events,
+    visible_confirmed_pivots,
+)
 from .prz import PotentialReversalZone
 from .scanner import project_forming_xabcd
 
