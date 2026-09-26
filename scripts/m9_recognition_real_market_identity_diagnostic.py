@@ -150,26 +150,42 @@ def _audit_candidates(candidates: list[Candidate], frames: dict[str, pd.DataFram
     failed_count_hist: Counter[int] = Counter()
     passed = 0
     near_miss_count = 0
+    degenerate_count = 0
+    degenerate_examples = []
     near_misses = []
 
     for candidate in candidates:
         points = _points(candidate)
         per_rule = []
-        for rule in rules:
-            result = audit_xabcd_identity(rule, points)
-            failed = tuple(check for check in result.checks if not check.passed)
-            score = (
-                len(result.reasons),
-                sum(
-                    (
-                        check.relative_error
-                        if check.relative_error is not None
-                        else check.distance_to_canonical
-                    )
-                    for check in failed
-                ),
-            )
-            per_rule.append((score, rule.pattern_id, result, failed))
+        try:
+            for rule in rules:
+                result = audit_xabcd_identity(rule, points)
+                failed = tuple(check for check in result.checks if not check.passed)
+                score = (
+                    len(result.reasons),
+                    sum(
+                        (
+                            check.relative_error
+                            if check.relative_error is not None
+                            else check.distance_to_canonical
+                        )
+                        for check in failed
+                    ),
+                )
+                per_rule.append((score, rule.pattern_id, result, failed))
+        except ValueError as exc:
+            degenerate_count += 1
+            if len(degenerate_examples) < 40:
+                degenerate_examples.append(
+                    {
+                        "detector": candidate.detector,
+                        "instrument_id": candidate.instrument_id,
+                        "nodes": list(candidate.nodes),
+                        "prices": [round(value, 6) for value in candidate.prices],
+                        "error": str(exc),
+                    }
+                )
+            continue
 
         per_rule.sort(key=lambda item: (item[0], item[1]))
         _, pattern_id, result, failed = per_rule[0]
@@ -217,6 +233,8 @@ def _audit_candidates(candidates: list[Candidate], frames: dict[str, pd.DataFram
         "candidate_count": len(candidates),
         "identity_pass_count": passed,
         "identity_pass_rate": passed / len(candidates) if candidates else 0.0,
+        "degenerate_geometry_count": degenerate_count,
+        "degenerate_geometry_examples": degenerate_examples,
         "nearest_rule_counts": dict(nearest_rule_counts.most_common()),
         "failed_reason_count_histogram": {
             str(key): value for key, value in sorted(failed_count_hist.items())
