@@ -178,6 +178,12 @@
       "title": "Product harmonic discovery is high-recall and non-authoritative",
       "status": "active",
       "source": "governance/decisions/D-090-recognition-discovery-boundary.md"
+    },
+    {
+      "id": "D-091",
+      "title": "Harmonic recognition trustworthiness is the highest HT-CN product-validity gate",
+      "status": "active",
+      "source": "governance/decisions/D-091-recognition-engine-product-validity-gate.md"
     }
   ],
   "rules": {
