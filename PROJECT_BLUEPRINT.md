@@ -1,6 +1,6 @@
 # HT-CN Project Blueprint — 项目总蓝图
 
-blueprint_schema: `5`
+blueprint_schema: `6`
 status: `authoritative`
 
 ## 1. 项目使命
@@ -11,6 +11,25 @@ HT-CN 是面向中国 A 股的谐波研究与人工辅助决策系统。方法�
 
 HT-CN 不是自动交易执行器；不以历史回看后的漂亮形态冒充实时可得信息，不用产品评分反向修改谐波身份，也不在前瞻证据不足时宣称胜率、alpha 或盈利能力。
 
+## 1.1 最高级产品有效性门：谐波识别引擎
+
+**谐波识别引擎是 HT-CN 整个项目的最高优先级与产品有效性前提。**
+
+如果系统不能从原始 K 线中稳定找到应当存在的谐波主结构，或者大量识别错误节点、错误形态、错误完成时点，那么后续的 PRZ、Terminal、Type-I/II、Outcome、胜率、AI 解读、UI、自动化和产品包装全部失去可信输入，整个项目在实战层面没有意义。
+
+永久规则：
+
+1. **Recognition correctness 优先于一切外围产品能力。** 当识别可信度存在重大未解决问题时，UI、胜率、Outcome、AI 解释、新指标、包装等工作必须让位。
+2. 识别引擎必须同时证明：应识别结构的 Recall、错误结构的 Precision/FP 控制、节点正确性、no-lookahead、历史不可被未来数据重写。
+3. 不允许用“候选更多”“图上有东西”“测试数量更多”“UI 更完整”代替识别正确性。
+4. 不允许为了提高 Recall 而放宽或篡改 Carney Source Identity / Source Raw PRZ；应先修 Pivot/Swing/Candidate/Time-of-Knowledge/Completion semantics。
+5. 任何 AI / Agent 接手项目时，必须先确认当前 Recognition Gate 与 blocker；若识别引擎尚未达到可信 production gate，默认下一项开发必须继续解决识别问题，除非存在阻止识别验证本身的更高层基础设施故障。
+
+当前长期目标链路为：
+
+`Raw OHLC -> confirmed Pivot Events -> Hierarchical XABC -> frozen Source Raw PRZ -> validity/invalidation clock -> event-sourced Source Terminal completion -> dedupe/false-positive audit`
+
+右确认 D Pivot / 精确 D-XA 可作为 retrospective geometry audit，但不得再次取代 observable Source Terminal 作为唯一完成语义。
 ## 2. 永久架构边界
 
 1. Source Harmonic Truth 与 A-share Execution Context 永久分层。
@@ -29,6 +48,7 @@ HT-CN 不是自动交易执行器；不以历史回看后的漂亮形态冒充�
 14. **长期 evidence accumulation 不得被解释为“产品尚未完成”的无限等待条件。**
 15. **ISSUE-0066 只限制统计/胜率/alpha/盈利能力结论，不得阻塞 M9 产品开发或 Stable Product Release。**
 16. **用户电脑不是 HT-CN 的日常开发基础设施；能够由托管 CI、仓库 fixture、agent-controlled runtime 或自动化服务完成的工作，不得要求用户电脑重复执行。**
+17. **D-091：识别引擎是项目最高级产品有效性门。识别不可靠时，任何外围产品完成状态都不能被解释为 HT-CN 已具备实战意义。**
 
 ## 3. 项目总里程碑与双轨关系
 
@@ -103,7 +123,7 @@ M9 的目标是把已经成立的研究能力封装为成熟应用。开发工�
 2. **M9.1 — Automated Market Data & Scheduling Service**  
    自动市场日历、增量行情、QFQ、provider failover/retry、运行调度、健康检查；用户不再运行日常 BAT。
 3. **M9.2 — Automated Harmonic Analysis Runtime**  
-   新数据到达后自动增量扫描/计算，forming pattern 演化，生命周期与 Source Truth 同步；viewport 操作不重算。
+   新数据到达后自动增量扫描/计算，forming pattern 演化，生命周期与 Source Truth 同步；viewport 操作不重算。**首要验收不是“能运行”，而是识别正确性通过 Ground Truth、真实市场、no-lookahead 与 false-positive gates；未通过时不得用外围产品能力替代。**
 4. **M9.3 — End-to-End Product Workbench**  
    股票选择、K 线、谐波 overlay、节点比例、PRZ、状态、关键价位、中文解释和审计信息在同一工作台闭环。
 5. **M9.4 — Background Evidence / Calibration Service & Observability**  
@@ -170,7 +190,9 @@ M8 负责 evidence-based calibration。ISSUE-0066 open 时：
 
 ## 8. Stable Product 完成定义
 
-HT-CN v1 Stable Product 在以下产品能力全部成立时即可宣告“开发完成”，**不要求 ISSUE-0066 已关闭**：
+HT-CN v1 Stable Product 在以下产品能力全部成立时即可宣告“开发完成”，**不要求 ISSUE-0066 已关闭**。
+
+**前置硬门：自动谐波识别必须达到 D-091 的可信标准。若原始 K 线上的结构识别、完成时钟或误报控制仍存在重大缺陷，则即使 UI、安装、后台服务和发布流程全部成熟，也只能称为 runtime/product engineering 成熟，不能称为具备有效谐波研究能力。**
 
 1. 市场数据和交易日更新可自动运行，失败有重试/降级/健康状态；
 2. 复权与数据 provenance 自动维护；
@@ -191,11 +213,12 @@ HT-CN v1 Stable Product 在以下产品能力全部成立时即可宣告“开�
 
 任何新 AI / 新对话恢复项目时必须明确回答：
 
-1. 当前产品开发主线是什么？答案必须来自 Project State / Product Completion Policy，而不是从 M7 样本数量猜测。
-2. M7 是开发阻塞线还是后台长期证据线？
-3. ISSUE-0066 阻塞什么、明确不阻塞什么？
-4. 当前是否真的需要用户电脑？若需要，为什么托管/自动化不能替代？
-5. 当前 M9 phase 与 Stable Product 剩余 exit gates 是什么？
+1. **当前 Recognition Gate、识别引擎最大 blocker 与可信度状态是什么？如果尚未 green，当前任务为什么直接服务于识别正确性？**
+2. 当前产品开发主线是什么？答案必须来自 Project State / Product Completion Policy，而不是从 M7 样本数量猜测。
+3. M7 是开发阻塞线还是后台长期证据线？
+4. ISSUE-0066 阻塞什么、明确不阻塞什么？
+5. 当前是否真的需要用户电脑？若需要，为什么托管/自动化不能替代？
+6. 当前 M9 phase 与 Stable Product 剩余 exit gates 是什么？
 
 禁止把“继续积累 M7”当作默认的下一项开发工作，除非当前任务明确是 evidence 服务本身的产品化或出现真实 evidence blocker。
 
