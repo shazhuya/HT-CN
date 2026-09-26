@@ -21,11 +21,23 @@ class FormingPattern:
     harmonic_family_tolerance_used: bool = False
 
 
-def executable_xabcd_rules() -> tuple[PatternRule, ...]:
+def executable_xabcd_rules(
+    *,
+    include_source_conflict_patterns: bool = False,
+) -> tuple[PatternRule, ...]:
+    """Return source-cleared standard XABCD rules for production scanning.
+
+    Source-conflict identities (currently Alternate Bat) remain available only through an
+    explicit research opt-in. Being mathematically executable is not sufficient for production
+    promotion when Source Coverage is fail-closed.
+    """
+
     return tuple(
         rule
         for rule in CARNEY_RULES.values()
-        if rule.schema == "XABCD" and rule.executable_identity
+        if rule.schema == "XABCD"
+        and rule.executable_identity
+        and (include_source_conflict_patterns or not rule.source_conflict)
     )
 
 
@@ -40,6 +52,7 @@ def project_forming_xabcd(
     *,
     include_source_tolerance: bool = True,
     harmonic_family_relative_tolerance: float = 0.03,
+    include_source_conflict_patterns: bool = False,
 ) -> tuple[FormingPattern, ...]:
     """Project D/PRZ only after XABC satisfies source-backed geometry.
 
@@ -68,7 +81,9 @@ def project_forming_xabcd(
         return ()
 
     projections: list[FormingPattern] = []
-    for rule in executable_xabcd_rules():
+    for rule in executable_xabcd_rules(
+        include_source_conflict_patterns=include_source_conflict_patterns
+    ):
         b_constraint = rule.constraints.get("b_xa")
         c_constraint = rule.constraints.get("c_ab")
         if b_constraint is None or c_constraint is None:
@@ -111,12 +126,15 @@ def classify_completed_xabcd(
     include_source_tolerance: bool = True,
     abcd_relative_tolerance: float = 0.03,
     harmonic_family_relative_tolerance: float = 0.03,
+    include_source_conflict_patterns: bool = False,
 ) -> tuple[PatternEvaluation, ...]:
     if not window.is_completed:
         raise ValueError("completed classification requires a 5-pivot XABCD window")
     points = window.harmonic_points()
     evaluations: list[PatternEvaluation] = []
-    for rule in executable_xabcd_rules():
+    for rule in executable_xabcd_rules(
+        include_source_conflict_patterns=include_source_conflict_patterns
+    ):
         try:
             result = match_xabcd(
                 rule,
