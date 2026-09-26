@@ -448,6 +448,49 @@ def _skip_ablation(
 
     missing_dev = sum(not row["requirements"] for row in development_requirements)
     missing_holdout = sum(not row["requirements"] for row in holdout_requirements)
+    joint_capacity = []
+    for step in leg_caps:
+        for budget in skip_budgets:
+            dev = _capacity_recall(
+                development_requirements,
+                max_leg_step=step,
+                max_total_skips=budget,
+            )
+            held = _capacity_recall(
+                holdout_requirements,
+                max_leg_step=step,
+                max_total_skips=budget,
+            )
+            joint_capacity.append(
+                {
+                    "max_leg_step": step,
+                    "max_total_skips": budget,
+                    "development_recall": dev["recall"],
+                    "holdout_recall": held["recall"],
+                    "development_recovered": dev["recovered"],
+                    "holdout_recovered": held["recovered"],
+                }
+            )
+
+    reliable = [
+        row
+        for row in joint_capacity
+        if row["development_recall"] >= 0.90
+        and row["holdout_recall"] >= 0.90
+    ]
+    smallest_reliable = (
+        min(
+            reliable,
+            key=lambda row: (
+                int(row["max_leg_step"]) * int(row["max_total_skips"]),
+                int(row["max_total_skips"]),
+                int(row["max_leg_step"]),
+            ),
+        )
+        if reliable
+        else None
+    )
+
     return {
         "method": "single-pass exact-truth graph capacity audit",
         "full_graph_exact_truth_missing": {
