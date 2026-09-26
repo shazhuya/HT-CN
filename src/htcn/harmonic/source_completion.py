@@ -110,7 +110,7 @@ class SourceCompletionScan:
     invalidated_without_terminal: int
     expired_without_terminal: int
     active_without_terminal: int
-    policy: str = "confirmed_c_extreme_or_expiry_v1"
+    policy: str = "confirmed_c_extreme_or_expiry_skip8_v1"
 
 
 def _merge_projection(
