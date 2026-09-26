@@ -47,6 +47,20 @@ class PatternEvaluation:
 
 
 @dataclass(frozen=True, slots=True)
+class IdentityAudit:
+    """Cheap public diagnostic view of XABCD identity without PRZ construction."""
+
+    direction: PatternDirection
+    metrics: XABCDMetrics
+    checks: tuple[ConstraintCheck, ...]
+    reasons: tuple[str, ...]
+
+    @property
+    def passed(self) -> bool:
+        return not self.reasons
+
+
+@dataclass(frozen=True, slots=True)
 class _IdentityEvaluation:
     """Cheap identity result before any projected PRZ objects are constructed."""
 
@@ -243,6 +257,35 @@ def _evaluate_identity(
         checks=tuple(checks),
         abcd_distance=abcd_distance,
         reasons=tuple(reasons),
+    )
+
+
+def audit_xabcd_identity(
+    rule: PatternRule,
+    points: tuple[HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint, HarmonicPoint],
+    *,
+    include_source_tolerance: bool = True,
+    abcd_relative_tolerance: float = 0.03,
+    harmonic_family_relative_tolerance: float = 0.03,
+) -> IdentityAudit:
+    """Return identity checks/reasons without constructing a PRZ.
+
+    This is intended for detector diagnostics and benchmark attribution. It shares the exact
+    production identity implementation and must never be used to loosen a failed rule.
+    """
+
+    identity = _evaluate_identity(
+        rule,
+        points,
+        include_source_tolerance=include_source_tolerance,
+        abcd_relative_tolerance=abcd_relative_tolerance,
+        harmonic_family_relative_tolerance=harmonic_family_relative_tolerance,
+    )
+    return IdentityAudit(
+        direction=identity.direction,
+        metrics=identity.metrics,
+        checks=identity.checks,
+        reasons=identity.reasons,
     )
 
 
