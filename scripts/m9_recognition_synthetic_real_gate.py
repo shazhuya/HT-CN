@@ -9,9 +9,9 @@ from typing import Any
 
 from htcn.harmonic.recognition_benchmark import (
     diagnose_truth_pivot_path,
-    graph_completed_predictions,
+    hierarchical_graph_completed_predictions,
     score_predictions,
-    streaming_graph_completed_predictions,
+    streaming_hierarchical_graph_completed_predictions,
 )
 from htcn.harmonic.recognition_real_noise import (
     SyntheticRealCase,
@@ -26,7 +26,8 @@ DEFAULT_MANIFEST = ROOT / "research" / "a-share-research-universe-v1.json"
 DEFAULT_DATA_DIR = ROOT / "artifacts" / "ci-research" / "data"
 REPORT_PATH = ROOT / "artifacts" / "reports" / "m9-recognition-synthetic-real-gate.json"
 SCALES = (3, 5, 8)
-MAX_TOTAL_SKIPS = 6
+MAX_LEG_STEP = 7
+MAX_TOTAL_SKIPS = 12
 HOLDOUT_COUNT = 9
 CASES_PER_SYMBOL = 2
 
@@ -103,10 +104,11 @@ def _evaluate(cases: list[SyntheticRealCase], *, reveal_cases: bool) -> dict[str
     )
     rows = []
     for case in cases:
-        predictions = graph_completed_predictions(
+        predictions = hierarchical_graph_completed_predictions(
             case.frame,
             scales=SCALES,
             recent_pivots=20,
+            max_leg_step=MAX_LEG_STEP,
             max_total_skips=MAX_TOTAL_SKIPS,
         )
         metrics = score_predictions([case.truth], predictions, tolerance_bars=1)
@@ -236,10 +238,11 @@ def _streaming(cases: list[SyntheticRealCase]) -> dict[str, Any]:
     preserved = 0
     known_at_values: list[int] = []
     for case in selected:
-        predictions = streaming_graph_completed_predictions(
+        predictions = streaming_hierarchical_graph_completed_predictions(
             case.frame,
             scales=SCALES,
             recent_pivots=20,
+            max_leg_step=MAX_LEG_STEP,
             max_total_skips=MAX_TOTAL_SKIPS,
         )
         metrics = score_predictions([case.truth], predictions, tolerance_bars=1)
@@ -270,7 +273,7 @@ def main() -> int:
 
     report = {
         "schema": 1,
-        "gate_id": "recognition-synthetic-real-gate3-v2",
+        "gate_id": "recognition-synthetic-real-gate3-v3-hierarchical",
         "fixture_version": "real-noise-injection-v2-turning-guards",
         "snapshot_dataset_id": manifest.get("dataset_id"),
         "snapshot_cutoff": manifest.get("snapshot_cutoff"),
@@ -286,6 +289,8 @@ def main() -> int:
         "detector": {
             "scales": list(SCALES),
             "recent_pivots": 20,
+            "graph": "hierarchical_swing_dominance",
+            "max_leg_step": MAX_LEG_STEP,
             "max_total_skips": MAX_TOTAL_SKIPS,
         },
         "development": _evaluate(development, reveal_cases=True),
