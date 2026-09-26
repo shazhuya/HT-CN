@@ -175,3 +175,7 @@ Recognition facts now frozen for handoff:
 
 Next gate: **Gate 4C — Production Graph Capacity & Precision Selection**.
 Compare current 7/8 against 5/10 and only necessary neighboring capacities on the same frozen real-market corpus. Select the smallest defensible cap using known-truth recall plus real-market candidate/collision pressure and high-information adjudication. Do not relax Carney identity/Source Raw PRZ and do not resume peripheral product work.
+
+## Gate 4C.1–4C.2 implementation — 2026-09-27
+
+Event contract v2 separates birth from corroboration, requires observed coverage of all PRZ measurements, and retires unobserved far-side passage under explicit operational policy. Source Raw PRZ/identity and M4 remain unchanged. Eleven deterministic challenge cases are selected in research/recognition-gate4c-case-selection-v1.json; independent arithmetic and coverage are audited by scripts/m9_recognition_gate4c_case_audit.py. Representative labels and production promotion remain blocked.

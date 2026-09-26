@@ -1,0 +1,388 @@
+{
+  "schema": 1,
+  "source_artifact": 10909996357,
+  "source_report_sha256": "679b98add48e4bdde3cfe252a490df47865e7124a899b82990a566298e9e48e8",
+  "purpose": "diagnostic challenge cases; not representative precision sample",
+  "selection": "five widest Crab among available report examples/collisions, three narrow non-Crab controls, first same-ABC group; no outcome selection",
+  "cases": [
+    {
+      "case_id": "wide_crab-1",
+      "selection_group": "wide_crab",
+      "instrument_id": "SSE.600104",
+      "name": "上汽集团",
+      "bucket": "汽车/传统制造",
+      "pattern_id": "crab",
+      "direction": "bullish",
+      "source_nodes": [
+        1666,
+        1684,
+        1689,
+        1693
+      ],
+      "source_dates": [
+        "2022-11-10",
+        "2022-12-06",
+        "2022-12-13",
+        "2022-12-19"
+      ],
+      "known_at": 1696,
+      "known_date": "2022-12-22",
+      "terminal_bar": 1796,
+      "terminal_date": "2023-05-25",
+      "terminal_price": 12.13283435,
+      "scale_support": [
+        3
+      ],
+      "scale_support_count": 1,
+      "min_skipped_pivots": 2,
+      "source_span_bars": 27,
+      "age_to_terminal": 100,
+      "source_prz_width_xa": 0.8905428571428551
+    },
+    {
+      "case_id": "wide_crab-2",
+      "selection_group": "wide_crab",
+      "instrument_id": "SSE.600104",
+      "name": "上汽集团",
+      "bucket": "汽车/传统制造",
+      "pattern_id": "crab",
+      "direction": "bullish",
+      "source_nodes": [
+        1673,
+        1684,
+        1689,
+        1693
+      ],
+      "source_dates": [
+        "2022-11-21",
+        "2022-12-06",
+        "2022-12-13",
+        "2022-12-19"
+      ],
+      "known_at": 1696,
+      "known_date": "2022-12-22",
+      "terminal_bar": 1796,
+      "terminal_date": "2023-05-25",
+      "terminal_price": 12.13283435,
+      "scale_support": [
+        3
+      ],
+      "scale_support_count": 1,
+      "min_skipped_pivots": 0,
+      "source_span_bars": 20,
+      "age_to_terminal": 100,
+      "source_prz_width_xa": 0.8635999999999984
+    },
+    {
+      "case_id": "wide_crab-3",
+      "selection_group": "wide_crab",
+      "instrument_id": "SSE.600036",
+      "name": "招商银行",
+      "bucket": "银行/低波动",
+      "pattern_id": "crab",
+      "direction": "bullish",
+      "source_nodes": [
+        954,
+        977,
+        979,
+        983
+      ],
+      "source_dates": [
+        "2019-12-03",
+        "2020-01-06",
+        "2020-01-08",
+        "2020-01-14"
+      ],
+      "known_at": 986,
+      "known_date": "2020-01-17",
+      "terminal_bar": 1020,
+      "terminal_date": "2020-03-13",
+      "terminal_price": 23.874264,
+      "scale_support": [
+        3
+      ],
+      "scale_support_count": 1,
+      "min_skipped_pivots": 2,
+      "source_span_bars": 29,
+      "age_to_terminal": 34,
+      "source_prz_width_xa": 0.8591963882618524
+    },
+    {
+      "case_id": "wide_crab-4",
+      "selection_group": "wide_crab",
+      "instrument_id": "SSE.600050",
+      "name": "中国联通",
+      "bucket": "通信/运营商",
+      "pattern_id": "crab",
+      "direction": "bearish",
+      "source_nodes": [
+        1889,
+        1954,
+        1959,
+        1964
+      ],
+      "source_dates": [
+        "2024-03-05",
+        "2024-06-12",
+        "2024-06-19",
+        "2024-06-26"
+      ],
+      "known_at": 1967,
+      "known_date": "2024-07-01",
+      "terminal_bar": 2030,
+      "terminal_date": "2024-09-30",
+      "terminal_price": 5.06978549,
+      "scale_support": [
+        3,
+        5
+      ],
+      "scale_support_count": 2,
+      "min_skipped_pivots": 6,
+      "source_span_bars": 75,
+      "age_to_terminal": 63,
+      "source_prz_width_xa": 0.8423157894736838
+    },
+    {
+      "case_id": "wide_crab-5",
+      "selection_group": "wide_crab",
+      "instrument_id": "SSE.600050",
+      "name": "中国联通",
+      "bucket": "通信/运营商",
+      "pattern_id": "crab",
+      "direction": "bearish",
+      "source_nodes": [
+        1919,
+        1954,
+        1959,
+        1964
+      ],
+      "source_dates": [
+        "2024-04-18",
+        "2024-06-12",
+        "2024-06-19",
+        "2024-06-26"
+      ],
+      "known_at": 1967,
+      "known_date": "2024-07-01",
+      "terminal_bar": 2030,
+      "terminal_date": "2024-09-30",
+      "terminal_price": 5.06978549,
+      "scale_support": [
+        3,
+        5
+      ],
+      "scale_support_count": 2,
+      "min_skipped_pivots": 0,
+      "source_span_bars": 45,
+      "age_to_terminal": 63,
+      "source_prz_width_xa": 0.8423157894736838
+    },
+    {
+      "case_id": "narrow_control-1",
+      "selection_group": "narrow_control",
+      "instrument_id": "SSE.600009",
+      "name": "上海机场",
+      "bucket": "交通/消费",
+      "pattern_id": "gartley",
+      "direction": "bearish",
+      "source_nodes": [
+        1872,
+        1938,
+        1953,
+        1958
+      ],
+      "source_dates": [
+        "2023-09-27",
+        "2024-01-08",
+        "2024-01-29",
+        "2024-02-05"
+      ],
+      "known_at": 1963,
+      "known_date": "2024-02-20",
+      "terminal_bar": 1980,
+      "terminal_date": "2024-03-14",
+      "terminal_price": 36.22520913,
+      "scale_support": [
+        5
+      ],
+      "scale_support_count": 1,
+      "min_skipped_pivots": 4,
+      "source_span_bars": 86,
+      "age_to_terminal": 17,
+      "source_prz_width_xa": 0.006714285714285391
+    },
+    {
+      "case_id": "narrow_control-2",
+      "selection_group": "narrow_control",
+      "instrument_id": "SSE.601857",
+      "name": "中国石油",
+      "bucket": "能源/红利",
+      "pattern_id": "bat",
+      "direction": "bearish",
+      "source_nodes": [
+        711,
+        731,
+        745,
+        750
+      ],
+      "source_dates": [
+        "2018-12-03",
+        "2019-01-02",
+        "2019-01-22",
+        "2019-01-29"
+      ],
+      "known_at": 753,
+      "known_date": "2019-02-01",
+      "terminal_bar": 764,
+      "terminal_date": "2019-02-25",
+      "terminal_price": 5.41917685,
+      "scale_support": [
+        3,
+        5,
+        8
+      ],
+      "scale_support_count": 3,
+      "min_skipped_pivots": 0,
+      "source_span_bars": 39,
+      "age_to_terminal": 11,
+      "source_prz_width_xa": 0.0077647058823523485
+    },
+    {
+      "case_id": "narrow_control-3",
+      "selection_group": "narrow_control",
+      "instrument_id": "SSE.600000",
+      "name": "浦发银行",
+      "bucket": "银行/大市值",
+      "pattern_id": "gartley",
+      "direction": "bearish",
+      "source_nodes": [
+        852,
+        857,
+        870,
+        871
+      ],
+      "source_dates": [
+        "2019-07-30",
+        "2019-08-06",
+        "2019-08-23",
+        "2019-08-26"
+      ],
+      "known_at": 874,
+      "known_date": "2019-08-29",
+      "terminal_bar": 881,
+      "terminal_date": "2019-09-09",
+      "terminal_price": 8.62588233,
+      "scale_support": [
+        3
+      ],
+      "scale_support_count": 1,
+      "min_skipped_pivots": 2,
+      "source_span_bars": 19,
+      "age_to_terminal": 7,
+      "source_prz_width_xa": 0.009300970873784987
+    },
+    {
+      "case_id": "same_abc_different_x-1",
+      "selection_group": "same_abc_different_x",
+      "instrument_id": "SSE.600276",
+      "name": "恒瑞医药",
+      "bucket": "医药/核心资产",
+      "pattern_id": "bat",
+      "direction": "bullish",
+      "source_nodes": [
+        555,
+        590,
+        597,
+        601
+      ],
+      "source_dates": [
+        "2018-04-17",
+        "2018-06-07",
+        "2018-06-19",
+        "2018-06-25"
+      ],
+      "known_at": 604,
+      "known_date": "2018-06-28",
+      "terminal_bar": 631,
+      "terminal_date": "2018-08-06",
+      "terminal_price": 33.81,
+      "scale_support": [
+        3
+      ],
+      "scale_support_count": 1,
+      "min_skipped_pivots": 4,
+      "source_span_bars": 46,
+      "age_to_terminal": 27,
+      "source_prz_width_xa": 0.07278773584905607
+    },
+    {
+      "case_id": "same_abc_different_x-2",
+      "selection_group": "same_abc_different_x",
+      "instrument_id": "SSE.600276",
+      "name": "恒瑞医药",
+      "bucket": "医药/核心资产",
+      "pattern_id": "bat",
+      "direction": "bullish",
+      "source_nodes": [
+        565,
+        590,
+        597,
+        601
+      ],
+      "source_dates": [
+        "2018-05-03",
+        "2018-06-07",
+        "2018-06-19",
+        "2018-06-25"
+      ],
+      "known_at": 604,
+      "known_date": "2018-06-28",
+      "terminal_bar": 631,
+      "terminal_date": "2018-08-06",
+      "terminal_price": 33.81,
+      "scale_support": [
+        3,
+        5
+      ],
+      "scale_support_count": 2,
+      "min_skipped_pivots": 2,
+      "source_span_bars": 36,
+      "age_to_terminal": 27,
+      "source_prz_width_xa": 0.07189999999999952
+    },
+    {
+      "case_id": "same_abc_different_x-3",
+      "selection_group": "same_abc_different_x",
+      "instrument_id": "SSE.600276",
+      "name": "恒瑞医药",
+      "bucket": "医药/核心资产",
+      "pattern_id": "bat",
+      "direction": "bullish",
+      "source_nodes": [
+        544,
+        590,
+        597,
+        601
+      ],
+      "source_dates": [
+        "2018-03-29",
+        "2018-06-07",
+        "2018-06-19",
+        "2018-06-25"
+      ],
+      "known_at": 606,
+      "known_date": "2018-07-02",
+      "terminal_bar": 631,
+      "terminal_date": "2018-08-06",
+      "terminal_price": 33.81,
+      "scale_support": [
+        5
+      ],
+      "scale_support_count": 1,
+      "min_skipped_pivots": 4,
+      "source_span_bars": 57,
+      "age_to_terminal": 25,
+      "source_prz_width_xa": 0.09577387318563704
+    }
+  ]
+}

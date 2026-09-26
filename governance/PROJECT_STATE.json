@@ -27,7 +27,7 @@
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260927-0090-010",
+    "latest_attempt_id": "A-20260927-0090-012",
     "latest_hosted_validation_attempt_id": "A-20260926-0090-008",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
@@ -35,6 +35,12 @@
       "workflow_run": 36252453523,
       "head": "110089e1d3e285b6687eca6769033e6da9efc649",
       "scope": "Session closeout checkpoint: full HT-CN CI plus Recognition Gate 3 Fast and Gate 4B Fast all green. Event-sourced Source Completion is operational with PRZ-contact, C-extreme invalidation, expiry/no-resurrection, source-conflict fail-closed, and current production total-skip cap 8. Gate 3 known-truth capacity audit remains 100%/100% at 7/12 research capacity and identifies 5/10 as the smallest tested 90%+/90%+ capacity; production cap selection remains open."
+    },
+    "latest_ci_failure": {
+      "head": "af96288809db23c4a981034b56fdbfce98d4ea82",
+      "workflow_run": 36258807108,
+      "attempt_id": "A-20260927-0090-011",
+      "reason": "resume index size; correction implemented, hosted revalidation pending"
     }
   },
   "private_m1": {
@@ -96,6 +102,7 @@
     }
   },
   "required_specs": [
+    "specs/m9-recognition-event-contract-v2.md",
     "specs/m9-recognition-gate4c-correctness-first.md",
     "specs/m9-post-release-recognition-trustworthiness-v1.md",
     "specs/m9-post-release-production-recognition-acceptance-v1.md",

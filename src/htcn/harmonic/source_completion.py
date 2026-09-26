@@ -17,6 +17,13 @@ from .scanner import project_forming_xabcd
 PRODUCTION_MAX_TOTAL_SKIPS = 8
 
 
+@dataclass(frozen=True, slots=True, order=True)
+class ProjectionSupport:
+    known_at: int
+    scale: int
+    skipped_pivots: int
+
+
 @dataclass(frozen=True, slots=True)
 class SourceProjection:
     """First-knowable standard XABCD projection born from a confirmed XABC source."""
@@ -28,6 +35,13 @@ class SourceProjection:
     prz: PotentialReversalZone
     scales: tuple[int, ...]
     min_skipped_pivots: int
+    support_events: tuple[ProjectionSupport, ...] = ()
+
+    def scales_as_of(self, cutoff: int) -> tuple[int, ...]:
+        """Later corroboration is not evidence available at projection birth."""
+        return tuple(sorted({
+            event.scale for event in self.support_events if event.known_at <= cutoff
+        }))
 
     @property
     def node_indices(self) -> tuple[int, ...]:
@@ -131,7 +145,7 @@ class SourceCompletionScan:
     invalidated_without_terminal: int
     expired_without_terminal: int
     active_without_terminal: int
-    policy: str = "confirmed_c_extreme_or_expiry_skip8_v1"
+    policy: str = "birth_evidence_gap_retirement_skip8_v2"
 
 
 def _merge_projection(
@@ -142,17 +156,24 @@ def _merge_projection(
     if prior is None:
         store[item.key] = item
         return
+    support = tuple(sorted(set(prior.support_events) | set(item.support_events)))
+    # Keep only the first observable support per scale. Re-visiting a frontier must
+    # not create a fresh birth or silently improve the earlier skip evidence.
+    first_by_scale: dict[int, ProjectionSupport] = {}
+    for event in support:
+        first_by_scale.setdefault(event.scale, event)
+    support = tuple(sorted(first_by_scale.values()))
+    birth = min(prior.known_at, item.known_at)
+    birth_support = tuple(event for event in support if event.known_at == birth)
     store[item.key] = SourceProjection(
         pattern_id=item.pattern_id,
         direction=item.direction,
         points=item.points,
-        known_at=min(prior.known_at, item.known_at),
+        known_at=birth,
         prz=prior.prz,
-        scales=tuple(sorted(set(prior.scales) | set(item.scales))),
-        min_skipped_pivots=min(
-            prior.min_skipped_pivots,
-            item.min_skipped_pivots,
-        ),
+        scales=tuple(sorted(event.scale for event in birth_support)),
+        min_skipped_pivots=min(event.skipped_pivots for event in birth_support),
+        support_events=support,
     )
 
 
@@ -208,6 +229,11 @@ def event_sourced_hierarchical_xabc_projections(
                         prz=projection.prz,
                         scales=(scale,),
                         min_skipped_pivots=int(candidate.skipped_pivots),
+                        support_events=(ProjectionSupport(
+                            known_at=cutoff,
+                            scale=scale,
+                            skipped_pivots=int(candidate.skipped_pivots),
+                        ),),
                     )
                     _merge_projection(born, item)
 
@@ -267,6 +293,14 @@ def _recognition_source_execution(
     first_entry: int | None = None
     terminal_bar: int | None = None
     terminal_price: float | None = None
+    # Volume 3 printed pp.151-153: all measured levels must be tested, possibly
+    # over several bars. A jump into the middle of the zone is not coverage of
+    # skipped measurements. Only actual observed bar ranges count.
+    levels = {source_low, source_high}
+    for component in prz.components:
+        if component.name in prz.source_prz_component_names:
+            levels.update((float(component.price_low), float(component.price_high)))
+    tested: set[float] = set()
 
     for bar in range(signal_bar + 1, end_bar + 1):
         row = frame.iloc[bar]
@@ -277,6 +311,9 @@ def _recognition_source_execution(
             continue
         if first_entry is None:
             first_entry = bar
+        tested.update(level for level in levels if low <= level <= high)
+        if tested != levels:
+            continue
         if direction is PatternDirection.BULLISH and low <= source_low:
             terminal_bar = bar
             terminal_price = low
@@ -376,6 +413,26 @@ def _projection_state(
         projection,
         end_bar=max_end,
     )
+    # Operational fail-closed policy, not a change to Carney identity/Raw PRZ:
+    # a wholly far-side bar has no observable zone test. Do not turn a later
+    # return into the original directional completion. A new XABC may be born.
+    gap_bar: int | None = None
+    assert projection.prz.source_prz_low is not None
+    assert projection.prz.source_prz_high is not None
+    for bar in range(projection.known_at + 1, max_end + 1):
+        row = frame.iloc[bar]
+        beyond = (
+            float(row["high"]) < projection.prz.source_prz_low
+            if projection.direction is PatternDirection.BULLISH
+            else float(row["low"]) > projection.prz.source_prz_high
+        )
+        if beyond:
+            gap_bar = bar
+            break
+    retirement_reason = "confirmed_c_extreme_breached_before_terminal"
+    if gap_bar is not None and (invalidation_bar is None or gap_bar < invalidation_bar):
+        invalidation_bar = gap_bar
+        retirement_reason = "unobserved_far_side_passage_retired_policy_v2"
     observation_end = (
         min(max_end, invalidation_bar - 1)
         if invalidation_bar is not None
@@ -405,7 +462,7 @@ def _projection_state(
             state="invalidated",
             audit=audit,
             closed_bar=invalidation_bar,
-            reason="confirmed_c_extreme_breached_before_terminal",
+            reason=retirement_reason,
         )
 
     expiry_bar = projection.known_at + int(lifetime_bars)

@@ -747,10 +747,10 @@ def build_resume_pack(state: dict[str, Any]) -> str:
         + "\n",
         "## Recent commits\n\n```text\n" + (recent or "(none)") + "\n```\n",
         "## Commits after last integrated release\n\n```text\n"
-        + _bounded_text_index(delta, limit=80, label="commits")
+        + _bounded_text_index(delta, limit=30, label="commits")
         + "\n```\n",
         "## Changed files after last integrated release\n\n```text\n"
-        + _bounded_text_index(changed, limit=120, label="changed files")
+        + _bounded_text_index(changed, limit=50, label="changed files")
         + "\n```\n",
         recovery_questions,
     ]

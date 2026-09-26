@@ -5,7 +5,39 @@ import pandas as pd
 from htcn.harmonic.source_completion import (
     event_sourced_hierarchical_xabc_projections,
     scan_source_completion_events,
+    _recognition_source_execution,
 )
+
+
+def test_birth_evidence_is_not_backfilled_by_later_scales() -> None:
+    frame = _gartley_path(terminal=True)
+    def target(data):
+        return next(p for p in event_sourced_hierarchical_xabc_projections(data)
+                    if p.pattern_id == "gartley" and p.node_indices == (10, 30, 50, 70))
+    early, late = target(frame.iloc[:75]), target(frame)
+    assert (early.known_at, early.scales, early.min_skipped_pivots) == (
+        late.known_at, late.scales, late.min_skipped_pivots
+    )
+    assert late.scales_as_of(72) == ()
+    assert late.scales_as_of(74) == (3,)
+    assert late.scales_as_of(78) == (3, 5, 8)
+
+
+def test_gap_return_cannot_complete_old_projection_in_either_direction() -> None:
+    for bearish in (False, True):
+        frame = _gartley_path(terminal=True).iloc[:86].copy()
+        frame.loc[80, ["open", "high", "low", "close"]] = [90, 95, 85, 90]
+        frame.loc[81, ["open", "high", "low", "close"]] = [120, 125, 115, 120]
+        if bearish:
+            high, low = frame["high"].copy(), frame["low"].copy()
+            frame["high"], frame["low"] = 400 - low, 400 - high
+            frame["open"], frame["close"] = 400 - frame["open"], 400 - frame["close"]
+        scan = scan_source_completion_events(frame, scales=(3,))
+        state = next(s for s in scan.states if s.projection.pattern_id == "gartley"
+                     and s.projection.node_indices == (10, 30, 50, 70))
+        assert state.state == "invalidated"
+        assert state.closed_bar == 80
+        assert state.reason == "unobserved_far_side_passage_retired_policy_v2"
 
 
 def _gartley_path(*, terminal: bool) -> pd.DataFrame:
@@ -49,7 +81,8 @@ def _gartley_path(*, terminal: bool) -> pd.DataFrame:
     )
     if terminal:
         # Source Terminal requires actual PRZ contact. A bar wholly below the zone is gap-through.
-        frame.loc[90, "high"] = 120.0
+        # Cover all PRZ measurements, not only its far boundary.
+        frame.loc[90, "high"] = 123.0
     return frame
 
 
@@ -203,7 +236,8 @@ def test_gap_through_source_prz_is_not_terminal_completion() -> None:
     ]
 
     assert target_states
-    assert target_states[0].state == "active"
+    assert target_states[0].state == "invalidated"
+    assert target_states[0].reason == "unobserved_far_side_passage_retired_policy_v2"
     assert target_states[0].audit.first_prz_entry_bar is None
     assert target_states[0].audit.terminal_bar is None
     assert not any(
@@ -211,3 +245,17 @@ def test_gap_through_source_prz_is_not_terminal_completion() -> None:
         and item.source_nodes == (10, 30, 50, 70)
         for item in scan.completions
     )
+
+
+def test_terminal_requires_actual_tests_of_all_zone_measurements() -> None:
+    projection = next(p for p in event_sourced_hierarchical_xabc_projections(
+        _gartley_path(terminal=True), scales=(3,)) if p.pattern_id == "gartley")
+    # Independent numbers: PRZ [119.57, 121.4]. First bar reaches the far end,
+    # but skips the near boundary. Second tests near side only; third retests all.
+    frame = pd.DataFrame({"low": [130, 118, 120, 119], "high": [131, 120, 122, 122]})
+    for end in (1, 2, 3):
+        audit = _recognition_source_execution(
+            frame, signal_bar=0, direction=projection.direction, prz=projection.prz,
+            reaction_anchor_price=200, observation_end_bar=end,
+        )
+        assert audit.terminal_bar == (3 if end == 3 else None)

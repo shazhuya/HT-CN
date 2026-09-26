@@ -1,0 +1,47 @@
+name: Recognition Event and PRZ Case Audit
+on:
+  push:
+    branches: [m9/recognition-trustworthiness-v1]
+    paths:
+      - src/htcn/harmonic/source_completion.py
+      - tests/harmonic/test_source_completion.py
+      - scripts/m9_recognition_gate4c_case_audit.py
+      - research/recognition-gate4c-case-selection-v1.json
+      - .github/workflows/recognition-case-audit.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  cases:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install pinned dependencies
+        run: |
+          python -m pip install -r requirements-dev.lock
+          python -m pip install --no-deps -e .
+      - name: Check event semantics and compact recovery
+        run: python -m pytest tests/harmonic/test_source_completion.py tests/test_project_os_runtime.py -q
+      - name: Restore exact pinned market snapshot artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: m2-autonomous-research-80421ff54cb0338906a3d34e5242740ec2d3469d
+          repository: shazhuya/HT-CN
+          run-id: 35114589602
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: artifacts/ci-research
+      - name: Independently calculate frozen PRZ cases
+        run: python scripts/m9_recognition_gate4c_case_audit.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recognition-case-audit-${{ github.sha }}
+          path: artifacts/reports/m9-recognition-gate4c-case-audit.json
+          if-no-files-found: error
