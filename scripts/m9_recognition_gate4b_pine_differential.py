@@ -60,10 +60,14 @@ def _v2_events(
     *,
     scales: tuple[int, ...],
     detector_name: str,
+    max_leg_step: int = 7,
+    max_total_skips: int = 12,
 ) -> list[Event]:
     scan = scan_source_completion_events(
         frame,
         scales=scales,
+        max_leg_step=max_leg_step,
+        max_total_skips=max_total_skips,
         lifetime_bars=LIFETIME_BARS,
     )
     return [
@@ -186,12 +190,17 @@ def main() -> int:
     totals = {
         "v2": 0,
         "v2_pine_scales": 0,
+        "v2_pine_scales_consecutive": 0,
         "pine": 0,
         "exact_structure_common": 0,
         "pine_scale_exact_structure_common": 0,
         "pine_scale_exact_structure_terminal_within_5": 0,
         "pine_scale_same_family_terminal_within_5": 0,
         "pine_scale_any_family_terminal_within_5": 0,
+        "consecutive_exact_structure_common": 0,
+        "consecutive_exact_structure_terminal_within_5": 0,
+        "consecutive_same_family_terminal_within_5": 0,
+        "consecutive_any_family_terminal_within_5": 0,
         "exact_structure_terminal_within_5": 0,
         "v2_same_family_terminal_within_5": 0,
         "pine_same_family_terminal_within_5": 0,
@@ -228,6 +237,14 @@ def main() -> int:
             scales=PINE_MATCHED_SCALES,
             detector_name="hierarchical_v2_pine_scales",
         )
+        v2_pine_scales_consecutive = _v2_events(
+            frame,
+            instrument_id,
+            scales=PINE_MATCHED_SCALES,
+            detector_name="consecutive_v2_pine_scales",
+            max_leg_step=1,
+            max_total_skips=0,
+        )
         pine = _pine_events(frame, instrument_id)
         totals["v2"] += len(v2)
         totals["pine"] += len(pine)
@@ -243,15 +260,26 @@ def main() -> int:
 
         v2_pine_exact = {item.structure_key: item for item in v2_pine_scales}
         pine_scale_common_keys = set(v2_pine_exact) & set(pine_exact)
+        consecutive_exact = {
+            item.structure_key: item for item in v2_pine_scales_consecutive
+        }
+        consecutive_common_keys = set(consecutive_exact) & set(pine_exact)
         pine_scale_exact_near = sum(
             abs(v2_pine_exact[key].terminal_bar - pine_exact[key].terminal_bar)
             <= NEAR_TERMINAL_BARS
             for key in pine_scale_common_keys
         )
+
+        consecutive_exact_near = sum(
+            abs(consecutive_exact[key].terminal_bar - pine_exact[key].terminal_bar)
+            <= NEAR_TERMINAL_BARS
+            for key in consecutive_common_keys
+        )
         totals["exact_structure_common"] += len(common_keys)
         totals["exact_structure_terminal_within_5"] += exact_near
 
         totals["v2_pine_scales"] += len(v2_pine_scales)
+        totals["v2_pine_scales_consecutive"] += len(v2_pine_scales_consecutive)
         totals["pine_scale_exact_structure_common"] += len(pine_scale_common_keys)
         totals["pine_scale_exact_structure_terminal_within_5"] += pine_scale_exact_near
         totals["pine_scale_same_family_terminal_within_5"] += sum(
@@ -265,6 +293,25 @@ def main() -> int:
         totals["pine_scale_any_family_terminal_within_5"] += sum(
             1
             for item in v2_pine_scales
+            if (
+                (nearest := _nearest(item, pine, same_family=False)) is not None
+                and abs(nearest[1]) <= NEAR_TERMINAL_BARS
+            )
+        )
+
+        totals["consecutive_exact_structure_common"] += len(consecutive_common_keys)
+        totals["consecutive_exact_structure_terminal_within_5"] += consecutive_exact_near
+        totals["consecutive_same_family_terminal_within_5"] += sum(
+            1
+            for item in v2_pine_scales_consecutive
+            if (
+                (nearest := _nearest(item, pine, same_family=True)) is not None
+                and abs(nearest[1]) <= NEAR_TERMINAL_BARS
+            )
+        )
+        totals["consecutive_any_family_terminal_within_5"] += sum(
+            1
+            for item in v2_pine_scales_consecutive
             if (
                 (nearest := _nearest(item, pine, same_family=False)) is not None
                 and abs(nearest[1]) <= NEAR_TERMINAL_BARS
@@ -345,9 +392,11 @@ def main() -> int:
                 "bars": len(frame),
                 "v2_completions": len(v2),
                 "v2_pine_scale_completions": len(v2_pine_scales),
+                "v2_pine_scale_consecutive_completions": len(v2_pine_scales_consecutive),
                 "pine_completions": len(pine),
                 "exact_structure_common": len(common_keys),
                 "pine_scale_exact_structure_common": len(pine_scale_common_keys),
+                "consecutive_exact_structure_common": len(consecutive_common_keys),
                 "exact_structure_terminal_within_5": exact_near,
                 "v2_same_family_terminal_within_5": v2_same_near,
                 "pine_same_family_terminal_within_5": pine_same_near,
@@ -377,6 +426,10 @@ def main() -> int:
             ),
             "v2_native_scales": list(V2_NATIVE_SCALES),
             "v2_pine_matched_scales": list(PINE_MATCHED_SCALES),
+            "v2_pine_matched_consecutive_ablation": {
+                "max_leg_step": 1,
+                "max_total_skips": 0,
+            },
             "pine": (
                 "standalone Pine R3.4 behavioral-parity channel; source-cleared standard "
                 "XABCD only; completed when Pine first_test_bar is observed"
@@ -433,6 +486,30 @@ def main() -> int:
                 totals["pine_scale_any_family_terminal_within_5"]
                 / totals["v2_pine_scales"]
                 if totals["v2_pine_scales"]
+                else 0.0
+            ),
+
+            "consecutive_exact_structure_common_rate_over_v2": (
+                totals["consecutive_exact_structure_common"]
+                / totals["v2_pine_scales_consecutive"]
+                if totals["v2_pine_scales_consecutive"]
+                else 0.0
+            ),
+            "consecutive_exact_structure_common_rate_over_pine": (
+                totals["consecutive_exact_structure_common"] / pine_total
+                if pine_total
+                else 0.0
+            ),
+            "consecutive_same_family_near_pine_rate": (
+                totals["consecutive_same_family_terminal_within_5"]
+                / totals["v2_pine_scales_consecutive"]
+                if totals["v2_pine_scales_consecutive"]
+                else 0.0
+            ),
+            "consecutive_any_family_near_pine_rate": (
+                totals["consecutive_any_family_terminal_within_5"]
+                / totals["v2_pine_scales_consecutive"]
+                if totals["v2_pine_scales_consecutive"]
                 else 0.0
             ),
         },
