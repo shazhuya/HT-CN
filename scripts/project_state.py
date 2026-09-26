@@ -204,6 +204,16 @@ def _validate_product_completion_policy(
     if mainline.get("blocked_by_natural_time_wait_for_evidence") is not False:
         errors.append("M9 must not be blocked by natural-time evidence waiting")
 
+    recognition = policy.get("recognition_engine_priority") or {}
+    if recognition.get("priority") != "highest":
+        errors.append("harmonic recognition must remain the highest product-validity priority")
+    if recognition.get("decision") != "D-091":
+        errors.append("recognition priority must bind D-091")
+    if recognition.get("product_validity_gate") is not True:
+        errors.append("recognition engine must remain a product-validity gate")
+    if recognition.get("blocks_peripheral_development_when_untrusted") is not True:
+        errors.append("untrusted recognition must block peripheral development displacement")
+
     background = policy.get("background_tracks") or {}
     evidence = background.get("evidence") or {}
     calibration = background.get("calibration") or {}
@@ -253,6 +263,7 @@ def _validate_product_completion_policy(
         "requires_zero_cli_daily_operation",
         "requires_formal_release_gates",
         "post_release_evidence_continues",
+        "requires_trustworthy_harmonic_recognition",
     )
     for key in required_true:
         if release.get(key) is not True:
@@ -299,6 +310,13 @@ def _validate_product_completion_policy(
     if productization.get("routine_user_computer_dependency") is not False:
         errors.append("PROJECT_STATE must not make user computer a routine dependency")
 
+    if productization.get("recognition_engine_priority") != "highest":
+        errors.append("PROJECT_STATE must keep recognition_engine_priority=highest")
+    if productization.get("recognition_engine_product_validity_gate") is not True:
+        errors.append("PROJECT_STATE must keep recognition as a product-validity gate")
+    if productization.get("recognition_priority_decision") != "D-091":
+        errors.append("PROJECT_STATE recognition priority must bind D-091")
+
     activation = str(productization.get("roadmap_activation") or "")
     if activation in {"active", "closed"}:
         if milestones.get("active") != "M9":
@@ -313,8 +331,10 @@ def _product_completion_policy_index(policy: dict[str, Any]) -> str:
     gate = policy.get("evidence_gate") or {}
     computer = policy.get("user_computer_policy") or {}
     release = policy.get("stable_product_release_definition") or {}
+    recognition = policy.get("recognition_engine_priority") or {}
     return "\n".join([
         "- canonical policy: `governance/PRODUCT_COMPLETION_POLICY.json`",
+        f"- recognition priority: `{recognition.get('priority')}`; product-validity gate: `{recognition.get('product_validity_gate')}`; decision: `{recognition.get('decision')}`",
         f"- development mainline: `{mainline.get('milestone')}`",
         f"- background evidence: `{(tracks.get('evidence') or {}).get('milestone')}` (non-blocking)",
         f"- calibration: `{(tracks.get('calibration') or {}).get('milestone')}` (claims-only when evidence is sufficient)",
@@ -682,6 +702,7 @@ def build_resume_pack(state: dict[str, Any]) -> str:
     recovery_questions = """## Blank-session recovery questions
 
 - 当前 canonical release 是什么？
+- 当前 Recognition Gate / blocker 是什么，识别引擎是否已达到可信 production gate？
 - 当前 Milestone/Phase 与 active Change 是什么？
 - 当前 Gate / blocker / next major task 是什么？
 - 哪些 Source/Methodology 冻结不能改？
