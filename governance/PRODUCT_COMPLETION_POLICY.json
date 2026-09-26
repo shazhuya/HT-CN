@@ -85,7 +85,8 @@
     "requires_reliability_and_recovery": true,
     "requires_zero_cli_daily_operation": true,
     "requires_formal_release_gates": true,
-    "post_release_evidence_continues": true
+    "post_release_evidence_continues": true,
+    "requires_trustworthy_harmonic_recognition": true
   },
   "productization_phases": [
     "M9.0_product_completion_policy_and_roadmap",
@@ -97,10 +98,35 @@
     "M9.6_stable_product_release_acceptance"
   ],
   "handoff_invariants": [
+    "harmonic recognition trustworthiness is the highest product-validity gate",
     "M9 is the development mainline after M9.0",
     "M7 remains a background evidence track and must not become daily manual user work",
     "M8 and ISSUE-0066 gate claims, not product completion",
     "user computer is not routine project infrastructure",
-    "do not delay M9 waiting for natural evidence accumulation"
-  ]
+    "do not delay M9 waiting for natural evidence accumulation",
+    "when recognition is not trustworthy, peripheral product work must not displace recognition correctness"
+  ],
+  "recognition_engine_priority": {
+    "priority": "highest",
+    "decision": "D-091",
+    "product_validity_gate": true,
+    "principle": "If harmonic recognition cannot reliably recover correct structures or produces materially incorrect structures/completion events, HT-CN has no meaningful harmonic-research product value.",
+    "blocks_peripheral_development_when_untrusted": true,
+    "required_evidence": [
+      "fixed_ground_truth_recall_and_precision",
+      "node_correctness",
+      "no_lookahead_and_history_immutability",
+      "completion_semantics_correctness",
+      "invalidation_and_expiry",
+      "real_market_false_positive_and_duplicate_control",
+      "blind_holdout_before_production_promotion"
+    ],
+    "forbidden_substitutes": [
+      "candidate_count",
+      "UI_visibility",
+      "test_count",
+      "code_volume",
+      "relaxing_Carney_identity_or_Source_Raw_PRZ"
+    ]
+  }
 }
