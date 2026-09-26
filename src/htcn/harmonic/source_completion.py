@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import pandas as pd
 
 from .discovery import iter_hierarchical_xabc_frontier_windows
-from .execution import SourceExecutionAudit, observe_source_execution
+from .execution import SourceExecutionAudit
 from .models import HarmonicPoint, PatternDirection
 from .pivots import detect_pivot_events, visible_confirmed_pivots
 from .prz import PotentialReversalZone
@@ -196,6 +196,121 @@ def event_sourced_hierarchical_xabc_projections(
     )
 
 
+def _recognition_source_execution(
+    frame: pd.DataFrame,
+    *,
+    signal_bar: int,
+    direction: PatternDirection,
+    prz: PotentialReversalZone,
+    reaction_anchor_price: float,
+    observation_end_bar: int,
+) -> SourceExecutionAudit:
+    """Recognition-V2 Source clock with an explicit PRZ-contact requirement.
+
+    The frozen M4 observer is preserved unchanged for historical prospective evidence.
+    Recognition V2 fixes a semantic inconsistency with source_lifecycle: a terminal-side
+    test must occur on a bar that actually overlaps Source Raw PRZ. A bar wholly beyond
+    the zone is a gap-through, not an observable PRZ test.
+    """
+
+    if not prz.has_source_prz:
+        return SourceExecutionAudit(
+            signal_bar=signal_bar,
+            direction=direction,
+            state="source_prz_unresolved",
+            source_prz_available=False,
+            source_prz_low=None,
+            source_prz_high=None,
+            first_prz_entry_bar=None,
+            terminal_bar=None,
+            terminal_price=None,
+            execution_start_bar=None,
+            pez_low=None,
+            pez_high=None,
+            target_382=None,
+            target_618=None,
+        )
+
+    assert prz.source_prz_low is not None and prz.source_prz_high is not None
+    source_low = float(prz.source_prz_low)
+    source_high = float(prz.source_prz_high)
+    end_bar = min(int(observation_end_bar), len(frame) - 1)
+    first_entry: int | None = None
+    terminal_bar: int | None = None
+    terminal_price: float | None = None
+
+    for bar in range(signal_bar + 1, end_bar + 1):
+        row = frame.iloc[bar]
+        low = float(row["low"])
+        high = float(row["high"])
+        overlaps = high >= source_low and low <= source_high
+        if not overlaps:
+            continue
+        if first_entry is None:
+            first_entry = bar
+        if direction is PatternDirection.BULLISH and low <= source_low:
+            terminal_bar = bar
+            terminal_price = low
+            break
+        if direction is PatternDirection.BEARISH and high >= source_high:
+            terminal_bar = bar
+            terminal_price = high
+            break
+
+    if terminal_bar is None or terminal_price is None:
+        state = (
+            "prz_entered_waiting_terminal"
+            if first_entry is not None
+            else "awaiting_prz_entry"
+        )
+        return SourceExecutionAudit(
+            signal_bar=signal_bar,
+            direction=direction,
+            state=state,
+            source_prz_available=True,
+            source_prz_low=source_low,
+            source_prz_high=source_high,
+            first_prz_entry_bar=first_entry,
+            terminal_bar=None,
+            terminal_price=None,
+            execution_start_bar=None,
+            pez_low=None,
+            pez_high=None,
+            target_382=None,
+            target_618=None,
+        )
+
+    if direction is PatternDirection.BULLISH:
+        pez_low = min(source_low, terminal_price)
+        pez_high = source_high
+        sign = 1.0
+    else:
+        pez_low = source_low
+        pez_high = max(source_high, terminal_price)
+        sign = -1.0
+    span = abs(float(reaction_anchor_price) - terminal_price)
+    if span <= 0:
+        raise ValueError(
+            "reaction anchor and Terminal Price Bar must define a positive span"
+        )
+    return SourceExecutionAudit(
+        signal_bar=signal_bar,
+        direction=direction,
+        state="terminal_observed",
+        source_prz_available=True,
+        source_prz_low=source_low,
+        source_prz_high=source_high,
+        first_prz_entry_bar=first_entry,
+        terminal_bar=terminal_bar,
+        terminal_price=terminal_price,
+        execution_start_bar=terminal_bar + 1,
+        pez_low=pez_low,
+        pez_high=pez_high,
+        target_382=terminal_price + sign * 0.382 * span,
+        target_618=terminal_price + sign * 0.618 * span,
+    )
+
+
 def _first_c_extreme_breach(
     frame: pd.DataFrame,
     projection: SourceProjection,
@@ -237,7 +352,7 @@ def _projection_state(
         if invalidation_bar is not None
         else max_end
     )
-    audit = observe_source_execution(
+    audit = _recognition_source_execution(
         frame,
         signal_bar=projection.known_at,
         direction=projection.direction,
