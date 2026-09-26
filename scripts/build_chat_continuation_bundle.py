@@ -110,7 +110,7 @@ def _new_chat_prompt(state: dict[str, Any], head: str) -> str:
 1. 按 `START_HERE.md` 和 `MANIFEST.json` 检查续接包；
 2. 读取仓库权威顺序、PROJECT_STATE、PRODUCT_COMPLETION_POLICY、Blueprint、active Change/spec、最新 Attempt、Open Issues、Decision Index 与 Source Coverage；
 3. 如可访问 GitHub，核对 canonical main；如不能，明确标注“未在线核对”，不得假装已验证；
-4. 先返回一份 **Bootstrap Receipt**，逐项回答协议规定的 12 个问题；
+4. 先返回一份 **Bootstrap Receipt**，逐项回答协议规定的 13 个问题；
 5. 若 bundle、Git、state、ledger 存在任何矛盾，停止核心开发，先报告差异；
 6. Receipt 合格后再执行我写在最后的任务；
 7. 工作结束前，把成功、失败、用户修改、blocker、Gate 和 next action 写回仓库，不得只留在聊天里；
