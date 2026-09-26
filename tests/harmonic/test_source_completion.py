@@ -90,3 +90,96 @@ def test_projection_does_not_become_completed_without_future_terminal_test() -> 
         and item.source_nodes == (10, 30, 50, 70)
         for item in scan.completions
     )
+
+
+def test_c_extreme_breach_invalidates_and_later_prz_touch_cannot_resurrect() -> None:
+    frame = _gartley_path(terminal=True)
+    frame.loc[75, "high"] = 185.0
+
+    scan = scan_source_completion_events(frame, scales=(3,))
+    target_states = [
+        item
+        for item in scan.states
+        if item.projection.pattern_id == "gartley"
+        and item.projection.node_indices == (10, 30, 50, 70)
+    ]
+
+    assert target_states
+    assert target_states[0].state == "invalidated"
+    assert target_states[0].closed_bar == 75
+    assert target_states[0].reason == "confirmed_c_extreme_breached_before_terminal"
+    assert not any(
+        item.pattern_id == "gartley"
+        and item.source_nodes == (10, 30, 50, 70)
+        for item in scan.completions
+    )
+
+
+def test_expired_projection_cannot_be_completed_by_later_terminal_touch() -> None:
+    frame = _gartley_path(terminal=True)
+
+    scan = scan_source_completion_events(
+        frame,
+        scales=(3,),
+        lifetime_bars=5,
+    )
+    target_states = [
+        item
+        for item in scan.states
+        if item.projection.pattern_id == "gartley"
+        and item.projection.node_indices == (10, 30, 50, 70)
+    ]
+
+    assert target_states
+    assert target_states[0].state == "expired"
+    assert target_states[0].closed_bar == target_states[0].projection.known_at + 5
+    assert not any(
+        item.pattern_id == "gartley"
+        and item.source_nodes == (10, 30, 50, 70)
+        for item in scan.completions
+    )
+
+
+def test_completed_terminal_is_immutable_when_future_tail_is_appended() -> None:
+    frame = _gartley_path(terminal=True)
+    prefix = frame.iloc[:96].reset_index(drop=True)
+
+    prefix_scan = scan_source_completion_events(prefix, scales=(3,))
+    full_scan = scan_source_completion_events(frame, scales=(3,))
+
+    def terminal(scan):
+        return next(
+            item
+            for item in scan.completions
+            if item.pattern_id == "gartley"
+            and item.source_nodes == (10, 30, 50, 70)
+        )
+
+    earlier = terminal(prefix_scan)
+    later = terminal(full_scan)
+    assert earlier.known_at == later.known_at
+    assert earlier.terminal_bar == later.terminal_bar
+    assert earlier.terminal_price == later.terminal_price
+
+
+def test_same_bar_c_breach_and_terminal_is_fail_closed() -> None:
+    frame = _gartley_path(terminal=True)
+    frame.loc[80, "high"] = 185.0
+    frame.loc[80, "low"] = 118.0
+
+    scan = scan_source_completion_events(frame, scales=(3,))
+    target_states = [
+        item
+        for item in scan.states
+        if item.projection.pattern_id == "gartley"
+        and item.projection.node_indices == (10, 30, 50, 70)
+    ]
+
+    assert target_states
+    assert target_states[0].state == "invalidated"
+    assert target_states[0].closed_bar == 80
+    assert not any(
+        item.pattern_id == "gartley"
+        and item.source_nodes == (10, 30, 50, 70)
+        for item in scan.completions
+    )
