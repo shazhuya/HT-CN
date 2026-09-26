@@ -18,7 +18,8 @@ DEFAULT_DATA_DIR = ROOT / "artifacts" / "ci-research" / "data"
 REPORT_PATH = ROOT / "artifacts" / "reports" / "m9-recognition-gate4b-pine-differential.json"
 
 SOURCE_CLEARED_STANDARD = {"gartley", "bat", "butterfly", "crab", "deep_crab"}
-V2_SCALES = (3, 5, 8)
+V2_NATIVE_SCALES = (3, 5, 8)
+PINE_MATCHED_SCALES = (5, 10, 20)
 LIFETIME_BARS = 180
 NEAR_TERMINAL_BARS = 5
 PINE_CAPACITY = 5000
@@ -53,15 +54,21 @@ def _date(frame: pd.DataFrame, index: int) -> str:
     return pd.Timestamp(frame.iloc[index]["trade_date"]).date().isoformat()
 
 
-def _v2_events(frame: pd.DataFrame, instrument_id: str) -> list[Event]:
+def _v2_events(
+    frame: pd.DataFrame,
+    instrument_id: str,
+    *,
+    scales: tuple[int, ...],
+    detector_name: str,
+) -> list[Event]:
     scan = scan_source_completion_events(
         frame,
-        scales=V2_SCALES,
+        scales=scales,
         lifetime_bars=LIFETIME_BARS,
     )
     return [
         Event(
-            detector="hierarchical_v2_source_terminal",
+            detector=detector_name,
             instrument_id=instrument_id,
             pattern_id=item.pattern_id,
             direction=item.direction.value,
@@ -178,8 +185,13 @@ def main() -> int:
     high_information: list[dict[str, Any]] = []
     totals = {
         "v2": 0,
+        "v2_pine_scales": 0,
         "pine": 0,
         "exact_structure_common": 0,
+        "pine_scale_exact_structure_common": 0,
+        "pine_scale_exact_structure_terminal_within_5": 0,
+        "pine_scale_same_family_terminal_within_5": 0,
+        "pine_scale_any_family_terminal_within_5": 0,
         "exact_structure_terminal_within_5": 0,
         "v2_same_family_terminal_within_5": 0,
         "pine_same_family_terminal_within_5": 0,
@@ -204,7 +216,18 @@ def main() -> int:
         frame = snapshot.frame.reset_index(drop=True)
         name = str(instrument.get("name") or instrument_id)
         bucket = str(instrument.get("bucket") or "")
-        v2 = _v2_events(frame, instrument_id)
+        v2 = _v2_events(
+            frame,
+            instrument_id,
+            scales=V2_NATIVE_SCALES,
+            detector_name="hierarchical_v2_native",
+        )
+        v2_pine_scales = _v2_events(
+            frame,
+            instrument_id,
+            scales=PINE_MATCHED_SCALES,
+            detector_name="hierarchical_v2_pine_scales",
+        )
         pine = _pine_events(frame, instrument_id)
         totals["v2"] += len(v2)
         totals["pine"] += len(pine)
@@ -217,8 +240,36 @@ def main() -> int:
             <= NEAR_TERMINAL_BARS
             for key in common_keys
         )
+
+        v2_pine_exact = {item.structure_key: item for item in v2_pine_scales}
+        pine_scale_common_keys = set(v2_pine_exact) & set(pine_exact)
+        pine_scale_exact_near = sum(
+            abs(v2_pine_exact[key].terminal_bar - pine_exact[key].terminal_bar)
+            <= NEAR_TERMINAL_BARS
+            for key in pine_scale_common_keys
+        )
         totals["exact_structure_common"] += len(common_keys)
         totals["exact_structure_terminal_within_5"] += exact_near
+
+        totals["v2_pine_scales"] += len(v2_pine_scales)
+        totals["pine_scale_exact_structure_common"] += len(pine_scale_common_keys)
+        totals["pine_scale_exact_structure_terminal_within_5"] += pine_scale_exact_near
+        totals["pine_scale_same_family_terminal_within_5"] += sum(
+            1
+            for item in v2_pine_scales
+            if (
+                (nearest := _nearest(item, pine, same_family=True)) is not None
+                and abs(nearest[1]) <= NEAR_TERMINAL_BARS
+            )
+        )
+        totals["pine_scale_any_family_terminal_within_5"] += sum(
+            1
+            for item in v2_pine_scales
+            if (
+                (nearest := _nearest(item, pine, same_family=False)) is not None
+                and abs(nearest[1]) <= NEAR_TERMINAL_BARS
+            )
+        )
 
         v2_same_near = 0
         v2_any_near = 0
@@ -293,8 +344,10 @@ def main() -> int:
                 "bucket": bucket,
                 "bars": len(frame),
                 "v2_completions": len(v2),
+                "v2_pine_scale_completions": len(v2_pine_scales),
                 "pine_completions": len(pine),
                 "exact_structure_common": len(common_keys),
+                "pine_scale_exact_structure_common": len(pine_scale_common_keys),
                 "exact_structure_terminal_within_5": exact_near,
                 "v2_same_family_terminal_within_5": v2_same_near,
                 "pine_same_family_terminal_within_5": pine_same_near,
@@ -322,6 +375,8 @@ def main() -> int:
                 "event-sourced Hierarchical XABC -> frozen Source Raw PRZ -> "
                 "validity clock -> PRZ-contact Source Terminal"
             ),
+            "v2_native_scales": list(V2_NATIVE_SCALES),
+            "v2_pine_matched_scales": list(PINE_MATCHED_SCALES),
             "pine": (
                 "standalone Pine R3.4 behavioral-parity channel; source-cleared standard "
                 "XABCD only; completed when Pine first_test_bar is observed"
@@ -357,6 +412,29 @@ def main() -> int:
                 if pine_total
                 else 0.0
             ),
+
+            "pine_scale_exact_structure_common_rate_over_v2": (
+                totals["pine_scale_exact_structure_common"] / totals["v2_pine_scales"]
+                if totals["v2_pine_scales"]
+                else 0.0
+            ),
+            "pine_scale_exact_structure_common_rate_over_pine": (
+                totals["pine_scale_exact_structure_common"] / pine_total
+                if pine_total
+                else 0.0
+            ),
+            "pine_scale_same_family_near_pine_rate": (
+                totals["pine_scale_same_family_terminal_within_5"]
+                / totals["v2_pine_scales"]
+                if totals["v2_pine_scales"]
+                else 0.0
+            ),
+            "pine_scale_any_family_near_pine_rate": (
+                totals["pine_scale_any_family_terminal_within_5"]
+                / totals["v2_pine_scales"]
+                if totals["v2_pine_scales"]
+                else 0.0
+            ),
         },
         "symbols": symbol_reports,
         "high_information_disagreements": sorted(
@@ -369,10 +447,10 @@ def main() -> int:
             ),
         )[:160],
         "interpretation_boundary": (
-            "Pine R3.4 is a disagreement miner, not ground truth. Agreement does not prove "
-            "correctness and disagreement does not prove an error. The report exists to select "
-            "high-information real-market cases for source-rule and swing-structure adjudication "
-            "without tuning Detector V2 to Pine."
+            "Pine R3.4 is a disagreement miner, not ground truth. Native V2 uses different "
+            "pivot scales, so this report also runs a diagnostic V2 copy on Pine's 5/10/20 "
+            "scales to separate scale mismatch from algorithm mismatch. Neither comparison "
+            "authorizes tuning Detector V2 to Pine."
         ),
     }
 
