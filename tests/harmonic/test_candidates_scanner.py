@@ -68,3 +68,23 @@ def test_completed_scanner_identifies_exact_gartley() -> None:
     window = next(iter(iter_completed_xabcd_windows(_gartley_pivots())))
     matches = classify_completed_xabcd(window)
     assert [match.pattern_id for match in matches] == ["gartley"]
+
+
+def test_source_conflict_alternate_bat_is_fail_closed_by_default() -> None:
+    pivots = [
+        Pivot(index=0, price=100.0, kind=PivotKind.LOW, scale=2, confirmed_at=2),
+        Pivot(index=10, price=200.0, kind=PivotKind.HIGH, scale=2, confirmed_at=12),
+        Pivot(index=20, price=161.8, kind=PivotKind.LOW, scale=2, confirmed_at=22),
+        Pivot(index=30, price=191.8252, kind=PivotKind.HIGH, scale=2, confirmed_at=32),
+        Pivot(index=40, price=100.0, kind=PivotKind.LOW, scale=2, confirmed_at=42),
+    ]
+    window = SwingWindow(scale=2, pivots=tuple(pivots))
+
+    production = classify_completed_xabcd(window)
+    research = classify_completed_xabcd(
+        window,
+        include_source_conflict_patterns=True,
+    )
+
+    assert production == ()
+    assert [match.pattern_id for match in research] == ["alternate_bat"]
