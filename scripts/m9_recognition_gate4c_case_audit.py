@@ -95,8 +95,28 @@ def audit() -> dict:
                     if float(frame.iloc[i]["low"]) <= measurement["price"] <=
                     float(frame.iloc[i]["high"])]
             touched[measurement["name"]] = hits[0] if hits else None
+        # Independent raw-bar envelope evidence: the graph checks confirmed
+        # pivots, while an omitted/unconfirmed extreme can still cross a leg.
+        # These are diagnostics, not a new Source identity or rejection rule.
+        leg_checks = []
+        for left, right in zip(points, points[1:], strict=False):
+            interior = frame.iloc[left.index + 1:right.index]
+            lower, upper = sorted((left.price, right.price))
+            below = [int(i) for i in range(left.index + 1, right.index)
+                     if float(frame.iloc[i]["low"]) < lower]
+            above = [int(i) for i in range(left.index + 1, right.index)
+                     if float(frame.iloc[i]["high"]) > upper]
+            leg_checks.append({
+                "leg": left.label + right.label,
+                "endpoint_bounds": [lower, upper],
+                "interior_low": None if interior.empty else float(interior["low"].min()),
+                "interior_high": None if interior.empty else float(interior["high"].max()),
+                "below_endpoint_bars": below, "above_endpoint_bars": above,
+                "raw_envelope_contained": not below and not above,
+            })
         cases.append({
             **case, "snapshot_sha256": snapshot.sha256, "nodes": nodes,
+            "raw_leg_envelope_checks": leg_checks,
             "b_xa": float(ab / xa), "c_ab": float(bc / ab),
             "components": measured, "source_prz": [prz.source_prz_low, prz.source_prz_high],
             "independent_width_xa": (max(selected) - min(selected)) / float(xa),
@@ -118,7 +138,7 @@ def audit() -> dict:
             "observation_rows": [
                 {"index": i, "date": frame.iloc[i]["trade_date"].date().isoformat(),
                  **{k: float(frame.iloc[i][k]) for k in ["open", "high", "low", "close"]}}
-                for i in range(case["known_at"], case["terminal_bar"] + 1)
+                for i in range(case["source_nodes"][0], case["terminal_bar"] + 1)
             ],
         })
     groups = []
