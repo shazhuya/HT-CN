@@ -348,3 +348,70 @@ def test_grouping_preserves_competing_family_without_identity_promotion() -> Non
     assert len(grouped) == 1
     assert len(grouped[0].interpretations) == 4
     assert {e.pattern_id for e in grouped[0].interpretations} == {"bat", "gartley"}
+
+
+def test_nonfinite_latest_bar_cannot_create_terminal_signals() -> None:
+    for bearish in (False, True):
+        frame = _gartley_path(terminal=True).iloc[:91].copy()
+        frame.loc[90, "low"] = float("-inf")
+        if bearish:
+            high, low = frame["high"].copy(), frame["low"].copy()
+            frame["high"], frame["low"] = 400 - low, 400 - high
+        try:
+            scan_source_completion_events(frame, scales=(3,))
+        except ValueError as error:
+            assert "finite" in str(error)
+        else:
+            raise AssertionError("nonfinite tail must not become a completed harmonic")
+
+
+def test_invalid_prices_are_errors_not_no_pattern_results() -> None:
+    for column, value in [("high", float("inf")), ("low", float("nan")),
+                          ("low", 0.0), ("low", -1.0), ("low", 999.0)]:
+        frame = _gartley_path(terminal=True)
+        frame.loc[80, column] = value
+        try:
+            event_sourced_hierarchical_xabc_projections(frame, scales=(3,))
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"invalid {column}={value} silently accepted")
+
+
+def test_valid_price_input_preserves_both_directions_and_does_not_mutate_frame() -> None:
+    for bearish in (False, True):
+        frame = _gartley_path(terminal=True)
+        if bearish:
+            high, low = frame["high"].copy(), frame["low"].copy()
+            frame["high"], frame["low"] = 400 - low, 400 - high
+        before = frame.copy(deep=True)
+        result = scan_source_completion_events(frame, scales=(3,))
+        target = next(e for e in result.completions if e.pattern_id == "gartley"
+                      and e.source_nodes == (10, 30, 50, 70))
+        assert target.direction.value == ("bearish" if bearish else "bullish")
+        assert target.terminal_price == (281.0 if bearish else 119.0)
+        pd.testing.assert_frame_equal(frame, before)
+
+
+def test_completed_event_rejects_nonfinite_payload_even_when_bypassing_scan() -> None:
+    event = _market_completion_scan().completions[0]
+    for field in ("terminal_price", "source_prz_low", "source_prz_high", "pez_low",
+                  "pez_high", "target_382", "target_618"):
+        try:
+            replace(event, audit=replace(event.audit, **{field: float("nan")}))
+        except ValueError as error:
+            assert "finite" in str(error)
+        else:
+            raise AssertionError(f"nonfinite {field} escaped event validation")
+
+
+def test_empty_price_series_is_valid_but_text_and_bool_prices_are_not() -> None:
+    assert scan_source_completion_events(pd.DataFrame(columns=["high", "low"])).completions == ()
+    for value in ("123", True):
+        frame = pd.DataFrame({"high": [value], "low": [1.0]})
+        try:
+            scan_source_completion_events(frame)
+        except ValueError as error:
+            assert "numeric" in str(error)
+        else:
+            raise AssertionError("non-numeric price dtype must not be silently coerced")

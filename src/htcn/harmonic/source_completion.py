@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 
 import pandas as pd
 
@@ -16,6 +17,31 @@ from .prz import PotentialReversalZone
 from .scanner import project_forming_xabcd
 
 PRODUCTION_MAX_TOTAL_SKIPS = 8
+
+
+def _validate_recognition_prices(frame: pd.DataFrame) -> None:
+    """Reject corrupt source prices, including the unconfirmed live tail.
+
+    Invalid input is an error, not a valid scan with zero patterns. Keep this
+    guard on Recognition V2; frozen historical evaluators are unchanged.
+    """
+    missing = {"high", "low"}.difference(frame.columns)
+    if missing:
+        raise ValueError(f"missing recognition price columns: {sorted(missing)}")
+    if frame.empty:
+        return
+    for column in ("high", "low"):
+        if not pd.api.types.is_numeric_dtype(frame[column]) or pd.api.types.is_bool_dtype(
+            frame[column]
+        ):
+            raise ValueError(f"recognition {column} must contain numeric prices")
+        for index, value in enumerate(frame[column]):
+            if pd.isna(value) or not isfinite(float(value)):
+                raise ValueError(f"recognition {column} must be finite at bar {index}")
+            if value <= 0:
+                raise ValueError(f"recognition {column} must be positive at bar {index}")
+    if (frame["high"] < frame["low"]).any():
+        raise ValueError("recognition prices contain high < low")
 
 
 @dataclass(frozen=True, slots=True, order=True)
@@ -91,6 +117,13 @@ class SourceCompletionEvent:
             raise ValueError("SourceCompletionEvent requires a terminal_observed audit")
         if self.audit.terminal_bar is None or self.audit.terminal_price is None:
             raise ValueError("terminal_observed audit must expose terminal bar/price")
+        for name in ("terminal_price", "source_prz_low", "source_prz_high",
+                     "pez_low", "pez_high", "target_382", "target_618"):
+            value = getattr(self.audit, name)
+            if value is not None and not isfinite(float(value)):
+                raise ValueError(f"SourceCompletionEvent requires finite {name}")
+        if self.audit.terminal_price <= 0:
+            raise ValueError("SourceCompletionEvent requires positive terminal_price")
         if self.audit.terminal_bar <= self.projection.known_at:
             raise ValueError("Source Terminal must occur after the projection is knowable")
 
@@ -234,6 +267,7 @@ def event_sourced_hierarchical_xabc_projections(
     recall gain above 8 while real-market candidate pressure increased.
     """
 
+    _validate_recognition_prices(frame)
     born: dict[tuple[str, str, tuple[int, ...]], SourceProjection] = {}
     for scale in sorted({int(value) for value in scales}):
         events = detect_pivot_events(

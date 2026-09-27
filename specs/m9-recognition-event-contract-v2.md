@@ -76,3 +76,15 @@ an error instead of silently choosing. Group identity excludes interpretation me
 so adding another explanation does not rename an existing observation. Cross-series grouping
 is prohibited without explicit data identity. Qualification is unchanged: grouping grants no
 Source validity. Regression uses the frozen three SSE.600276 cases (ABC590/597/601, Terminal631).
+
+## Price integrity at the recognition boundary
+
+Recognition V2 validates every supplied high/low value, including the newest unconfirmed bar,
+before pivot discovery or event timing: numeric, finite, strictly positive, high >= low.
+It does not coerce strings/bools, discard rows, fill prices or turn bad data into an empty
+successful scan. Empty input with declared high/low columns remains an empty successful scan.
+This is a price-integrity guard, not a new harmonic identity criterion or a full OHLC/provenance
+validator. Completion payloads independently reject nonfinite price/PRZ/PEZ/target fields.
+Reproduced pre-fix failure: a valid Gartley path with the last low=-infinity produced both
+Crab and Gartley Terminal events with terminal=-infinity and NaN targets. No frozen M4,
+Source ratio, Raw PRZ formula or valid-price recognition behavior is changed by the guard.

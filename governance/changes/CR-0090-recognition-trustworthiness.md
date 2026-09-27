@@ -203,3 +203,12 @@ existing simple exact-match behavior. 100 small configurations checked against a
 exhaustive oracle, plus existing regressions. This is measurement correctness, not improved
 engine accuracy. Existing single-truth synthetic-real Gate3 results are not affected by the
 reproduced overlap defect. No benchmark framework expansion or Source relaxation.
+
+## Unconfirmed-tail nonfinite false completions — 2026-09-27
+
+Reproduced -infinity on the newest bar bypassing pivot validation and emitting Crab/Gartley
+Terminal events with nonfinite completion/target prices. Added Recognition V2 high/low entry
+validation and independent completed-event finite-value checks. Invalid input raises instead
+of masquerading as an empty scan or a pattern; valid bullish/bearish detections are preserved.
+Local31 direct-function regressions pass; hosted validation pending. This repairs one concrete
+false-signal failure mode, not overall real-market precision/recall or Source qualification.

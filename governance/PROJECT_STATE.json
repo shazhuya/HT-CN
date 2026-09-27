@@ -27,20 +27,21 @@
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260927-0090-027",
-    "latest_hosted_validation_attempt_id": "A-20260927-0090-027",
+    "latest_attempt_id": "A-20260927-0090-029",
+    "latest_hosted_validation_attempt_id": "A-20260927-0090-028",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36300112092,
-      "head": "2c52c7185fd7afb203df0a87bae5c6af045759b0",
-      "scope": "Dedicated11-case audit successful; all33 raw leg envelopes contained. FullCI RUF007 fix pending rerun; no semantic promotion."
+      "workflow_run": 36300259406,
+      "head": "6b0bcd663a0c7d780ba9b44384ca1444cf945909",
+      "scope": "Full CI and dedicated case audit36300259401 passed for benchmark/raw-leg changes. New nonfinite-price guard pending hosted validation."
     },
     "latest_ci_failure": {
       "head": "2c52c7185fd7afb203df0a87bae5c6af045759b0",
       "workflow_run": 36300112100,
       "attempt_id": "A-20260927-0090-026",
-      "reason": "RUF007 requires pairwise instead of zip for adjacent legs; fixed with no numerical change."
+      "reason": "RUF007 requires pairwise instead of zip for adjacent legs; fixed with no numerical change.",
+      "resolution": "RUF007 corrected; fullCI36300259406 passed."
     }
   },
   "private_m1": {
