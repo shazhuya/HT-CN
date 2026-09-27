@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import asdict
 from decimal import Decimal
 from pathlib import Path
 
+from htcn.harmonic.confluence_audit import audit_projection_confluence
 from htcn.harmonic.models import HarmonicPoint
 from htcn.harmonic.prz import build_xabcd_prz
 from htcn.harmonic.rules import CARNEY_RULES
@@ -97,6 +99,9 @@ def audit() -> dict:
             "v2_policy_state": state.state, "v2_closed_bar": state.closed_bar,
             "v2_reason": state.reason,
             "math_ruling": "valid_independent_measurements",
+            "qualification_screen": asdict(audit_projection_confluence(
+                case["pattern_id"], points, prz)),
+            "validated_identity": False,
             "semantic_ruling": "uncertain_requires_confluence_qualification",
             "rationale": "Arithmetic agreement is not semantic acceptance. Inspect XA/BC "
                          "separation and observed measurement coverage; no width cutoff invented.",

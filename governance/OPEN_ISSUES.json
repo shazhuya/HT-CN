@@ -180,8 +180,8 @@
         "CR-0090 production promotion",
         "recognition product-validity gate"
       ],
-      "current_fact": "Crab PRZ width/XA median is 0.6737 in actual Gate 4B; gap-return and later scale aggregation probes require explicit contracts. This is not proof all wide zones are invalid.",
-      "next_action": "Execute Gate 4C.1 and 4C.2 independent cases."
+      "current_fact": "Event contract v2 tested: birth evidence frozen, all-measurement coverage, explicit gap retirement. Eleven real challenge candidates independently calculated; five Crab candidates fail nominal-XA/BC compatibility review. Full confluence qualification remains open.",
+      "next_action": "Complete Source-backed qualification independent from lifecycle; do not treat candidate/Terminal counts as accuracy."
     },
     {
       "id": "ISSUE-0076",

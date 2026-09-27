@@ -1,0 +1,221 @@
+{
+  "schema": 1,
+  "evidence_artifact": 10911369447,
+  "evidence_sha256": "1938e7a8c6093dbbdcbe54e5d52f991d7dc3bd90180d2f2312c9bd4ee7ea6d61",
+  "source_read": {
+    "volume": 3,
+    "printed_pages": [
+      104,
+      151,
+      152,
+      153
+    ],
+    "pdf_pages": [
+      111,
+      158,
+      159,
+      160
+    ]
+  },
+  "boundary": "Challenge-case qualification findings only; not population precision or Source formula modification. Five wide Crab cases not eligible for validated promotion; other cases remain unlabelled semantic truth.",
+  "cases": [
+    {
+      "case_id": "wide_crab-1",
+      "instrument_id": "SSE.600104",
+      "source_nodes": [
+        1666,
+        1684,
+        1689,
+        1693
+      ],
+      "snapshot_sha256": "ae4d24289e7bde47b4e39ba18e816220dad4a8299149ffb35ff12f43e64d0912",
+      "measurement_math": "pass",
+      "qualification": "blocked_primary_nonconfluence",
+      "required_bc_at_nominal_xa": 4.3703999999999965,
+      "reported_terminal_bc": 4.6,
+      "reported_terminal_d_xa": 1.7000000000000006,
+      "v2_state": "invalidated",
+      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred."
+    },
+    {
+      "case_id": "wide_crab-2",
+      "instrument_id": "SSE.600104",
+      "source_nodes": [
+        1673,
+        1684,
+        1689,
+        1693
+      ],
+      "snapshot_sha256": "ae4d24289e7bde47b4e39ba18e816220dad4a8299149ffb35ff12f43e64d0912",
+      "measurement_math": "pass",
+      "qualification": "blocked_primary_nonconfluence",
+      "required_bc_at_nominal_xa": 4.208599999999999,
+      "reported_terminal_bc": 4.6,
+      "reported_terminal_d_xa": 1.7629629629629635,
+      "v2_state": "invalidated",
+      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred."
+    },
+    {
+      "case_id": "wide_crab-3",
+      "instrument_id": "SSE.600036",
+      "source_nodes": [
+        954,
+        977,
+        979,
+        983
+      ],
+      "snapshot_sha256": "c8f0529f83a7d37ac1014b4a58359369f989654af787883acc1319526573e658",
+      "measurement_math": "pass",
+      "qualification": "blocked_primary_nonconfluence",
+      "required_bc_at_nominal_xa": 5.4407704918032795,
+      "reported_terminal_bc": 5.926229508196722,
+      "reported_terminal_d_xa": 1.7516930022573376,
+      "v2_state": "completed",
+      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred."
+    },
+    {
+      "case_id": "wide_crab-4",
+      "instrument_id": "SSE.600050",
+      "source_nodes": [
+        1889,
+        1954,
+        1959,
+        1964
+      ],
+      "snapshot_sha256": "8bd62a450bf0b8ad02a0af76aa867cef737c662c5cf9abad3d2b1ea0a08332b6",
+      "measurement_math": "pass",
+      "qualification": "blocked_primary_nonconfluence",
+      "required_bc_at_nominal_xa": 5.3266250000000035,
+      "reported_terminal_bc": 6.291380290670612,
+      "reported_terminal_d_xa": 1.8888085026443866,
+      "v2_state": "completed",
+      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred."
+    },
+    {
+      "case_id": "wide_crab-5",
+      "instrument_id": "SSE.600050",
+      "source_nodes": [
+        1919,
+        1954,
+        1959,
+        1964
+      ],
+      "snapshot_sha256": "8bd62a450bf0b8ad02a0af76aa867cef737c662c5cf9abad3d2b1ea0a08332b6",
+      "measurement_math": "pass",
+      "qualification": "blocked_primary_nonconfluence",
+      "required_bc_at_nominal_xa": 5.3266250000000035,
+      "reported_terminal_bc": 6.291380290670612,
+      "reported_terminal_d_xa": 1.8888085026443866,
+      "v2_state": "completed",
+      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred."
+    },
+    {
+      "case_id": "narrow_control-1",
+      "instrument_id": "SSE.600009",
+      "source_nodes": [
+        1872,
+        1938,
+        1953,
+        1958
+      ],
+      "snapshot_sha256": "d96d437e97724129ae6b1f0092b2de06f9afbf59ed385f8b5e48856533f24ad5",
+      "measurement_math": "pass",
+      "qualification": "pending_full_structure_adjudication",
+      "required_bc_at_nominal_xa": 1.2832879581151837,
+      "reported_terminal_bc": 1.4895287958115193,
+      "reported_terminal_d_xa": 0.8902116402116409,
+      "v2_state": "completed",
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+    },
+    {
+      "case_id": "narrow_control-2",
+      "instrument_id": "SSE.601857",
+      "source_nodes": [
+        711,
+        731,
+        745,
+        750
+      ],
+      "snapshot_sha256": "9094f56cdc9e15a5d171499b09f5ae4a87571d6d91560f642c5132a135ebc75e",
+      "measurement_math": "pass",
+      "qualification": "pending_full_structure_adjudication",
+      "required_bc_at_nominal_xa": 2.22817391304348,
+      "reported_terminal_bc": 2.782608695652165,
+      "reported_terminal_d_xa": 1.0735294117647076,
+      "v2_state": "completed",
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+    },
+    {
+      "case_id": "narrow_control-3",
+      "instrument_id": "SSE.600000",
+      "source_nodes": [
+        852,
+        857,
+        870,
+        871
+      ],
+      "snapshot_sha256": "875365a15a26b1c92ac5f846d32d3138e07837e2c35b8456c0e258e847fc592f",
+      "measurement_math": "pass",
+      "qualification": "pending_full_structure_adjudication",
+      "required_bc_at_nominal_xa": 1.430863636363633,
+      "reported_terminal_bc": 1.454545454545457,
+      "reported_terminal_d_xa": 0.7961165048543682,
+      "v2_state": "completed",
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+    },
+    {
+      "case_id": "same_abc_different_x-1",
+      "instrument_id": "SSE.600276",
+      "source_nodes": [
+        555,
+        590,
+        597,
+        601
+      ],
+      "snapshot_sha256": "6460eeb2708bf33e55789552153df5055519e917fc4e0413d0fcbfd5533d7b37",
+      "measurement_math": "pass",
+      "qualification": "pending_full_structure_adjudication",
+      "required_bc_at_nominal_xa": 2.244426666666666,
+      "reported_terminal_bc": 2.633333333333332,
+      "reported_terminal_d_xa": 1.0235849056603772,
+      "v2_state": "completed",
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+    },
+    {
+      "case_id": "same_abc_different_x-2",
+      "instrument_id": "SSE.600276",
+      "source_nodes": [
+        565,
+        590,
+        597,
+        601
+      ],
+      "snapshot_sha256": "6460eeb2708bf33e55789552153df5055519e917fc4e0413d0fcbfd5533d7b37",
+      "measurement_math": "pass",
+      "qualification": "pending_full_structure_adjudication",
+      "required_bc_at_nominal_xa": 2.2207999999999988,
+      "reported_terminal_bc": 2.633333333333332,
+      "reported_terminal_d_xa": 1.033333333333333,
+      "v2_state": "completed",
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+    },
+    {
+      "case_id": "same_abc_different_x-3",
+      "instrument_id": "SSE.600276",
+      "source_nodes": [
+        544,
+        590,
+        597,
+        601
+      ],
+      "snapshot_sha256": "6460eeb2708bf33e55789552153df5055519e917fc4e0413d0fcbfd5533d7b37",
+      "measurement_math": "pass",
+      "qualification": "pending_full_structure_adjudication",
+      "required_bc_at_nominal_xa": 2.3172755555555558,
+      "reported_terminal_bc": 2.633333333333332,
+      "reported_terminal_d_xa": 0.9946524064171123,
+      "v2_state": "completed",
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+    }
+  ]
+}

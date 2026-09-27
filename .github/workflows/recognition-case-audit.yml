@@ -4,6 +4,8 @@ on:
     branches: [m9/recognition-trustworthiness-v1]
     paths:
       - src/htcn/harmonic/source_completion.py
+      - src/htcn/harmonic/confluence_audit.py
+      - tests/harmonic/test_confluence_audit.py
       - tests/harmonic/test_source_completion.py
       - scripts/m9_recognition_gate4c_case_audit.py
       - research/recognition-gate4c-case-selection-v1.json
@@ -29,7 +31,7 @@ jobs:
           python -m pip install -r requirements-dev.lock
           python -m pip install --no-deps -e .
       - name: Check event semantics and compact recovery
-        run: python -m pytest tests/harmonic/test_source_completion.py tests/test_project_os_runtime.py -q
+        run: python -m pytest tests/harmonic/test_source_completion.py tests/harmonic/test_confluence_audit.py tests/test_project_os_runtime.py -q
       - name: Restore exact pinned market snapshot artifact
         uses: actions/download-artifact@v4
         with:

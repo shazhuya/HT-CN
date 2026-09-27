@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from .confluence_audit import ConfluenceAudit, audit_projection_confluence
 from .discovery import iter_hierarchical_xabc_frontier_windows
 from .execution import SourceExecutionAudit
 from .models import HarmonicPoint, PatternDirection
@@ -77,6 +78,13 @@ class SourceCompletionEvent:
 
     projection: SourceProjection
     audit: SourceExecutionAudit
+
+    @property
+    def qualification(self) -> ConfluenceAudit:
+        """A clock event must never masquerade as verified harmonic identity."""
+        return audit_projection_confluence(
+            self.projection.pattern_id, self.projection.points, self.projection.prz,
+        )
 
     def __post_init__(self) -> None:
         if self.audit.state != "terminal_observed":

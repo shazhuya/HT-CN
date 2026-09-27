@@ -51,6 +51,13 @@ Current prefix acceptance/zone availability does not establish complete shape va
 confluence. Label mathematical measurement consistency separately from semantic qualification.
 ABCD and Shark are outside this standard-XABC implementation. No trade/win-rate claim follows.
 
+Every experimental SourceCompletionEvent exposes a separate `qualification` audit:
+`review_required`, `primary_compatible_unverified`, or `unresolved`. Nominal-XA BC-envelope
+compatibility is a conservative engineering review screen, not a resurrected exact-D completion
+gate and not a universal Source identity condition. Clock events remain available for audit.
+This screen never grants `validated_identity`; full qualification and blind acceptance remain
+open. It uses only the XABC projection, never future Terminal price or outcome performance.
+
 ## Acceptance status
 
 Focused boundary tests cover birth evidence, append invariance, bullish/bearish gap-return,
