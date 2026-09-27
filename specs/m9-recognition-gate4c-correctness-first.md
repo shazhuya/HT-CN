@@ -100,3 +100,21 @@ The audit is not a new full-market accuracy study or complete re-verification of
 4. 已验收能力通过同一版本化接口最小接入应用并验证一致性；不扩大 UI 或其他产品功能。
 
 最终完成条件仍为 D-092 的独立验收及生产一致性；某个家族未解决时不得宣称全引擎可信。
+
+## Benchmark role and scoring correction — 2026-09-27
+
+The benchmark is a bounded diagnostic/regression tool for the recognition engine, not a
+separate platform or a product-completion proxy. Existing injected-truth Gate3 calls score
+one truth per case; its recall cannot establish real-market precision or complete-window recall.
+The geometric matcher checks family/direction/node positions, not PRZ/Terminal semantics;
+known_at is not scored by this matcher. Keep event-clock validation separate until real labelled
+event expectations exist. Do not reinterpret existing XABCD scores as event-engine acceptance.
+
+A reproduced two-truth/two-prediction overlap shows the previous greedy matcher reporting
+1 TP/1 FP/1 FN despite a feasible legal 2 TP matching. Version maximum_cardinality_augmenting_v2
+repairs that scoring defect without changing detector output, node tolerance or Source rules.
+It maximizes one-to-one match count with deterministic local error preferences, not globally
+minimum node error. Version-aware comparisons are required for ambiguous multi-truth windows.
+Existing single-truth Gate3 scores are not claimed to improve from this fix. A 100-configuration
+exhaustive oracle plus regression protects the matcher. Stop benchmark expansion after this
+correction and resume concrete structure/clock failures and independent complete-window labels.

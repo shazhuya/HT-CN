@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import defaultdict, deque
 from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import pairwise
@@ -82,6 +82,7 @@ class RecognitionMetrics:
     node_mae_bars: float | None
     node_mae_by_label: dict[str, float]
     matches: tuple[MatchedRecognition, ...]
+    matching_policy: str = "maximum_cardinality_augmenting_v2"
 
 
 FailureStage = Literal[
@@ -117,8 +118,10 @@ def match_predictions(
 ) -> tuple[MatchedRecognition, ...]:
     """Return deterministic one-to-one matches within a predeclared node tolerance.
 
-    Candidate pairs are ordered by max node error, total node error, truth case id and
-    prediction id. One truth and one prediction can each be consumed at most once.
+    Maximize match cardinality, then use deterministic local edge preferences
+    (max error, total error, stable IDs). Augmenting paths repair greedy conflicts.
+    This does not claim globally minimum total node error. Each truth/prediction
+    is consumed at most once; no ratio, family or tolerance constraint is relaxed.
     """
 
     if tolerance_bars < 0:
@@ -155,22 +158,57 @@ def match_predictions(
             )
 
     candidates.sort()
-    used_truths: set[int] = set()
-    used_predictions: set[int] = set()
-    matches: list[MatchedRecognition] = []
-    for _, _, _, _, truth_index, prediction_index, offsets in candidates:
-        if truth_index in used_truths or prediction_index in used_predictions:
+    adjacency: dict[int, list[int]] = defaultdict(list)
+    offsets_by_pair: dict[tuple[int, int], tuple[int, ...]] = {}
+    truth_to_prediction: dict[int, int] = {}
+    prediction_to_truth: dict[int, int] = {}
+    # Retain error-preferred greedy matches where they do not reduce cardinality.
+    for _, _, _, _, ti, pi, offsets in candidates:
+        adjacency[ti].append(pi)
+        offsets_by_pair[ti, pi] = offsets
+        if ti not in truth_to_prediction and pi not in prediction_to_truth:
+            truth_to_prediction[ti] = pi
+            prediction_to_truth[pi] = ti
+
+    for root in sorted(adjacency, key=lambda i: (truths[i].case_id, i)):
+        if root in truth_to_prediction:
             continue
-        used_truths.add(truth_index)
-        used_predictions.add(prediction_index)
-        matches.append(
-            MatchedRecognition(
-                truth=truths[truth_index],
-                prediction=predictions[prediction_index],
-                node_offsets=offsets,
-            )
-        )
-    return tuple(matches)
+        queue = deque([root])
+        visited_truths = {root}
+        parent_prediction: dict[int, int] = {}
+        free_prediction: int | None = None
+        while queue and free_prediction is None:
+            ti = queue.popleft()
+            for pi in adjacency[ti]:
+                if pi in parent_prediction:
+                    continue
+                parent_prediction[pi] = ti
+                owner = prediction_to_truth.get(pi)
+                if owner is None:
+                    free_prediction = pi
+                    break
+                if owner not in visited_truths:
+                    visited_truths.add(owner)
+                    queue.append(owner)
+        if free_prediction is None:
+            continue
+        pi = free_prediction
+        while True:
+            ti = parent_prediction[pi]
+            previous = truth_to_prediction.get(ti)
+            truth_to_prediction[ti] = pi
+            prediction_to_truth[pi] = ti
+            if previous is None:
+                break
+            pi = previous
+
+    matches = [
+        MatchedRecognition(truths[ti], predictions[pi], offsets_by_pair[ti, pi])
+        for ti, pi in truth_to_prediction.items()
+    ]
+    return tuple(sorted(matches, key=lambda m: (
+        m.truth.case_id, m.prediction.prediction_id,
+    )))
 
 
 def score_predictions(

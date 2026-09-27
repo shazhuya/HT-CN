@@ -259,3 +259,45 @@ def test_streaming_graph_preserves_confirmed_pattern_after_future_same_kind_repl
         and item.node_indices == truth.node_indices
     )
     assert matched.known_at == 93
+
+
+def test_overlap_matching_does_not_invent_false_negative_from_greedy_choice() -> None:
+    from dataclasses import replace
+
+    first = _truth("a")
+    second = replace(first, case_id="b", node_indices=tuple(n + 2 for n in first.node_indices))
+    shared = _prediction("a-shared", nodes=tuple(n + 1 for n in first.node_indices))
+    only_first = _prediction("b-only-first", nodes=tuple(n - 1 for n in first.node_indices))
+    metrics = score_predictions([first, second], [shared, only_first], tolerance_bars=1)
+    assert (metrics.true_positive, metrics.false_positive, metrics.false_negative) == (2, 0, 0)
+    assert {(m.truth.case_id, m.prediction.prediction_id) for m in metrics.matches} == {
+        ("a", "b-only-first"), ("b", "a-shared")}
+    reversed_metrics = score_predictions([second, first], [only_first, shared], tolerance_bars=1)
+    assert reversed_metrics.matches == metrics.matches
+
+
+def test_tolerant_match_cardinality_agrees_with_independent_exhaustive_oracle() -> None:
+    from dataclasses import replace
+    from itertools import combinations, permutations
+
+    base = _truth()
+    # Enumerate every 3-of-5 truth and prediction position set. Oracle tries
+    # every partial injective assignment; it does not reuse matcher helpers.
+    for expected in combinations(range(5), 3):
+        truths = [replace(base, case_id=f"t{i}",
+                          node_indices=tuple(n + shift for n in base.node_indices))
+                  for i, shift in enumerate(expected)]
+        for observed in combinations(range(5), 3):
+            predictions = [_prediction(f"p{i}", nodes=tuple(n + shift for n in base.node_indices))
+                           for i, shift in enumerate(observed)]
+            best = 0
+            for count in range(1, 4):
+                for selected_truths in combinations(expected, count):
+                    for selected_predictions in permutations(observed, count):
+                        if all(abs(t - p) <= 1 for t, p in
+                               zip(selected_truths, selected_predictions, strict=True)):
+                            best = count
+            metrics = score_predictions(truths, predictions, tolerance_bars=1)
+            assert metrics.true_positive == best
+            assert metrics.false_positive == 3 - best
+            assert metrics.false_negative == 3 - best

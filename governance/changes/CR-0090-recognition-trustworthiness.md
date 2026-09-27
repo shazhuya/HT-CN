@@ -194,3 +194,12 @@ or recall. Full Source and multi-X structural adjudication remain open. SDK/API/
 explicitly deferred until recognition reliability acceptance, per the user's clarification.
 
 Full hosted CI36294119393 and case audit36294119444 passed on ddff2f7. Original book figure measurements are now recorded in recognition-crab-confluence-bound-v1.json; the responsible Source rule/label remains unresolved, so no frozen rule change or production promotion is made.
+
+## Benchmark diagnostic correction — 2026-09-27
+
+Fixed greedy one-to-one scoring that could fabricate FP/FN in overlapping multi-truth cases.
+Augmenting paths maximize legal match cardinality; deterministic local preferences preserve
+existing simple exact-match behavior. 100 small configurations checked against an independent
+exhaustive oracle, plus existing regressions. This is measurement correctness, not improved
+engine accuracy. Existing single-truth synthetic-real Gate3 results are not affected by the
+reproduced overlap defect. No benchmark framework expansion or Source relaxation.
