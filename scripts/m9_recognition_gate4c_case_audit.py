@@ -4,6 +4,7 @@ import hashlib
 import json
 from dataclasses import asdict
 from decimal import Decimal
+from itertools import pairwise
 from pathlib import Path
 
 from htcn.harmonic.confluence_audit import audit_projection_confluence
@@ -99,7 +100,7 @@ def audit() -> dict:
         # pivots, while an omitted/unconfirmed extreme can still cross a leg.
         # These are diagnostics, not a new Source identity or rejection rule.
         leg_checks = []
-        for left, right in zip(points, points[1:], strict=False):
+        for left, right in pairwise(points):
             interior = frame.iloc[left.index + 1:right.index]
             lower, upper = sorted((left.price, right.price))
             below = [int(i) for i in range(left.index + 1, right.index)

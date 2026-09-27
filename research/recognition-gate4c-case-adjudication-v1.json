@@ -35,7 +35,45 @@
       "reported_terminal_bc": 4.6,
       "reported_terminal_d_xa": 1.7000000000000006,
       "v2_state": "invalidated",
-      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred."
+      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            13.03703037,
+            14.32873897
+          ],
+          "interior_low": 13.08316282,
+          "interior_high": 14.25492705,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            13.79360255,
+            14.32873897
+          ],
+          "interior_low": 13.84896149,
+          "interior_high": 14.19956811,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            13.79360255,
+            14.25492705
+          ],
+          "interior_low": 13.81205553,
+          "interior_high": 14.07962374,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     },
     {
       "case_id": "wide_crab-2",
@@ -53,7 +91,45 @@
       "reported_terminal_bc": 4.6,
       "reported_terminal_d_xa": 1.7629629629629635,
       "v2_state": "invalidated",
-      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred."
+      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            13.08316282,
+            14.32873897
+          ],
+          "interior_low": 13.11084229,
+          "interior_high": 14.25492705,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            13.79360255,
+            14.32873897
+          ],
+          "interior_low": 13.84896149,
+          "interior_high": 14.19956811,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            13.79360255,
+            14.25492705
+          ],
+          "interior_low": 13.81205553,
+          "interior_high": 14.07962374,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     },
     {
       "case_id": "wide_crab-3",
@@ -71,7 +147,45 @@
       "reported_terminal_bc": 5.926229508196722,
       "reported_terminal_d_xa": 1.7516930022573376,
       "v2_state": "completed",
-      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred."
+      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            26.3280078,
+            29.5922976
+          ],
+          "interior_low": 26.5490658,
+          "interior_high": 29.1943932,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            28.3027926,
+            29.5922976
+          ],
+          "interior_low": 28.811226,
+          "interior_high": 29.4301884,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            28.3027926,
+            29.2017618
+          ],
+          "interior_low": 28.4280588,
+          "interior_high": 28.9438608,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     },
     {
       "case_id": "wide_crab-4",
@@ -89,7 +203,45 @@
       "reported_terminal_bc": 6.291380290670612,
       "reported_terminal_d_xa": 1.8888085026443866,
       "v2_state": "completed",
-      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred."
+      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            4.06765281,
+            4.59821622
+          ],
+          "interior_low": 4.16073411,
+          "interior_high": 4.59821622,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            4.06765281,
+            4.2817398
+          ],
+          "interior_low": 4.0955772,
+          "interior_high": 4.23519915,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            4.13280972,
+            4.2817398
+          ],
+          "interior_low": 4.15142598,
+          "interior_high": 4.27243167,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     },
     {
       "case_id": "wide_crab-5",
@@ -107,7 +259,45 @@
       "reported_terminal_bc": 6.291380290670612,
       "reported_terminal_d_xa": 1.8888085026443866,
       "v2_state": "completed",
-      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred."
+      "reason": "Required BC at nominal XA exceeds source-cleared 3.618 maximum; selected XA/BC/ABCD prices are separated. Do not promote as validated Crab. No universal width threshold inferred.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            4.06765281,
+            4.59821622
+          ],
+          "interior_low": 4.16073411,
+          "interior_high": 4.54236744,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            4.06765281,
+            4.2817398
+          ],
+          "interior_low": 4.0955772,
+          "interior_high": 4.23519915,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            4.13280972,
+            4.2817398
+          ],
+          "interior_low": 4.15142598,
+          "interior_high": 4.27243167,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     },
     {
       "case_id": "narrow_control-1",
@@ -125,7 +315,45 @@
       "reported_terminal_bc": 1.4895287958115193,
       "reported_terminal_d_xa": 0.8902116402116409,
       "v2_state": "completed",
-      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            29.71878646,
+            37.0276357
+          ],
+          "interior_low": 30.11516585,
+          "interior_high": 36.737602,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            29.71878646,
+            34.4173324
+          ],
+          "interior_low": 29.78646099,
+          "interior_high": 33.51822793,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            30.72423662,
+            34.4173324
+          ],
+          "interior_low": 30.936928,
+          "interior_high": 33.79859384,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     },
     {
       "case_id": "narrow_control-2",
@@ -143,7 +371,45 @@
       "reported_terminal_bc": 2.782608695652165,
       "reported_terminal_d_xa": 1.0735294117647076,
       "v2_state": "completed",
-      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            4.91522792,
+            5.3846598
+          ],
+          "interior_low": 4.92903474,
+          "interior_high": 5.3846598,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            4.91522792,
+            5.13613704
+          ],
+          "interior_low": 4.92213133,
+          "interior_high": 5.12233022,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            4.97735861,
+            5.13613704
+          ],
+          "interior_low": 4.98426202,
+          "interior_high": 5.06019953,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     },
     {
       "case_id": "narrow_control-3",
@@ -161,7 +427,45 @@
       "reported_terminal_bc": 1.454545454545457,
       "reported_terminal_d_xa": 0.7961165048543682,
       "v2_state": "completed",
-      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            8.02594819,
+            8.779524
+          ],
+          "interior_low": 8.21617121,
+          "interior_high": 8.73562638,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            8.02594819,
+            8.47955693
+          ],
+          "interior_low": 8.08447835,
+          "interior_high": 8.39907796,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            8.15764105,
+            8.47955693
+          ],
+          "interior_low": null,
+          "interior_high": null,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     },
     {
       "case_id": "same_abc_different_x-1",
@@ -179,7 +483,45 @@
       "reported_terminal_bc": 2.633333333333332,
       "reported_terminal_d_xa": 1.0235849056603772,
       "v2_state": "completed",
-      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            34.11,
+            46.83
+          ],
+          "interior_low": 34.18,
+          "interior_high": 46.72,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            41.16,
+            46.83
+          ],
+          "interior_low": 42.08,
+          "interior_high": 46.44,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            41.16,
+            45.66
+          ],
+          "interior_low": 41.22,
+          "interior_high": 44.88,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     },
     {
       "case_id": "same_abc_different_x-2",
@@ -197,7 +539,45 @@
       "reported_terminal_bc": 2.633333333333332,
       "reported_terminal_d_xa": 1.033333333333333,
       "v2_state": "completed",
-      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            34.23,
+            46.83
+          ],
+          "interior_low": 34.99,
+          "interior_high": 46.72,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            41.16,
+            46.83
+          ],
+          "interior_low": 42.08,
+          "interior_high": 46.44,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            41.16,
+            45.66
+          ],
+          "interior_low": 41.22,
+          "interior_high": 44.88,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     },
     {
       "case_id": "same_abc_different_x-3",
@@ -215,7 +595,52 @@
       "reported_terminal_bc": 2.633333333333332,
       "reported_terminal_d_xa": 0.9946524064171123,
       "v2_state": "completed",
-      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication."
+      "reason": "Arithmetic and observed coverage do not establish complete semantic truth; preserve nested/competing candidates for explicit adjudication.",
+      "raw_leg_envelope_checks": [
+        {
+          "leg": "XA",
+          "endpoint_bounds": [
+            33.74,
+            46.83
+          ],
+          "interior_low": 34.11,
+          "interior_high": 46.72,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "AB",
+          "endpoint_bounds": [
+            41.16,
+            46.83
+          ],
+          "interior_low": 42.08,
+          "interior_high": 46.44,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        },
+        {
+          "leg": "BC",
+          "endpoint_bounds": [
+            41.16,
+            45.66
+          ],
+          "interior_low": 41.22,
+          "interior_high": 44.88,
+          "below_endpoint_bars": [],
+          "above_endpoint_bars": [],
+          "raw_envelope_contained": true
+        }
+      ]
     }
-  ]
+  ],
+  "raw_leg_envelope_evidence": {
+    "artifact_id": 10924483997,
+    "workflow_run": 36300112092,
+    "head": "2c52c7185fd7afb203df0a87bae5c6af045759b0",
+    "report_sha256": "71546594500bf071ace4cdcf485b97c791268bbfad7a123f13c4080270171917",
+    "finding": "All33 XA/AB/BC interior raw-bar envelopes are contained across11 selected cases. This does not prove full Source identity; do not reject multiple X solely on this hypothesis."
+  }
 }

@@ -27,21 +27,20 @@
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260927-0090-025",
-    "latest_hosted_validation_attempt_id": "A-20260927-0090-022",
+    "latest_attempt_id": "A-20260927-0090-027",
+    "latest_hosted_validation_attempt_id": "A-20260927-0090-027",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36294119393,
-      "head": "ddff2f7a705cd460c9ae70332723b7f6708986d7",
-      "scope": "Full CI and dedicated case run36294119444 passed; core multi-X grouping engineering only, no Source/market-accuracy promotion."
+      "workflow_run": 36300112092,
+      "head": "2c52c7185fd7afb203df0a87bae5c6af045759b0",
+      "scope": "Dedicated11-case audit successful; all33 raw leg envelopes contained. FullCI RUF007 fix pending rerun; no semantic promotion."
     },
     "latest_ci_failure": {
-      "head": "370d3d73ca5776574a1cf4cde7bf65560e0cfedd",
-      "workflow_run": 36294040103,
-      "attempt_id": "A-20260927-0090-020",
-      "reason": "Ruff B018 in expected-error regression: bare property access. Assign evaluation to underscore; no core behavior change.",
-      "resolution": "B018 corrected in ddff2f7; full CI36294119393 passed."
+      "head": "2c52c7185fd7afb203df0a87bae5c6af045759b0",
+      "workflow_run": 36300112100,
+      "attempt_id": "A-20260927-0090-026",
+      "reason": "RUF007 requires pairwise instead of zip for adjacent legs; fixed with no numerical change."
     }
   },
   "private_m1": {
