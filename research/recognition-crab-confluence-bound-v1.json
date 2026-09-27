@@ -48,5 +48,37 @@
       152,
       153
     ]
+  },
+  "figure_check": {
+    "source": "Harmonic Trading Volume One, printed/PDF pp146-147, Home Depot 15-minute chart",
+    "verification": "Rendered original PDF pages and visually read printed price labels; no OCR-derived exact XABC prices asserted.",
+    "pdf_sha256": "bf3ebd944a852c164476ea1decd70e6e38a1dc0e48fd12982d198a302ed91a9f",
+    "printed_measurements": {
+      "alternate_abcd_label": "1.62AB=CD",
+      "alternate_abcd_price": "32.815",
+      "bc_ratio": "3.140",
+      "bc_price": "32.776",
+      "xa_ratio": "1.618",
+      "xa_price": "32.563"
+    },
+    "printed_zone_width": "0.252",
+    "visual_price_intervals_not_exact_nodes": {
+      "A": [
+        "35.1",
+        "35.3"
+      ],
+      "X": [
+        "33.5",
+        "33.7"
+      ],
+      "XA": [
+        "1.4",
+        "1.8"
+      ]
+    },
+    "maximum_width_over_xa_from_visual_intervals": "0.18",
+    "minimum_if_abcd_ratio_uses_chart_rounded_1_62": "0.234916",
+    "ruling": "Book figure has a materially narrower printed component envelope than the current exact rule combination permits within conservative visual XA intervals. Rounding 1.618 to1.62 does not reconcile it. This corroborates a Source combination discrepancy; it does not identify which rule/formula/label is wrong.",
+    "next_action": "Reconcile book chart B/C ratios and alternate-ABCD definition against another explicit source example; do not silently remove ABCD, relax B bounds, or assert exact digitized nodes."
   }
 }

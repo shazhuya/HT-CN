@@ -192,3 +192,5 @@ The fixed-case runner consumes core grouping rather than treating raw interpreta
 independent opportunities. This fixes result representation/counting only, not market precision
 or recall. Full Source and multi-X structural adjudication remain open. SDK/API/Agent reuse is
 explicitly deferred until recognition reliability acceptance, per the user's clarification.
+
+Full hosted CI36294119393 and case audit36294119444 passed on ddff2f7. Original book figure measurements are now recorded in recognition-crab-confluence-bound-v1.json; the responsible Source rule/label remains unresolved, so no frozen rule change or production promotion is made.

@@ -27,20 +27,21 @@
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260927-0090-021",
-    "latest_hosted_validation_attempt_id": "A-20260927-0090-021",
+    "latest_attempt_id": "A-20260927-0090-023",
+    "latest_hosted_validation_attempt_id": "A-20260927-0090-022",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36294040008,
-      "head": "370d3d73ca5776574a1cf4cde7bf65560e0cfedd",
-      "scope": "Dedicated event/confluence/Project OS and11 market cases succeeded; fullCI Ruff B018 correction pending revalidation. No semantic acceptance."
+      "workflow_run": 36294119393,
+      "head": "ddff2f7a705cd460c9ae70332723b7f6708986d7",
+      "scope": "Full CI and dedicated case run36294119444 passed; core multi-X grouping engineering only, no Source/market-accuracy promotion."
     },
     "latest_ci_failure": {
       "head": "370d3d73ca5776574a1cf4cde7bf65560e0cfedd",
       "workflow_run": 36294040103,
       "attempt_id": "A-20260927-0090-020",
-      "reason": "Ruff B018 in expected-error regression: bare property access. Assign evaluation to underscore; no core behavior change."
+      "reason": "Ruff B018 in expected-error regression: bare property access. Assign evaluation to underscore; no core behavior change.",
+      "resolution": "B018 corrected in ddff2f7; full CI36294119393 passed."
     }
   },
   "private_m1": {

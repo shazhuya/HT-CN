@@ -219,8 +219,8 @@
         "CR-0090 full confluence qualification",
         "Crab semantic production promotion"
       ],
-      "current_fact": "Current un-toleranced b/c ranges and maximum1.618ABCD force XA/ABCD separation >=0.236152XA. Volume1 directly gives XA/BC primary, ABCD secondary, but figure-level coordinate/membership reconciliation is unresolved. This is not a universal invalidity proof.",
-      "next_action": "Reconcile Volume1 pp125-127/145-147 figure coordinates, measurement roles and Volume3p104; any frozen-source correction requires explicit Source Decision/versioning, keeping M4 unchanged."
+      "current_fact": "Current un-toleranced b/c ranges and maximum1.618ABCD force XA/ABCD separation >=0.236152XA. Volume1 directly gives XA/BC primary, ABCD secondary, but figure-level coordinate/membership reconciliation is unresolved. This is not a universal invalidity proof. Original Volume1 pp146-147 figures now visually verified: printed PRZ32.563..32.815 (width0.252); conservative visual XA1.4..1.8 makes width/XA<=0.18, below the exact bound, even using rounded1.62ABCD. The discrepancy is confirmed at figure level; responsible rule/label remains unresolved.",
+      "next_action": "Reconcile published chart B/C ratio labels and alternate-ABCD definition against a second explicit Source example. Do not change frozen formulas on this single conflicting example; continue independent multi-X geometry/complete-window label work."
     }
   ]
 }
