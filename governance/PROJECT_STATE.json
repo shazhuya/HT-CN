@@ -27,14 +27,14 @@
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260927-0090-029",
-    "latest_hosted_validation_attempt_id": "A-20260927-0090-028",
+    "latest_attempt_id": "A-20260927-0090-030",
+    "latest_hosted_validation_attempt_id": "A-20260927-0090-030",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36300259406,
-      "head": "6b0bcd663a0c7d780ba9b44384ca1444cf945909",
-      "scope": "Full CI and dedicated case audit36300259401 passed for benchmark/raw-leg changes. New nonfinite-price guard pending hosted validation."
+      "workflow_run": 36303430972,
+      "head": "09b458a46dd0e38810eb0268978fda3155664a87",
+      "scope": "FullCI plus dedicated11-case, Gate3Fast and Gate4BFast passed. Nonfinite tail false-completion fix accepted; recognition semantic gate remains open."
     },
     "latest_ci_failure": {
       "head": "2c52c7185fd7afb203df0a87bae5c6af045759b0",

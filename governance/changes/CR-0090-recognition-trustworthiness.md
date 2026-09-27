@@ -212,3 +212,5 @@ validation and independent completed-event finite-value checks. Invalid input ra
 of masquerading as an empty scan or a pattern; valid bullish/bearish detections are preserved.
 Local31 direct-function regressions pass; hosted validation pending. This repairs one concrete
 false-signal failure mode, not overall real-market precision/recall or Source qualification.
+
+Nonfinite-tail fix hosted closeout: fullCI36303430972, fixed-case36303430955, Gate3Fast36303430936 and Gate4BFast36303430943 all passed on09b458a. Defect closed on experimental branch; no production promotion.
