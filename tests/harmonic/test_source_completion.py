@@ -331,7 +331,7 @@ def test_grouping_rejects_conflicting_replay_instead_of_choosing_a_winner() -> N
     event = scan.completions[0]
     conflict = replace(event, audit=replace(event.audit, terminal_price=event.terminal_price - 1))
     try:
-        replace(scan, completions=(*scan.completions, conflict)).completion_groups
+        _ = replace(scan, completions=(*scan.completions, conflict)).completion_groups
     except ValueError as error:
         assert "conflicting completion" in str(error)
     else:

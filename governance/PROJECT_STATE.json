@@ -27,21 +27,20 @@
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260927-0090-019",
-    "latest_hosted_validation_attempt_id": "A-20260927-0090-017",
+    "latest_attempt_id": "A-20260927-0090-021",
+    "latest_hosted_validation_attempt_id": "A-20260927-0090-021",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36284826673,
-      "head": "3f3d3a188eb8e018bd0a4bd7f808b63c833a66a3",
-      "scope": "Full HT-CN CI and dedicated case audit 36284826671 succeeded. Engineering evidence only; recognition acceptance remains open."
+      "workflow_run": 36294040008,
+      "head": "370d3d73ca5776574a1cf4cde7bf65560e0cfedd",
+      "scope": "Dedicated event/confluence/Project OS and11 market cases succeeded; fullCI Ruff B018 correction pending revalidation. No semantic acceptance."
     },
     "latest_ci_failure": {
-      "head": "af96288809db23c4a981034b56fdbfce98d4ea82",
-      "workflow_run": 36258807108,
-      "attempt_id": "A-20260927-0090-011",
-      "reason": "resume index size; correction implemented, hosted revalidation pending",
-      "resolution": "Corrected bounded index; full CI 36259447684 passed. Intermediate I001 failure retained as A-20260927-0090-013."
+      "head": "370d3d73ca5776574a1cf4cde7bf65560e0cfedd",
+      "workflow_run": 36294040103,
+      "attempt_id": "A-20260927-0090-020",
+      "reason": "Ruff B018 in expected-error regression: bare property access. Assign evaluation to underscore; no core behavior change."
     }
   },
   "private_m1": {
