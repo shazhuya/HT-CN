@@ -146,6 +146,19 @@ class SourceProjectionState:
 
 
 @dataclass(frozen=True, slots=True)
+class SourceCompletionGroup:
+    """One ABC/Terminal observation with competing structural interpretations.
+
+    Scoped to ONE input series (instrument, timeframe and price basis). This is
+    neither a verified identity nor an independent trade/opportunity count.
+    Different X or family interpretations are retained, never score-selected.
+    """
+
+    key: tuple[str, tuple[int, ...], int]
+    interpretations: tuple[SourceCompletionEvent, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class SourceCompletionScan:
     projections: tuple[SourceProjection, ...]
     states: tuple[SourceProjectionState, ...]
@@ -154,6 +167,27 @@ class SourceCompletionScan:
     expired_without_terminal: int
     active_without_terminal: int
     policy: str = "birth_evidence_gap_retirement_skip8_v2"
+
+    @property
+    def completion_groups(self) -> tuple[SourceCompletionGroup, ...]:
+        """Group observable events without erasing their alternative source nodes."""
+        groups: dict[tuple[str, tuple[int, ...], int],
+                     dict[tuple[str, str, tuple[int, ...]], SourceCompletionEvent]] = {}
+        seen: dict[tuple[str, str, tuple[int, ...]], SourceCompletionEvent] = {}
+        for event in self.completions:
+            identity = event.projection.key
+            prior = seen.get(identity)
+            if prior is not None:
+                if prior != event:
+                    raise ValueError("conflicting completion for the same projection")
+                continue
+            seen[identity] = event
+            key = (event.direction.value, event.source_nodes[1:], event.terminal_bar)
+            groups.setdefault(key, {})[identity] = event
+        return tuple(
+            SourceCompletionGroup(key, tuple(events[k] for k in sorted(events)))
+            for key, events in sorted(groups.items())
+        )
 
 
 def _merge_projection(

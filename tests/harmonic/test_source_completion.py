@@ -1,4 +1,7 @@
+import json
+from dataclasses import replace
 from itertools import pairwise
+from pathlib import Path
 
 import pandas as pd
 
@@ -259,3 +262,89 @@ def test_terminal_requires_actual_tests_of_all_zone_measurements() -> None:
             reaction_anchor_price=200, observation_end_bar=end,
         )
         assert audit.terminal_bar == (3 if end == 3 else None)
+
+
+def _market_completion_scan():
+    from htcn.harmonic.models import HarmonicPoint
+    from htcn.harmonic.prz import build_xabcd_prz
+    from htcn.harmonic.rules import CARNEY_RULES
+    from htcn.harmonic.source_completion import (
+        SourceCompletionEvent,
+        SourceCompletionScan,
+        SourceProjection,
+        _projection_state,
+    )
+
+    path = Path(__file__).resolve().parents[2] / "research/recognition-gate4c-case-evidence-v1.json"
+    events = []
+    for case in json.loads(path.read_text())["cases"]:
+        if case["selection_group"] != "same_abc_different_x":
+            continue
+        points = tuple(HarmonicPoint(label=n["label"], index=n["index"], price=n["price"])
+                       for n in case["nodes"])
+        prz = build_xabcd_prz(CARNEY_RULES[case["pattern_id"]], points)
+        projection = SourceProjection(case["pattern_id"], prz.direction, points,
+                                      case["known_at"], prz, (), case["min_skipped_pivots"])
+        # Only post-birth rows are consumed. Keep original positional indices.
+        frame = pd.DataFrame(index=range(case["terminal_bar"] + 1), columns=["low", "high"],
+                             dtype=float)
+        for row in case["observation_rows"]:
+            frame.loc[row["index"], ["low", "high"]] = [row["low"], row["high"]]
+        state = _projection_state(frame, projection, lifetime_bars=180)
+        assert state.state == "completed"
+        events.append(SourceCompletionEvent(projection, state.audit))
+    return SourceCompletionScan((), (), tuple(events), 0, 0, 0)
+
+
+def test_market_multi_x_is_one_observation_with_all_interpretations() -> None:
+    scan = _market_completion_scan()
+    assert len(scan.completions) == 3
+    groups = scan.completion_groups
+    assert len(groups) == 1
+    assert groups[0].key == ("bullish", (590, 597, 601), 631)
+    assert {e.source_nodes[0] for e in groups[0].interpretations} == {544, 555, 565}
+    assert all(not e.qualification.validated_identity for e in groups[0].interpretations)
+    assert replace(scan, completions=tuple(reversed(scan.completions))).completion_groups == groups
+    # Exact replay is idempotent; different X evidence is not discarded.
+    assert replace(scan, completions=scan.completions * 2).completion_groups == groups
+
+
+def test_grouping_keeps_distinct_abc_and_terminal_observations() -> None:
+    scan = _market_completion_scan()
+    event = scan.completions[0]
+    other_points = tuple(replace(p, index=p.index + 1) for p in event.projection.points)
+    other_abc = replace(event, projection=replace(event.projection, points=other_points))
+    other_projection = replace(event.projection, points=(
+        replace(event.projection.points[0], index=556), *event.projection.points[1:]))
+    other_terminal = replace(event, projection=other_projection,
+                             audit=replace(event.audit, terminal_bar=632,
+                                                 execution_start_bar=633))
+    extended = replace(scan, completions=(*scan.completions, other_abc, other_terminal))
+    assert len(extended.completion_groups) == 3
+    assert sum(len(g.interpretations) for g in extended.completion_groups) == 5
+    # A later observation never changes the key of the already observed group.
+    assert scan.completion_groups[0].key in {g.key for g in extended.completion_groups}
+
+
+def test_grouping_rejects_conflicting_replay_instead_of_choosing_a_winner() -> None:
+    scan = _market_completion_scan()
+    event = scan.completions[0]
+    conflict = replace(event, audit=replace(event.audit, terminal_price=event.terminal_price - 1))
+    try:
+        replace(scan, completions=(*scan.completions, conflict)).completion_groups
+    except ValueError as error:
+        assert "conflicting completion" in str(error)
+    else:
+        raise AssertionError("conflicting replay must not be silently deduplicated")
+
+
+def test_grouping_preserves_competing_family_without_identity_promotion() -> None:
+    scan = _market_completion_scan()
+    event = scan.completions[0]
+    # Grouping must not choose a family; this is a transport-level label variant,
+    # not a claim that these Bat points satisfy Gartley rules.
+    alternative = replace(event, projection=replace(event.projection, pattern_id="gartley"))
+    grouped = replace(scan, completions=(*scan.completions, alternative)).completion_groups
+    assert len(grouped) == 1
+    assert len(grouped[0].interpretations) == 4
+    assert {e.pattern_id for e in grouped[0].interpretations} == {"bat", "gartley"}

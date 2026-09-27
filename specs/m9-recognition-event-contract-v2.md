@@ -63,3 +63,16 @@ open. It uses only the XABC projection, never future Terminal price or outcome p
 Focused boundary tests cover birth evidence, append invariance, bullish/bearish gap-return,
 retirement, expiry and same-bar ambiguity. Representative real-market labels, new sealed final
 acceptance, complete data/version event IDs and application integration remain future gates.
+
+## Same-ABC completion observation groups (2026-09-27)
+
+Within one instrument/timeframe/price-basis scan, group completions by direction,
+A/B/C bar positions and Terminal bar. Keep all X/family interpretations in deterministic
+order; do not select a winner by score or declare them independently tradable signals.
+Different ABC or Terminal bars remain separate observation groups; those groups are NOT
+asserted statistically independent. Raw projection completions remain available for audit.
+Exact replay is idempotent; conflicting completion evidence for the same projection raises
+an error instead of silently choosing. Group identity excludes interpretation membership,
+so adding another explanation does not rename an existing observation. Cross-series grouping
+is prohibited without explicit data identity. Qualification is unchanged: grouping grants no
+Source validity. Regression uses the frozen three SSE.600276 cases (ABC590/597/601, Terminal631).

@@ -181,3 +181,14 @@ Compare current 7/8 against 5/10 and only necessary neighboring capacities on th
 Event contract v2 separates birth from corroboration, requires observed coverage of all PRZ measurements, and retires unobserved far-side passage under explicit operational policy. Source Raw PRZ/identity and M4 remain unchanged. Eleven deterministic challenge cases are selected in research/recognition-gate4c-case-selection-v1.json; independent arithmetic and coverage are audited by scripts/m9_recognition_gate4c_case_audit.py. Representative labels and production promotion remain blocked.
 
 Event baseline 4983f09 passed full CI 36259447684 (1076 tests) and focused 36259447599 (19 tests/11 cases). Case register and adjudication are canonical research/recognition-gate4c-case-*-v1.json files. A separate conservative confluence review screen never grants identity; full semantic qualification remains open.
+
+## 2026-09-27 — Multi-X observation grouping implementation
+
+SourceCompletionScan now separates raw structural interpretations from same-series
+ABC/Terminal observation groups. Frozen SSE.600276 cases preserve X544/555/565 in one group;
+no geometry winner or Source acceptance is invented. Exact replays deduplicate, conflicting
+projection replays fail explicitly, different ABC/Terminal observations stay separate.
+The fixed-case runner consumes core grouping rather than treating raw interpretations as
+independent opportunities. This fixes result representation/counting only, not market precision
+or recall. Full Source and multi-X structural adjudication remain open. SDK/API/Agent reuse is
+explicitly deferred until recognition reliability acceptance, per the user's clarification.

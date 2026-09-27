@@ -10,7 +10,12 @@ from htcn.harmonic.confluence_audit import audit_projection_confluence
 from htcn.harmonic.models import HarmonicPoint
 from htcn.harmonic.prz import build_xabcd_prz
 from htcn.harmonic.rules import CARNEY_RULES
-from htcn.harmonic.source_completion import SourceProjection, _projection_state
+from htcn.harmonic.source_completion import (
+    SourceCompletionEvent,
+    SourceCompletionScan,
+    SourceProjection,
+    _projection_state,
+)
 from htcn.research.snapshot_cache import load_research_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +25,7 @@ def audit() -> dict:
     selection_path = ROOT / "research/recognition-gate4c-case-selection-v1.json"
     selection = json.loads(selection_path.read_text())
     cases = []
+    completion_events = {}
     for case in selection["cases"]:
         snapshot, reason = load_research_snapshot(
             ROOT / "artifacts/ci-research/data",
@@ -78,6 +84,9 @@ def audit() -> dict:
             min_skipped_pivots=case["min_skipped_pivots"],
         )
         state = _projection_state(frame, projection, lifetime_bars=180)
+        if state.state == "completed":
+            completion_events.setdefault(case["instrument_id"], []).append(
+                SourceCompletionEvent(projection, state.audit))
         selected_bc = next(m["price"] for m in measured if m["selected"] and
                            m["name"].startswith("BC projection"))
         touched = {}
@@ -112,7 +121,18 @@ def audit() -> dict:
                 for i in range(case["known_at"], case["terminal_bar"] + 1)
             ],
         })
-    return {"schema": 1, "selection_sha256": hashlib.sha256(selection_path.read_bytes()).hexdigest(),
+    groups = []
+    for instrument_id, events in sorted(completion_events.items()):
+        scan = SourceCompletionScan((), (), tuple(events), 0, 0, 0)
+        for group in scan.completion_groups:
+            groups.append({"instrument_id": instrument_id, "key": group.key,
+                           "interpretation_count": len(group.interpretations),
+                           "source_nodes": [e.source_nodes for e in group.interpretations],
+                           "validated_identity": False})
+    return {"schema": 2, "completion_groups": groups,
+            "completion_interpretation_count": sum(len(v) for v in completion_events.values()),
+            "completion_observation_group_count": len(groups),
+            "grouping_scope": "Same-series direction/ABC/Terminal grouping; not independent trades or verified identities", "selection_sha256": hashlib.sha256(selection_path.read_bytes()).hexdigest(),
             "source_artifact": selection["source_artifact"],
             "scope": "11 preselected challenge cases, not precision/recall estimation",
             "case_count": len(cases), "cases": cases}

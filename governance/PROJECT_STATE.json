@@ -27,7 +27,7 @@
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260927-0090-018",
+    "latest_attempt_id": "A-20260927-0090-019",
     "latest_hosted_validation_attempt_id": "A-20260927-0090-017",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
@@ -85,6 +85,10 @@
       "concrete false-positive or false-negative case and independently justified expected behavior",
       "root-cause layer and correction or evidence-backed unresolved scope",
       "before/after regression evidence; no reliability claim from count reduction or all-rejected output"
+    ],
+    "deferred_until_recognition_accepted": [
+      "independent_sdk_packaging",
+      "external_api_and_agent_adapters"
     ]
   },
   "freezes": {
