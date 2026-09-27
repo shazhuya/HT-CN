@@ -75,3 +75,13 @@ XA/BC 之间已相隔约50.20%的XA波幅，加入ABCD后总宽约85.92%。这�
 
 4983f09完整CI 36259447684 已通过：1076项Python测试、Ruff和警告均为零；专项为19项测试和11个案例。
 进一步实现confluence_audit及事件qualification：5个宽Crab为review_required，其余6个为primary_compatible_unverified。该保守筛查不授予validated_identity，不重启精确D完成门，也不删掉时钟观察事件。新筛查的托管验收与历史基准分开记录。
+
+## 新发现：Crab宽区间的结构性下限
+
+直接读取Volume1 pp125–127、145–147，确认XA/BC优先、ABCD相对次要，但书中仍要求ABCD补充，并给出HD图例的紧密测量。尚需图例级可靠坐标核对，不能直接删除ABCD。
+
+令XA归一化为1，b=AB/XA、c=BC/AB。当前公式中XA终点与最近的1.618ABCD价格差为`1.618−2.618b+bc`。在b∈[.382,.618]、c∈[.382,.886]内，最小值为**0.236152 XA**。独立Decimal运算确认。于是只要代码强制把这两项包进Raw PRZ，就会出现至少23.6152% XA宽度，尚未加入BC。
+
+这不是任意选出的阈值；它是当前规则/公式/区间成员组合的性质。它不证明原书所有Crab无效，也不能证明精确共点是普适要求。新增ISSUE-0078要求Source图例级解释及版本化处理，禁止扩大容差掩盖问题。推导存于`research/recognition-crab-confluence-bound-v1.json`。
+
+资格诊断fab9195已通过1078项Python检查（全CI中的deterministic job）及专项21项测试/11例重算；完整Gate3结果单独追踪。新增可通过主测量相容检查的Crab正例，防止将整个Crab家族机械拒绝。

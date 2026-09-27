@@ -37,3 +37,14 @@ def test_primary_screen_is_price_scale_and_mirror_invariant() -> None:
         assert len({r.status for r in results}) == 1
         assert max(r.required_bc_at_nominal_xa for r in results) - min(
             r.required_bc_at_nominal_xa for r in results) < 1e-9
+
+
+def test_crab_primary_compatibility_is_not_blanket_family_rejection() -> None:
+    points = tuple(HarmonicPoint(label=label, index=i * 10, price=price)
+                   for i, (label, price) in enumerate(zip("XABC", [100, 200, 138.2, 192.9548])))
+    prz = build_xabcd_prz(CARNEY_RULES["crab"], points)
+    result = audit_projection_confluence("crab", points, prz)
+    assert result.status == "primary_compatible_unverified"
+    assert not result.validated_identity
+    # Primary compatibility cannot conceal the distinct AB=CD membership issue.
+    assert result.raw_width_xa > 0.23

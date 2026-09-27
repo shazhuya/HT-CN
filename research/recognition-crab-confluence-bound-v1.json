@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "status": "source_combination_review_required",
+  "scope": "Exact nominal projection arithmetic, not a universal market invalidity criterion",
+  "assumptions": {
+    "normalized_x": 0,
+    "normalized_a": 1,
+    "b_ab_over_xa": [
+      0.382,
+      0.618
+    ],
+    "c_bc_over_ab": [
+      0.382,
+      0.886
+    ],
+    "xa_completion_ratio": 1.618,
+    "maximum_abcd_component_ratio": 1.618,
+    "selector_includes_abcd_in_raw_zone_envelope": true
+  },
+  "derivation": {
+    "B": "1-b",
+    "C": "1-b+b*c",
+    "D_XA": "1-1.618 = -0.618",
+    "closest_D_ABCD": "C-1.618*b",
+    "separation_over_XA": "1.618-2.618*b+b*c",
+    "monotonicity": "Decreases with b and increases with c throughout the declared bounds",
+    "minimum_at": {
+      "b": 0.618,
+      "c": 0.382
+    },
+    "exact_minimum": "0.236152"
+  },
+  "consequence": "Under these exact assumptions, always enveloping XA and any permitted AB=CD component forces at least 23.6152% XA zone width before adding BC. This is a structural property of the rule/selector combination, not floating point noise or just a market sample anomaly.",
+  "source_boundary": "Volume1 pp125-127 directly confirms XA/BC as primary and AB=CD as least important, while still describing required alternate AB=CD. pp145-147 describes nearby measurements in the HD example, without reliable machine-readable XABC coordinates. This supports the need for figure-level reconciliation, not automatic removal of AB=CD. Exact co-location is not asserted as universally required.",
+  "required_action": "Adjudicate lower-priority measurement membership versus mandatory Raw PRZ envelope; preserve old M4 and require a new explicit Source Decision for any frozen formula/membership correction. Do not rescue with larger tolerance.",
+  "source_read": {
+    "volume_one_printed_and_pdf_pages": [
+      125,
+      126,
+      127,
+      145,
+      146,
+      147
+    ],
+    "volume_three_printed_pages": [
+      104,
+      151,
+      152,
+      153
+    ]
+  }
+}

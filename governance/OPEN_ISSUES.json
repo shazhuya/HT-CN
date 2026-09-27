@@ -208,6 +208,19 @@
       ],
       "current_fact": "source_completion is called by audit scripts; current app uses legacy/Pine/discovery paths.",
       "next_action": "After correctness acceptance, use one versioned result interface and verify runner/API/chart equality."
+    },
+    {
+      "id": "ISSUE-0078",
+      "severity": "high",
+      "type": "source_combination",
+      "status": "open",
+      "title": "Crab mandatory three-measure Raw PRZ envelope has structural width lower bound",
+      "blocks": [
+        "CR-0090 full confluence qualification",
+        "Crab semantic production promotion"
+      ],
+      "current_fact": "Current un-toleranced b/c ranges and maximum1.618ABCD force XA/ABCD separation >=0.236152XA. Volume1 directly gives XA/BC primary, ABCD secondary, but figure-level coordinate/membership reconciliation is unresolved. This is not a universal invalidity proof.",
+      "next_action": "Reconcile Volume1 pp125-127/145-147 figure coordinates, measurement roles and Volume3p104; any frozen-source correction requires explicit Source Decision/versioning, keeping M4 unchanged."
     }
   ]
 }

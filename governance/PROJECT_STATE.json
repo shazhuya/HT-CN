@@ -27,14 +27,14 @@
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260927-0090-015",
-    "latest_hosted_validation_attempt_id": "A-20260927-0090-014",
+    "latest_attempt_id": "A-20260927-0090-016",
+    "latest_hosted_validation_attempt_id": "A-20260927-0090-016",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36259447684,
-      "head": "4983f09ec32b66c79a7ecb4c1e506f8ca3c7bf87",
-      "scope": "Full event-contract baseline CI: 1076 Python tests; separate 19-test/11-case audit succeeded. New confluence screen hosted validation pending; no semantic reliability claim."
+      "workflow_run": 36284684543,
+      "head": "fab9195174a430ac99bb7fb036005387250126a1",
+      "scope": "Focused confluence/event21 tests and11 case recalculations success; deterministic CI1078 pass separately. Final closeout positive Crab test not included in these counts; no semantic promotion."
     },
     "latest_ci_failure": {
       "head": "af96288809db23c4a981034b56fdbfce98d4ea82",
@@ -64,9 +64,10 @@
   },
   "next_major_task": {
     "phase": "M9.post_release",
-    "title": "CR-0090 Gate 4C.2 — Source-backed Full Confluence Qualification",
+    "title": "CR-0090 Gate 4C.2 — Resolve Crab Source Measurement Membership",
     "status": "ready",
     "blocked_until": [
+      "resolve ISSUE-0078: mandatory XA/ABCD envelope lower bound and book figure measurement membership without silent freeze edits",
       "validate conservative review screen without equating nominal-XA compatibility to full Source identity",
       "define full XA/BC/ABCD qualification with source-backed boundary cases; preserve unresolved as unresolved",
       "audit multi-X, matched Pine disagreements and separate ABCD/Shark cases",
@@ -78,7 +79,7 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Qualify convergence independently from observable completion. Resolve five wide-Crab conflicts, competing-X and missing family cases; no capacity or peripheral work before labelled correctness."
+    "objective": "Resolve the Source-backed cause of structurally broad Crab PRZ, while preserving event/qualification separation; then complete multi-X/family adjudication and preregistered independent acceptance."
   },
   "freezes": {
     "m4_capture_methodology": {
@@ -147,7 +148,8 @@
     "recognition_architecture_audit": "governance/reviews/2026-09-27-recognition-architecture-audit.md",
     "recognition_case_review": "governance/reviews/2026-09-27-gate4c-events-and-prz-cases.md",
     "recognition_case_evidence": "research/recognition-gate4c-case-evidence-v1.json",
-    "recognition_case_adjudication": "research/recognition-gate4c-case-adjudication-v1.json"
+    "recognition_case_adjudication": "research/recognition-gate4c-case-adjudication-v1.json",
+    "crab_confluence_bound": "research/recognition-crab-confluence-bound-v1.json"
   },
   "recovery_contract": {
     "chat_is_authoritative": false,
