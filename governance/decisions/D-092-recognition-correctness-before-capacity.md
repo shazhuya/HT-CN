@@ -18,3 +18,10 @@ This supplements D-091; it does not supersede its highest-priority status.
 
 Evidence and limitations: `governance/reviews/2026-09-27-recognition-architecture-audit.md`.
 No detector improvement or production readiness is claimed by this planning decision.
+
+## 2026-09-27 用户方向复核补充
+
+按执行规范末节落实案例到引擎修复的闭环；治理工作不得替代识别改进。
+局部 Source 争议不得演变成全项目停摆；未裁定能力保持不通过。
+全拒绝或永久 unverified 不构成可靠识别，必须同时控制漏检与误检。
+此次补充不修改 Source 规则，不宣称新的识别成绩。

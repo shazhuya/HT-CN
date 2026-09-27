@@ -27,14 +27,14 @@
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260927-0090-016",
-    "latest_hosted_validation_attempt_id": "A-20260927-0090-016",
+    "latest_attempt_id": "A-20260927-0090-018",
+    "latest_hosted_validation_attempt_id": "A-20260927-0090-017",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36284684543,
-      "head": "fab9195174a430ac99bb7fb036005387250126a1",
-      "scope": "Focused confluence/event21 tests and11 case recalculations success; deterministic CI1078 pass separately. Final closeout positive Crab test not included in these counts; no semantic promotion."
+      "workflow_run": 36284826673,
+      "head": "3f3d3a188eb8e018bd0a4bd7f808b63c833a66a3",
+      "scope": "Full HT-CN CI and dedicated case audit 36284826671 succeeded. Engineering evidence only; recognition acceptance remains open."
     },
     "latest_ci_failure": {
       "head": "af96288809db23c4a981034b56fdbfce98d4ea82",
@@ -79,7 +79,13 @@
     "calibration_track": "M8",
     "inference_gate": "ISSUE-0066_claims_only",
     "user_computer_required": false,
-    "objective": "Resolve the Source-backed cause of structurally broad Crab PRZ, while preserving event/qualification separation; then complete multi-X/family adjudication and preregistered independent acceptance."
+    "objective": "Resolve ISSUE-0078 using reproducible book measurements; adjudicate existing multi-X cases and turn proven failures into engine corrections with regression evidence. If Crab remains unresolved, continue independent family/node/dedupe work. Then complete-window independent labels and preregistered acceptance; no peripheral work.",
+    "execution_contract": "specs/m9-recognition-gate4c-correctness-first.md",
+    "required_delivery": [
+      "concrete false-positive or false-negative case and independently justified expected behavior",
+      "root-cause layer and correction or evidence-backed unresolved scope",
+      "before/after regression evidence; no reliability claim from count reduction or all-rejected output"
+    ]
   },
   "freezes": {
     "m4_capture_methodology": {

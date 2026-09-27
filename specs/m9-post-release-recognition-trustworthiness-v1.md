@@ -1,7 +1,7 @@
 # M9 post-release — Recognition trustworthiness v1
 
 
-> CURRENT EXECUTION OVERRIDE (2026-09-27, D-092): `specs/m9-recognition-gate4c-correctness-first.md` supersedes capacity-first next actions below. Recognition remains untrusted; start with event semantics and PRZ case adjudication. Historical gate results remain evidence only.
+> CURRENT EXECUTION OVERRIDE (2026-09-27, D-092): `specs/m9-recognition-gate4c-correctness-first.md` supersedes capacity-first next actions below. Recognition remains untrusted. Event-contract implementation and initial 11 cases are complete; next resolve ISSUE-0078 and multi-X cases through the case-to-engine-fix loop in the current execution spec. Historical gate results remain evidence only.
 
 status: implementing
 change: CR-0090
