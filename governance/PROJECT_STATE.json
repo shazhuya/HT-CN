@@ -27,14 +27,14 @@
     "status": "implementing",
     "active_change": "CR-0090",
     "active_spec": "specs/m9-post-release-recognition-trustworthiness-v1.md",
-    "latest_attempt_id": "A-20260929-0090-002",
-    "latest_hosted_validation_attempt_id": "A-20260929-0090-002",
+    "latest_attempt_id": "A-20260929-0090-003",
+    "latest_hosted_validation_attempt_id": "A-20260929-0090-003",
     "work_branch": "m9/recognition-trustworthiness-v1",
     "latest_validation": {
       "result": "success",
-      "workflow_run": 36551998450,
-      "head": "8a5f3d632743e1778b79b5a457da42268a7deb80",
-      "scope": "FullCI and actual detector fixed11-case replay passed; closure-prefix extension pending. Semantic recognition gate remains open."
+      "workflow_run": 36552578092,
+      "head": "4919101de98ddd7276ffed1c2829abf2bf8ed845",
+      "scope": "Fixed11 market cases pass132 actual-detector birth/closure replay checks. FullCI36552578251 passed. No semantic gate promotion."
     },
     "latest_ci_failure": {
       "head": "2c52c7185fd7afb203df0a87bae5c6af045759b0",

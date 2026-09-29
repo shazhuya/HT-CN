@@ -642,5 +642,13 @@
     "head": "2c52c7185fd7afb203df0a87bae5c6af045759b0",
     "report_sha256": "71546594500bf071ace4cdcf485b97c791268bbfad7a123f13c4080270171917",
     "finding": "All33 XA/AB/BC interior raw-bar envelopes are contained across11 selected cases. This does not prove full Source identity; do not reject multiple X solely on this hypothesis."
+  },
+  "detector_replay_evidence": {
+    "head": "4919101de98ddd7276ffed1c2829abf2bf8ed845",
+    "workflow_run": 36552578092,
+    "artifact_id": 11025049189,
+    "case_count": 11,
+    "passed_checks": 132,
+    "scope": "Actual raw-OHLC detector recovery and birth/closure prefix consistency only. Not independent semantic labels, market recall or precision."
   }
 }

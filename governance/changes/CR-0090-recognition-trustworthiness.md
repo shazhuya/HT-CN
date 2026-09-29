@@ -224,3 +224,7 @@ Failures retain an uploaded report. This verifies emitted-case reproducibility, 
 recall/precision or independent semantic truth. Hosted replay is pending.
 
 Hosted replay passed on8a5f3d6: fullCI36551998450 and case36551998479, artifact11025363027; all11 cases pass all9 checks. Added before/at-closure actual scans and immutable audit-payload checks to cover event-time lookahead, pending hosted validation. This is a bounded regression-evidence repair, not a new identity rule or accuracy claim. Next: source-backed Gartley/Bat semantic labels; narrow PRZ alone is insufficient.
+
+Closure-prefix hosted acceptance on4919101: case36552578092/artifact11025049189 passes11 cases and132 checks, including before/at closure and immutable event payload. Nine interpretations/six observation groups, two invalidated. Local31 direct regressions and hosted deterministic job109354038934 pass. This closes replay coverage only; no new engine accuracy claim. Stop replay expansion and return to source-backed Gartley/Bat positive/negative semantic adjudication.
+
+Full CI36552578251 also succeeded on4919101, including synthetic-real Gate3.
