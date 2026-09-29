@@ -31,6 +31,7 @@ def audit() -> dict:
     completion_events = {}
     detector_states = {}
     birth_prefixes = {}
+    closure_prefixes = {}
     for case in selection["cases"]:
         snapshot, reason = load_research_snapshot(
             ROOT / "artifacts/ci-research/data",
@@ -118,6 +119,27 @@ def audit() -> dict:
                  recovered.projection.min_skipped_pivots) ==
                 (at_birth.known_at, at_birth.scales, at_birth.min_skipped_pivots),
         }
+        # Re-run the actual detector with future bars physically unavailable.
+        # Comparing only a full scan with a hand-built projection cannot expose
+        # a retrospective completion or later mutation of its event payload.
+        if state.closed_bar is not None:
+            for cutoff in (state.closed_bar - 1, state.closed_bar):
+                prefix_key = (*series, cutoff)
+                if prefix_key not in closure_prefixes:
+                    prefix_scan = scan_source_completion_events(frame.iloc[:cutoff + 1])
+                    closure_prefixes[prefix_key] = {
+                        item.projection.key: item for item in prefix_scan.states}
+            before_close = closure_prefixes[(*series, state.closed_bar - 1)].get(projection.key)
+            at_close = closure_prefixes[(*series, state.closed_bar)].get(projection.key)
+            replay_checks.update({
+                "active_before_close": before_close is not None and
+                    before_close.state == "active" and before_close.closed_bar is None,
+                "closed_at_observable_bar": at_close is not None and
+                    (at_close.state, at_close.closed_bar, at_close.reason) ==
+                    (state.state, state.closed_bar, state.reason),
+                "closure_payload_not_backfilled": at_close is not None and
+                    recovered is not None and at_close.audit == recovered.audit,
+            })
 
         if state.state == "completed":
             completion_events.setdefault(case["instrument_id"], []).append(
