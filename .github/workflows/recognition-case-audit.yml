@@ -43,6 +43,7 @@ jobs:
       - name: Independently calculate frozen PRZ cases
         run: python scripts/m9_recognition_gate4c_case_audit.py
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: recognition-case-audit-${{ github.sha }}
           path: artifacts/reports/m9-recognition-gate4c-case-audit.json

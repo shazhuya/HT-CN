@@ -16,6 +16,8 @@ from htcn.harmonic.source_completion import (
     SourceCompletionScan,
     SourceProjection,
     _projection_state,
+    event_sourced_hierarchical_xabc_projections,
+    scan_source_completion_events,
 )
 from htcn.research.snapshot_cache import load_research_snapshot
 
@@ -27,6 +29,8 @@ def audit() -> dict:
     selection = json.loads(selection_path.read_text())
     cases = []
     completion_events = {}
+    detector_states = {}
+    birth_prefixes = {}
     for case in selection["cases"]:
         snapshot, reason = load_research_snapshot(
             ROOT / "artifacts/ci-research/data",
@@ -85,6 +89,36 @@ def audit() -> dict:
             min_skipped_pivots=case["min_skipped_pivots"],
         )
         state = _projection_state(frame, projection, lifetime_bars=180)
+        series = (case["instrument_id"], snapshot.sha256)
+        if series not in detector_states:
+            actual = scan_source_completion_events(frame)
+            detector_states[series] = {item.projection.key: item for item in actual.states}
+        recovered = detector_states[series].get(projection.key)
+        for cutoff in (case["known_at"] - 1, case["known_at"]):
+            prefix_key = (*series, cutoff)
+            if prefix_key not in birth_prefixes:
+                birth_prefixes[prefix_key] = {
+                    item.key: item for item in event_sourced_hierarchical_xabc_projections(
+                        frame.iloc[:cutoff + 1])}
+        at_birth = birth_prefixes[(*series, case["known_at"])].get(projection.key)
+        before_birth = birth_prefixes[(*series, case["known_at"] - 1)].get(projection.key)
+        replay_checks = {
+            "nodes_recovered": recovered is not None,
+            "absent_before_birth": before_birth is None,
+            "present_at_birth": at_birth is not None,
+            "birth_matches": recovered is not None and
+                             recovered.projection.known_at == case["known_at"],
+            "node_prices_match": recovered is not None and
+                                 recovered.projection.points == points,
+            "prz_matches": recovered is not None and recovered.projection.prz == prz,
+            "state_matches": recovered is not None and recovered.state == state.state,
+            "close_bar_matches": recovered is not None and recovered.closed_bar == state.closed_bar,
+            "birth_evidence_not_backfilled": recovered is not None and at_birth is not None and
+                (recovered.projection.known_at, recovered.projection.scales,
+                 recovered.projection.min_skipped_pivots) ==
+                (at_birth.known_at, at_birth.scales, at_birth.min_skipped_pivots),
+        }
+
         if state.state == "completed":
             completion_events.setdefault(case["instrument_id"], []).append(
                 SourceCompletionEvent(projection, state.audit))
@@ -118,6 +152,8 @@ def audit() -> dict:
         cases.append({
             **case, "snapshot_sha256": snapshot.sha256, "nodes": nodes,
             "raw_leg_envelope_checks": leg_checks,
+            "detector_replay_checks": replay_checks,
+            "detector_replay_passed": all(replay_checks.values()),
             "b_xa": float(ab / xa), "c_ab": float(bc / ab),
             "components": measured, "source_prz": [prz.source_prz_low, prz.source_prz_high],
             "independent_width_xa": (max(selected) - min(selected)) / float(xa),
@@ -150,7 +186,8 @@ def audit() -> dict:
                            "interpretation_count": len(group.interpretations),
                            "source_nodes": [e.source_nodes for e in group.interpretations],
                            "validated_identity": False})
-    return {"schema": 2, "completion_groups": groups,
+    return {"schema": 3, "completion_groups": groups,
+            "detector_replay_passed": all(c["detector_replay_passed"] for c in cases),
             "completion_interpretation_count": sum(len(v) for v in completion_events.values()),
             "completion_observation_group_count": len(groups),
             "grouping_scope": "Same-series direction/ABC/Terminal grouping; not independent trades or verified identities", "selection_sha256": hashlib.sha256(selection_path.read_bytes()).hexdigest(),
@@ -164,4 +201,7 @@ if __name__ == "__main__":
     path = ROOT / "artifacts/reports/m9-recognition-gate4c-case-audit.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
-    print(json.dumps({"case_count": report["case_count"], "report": str(path)}))
+    print(json.dumps({"case_count": report["case_count"], "report": str(path),
+                      "detector_replay_passed": report["detector_replay_passed"]}))
+    if not report["detector_replay_passed"]:
+        raise SystemExit("Raw-OHLC detector replay disagrees with frozen cases; inspect report")

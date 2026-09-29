@@ -214,3 +214,11 @@ Local31 direct-function regressions pass; hosted validation pending. This repair
 false-signal failure mode, not overall real-market precision/recall or Source qualification.
 
 Nonfinite-tail fix hosted closeout: fullCI36303430972, fixed-case36303430955, Gate3Fast36303430936 and Gate4BFast36303430943 all passed on09b458a. Defect closed on experimental branch; no production promotion.
+
+## 2026-09-29 — Actual detector replay of fixed cases
+
+The existing case audit previously recomputed manually selected nodes and their states. It now
+scans the original OHLC through the actual engine and compares node recovery/prices, PRZ, birth,
+state and close bar. Prefix checks prevent future-born case credit and birth-evidence backfill.
+Failures retain an uploaded report. This verifies emitted-case reproducibility, not population
+recall/precision or independent semantic truth. Hosted replay is pending.
